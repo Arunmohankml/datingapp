@@ -148,6 +148,17 @@ if not firebase_admin._apps:
     if os.path.exists(cert_path):
         cred = credentials.Certificate(cert_path)
         firebase_admin.initialize_app(cred)
+    else:
+        # Fallback for Vercel: Initializing with a default app or environment variables if configured
+        import json
+        firebase_config = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
+        if firebase_config:
+            try:
+                cred_dict = json.loads(firebase_config)
+                cred = credentials.Certificate(cred_dict)
+                firebase_admin.initialize_app(cred)
+            except Exception as e:
+                print(f"Firebase error: {e}")
 
 # Fix for Firebase Auth Popup getting blocked by Django 4+ security headers
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
