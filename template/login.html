@@ -117,7 +117,7 @@
             
         } catch (error) {
             console.error(error);
-            errorEl.innerText = "Sign in was cancelled or failed.";
+            errorEl.innerText = "Error: " + error.message + " (" + error.code + ")";
             errorEl.style.display = "block";
         }
     });
