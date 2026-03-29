@@ -68,7 +68,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+    import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDNiJROEM1-oa2kidoUorjFPS4FvP_et0M",
@@ -82,49 +82,44 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    console.log("Firebase Auth initialized successfully ✅");
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({
         prompt: 'select_account'
     });
 
-    document.getElementById('google-login-btn').addEventListener('click', async () => {
-        const errorEl = document.getElementById('error-message');
-        errorEl.style.display = 'none';
-        
-        try {
-            const result = await signInWithPopup(auth, provider);
-            const user = result.user;
-            
-            // if (!user.email.endsWith('@srmist.edu.in')) {
-            //     errorEl.innerText = "Access Restricted: You must use an @srmist.edu.in email address.";
-            //     errorEl.style.display = "block";
-            //     auth.signOut();
-            //     return;
-            // }
+    const errorEl = document.getElementById('error-message');
 
-            const idToken = await user.getIdToken();
-            
-            // Send token to backend
-            const response = await fetch('/api/verify-token/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken: idToken })
-            });
-            
-            const data = await response.json();
-            if (data.success) {
-                window.location.href = '/complete_profile/';
-            } else {
-                errorEl.innerText = data.error || "Authentication failed on our servers.";
-                errorEl.style.display = "block";
+    // Handle the redirect result when the page loads back from Google
+    getRedirectResult(auth)
+        .then(async (result) => {
+            if (result && result.user) {
+                const user = result.user;
+                const idToken = await user.getIdToken();
+                
+                const response = await fetch('/api/verify-token/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idToken: idToken })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = '/complete_profile/';
+                } else {
+                    errorEl.innerText = "Backend Error: " + (data.error || "Authentication failed.");
+                    errorEl.style.display = "block";
+                }
             }
-            
-        } catch (error) {
+        })
+        .catch((error) => {
             console.error(error);
-            errorEl.innerText = "Error: " + error.message + " (" + error.code + ")";
+            errorEl.innerText = "Redirect Error: " + error.message;
             errorEl.style.display = "block";
-        }
+        });
+
+    document.getElementById('google-login-btn').addEventListener('click', () => {
+        errorEl.style.display = 'none';
+        signInWithRedirect(auth, provider);
     });
 </script>
 {% endblock %}
