@@ -53,11 +53,10 @@ def home(request):
     answered_ids = list(UserAnswer.objects.filter(user=user).values_list("question_id", flat=True))
     ans_count = len(answered_ids)
 
-    # ── 4-question round break ──
-    # Round number = how many complete 4-question rounds the user has finished
-    # We use session to track how many rounds we've already shown a match for
+    # ── 10-question round break ──
+    # Round number = how many complete 10-question rounds the user has finished
     rounds_shown = request.session.get('rounds_shown', 0)
-    current_round = ans_count // 4  # integer division: 4→1, 8→2, 12→3 ...
+    current_round = ans_count // 10  # 10→1, 20→2, 30→3 ...
 
     if current_round > rounds_shown:
         # A new round has been completed — show a match
