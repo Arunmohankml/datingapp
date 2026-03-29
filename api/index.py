@@ -2,15 +2,17 @@ import os
 import sys
 from pathlib import Path
 
-# Add the project directory to the path so Vercel can find everything
+# Fix the Python Path for Vercel’s serverless environment
 BASE_DIR = Path(__file__).resolve().parent.parent
-sys.path.append(os.path.join(BASE_DIR, "datingapp"))
+# Look for modules in the root and in the nested project folder
+sys.path.append(str(BASE_DIR))
+sys.path.append(str(BASE_DIR / "datingapp"))
 
 # Set the Django settings module
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'datingapp.settings')
 
-# Import the WSGI application
-from datingapp.wsgi import application # This is the datingapp folder inside datingapp/
+# Import the WSGI application from the inner datingapp folder
+from datingapp.wsgi import application
 
-# Export the application for Vercel
+# Alias for Vercel's entry point
 app = application
