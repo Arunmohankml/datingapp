@@ -67,10 +67,8 @@
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
-
-    console.log("Firebase scripts loaded correctly ✅");
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDNiJROEM1-oa2kidoUorjFPS4FvP_et0M",
@@ -84,6 +82,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    console.log("Firebase Auth initialized successfully ✅");
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({
         prompt: 'select_account'
