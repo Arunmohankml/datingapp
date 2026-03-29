@@ -65,7 +65,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDNiJROEM1-oa2kidoUorjFPS4FvP_et0M",
@@ -86,37 +86,46 @@
 
     const errorEl = document.getElementById('error-message');
 
-    // Handle the redirect result when the page loads back from Google
-    getRedirectResult(auth)
-        .then(async (result) => {
-            if (result && result.user) {
-                const user = result.user;
-                const idToken = await user.getIdToken();
-                
-                const response = await fetch('/api/verify-token/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ idToken: idToken })
-                });
-                
-                const data = await response.json();
-                if (data.success) {
-                    window.location.href = '/complete_profile/';
-                } else {
-                    errorEl.innerText = "Backend Error: " + (data.error || "Authentication failed.");
-                    errorEl.style.display = "block";
-                }
-            }
-        })
-        .catch((error) => {
-            console.error(error);
-            errorEl.innerText = "Redirect Error: " + error.message;
-            errorEl.style.display = "block";
-        });
-
-    document.getElementById('google-login-btn').addEventListener('click', () => {
+    async function handleLogin() {
         errorEl.style.display = 'none';
-        signInWithRedirect(auth, provider);
-    });
+        
+        try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+            const idToken = await user.getIdToken();
+            
+            errorEl.innerText = "Authenticating with backend...";
+            errorEl.style.display = "block";
+            errorEl.style.backgroundColor = "#eff6ff";
+            errorEl.style.color = "#1d4ed8";
+            errorEl.style.borderColor = "#bfdbfe";
+
+            const response = await fetch('/api/verify-token/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken: idToken })
+            });
+            
+            const data = await response.json();
+            if (data.success) {
+                window.location.href = '/complete_profile/';
+            } else {
+                throw new Error(data.error || "Backend authentication failed.");
+            }
+        } catch (error) {
+            console.error(error);
+            errorEl.innerText = "Authentication Error: " + error.message;
+            errorEl.style.display = "block";
+            errorEl.style.backgroundColor = "#fef2f2";
+            errorEl.style.color = "#b91c1c";
+            errorEl.style.borderColor = "#fecaca";
+            
+            if (error.code === 'auth/unauthorized-domain') {
+                errorEl.innerHTML += "<br><strong>Fix:</strong> Add your domain to Firebase console.";
+            }
+        }
+    }
+
+    document.getElementById('google-login-btn').addEventListener('click', handleLogin);
 </script>
 {% endblock %}
