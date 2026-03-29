@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+
+{% block title %}Chats | SRM Match{% endblock %}
+
+{% block head %}
+<style>
+    body {
+        align-items: flex-start !important;
+        padding-top: 80px;
+    }
+    
+    .container {
+        max-width: 600px !important;
+    }
+
+    .chats-container {
+        padding: 16px 0;
+    }
+    
+    .page-title {
+        color: var(--primary);
+        font-size: 24px;
+        margin-bottom: 24px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--border);
+    }
+    
+    .chat-card {
+        display: flex;
+        align-items: center;
+        padding: 16px;
+        margin-bottom: 12px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+    
+    .chat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary);
+    }
+
+    .chat-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 16px;
+        border: 2px solid var(--border);
+        background: var(--bg-color);
+    }
+    
+    .chat-details {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .chat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 4px;
+    }
+    
+    .chat-name {
+        font-weight: 600;
+        font-size: 16px;
+        color: var(--text-main);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .chat-time {
+        font-size: 12px;
+        color: var(--text-muted);
+        white-space: nowrap;
+        margin-left: 8px;
+    }
+    
+    .chat-snippet-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .chat-snippet {
+        font-size: 14px;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding-right: 8px;
+    }
+    
+    .unread-badge {
+        background-color: var(--primary);
+        color: white;
+        font-size: 11px;
+        font-weight: 700;
+        min-width: 20px;
+        height: 20px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 6px;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 48px 24px;
+        color: var(--text-muted);
+    }
+    
+    .empty-icon {
+        font-size: 48px;
+        color: var(--border);
+        margin-bottom: 16px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="chats-container">
+    <h2 class="page-title"><i class="fas fa-comment-dots"></i> Recent Chats</h2>
+    
+    {% if chats %}
+        {% for chat in chats %}
+        <a href="{% url 'chat_view' chat.partner.id %}" class="chat-card">
+            <img src="{% if chat.partner.profile.profile_pic %}{{ chat.partner.profile.profile_pic.url }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ chat.partner.username }}{% endif %}" alt="{{ chat.partner.profile.name|default:chat.partner.username }}" class="chat-avatar">
+            
+            <div class="chat-details">
+                <div class="chat-header">
+                    <div class="chat-name">{{ chat.partner.profile.name|default:chat.partner.username }}</div>
+                    {% if chat.latest_message %}
+                        <div class="chat-time">{{ chat.timestamp|date:"M d, P" }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="chat-snippet-row">
+                    {% if chat.latest_message %}
+                        <div class="chat-snippet">
+                            {% if chat.latest_message.sender == request.user %}
+                                <span>You: </span>
+                            {% endif %}
+                            {{ chat.latest_message.text }}
+                        </div>
+                    {% else %}
+                        <div class="chat-snippet" style="font-style: italic;">No messages yet. Say hi!</div>
+                    {% endif %}
+                    
+                    {% if chat.unread_count > 0 %}
+                        <div class="unread-badge">{{ chat.unread_count }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-comments empty-icon"></i>
+            <h3>No Chats Yet</h3>
+            <p style="margin-top: 8px;">Connect with your matches to start chatting!</p>
+            <a href="{% url 'connections' %}" class="btn btn-primary" style="margin-top: 16px;">View Matches</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

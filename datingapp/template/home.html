@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<style>
+    .quiz-card {
+        padding: 40px;
+    }
+
+    .profile-mini {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 32px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .profile-mini img {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background-color: var(--border);
+        object-fit: cover;
+    }
+
+    .profile-mini h3 {
+        margin: 0;
+        font-size: 15px;
+        color: var(--text-main);
+    }
+
+    .profile-mini p {
+        margin: 0;
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+    
+    /* Progress bar */
+    .progress-track {
+        height: 6px;
+        background: var(--border);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 32px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background-color: var(--primary);
+        transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .question-box h2 {
+        font-size: 20px;
+        margin-bottom: 8px;
+        color: var(--text-main);
+        line-height: 1.4;
+    }
+
+    .question-hint {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 24px;
+    }
+
+    .options-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .option-label {
+        display: flex;
+        align-items: center;
+        padding: 16px 20px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: var(--surface);
+    }
+
+    .option-label:hover {
+        border-color: var(--primary);
+        background-color: #f8faff;
+        box-shadow: 0 2px 4px rgba(99, 102, 241, 0.05);
+        transform: translateY(-1px);
+    }
+
+    .option-label input {
+        display: none;
+    }
+
+    .option-label span {
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--text-main);
+    }
+    
+    .all-done {
+        text-align: center;
+        padding: 40px 0;
+    }
+    .all-done .icon {
+        font-size: 48px;
+        color: var(--primary);
+        margin-bottom: 16px;
+    }
+
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="card quiz-card">
+    {% if question %}
+    <div class="profile-mini">
+        <img src="{% if request.user.profile.profile_pic %}{{ request.user.profile.profile_pic.url }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ request.user.username }}{% endif %}" alt="User">
+        <div>
+            <h3>Discovery Module</h3>
+            <p>Answer naturally to improve your matches</p>
+        </div>
+    </div>
+
+    <div class="progress-track">
+        <div class="progress-fill" style="width: {{ progress|default:20 }}%;"></div>
+    </div>
+
+    <div class="question-box">
+        <h2>{{ question.text }}</h2>
+        <p class="question-hint">Select the option that best describes you.</p>
+
+        <form method="POST" action="{% url 'answer_question' question.id %}" id="question-form">
+            {% csrf_token %}
+            <div class="options-list">
+                {% for option in question.options.all %}
+                <label class="option-label">
+                    <input type="radio" name="option" value="{{ option.id }}" onchange="this.form.submit()">
+                    <span>{{ option.text }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <div class="all-done">
+        <div class="icon"><i class="fas fa-check-circle"></i></div>
+        <h2>All Caught Up</h2>
+        <p>You've answered all available questions. Your profile is fully optimized for matching!</p>
+        <a href="{% url 'check_match' %}" class="btn btn-primary" style="margin-top: 20px;">Review Matches</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

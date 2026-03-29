@@ -1,0 +1,20 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "datingapp/datingapp/wsgi.py",
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "15mb", "runtime": "python3.10" }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/datingapp/static/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "datingapp/datingapp/wsgi.py"
+    }
+  ]
+}

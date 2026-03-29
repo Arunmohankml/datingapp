@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<style>
+    .conn-header {
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+    }
+    
+    .section-title {
+        font-size: 14px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 0.05em;
+        margin-bottom: 16px;
+        margin-top: 32px;
+    }
+
+    .user-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        margin-bottom: 12px;
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .user-info img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--border);
+        object-fit: cover;
+    }
+    
+    .actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        color: white;
+    }
+
+    .btn-accept { background: #10b981; }
+    .btn-reject { background: #ef4444; }
+    .btn-chat { background: var(--primary); text-decoration: none; padding: 6px 16px; border-radius: var(--radius-md); font-size: 14px;}
+    .btn-chat:hover { background: var(--primary-hover); }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-muted);
+        font-size: 14px;
+        background: #fdfdfd;
+        border-radius: var(--radius-md);
+        border: 1px dashed var(--border);
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="card" style="width: 100%;">
+    <div class="conn-header">
+        <a href="{% url 'home' %}" style="text-decoration: none; color: var(--primary); font-size: 14px; margin-bottom: 10px; display: inline-block;">&larr; Back to Match</a>
+        <h2>Your Connections</h2>
+    </div>
+
+    <h3 class="section-title">Incoming Requests ({{ incoming_requests.count }})</h3>
+    {% if incoming_requests %}
+        {% for req in incoming_requests %}
+        <div class="user-row">
+            <div class="user-info">
+                <img src="{% if req.sender.profile.profile_pic %}{{ req.sender.profile.profile_pic.url }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ req.sender.username }}{% endif %}" alt="Avatar">
+                <div>
+                    <h4 style="margin:0; font-size: 15px;">{{ req.sender.profile.name|default:req.sender.username }}</h4>
+                    <span style="font-size: 12px; color: var(--text-muted);">Wants to connect</span>
+                </div>
+            </div>
+            <div class="actions">
+                <form method="POST" action="{% url 'accept_match' req.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-icon btn-accept"><i class="fas fa-check"></i></button>
+                </form>
+                <form method="POST" action="{% url 'reject_match' req.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-icon btn-reject"><i class="fas fa-times"></i></button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">No pending requests right now.</div>
+    {% endif %}
+
+    <h3 class="section-title">Matches</h3>
+    {% if connections %}
+        {% for conn in connections %}
+        <div class="user-row">
+            <div class="user-info">
+                <img src="{% if conn.profile.profile_pic %}{{ conn.profile.profile_pic.url }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ conn.username }}{% endif %}" alt="Avatar">
+                <div>
+                    <h4 style="margin:0; font-size: 15px;">{{ conn.profile.name|default:conn.username }}</h4>
+                </div>
+            </div>
+            <a href="{% url 'chat_view' conn.id %}" class="btn-chat" style="color: white;"><i class="fas fa-comment"></i> Chat</a>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">No matches yet. Keep answering questions to find your vibe!</div>
+    {% endif %}
+</div>
+{% endblock %}

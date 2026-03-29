@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<style>
+    .profile-setup-wrap {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px 16px 60px;
+    }
+    .setup-header {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+    .setup-header .emoji {
+        font-size: 40px;
+        display: block;
+        margin-bottom: 12px;
+    }
+    .setup-header h2 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 6px;
+    }
+    .setup-header p {
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+    .section-title {
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--primary);
+        margin: 28px 0 12px;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    .form-group {
+        margin-bottom: 12px;
+    }
+    .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-main);
+        margin-bottom: 6px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        font-size: 14px;
+        font-family: inherit;
+        color: var(--text-main);
+        background: white;
+        transition: border-color 0.2s;
+        box-sizing: border-box;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    }
+    .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    .hint {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 4px;
+    }
+    .submit-wrap {
+        margin-top: 32px;
+    }
+    .btn-submit {
+        width: 100%;
+        padding: 14px;
+        font-size: 15px;
+        font-weight: 600;
+    }
+    .errorlist {
+        color: #e11d48;
+        font-size: 12px;
+        list-style: none;
+        padding: 0;
+        margin: 4px 0 0;
+    }
+    @media (max-width: 500px) {
+        .form-row { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="profile-setup-wrap">
+    <div class="setup-header">
+        <span class="emoji">👋</span>
+        <h2>Set up your profile</h2>
+        <p>Tell us about yourself so we can find your best match.</p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div style="background: #ffe4e6; border: 1px solid #f43f5e; color: #be123c; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px;">
+            <strong>Please correct the errors below:</strong>
+            <ul style="margin: 8px 0 0 16px; padding: 0;">
+            {% for field, errors in form.errors.items %}
+                <li><strong>{{ field|title }}:</strong> {{ errors|join:", " }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="section-title">📋 Basic Info</div>
+        <div class="form-group">
+            <label for="id_name">Full Name *</label>
+            {{ form.name }}
+            {{ form.name.errors }}
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_gender">Gender *</label>
+                {{ form.gender }}
+                {{ form.gender.errors }}
+            </div>
+            <div class="form-group">
+                <label for="id_age">Age</label>
+                {{ form.age }}
+                {{ form.age.errors }}
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_clg_year">College Year</label>
+                {{ form.clg_year }}
+            </div>
+            <div class="form-group">
+                <label for="id_campus">Campus</label>
+                {{ form.campus }}
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_course">Course</label>
+                {{ form.course }}
+            </div>
+            <div class="form-group">
+                <label for="id_branch">Branch</label>
+                {{ form.branch }}
+            </div>
+        </div>
+
+        <div class="section-title">📸 Profile Picture</div>
+        <div class="form-group">
+            <label for="id_profile_pic">Upload Photo</label>
+            {{ form.profile_pic }}
+        </div>
+
+        <div class="section-title">🌍 Location</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_living_place">Living Place</label>
+                {{ form.living_place }}
+            </div>
+            <div class="form-group">
+                <label for="id_native_place">Native Place</label>
+                {{ form.native_place }}
+            </div>
+        </div>
+
+        <div class="section-title">🗣️ Languages</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_languages">Languages Known</label>
+                {{ form.languages }}
+                <p class="hint">Comma separated, e.g. English, Tamil</p>
+            </div>
+            <div class="form-group">
+                <label for="id_mother_tongues">Mother Tongue(s)</label>
+                {{ form.mother_tongues }}
+                <p class="hint">e.g. Tamil, Hindi</p>
+            </div>
+        </div>
+
+        <div class="section-title">✨ About You</div>
+        <div class="form-group">
+            <label for="id_bio">Bio</label>
+            {{ form.bio }}
+        </div>
+        <div class="form-group">
+            <label for="id_interest_tags">Interests / Hobbies</label>
+            {{ form.interest_tags }}
+            <p class="hint">e.g. anime, food, coding, gym</p>
+        </div>
+        <div class="form-group">
+            <label for="id_looking_for">Looking for</label>
+            {{ form.looking_for }}
+        </div>
+        <div class="form-group">
+            <label for="id_liked_songs">Liked Songs</label>
+            {{ form.liked_songs }}
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_liked_movies">Liked Movies</label>
+                {{ form.liked_movies }}
+            </div>
+            <div class="form-group">
+                <label for="id_fav_shows">Favourite Shows</label>
+                {{ form.fav_shows }}
+            </div>
+        </div>
+
+        <div class="section-title">💘 Preferences</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_pref_gender">Preferred Gender</label>
+                {{ form.pref_gender }}
+            </div>
+            <div class="form-group">
+                <label for="id_pref_languages">Preferred Language(s)</label>
+                {{ form.pref_languages }}
+                <p class="hint">e.g. English, Tamil</p>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_pref_age_min">Min Age</label>
+                {{ form.pref_age_min }}
+            </div>
+            <div class="form-group">
+                <label for="id_pref_age_max">Max Age</label>
+                {{ form.pref_age_max }}
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="id_pref_campus">Preferred Campus</label>
+                {{ form.pref_campus }}
+            </div>
+            <div class="form-group">
+                <label for="id_pref_branch">Preferred Branch</label>
+                {{ form.pref_branch }}
+            </div>
+        </div>
+
+        <div class="submit-wrap">
+            <button type="submit" class="btn btn-primary btn-submit">
+                Save &amp; Start Matching →
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

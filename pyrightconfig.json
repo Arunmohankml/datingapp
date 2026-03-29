@@ -1,0 +1,17 @@
+{
+  "venvPath": ".",
+  "venv": "venv",
+  "pythonVersion": "3.12",
+  "extraPaths": [
+    "./datingapp"
+  ],
+  "executionEnvironments": [
+    {
+      "root": "./datingapp",
+      "extraPaths": ["./datingapp"]
+    }
+  ],
+  "reportMissingImports": false,
+  "reportMissingModuleSource": false,
+  "typeCheckingMode": "off"
+}
