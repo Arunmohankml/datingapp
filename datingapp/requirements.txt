@@ -1,4 +1,0 @@
-Django>=4.0
-firebase-admin==6.5.0
-numpy==1.26.4
-whitenoise==6.6.0
