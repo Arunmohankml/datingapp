@@ -64,6 +64,8 @@ def home(request):
         request.session['rounds_shown'] = current_round
         return redirect('check_match')
 
+    question = Question.objects.exclude(id__in=answered_ids).first()
+
     if not question:
         # ── DISCOVERY MODE: Fetch and Rank All Potential Matches ──
         seen_ids = request.session.get('seen_match_ids', [])
