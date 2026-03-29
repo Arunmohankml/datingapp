@@ -25,7 +25,12 @@ def complete_profile(request):
         if form.is_valid():
             new_profile = form.save(commit=False)
             new_profile.user = user
-            new_profile.save()
+            try:
+                new_profile.save()
+            except OSError:
+                # Fallback for Read-only filesystem (Vercel)
+                new_profile.profile_pic = None
+                new_profile.save()
             return redirect('home')
         # If form is invalid, fall through to re-render with errors
     else:
