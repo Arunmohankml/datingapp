@@ -64,11 +64,32 @@ def home(request):
         request.session['rounds_shown'] = current_round
         return redirect('check_match')
 
-    question = Question.objects.exclude(id__in=answered_ids).first()
-
     if not question:
-        # All questions answered
-        return render(request, "home.html", {"all_done": True, "progress": 100})
+        # ── DISCOVERY MODE: Fetch and Rank All Potential Matches ──
+        seen_ids = request.session.get('seen_match_ids', [])
+        candidates = Profile.objects.exclude(user=user)
+        
+        matches_list = []
+        for c in candidates:
+            # Mutual Preference Filter
+            user_pref_ok = (profile.pref_gender == 'any' or profile.pref_gender == c.gender)
+            cand_pref_ok = (c.pref_gender == 'any' or c.pref_gender == profile.gender)
+            
+            if user_pref_ok and cand_pref_ok:
+                score = calculate_match_score(user, c.user)
+                matches_list.append({
+                    'profile': c,
+                    'score': score
+                })
+        
+        # Sort by best score
+        matches_list.sort(key=lambda x: x['score'], reverse=True)
+        
+        return render(request, "home.html", {
+            "all_done": True, 
+            "progress": 100,
+            "matches": matches_list[:10]  # Show top 10
+        })
 
     total_q_db = Question.objects.count()
     progress = int((ans_count / total_q_db) * 100) if total_q_db > 0 else 0

@@ -142,11 +142,36 @@
         </form>
     </div>
     {% else %}
-    <div class="all-done">
-        <div class="icon"><i class="fas fa-check-circle"></i></div>
-        <h2>All Caught Up</h2>
-        <p>You've answered all available questions. Your profile is fully optimized for matching!</p>
-        <a href="{% url 'check_match' %}" class="btn btn-primary" style="margin-top: 20px;">Review Matches</a>
+    <div class="discovery-board">
+        <h2 style="margin-bottom: 24px;">Recommended Matches</h2>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            {% for m in matches %}
+            <div class="card" style="padding: 20px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <img src="{% if m.profile.profile_pic %}{{ m.profile.profile_pic.url }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ m.profile.user.username }}{% endif %}" alt="PFP" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
+                    <div>
+                        <h4 style="margin: 0;">{{ m.profile.name }}, {{ m.profile.age }}</h4>
+                        <p style="margin: 4px 0; color: var(--text-muted); font-size: 13px;">{{ m.profile.branch }} • {{ m.profile.campus }}</p>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span style="display: inline-block; padding: 2px 8px; border-radius: 20px; background: #eef2ff; color: var(--primary); font-size: 11px; font-weight: 700;">{{ m.score }}% MATCH</span>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <form method="POST" action="{% url 'send_match_request' m.profile.user.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px;">Like</button>
+                    </form>
+                </div>
+            </div>
+            {% empty %}
+            <div class="all-done">
+                <div class="icon"><i class="fas fa-check-circle"></i></div>
+                <h2>All Caught Up</h2>
+                <p>No new matches available right now. Invite more friends to find more matches!</p>
+            </div>
+            {% endfor %}
+        </div>
     </div>
     {% endif %}
 </div>
