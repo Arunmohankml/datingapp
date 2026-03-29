@@ -158,6 +158,10 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 8px;">
+                    <form method="POST" action="{% url 'skip_match' m.profile.user.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn" style="padding: 10px 16px; font-size: 14px; background: #f3f4f6; color: var(--text-main); border: 1px solid var(--border);">Pass</button>
+                    </form>
                     <form method="POST" action="{% url 'send_match_request' m.profile.user.id %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px;">Like</button>

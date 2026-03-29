@@ -9,6 +9,7 @@ urlpatterns = [
     path("check_match/", views.check_match, name="check_match"),
     path("answer_question/<int:question_id>/", views.answer_question, name="answer_question"),
     path("match/send/<int:receiver_id>/", views.send_match_request, name="send_match_request"),
+    path("match/skip/<int:receiver_id>/", views.skip_match, name="skip_match"),
     path("match/accept/<int:req_id>/", views.accept_match, name="accept_match"),
     path("match/reject/<int:req_id>/", views.reject_match, name="reject_match"),
     path("connections/", views.connections_view, name="connections"),

@@ -138,7 +138,10 @@
             {% csrf_token %}
             <button type="submit" class="btn btn-primary btn-block" style="width: 100%;">Connect</button>
         </form>
-        <a href="{% url 'home' %}" class="btn btn-block" style="flex: 1; background: #e5e7eb; color: var(--text-main); text-align: center;">Skip</a>
+        <form action="{% url 'skip_match' match.user.id %}" method="POST" style="flex: 1;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-block" style="width: 100%; background: #f3f4f6; color: var(--text-main); border: 1px solid var(--border);">Skip</button>
+        </form>
     </div>
 </div>
 {% endblock %}

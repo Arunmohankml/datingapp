@@ -68,8 +68,9 @@ def home(request):
 
     if not question:
         # ── DISCOVERY MODE: Fetch and Rank All Potential Matches ──
-        seen_ids = request.session.get('seen_match_ids', [])
-        candidates = Profile.objects.exclude(user=user)
+        # Filter candidates who don't have ANY match request from this user
+        interacted_user_ids = MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)
+        candidates = Profile.objects.exclude(user=user).exclude(user__id__in=interacted_user_ids)
         
         matches_list = []
         for c in candidates:
@@ -90,7 +91,7 @@ def home(request):
         return render(request, "home.html", {
             "all_done": True, 
             "progress": 100,
-            "matches": matches_list[:10]  # Show top 10
+            "matches": matches_list[:20]  # Show top 20
         })
 
     total_q_db = Question.objects.count()
@@ -172,10 +173,9 @@ def check_match(request):
         return redirect('home')
 
     # IDs of users already shown to this user in previous rounds (stored in session)
-    seen_ids = request.session.get('seen_match_ids', [])
-
-    # ── Step 1: Filter candidates by mutual preference ──
-    candidates = Profile.objects.exclude(user=user).exclude(user__id__in=seen_ids)
+    # Exclude ANY users we have already interacted with (liked, rejected, skipped, pending)
+    interacted_user_ids = MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)
+    candidates = Profile.objects.exclude(user=user).exclude(user__id__in=interacted_user_ids)
 
     preference_filtered = []
     for c in candidates:
@@ -273,6 +273,18 @@ def send_match_request(request, receiver_id):
         # Reset last_match_count so they can continue answering
         # request.session['last_match_count'] it was already set in home
     
+    return redirect('home')
+    
+@login_required
+def skip_match(request, receiver_id):
+    if request.method == 'POST':
+        receiver = get_object_or_404(User, id=receiver_id)
+        if receiver != request.user:
+            MatchRequest.objects.get_or_create(
+                sender=request.user, 
+                receiver=receiver, 
+                defaults={'status': 'skipped'}
+            )
     return redirect('home')
 
 @login_required
