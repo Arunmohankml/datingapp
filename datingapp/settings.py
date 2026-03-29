@@ -82,12 +82,21 @@ DATABASES = {
     }
 }
 
-# Add Cloud Database support for Vercel
-if os.environ.get('DATABASE_URL'):
+# Enforce Neon Cloud Database in Production
+if os.environ.get('VERCEL'):
+    if os.environ.get('DATABASE_URL'):
+        DATABASES['default'] = dj_database_url.config(
+            default=os.environ.get('DATABASE_URL'),
+            conn_max_age=600,
+            ssl_require=True
+        )
+    else:
+        # If running on Vercel without DATABASE_URL, this will warn us visually
+        print("DATABASE_URL NOT FOUND ON VERCEL!")
+elif os.environ.get('DATABASE_URL'):
     DATABASES['default'] = dj_database_url.config(
         default=os.environ.get('DATABASE_URL'),
         conn_max_age=600,
-        conn_health_checks=True,
     )
 
 
