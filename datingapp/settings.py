@@ -169,5 +169,5 @@ if not firebase_admin._apps:
             except Exception as e:
                 print(f"Firebase error: {e}")
 
-# Fix for Firebase Auth Popup getting blocked by Django 4+ security headers
-SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
+# Temporarily disabling COOP to fix the sign-in popup being blocked on Vercel
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
