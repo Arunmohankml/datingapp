@@ -144,6 +144,9 @@ class ProfileEditForm(forms.ModelForm):
             'looking_for': forms.Select(choices=LOOKING_FOR_CHOICES, attrs={'class': 'form-control'}),
             'pref_campus': forms.Select(choices=[('any', 'Any Campus')] + [c for c in CAMPUS_CHOICES if c[0] != ''], attrs={'class': 'form-control'}),
             'pref_branch': forms.Select(choices=[('any', 'Any Branch')] + [c for c in BRANCH_CHOICES if c[0] != ''], attrs={'class': 'form-control'}),
+            'pref_age_min': forms.NumberInput(attrs={'class': 'form-control'}),
+            'pref_age_max': forms.NumberInput(attrs={'class': 'form-control'}),
+            'profile_pic': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
     def clean_languages(self):

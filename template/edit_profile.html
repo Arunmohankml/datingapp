@@ -2,185 +2,369 @@
 {% load static %}
 
 {% block body %}
-<div class="edit-profile-container">
-    <div class="header-section">
-        <h1>Edit Profile</h1>
-        <p>Keep your profile fresh and matching criteria up to date.</p>
+<div class="profile-edit-wrapper">
+    <!-- Header -->
+    <div class="edit-header">
+        <h1>My Profile</h1>
+        <p>Your digital identity at SRMIST</p>
     </div>
 
-    <div class="profile-grid">
-        <!-- Left Column: Fixed Info & Basic Edits -->
-        <div class="form-card main-form">
-            <h2 class="section-title"><i class="fas fa-user-edit"></i> Profile Details</h2>
-            
-            <div class="fixed-info-banner">
-                <div class="info-item">
-                    <span class="label">Name</span>
-                    <span class="value">{{ profile.name }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Gender</span>
-                    <span class="value">{{ profile.gender|title }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Age</span>
-                    <span class="value">{{ profile.age }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="label">Campus</span>
-                    <span class="value">{{ profile.campus }}</span>
-                </div>
-                <p class="lock-hint"><i class="fas fa-lock"></i> These fields are locked. Contact support to change.</p>
+    <!-- 1. Identity Preview (Read Only) -->
+    <div class="card identity-card">
+        <div class="pfp-container-large">
+            <div class="pfp-ring">
+                {% if profile.profile_pic %}
+                    <img src="{{ profile.profile_pic.url }}" alt="Profile Picture" id="main-pfp">
+                {% else %}
+                    <div class="pfp-placeholder"><i class="fas fa-user"></i></div>
+                {% endif %}
             </div>
-
-            <form method="POST" enctype="multipart/form-data">
-                {% csrf_token %}
-                <input type="hidden" name="update_profile" value="1">
-                
-                <div class="form-group">
-                    <label>Profile Picture</label>
-                    <div class="pfp-preview">
-                        {% if profile.profile_pic %}
-                            <img src="{{ profile.profile_pic.url }}" alt="PFP" id="pfp-img">
-                        {% else %}
-                            <div class="placeholder-pfp">No Image</div>
-                        {% endif %}
-                        {{ form.profile_pic }}
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Bio</label>
-                    {{ form.bio }}
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group half">
-                        <label>Languages (Comma separated)</label>
-                        {{ form.languages }}
-                    </div>
-                    <div class="form-group half">
-                        <label>Mother Tongue(s)</label>
-                        {{ form.mother_tongues }}
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Interests (Comma separated)</label>
-                    {{ form.interest_tags }}
-                </div>
-
-                <h3 class="sub-section">Discovery Preferences</h3>
-                <div class="form-row">
-                    <div class="form-group third">
-                        <label>Min Age</label>
-                        {{ form.pref_age_min }}
-                    </div>
-                    <div class="form-group third">
-                        <label>Max Age</label>
-                        {{ form.pref_age_max }}
-                    </div>
-                    <div class="form-group third">
-                        <label>Looking For</label>
-                        {{ form.looking_for }}
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Interested In</label>
-                    {{ form.pref_gender }}
-                </div>
-
-                <button type="submit" class="btn-save">Save Profile Changes</button>
-            </form>
+            <label for="id_profile_pic" class="pfp-edit-overlay">
+                <i class="fas fa-camera"></i>
+            </label>
         </div>
+        
+        <div class="user-info-brief">
+            <h2>{{ profile.name }}</h2>
+            <div class="info-badges">
+                <span class="badge"><i class="fas fa-birthday-cake"></i> {{ profile.age }}</span>
+                <span class="badge"><i class="fas fa-venus-mars"></i> {{ profile.gender|title }}</span>
+                <span class="badge"><i class="fas fa-university"></i> {{ profile.campus }}</span>
+            </div>
+            <p class="verification-note"><i class="fas fa-check-circle"></i> Verified SRM Student</p>
+        </div>
+    </div>
 
-        <!-- Right Column: Image Gallery -->
-        <div class="form-card gallery-section">
-            <h2 class="section-title"><i class="fas fa-images"></i> Image Gallery</h2>
-            <p class="gallery-hint">Add up to 5 more photos to stand out! ({{ gallery.count }}/5)</p>
+    <form method="POST" enctype="multipart/form-data" id="profile-edit-form">
+        {% csrf_token %}
+        <input type="hidden" name="update_profile" value="1">
+        <div style="display:none">{{ form.profile_pic }}</div>
 
-            <div class="gallery-grid">
+        <!-- 2. Gallery -->
+        <div class="card section-card">
+            <div class="section-header">
+                <h3><i class="fas fa-images"></i> Image Gallery</h3>
+                <span class="count">{{ gallery.count }}/5</span>
+            </div>
+            <p class="section-desc">Add more photos to express your personality.</p>
+            
+            <div class="gallery-grid-modern">
                 {% for img in gallery %}
-                <div class="gallery-item">
+                <div class="gallery-tile">
                     <img src="{{ img.image.url }}" alt="Gallery Image">
-                    <a href="{% url 'delete_profile_image' img.id %}" class="btn-delete-img" onclick="return confirm('Delete this image?')">
-                        <i class="fas fa-times"></i>
+                    <a href="{% url 'delete_profile_image' img.id %}" class="tile-delete" onclick="return confirm('Delete this photo?')">
+                        <i class="fas fa-trash-alt"></i>
                     </a>
                 </div>
                 {% endfor %}
 
                 {% if gallery.count < 5 %}
-                <div class="add-image-box">
-                    <form method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <input type="hidden" name="add_image" value="1">
-                        <label for="id_image" class="upload-label">
-                            <i class="fas fa-plus"></i>
-                            <span>Add Photo</span>
-                        </label>
-                        <div style="display:none">{{ image_form.image }}</div>
-                        <script>
-                            document.querySelector('#id_image').onchange = function() {
-                                this.form.submit();
-                            };
-                        </script>
-                    </form>
+                <div class="gallery-add-tile" onclick="document.getElementById('gallery-upload-input').click()">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Upload</span>
                 </div>
                 {% endif %}
             </div>
         </div>
-    </div>
+
+        <!-- 3. Bio & About -->
+        <div class="card section-card">
+            <div class="section-header">
+                <h3><i class="fas fa-pen-nib"></i> About You</h3>
+            </div>
+            <div class="form-field">
+                <label>Bio</label>
+                {{ form.bio }}
+            </div>
+            <div class="form-field">
+                <label>Languages</label>
+                {{ form.languages }}
+                <small>Separate with commas</small>
+            </div>
+            <div class="form-field">
+                <label>Interests</label>
+                {{ form.interest_tags }}
+                <small>e.g. Anime, Coding, Music</small>
+            </div>
+        </div>
+
+        <!-- 4. Preferences -->
+        <div class="card section-card">
+            <div class="section-header">
+                <h3><i class="fas fa-sliders-h"></i> Discovery Settings</h3>
+            </div>
+            
+            <div class="form-row-multi">
+                <div class="form-field">
+                    <label>Min Age</label>
+                    {{ form.pref_age_min }}
+                </div>
+                <div class="form-field">
+                    <label>Max Age</label>
+                    {{ form.pref_age_max }}
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label>Interested In</label>
+                {{ form.pref_gender }}
+            </div>
+
+            <div class="form-field">
+                <label>Looking For</label>
+                {{ form.looking_for }}
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full-width">
+            <i class="fas fa-save"></i> Save Changes
+        </button>
+    </form>
+
+    <!-- Hidden Gallery form -->
+    {% if gallery.count < 5 %}
+    <form method="POST" enctype="multipart/form-data" id="gallery-form" style="display:none">
+        {% csrf_token %}
+        <input type="hidden" name="add_image" value="1">
+        <input type="file" name="image" id="gallery-upload-input" onchange="this.form.submit()">
+    </form>
+    {% endif %}
 </div>
 
 <style>
-    .edit-profile-container {
-        max-width: 1200px;
-        margin: 40px auto;
-        padding: 0 20px;
+    .profile-edit-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        padding-bottom: 60px;
+    }
+
+    .edit-header {
+        text-align: center;
+        margin-bottom: 8px;
+    }
+
+    .identity-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding-top: 40px;
+    }
+
+    .pfp-container-large {
+        position: relative;
+        margin-bottom: 20px;
+    }
+
+    .pfp-ring {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        padding: 4px;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+    }
+
+    .pfp-ring img, .pfp-placeholder {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        background: #1e293b;
+        border: 4px solid #1e293b;
+    }
+
+    .pfp-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: var(--text-muted);
+    }
+
+    .pfp-edit-overlay {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background: var(--primary);
         color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        border: 3px solid #1e293b;
+        transition: 0.2s;
     }
-    .header-section { margin-bottom: 30px; text-align: center; }
-    .header-section h1 { font-size: 2.5rem; background: linear-gradient(45deg, #00f2fe, #4facfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    
-    .profile-grid { display: grid; grid-template-columns: 2fr 1.2fr; gap: 30px; }
-    .form-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 30px; }
-    
-    .section-title { font-size: 1.5rem; margin-bottom: 20px; color: #4facfe; display: flex; align-items: center; gap: 10px; }
-    
-    .fixed-info-banner { background: rgba(0, 0, 0, 0.2); border-radius: 12px; padding: 15px; margin-bottom: 25px; border-left: 4px solid #4facfe; }
-    .info-item { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; }
-    .info-item .label { opacity: 0.6; }
-    .lock-hint { font-size: 0.8rem; opacity: 0.5; margin-top: 10px; font-style: italic; }
 
-    .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; margin-bottom: 8px; font-weight: 500; opacity: 0.9; }
-    .form-control { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; color: white; transition: 0.3s; }
-    .form-control:focus { border-color: #4facfe; outline: none; box-shadow: 0 0 10px rgba(79, 172, 254, 0.3); }
-    
-    .form-row { display: flex; gap: 15px; }
-    .half { flex: 1; }
-    .third { flex: 1; }
-
-    .pfp-preview { display: flex; align-items: center; gap: 20px; }
-    .pfp-preview img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #4facfe; }
-    .placeholder-pfp { width: 80px; height: 80px; border-radius: 50%; background: #333; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
-
-    .btn-save { width: 100%; padding: 15px; background: linear-gradient(45deg, #00f2fe, #4facfe); border: none; border-radius: 10px; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-    .btn-save:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4); }
-
-    .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px; }
-    .gallery-item { position: relative; border-radius: 12px; overflow: hidden; height: 140px; border: 1px solid rgba(255,255,255,0.1); }
-    .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
-    .btn-delete-img { position: absolute; top: 5px; right: 5px; background: rgba(255,0,0,0.7); color: white; width: 25px; height: 25px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 0.8rem; }
-    
-    .add-image-box { border: 2px dashed rgba(255,255,255,0.2); border-radius: 12px; height: 140px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; }
-    .add-image-box:hover { border-color: #4facfe; background: rgba(79, 172, 254, 0.05); }
-    .upload-label { text-align: center; cursor: pointer; display: flex; flex-direction: column; gap: 5px; }
-    .upload-label i { font-size: 1.5rem; color: #4facfe; }
-
-    @media (max-width: 900px) {
-        .profile-grid { grid-template-columns: 1fr; }
+    .pfp-edit-overlay:hover {
+        transform: scale(1.1);
+        background: var(--primary-hover);
     }
+
+    .user-info-brief h2 {
+        margin-bottom: 12px;
+        font-size: 1.8rem;
+    }
+
+    .info-badges {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+    }
+
+    .badge {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: var(--text-main);
+        border: 1px solid var(--glass-border);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .verification-note {
+        font-size: 0.8rem;
+        color: #10b981; /* Success Green */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        margin-top: 10px;
+    }
+
+    .section-card {
+        padding: 24px;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .section-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: none;
+        -webkit-text-fill-color: var(--text-main);
+    }
+
+    .section-header .count {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        background: var(--glass-bg);
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+
+    .section-desc {
+        font-size: 0.85rem;
+        margin-top: -8px;
+        margin-bottom: 20px;
+    }
+
+    .gallery-grid-modern {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+    .gallery-tile {
+        aspect-ratio: 1;
+        border-radius: 12px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--glass-border);
+    }
+
+    .gallery-tile img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .tile-delete {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: rgba(244, 63, 94, 0.8);
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        text-decoration: none;
+        backdrop-filter: blur(4px);
+    }
+
+    .gallery-add-tile {
+        aspect-ratio: 1;
+        border-radius: 12px;
+        border: 2px dashed var(--glass-border);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+        color: var(--text-muted);
+    }
+
+    .gallery-add-tile:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: rgba(139, 92, 246, 0.05);
+    }
+
+    .gallery-add-tile i { font-size: 1.5rem; }
+    .gallery-add-tile span { font-size: 0.75rem; font-weight: 600; }
+
+    .form-field { margin-bottom: 20px; }
+    .form-field small { display: block; margin-top: -12px; margin-bottom: 12px; font-size: 0.75rem; color: var(--text-muted); }
+
+    .form-row-multi {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+
+    .btn-full-width {
+        width: 100%;
+        padding: 16px;
+        font-size: 1.1rem;
+        margin-top: 10px;
+    }
+
+    /* Auto-submit PFP change */
+    #id_profile_pic {
+        display: none;
+    }
+
 </style>
+
+<script>
+    // Link the overlay to the hidden file input
+    const pfpInput = document.querySelector('#id_profile_pic');
+    if (pfpInput) {
+        pfpInput.onchange = function() {
+            document.getElementById('profile-edit-form').submit();
+        };
+    }
+</script>
 {% endblock %}
