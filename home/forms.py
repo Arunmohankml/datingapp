@@ -1,5 +1,5 @@
 from django import forms
-from .models import Profile
+from .models import Profile, ProfileImage
 
 # ✅ Move choices outside Meta
 GENDER_CHOICES = [
@@ -124,3 +124,49 @@ class ProfileForm(forms.ModelForm):
         data = self.cleaned_data.get('pref_languages', '')
         if isinstance(data, list): return data
         return [x.strip() for x in data.split(',') if x.strip()]
+
+class ProfileEditForm(forms.ModelForm):
+    languages = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'English, Tamil'}))
+    mother_tongues = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Hindi, Telugu'}))
+    interest_tags = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'gaming, music'}))
+    pref_languages = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'English'}))
+
+    class Meta:
+        model = Profile
+        fields = [
+            'profile_pic', 'bio', 'languages', 'mother_tongues', 'interest_tags', 
+            'pref_age_min', 'pref_age_max', 'pref_gender', 'pref_languages',
+            'pref_campus', 'pref_branch', 'looking_for'
+        ]
+        widgets = {
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'pref_gender': forms.Select(choices=PREF_GENDER_CHOICES, attrs={'class': 'form-control'}),
+            'looking_for': forms.Select(choices=LOOKING_FOR_CHOICES, attrs={'class': 'form-control'}),
+            'pref_campus': forms.Select(choices=[('any', 'Any Campus')] + [c for c in CAMPUS_CHOICES if c[0] != ''], attrs={'class': 'form-control'}),
+            'pref_branch': forms.Select(choices=[('any', 'Any Branch')] + [c for c in BRANCH_CHOICES if c[0] != ''], attrs={'class': 'form-control'}),
+        }
+
+    def clean_languages(self):
+        data = self.cleaned_data.get('languages', '')
+        if isinstance(data, list): return data
+        return [x.strip() for x in data.split(',') if x.strip()]
+
+    def clean_mother_tongues(self):
+        data = self.cleaned_data.get('mother_tongues', '')
+        if isinstance(data, list): return data
+        return [x.strip() for x in data.split(',') if x.strip()]
+
+    def clean_interest_tags(self):
+        data = self.cleaned_data.get('interest_tags', '')
+        if isinstance(data, list): return data
+        return [x.strip() for x in data.split(',') if x.strip()]
+
+    def clean_pref_languages(self):
+        data = self.cleaned_data.get('pref_languages', '')
+        if isinstance(data, list): return data
+        return [x.strip() for x in data.split(',') if x.strip()]
+
+class ProfileImageForm(forms.ModelForm):
+    class Meta:
+        model = ProfileImage
+        fields = ['image']

@@ -78,14 +78,139 @@
     <h2 class="match-title">It's a Match! 🎉</h2>
     <p class="match-subtitle">You vibe well with <strong>{{ match.name|default:match.user.username }}</strong></p>
     
-    <div class="avatars">
-        <div class="avatar-wrapper">
-            <img src="{% if request.user.profile.profile_pic %}{{ request.user.profile.profile_pic.url }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ request.user.username }}{% endif %}" alt="You">
+    <div class="profile-slider-wrapper">
+        <div class="profile-slider">
+            <!-- Main PFP -->
+            <div class="slide">
+                <img src="{% if match.profile_pic %}{{ match.profile_pic.url }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ match.user.username }}{% endif %}" alt="Main Profile">
+            </div>
+            <!-- Gallery Images -->
+            {% for img in match.images.all %}
+            <div class="slide">
+                <img src="{{ img.image.url }}" alt="Gallery Image">
+            </div>
+            {% endfor %}
         </div>
-        <div class="avatar-wrapper">
-            <img src="{% if match.profile_pic %}{{ match.profile_pic.url }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ match.user.username }}{% endif %}" alt="Match">
+        
+        {% if match.images.count > 0 %}
+        <div class="slider-controls">
+            <button onclick="prevSlide(this)" class="slider-btn prev">❮</button>
+            <button onclick="nextSlide(this)" class="slider-btn next">❯</button>
         </div>
+        <div class="slider-dots">
+            <span class="dot active" onclick="setSlide(this, 0)"></span>
+            {% for i in match.images.all %}
+            <span class="dot" onclick="setSlide(this, {{ forloop.counter }})"></span>
+            {% endfor %}
+        </div>
+        {% endif %}
     </div>
+
+    <style>
+        .profile-slider-wrapper {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            margin: 0 auto 32px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            border: 3px solid var(--primary);
+        }
+        .profile-slider {
+            display: flex;
+            transition: transform 0.4s ease-in-out;
+            height: 100%;
+        }
+        .slide {
+            min-width: 100%;
+            height: 100%;
+        }
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .slider-controls {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            transform: translateY(-50%);
+            padding: 0 10px;
+            pointer-events: none;
+        }
+        .slider-btn {
+            background: rgba(0,0,0,0.4);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .slider-btn:hover { background: var(--primary); }
+        
+        .slider-dots {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .dot.active { background: white; width: 20px; border-radius: 10px; }
+    </style>
+
+    <script>
+        function updateSlider(wrapper, index) {
+            const slider = wrapper.querySelector('.profile-slider');
+            const slides = wrapper.querySelectorAll('.slide');
+            const dots = wrapper.querySelectorAll('.dot');
+            
+            if (index >= slides.length) index = 0;
+            if (index < 0) index = slides.length - 1;
+            
+            slider.style.transform = `translateX(-${index * 100}%)`;
+            
+            dots.forEach(d => d.classList.remove('active'));
+            if(dots[index]) dots[index].classList.add('active');
+            
+            wrapper.dataset.currentIndex = index;
+        }
+
+        function nextSlide(btn) {
+            const wrapper = btn.closest('.profile-slider-wrapper');
+            const currentIndex = parseInt(wrapper.dataset.currentIndex || 0);
+            updateSlider(wrapper, currentIndex + 1);
+        }
+
+        function prevSlide(btn) {
+            const wrapper = btn.closest('.profile-slider-wrapper');
+            const currentIndex = parseInt(wrapper.dataset.currentIndex || 0);
+            updateSlider(wrapper, currentIndex - 1);
+        }
+
+        function setSlide(dot, index) {
+            const wrapper = dot.closest('.profile-slider-wrapper');
+            updateSlider(wrapper, index);
+        }
+    </script>
     
     <div class="match-score">
         <svg style="margin-right: 6px;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>

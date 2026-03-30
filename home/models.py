@@ -1,7 +1,3 @@
-
-# Create your models here.
-from django.db import models
-from django.contrib.auth.models import User
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -57,25 +53,19 @@ class Profile(models.Model):
     def __str__(self):
         return f"{self.name} - {self.user.email}"
 
-from django.db import models
-from django.contrib.auth.models import User
-
 class Question(models.Model):
     text = models.CharField(max_length=255)
-    # Example: "Do you like pets?"
 
     def __str__(self):
         return self.text
 
-
 class Option(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="options")
-    text = models.CharField(max_length=100)  # Example: "Yes" / "No" / "Sometimes"
-    weight = models.FloatField(default=0.0)  # For advanced matching algorithms
+    text = models.CharField(max_length=100)
+    weight = models.FloatField(default=0.0)
 
     def __str__(self):
         return f"{self.question.text} - {self.text} ({self.weight})"
-
 
 class UserAnswer(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -83,8 +73,7 @@ class UserAnswer(models.Model):
     option = models.ForeignKey(Option, on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ("user", "question")  # Prevent multiple answers
-
+        unique_together = ("user", "question")
 
 class MatchRequest(models.Model):
     STATUS_CHOICES = (
@@ -113,3 +102,11 @@ class Message(models.Model):
 
     def __str__(self):
         return f"From {self.sender.username} to {self.receiver.username} at {self.timestamp}"
+
+class ProfileImage(models.Model):
+    profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to='profile_gallery/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Image for {self.profile.name}"

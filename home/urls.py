@@ -16,4 +16,6 @@ urlpatterns = [
     path("chat/<int:partner_id>/", views.chat_view, name="chat_view"),
     path("chats/", views.chat_list_view, name="chat_list"),
     path("api/chat/<int:partner_id>/", views.chat_api_messages, name="chat_api_messages"),
+    path("profile/edit/", views.edit_profile, name="edit_profile"),
+    path("profile/image/delete/<int:image_id>/", views.delete_profile_image, name="delete_profile_image"),
 ]

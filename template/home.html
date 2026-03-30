@@ -148,7 +148,23 @@
             {% for m in matches %}
             <div class="card" style="padding: 20px; display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 16px;">
-                    <img src="{% if m.profile.profile_pic %}{{ m.profile.profile_pic.url }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ m.profile.user.username }}{% endif %}" alt="PFP" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);">
+                    <div class="mini-slider-wrapper" style="position: relative; width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2px solid var(--primary);">
+                        <div class="mini-slider" style="display: flex; height: 100%; transition: transform 0.3s ease;">
+                            <img src="{% if m.profile.profile_pic %}{{ m.profile.profile_pic.url }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ m.profile.user.username }}{% endif %}" alt="PFP" style="min-width: 100%; height: 100%; object-fit: cover;">
+                            {% for img in m.profile.images.all %}
+                                <img src="{{ img.image.url }}" alt="Gallery" style="min-width: 100%; height: 100%; object-fit: cover;">
+                            {% endfor %}
+                        </div>
+                        {% if m.profile.images.count > 0 %}
+                        <div style="position: absolute; bottom: 4px; width: 100%; display: flex; justify-content: center; gap: 2px; pointer-events: none;">
+                            <div class="mini-dot active" style="width: 4px; height: 4px; background: white; border-radius: 50%;"></div>
+                            {% for i in m.profile.images.all %}
+                            <div class="mini-dot" style="width: 4px; height: 4px; background: rgba(255,255,255,0.4); border-radius: 50%;"></div>
+                            {% endfor %}
+                        </div>
+                        <button onclick="nextMiniSlide(this)" style="position: absolute; right: 0; top: 0; height: 100%; width: 20px; background: transparent; border: none; color: white; cursor: pointer; text-shadow: 0 0 2px black; font-size: 10px;">❯</button>
+                        {% endif %}
+                    </div>
                     <div>
                         <h4 style="margin: 0;">{{ m.profile.name }}, {{ m.profile.age }}</h4>
                         <p style="margin: 4px 0; color: var(--text-muted); font-size: 13px;">{{ m.profile.branch }} • {{ m.profile.campus }}</p>
@@ -179,4 +195,26 @@
     </div>
     {% endif %}
 </div>
+    <script>
+        function nextMiniSlide(btn) {
+            const wrapper = btn.closest('.mini-slider-wrapper');
+            const slider = wrapper.querySelector('.mini-slider');
+            const slides = slider.querySelectorAll('img');
+            const dots = wrapper.querySelectorAll('.mini-dot');
+            
+            let currentIndex = parseInt(wrapper.dataset.currentIndex || 0);
+            currentIndex = (currentIndex + 1) % slides.length;
+            
+            slider.style.transform = `translateX(-${currentIndex * 100}%)`;
+            
+            // Update dots
+            dots.forEach((dot, idx) => {
+                dot.style.background = idx === currentIndex ? 'white' : 'rgba(255,255,255,0.4)';
+            });
+            
+            wrapper.dataset.currentIndex = currentIndex;
+        }
+
+        // Add auto-slide for better discovery experience? No, let user control it.
+    </script>
 {% endblock %}

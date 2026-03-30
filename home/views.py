@@ -7,8 +7,8 @@ import json
 from firebase_admin import auth as firebase_auth
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message
-from .forms import ProfileForm
+from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage
+from .forms import ProfileForm, ProfileEditForm, ProfileImageForm
 from django.db.models import Q
 
 
@@ -445,3 +445,47 @@ def chat_api_messages(request, partner_id):
         })
         
     return JsonResponse({'messages': msg_list})
+
+# ---------------- PROFILE MANAGEMENT ----------------
+
+@login_required
+def edit_profile(request):
+    profile = get_object_or_404(Profile, user=request.user)
+    
+    if request.method == "POST":
+        # Handle Profile Info Update
+        if 'update_profile' in request.POST:
+            form = ProfileEditForm(request.POST, request.FILES, instance=profile)
+            if form.is_valid():
+                form.save()
+                return redirect('edit_profile')
+        
+        # Handle Image Upload
+        elif 'add_image' in request.POST:
+            if profile.images.count() >= 5:
+                # Limit reached (could add a message)
+                return redirect('edit_profile')
+            
+            image_form = ProfileImageForm(request.POST, request.FILES)
+            if image_form.is_valid():
+                new_img = image_form.save(commit=False)
+                new_img.profile = profile
+                new_img.save()
+                return redirect('edit_profile')
+
+    form = ProfileEditForm(instance=profile)
+    image_form = ProfileImageForm()
+    gallery = profile.images.all()
+
+    return render(request, "edit_profile.html", {
+        "form": form,
+        "image_form": image_form,
+        "gallery": gallery,
+        "profile": profile
+    })
+
+@login_required
+def delete_profile_image(request, image_id):
+    image = get_object_or_404(ProfileImage, id=image_id, profile__user=request.user)
+    image.delete()
+    return redirect('edit_profile')
