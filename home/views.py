@@ -172,9 +172,11 @@ def check_match(request):
         return redirect('home')
 
     # IDs of users already shown to this user in previous rounds (stored in session)
+    seen_ids = request.session.get('seen_match_ids', [])
+    
     # Exclude ANY users we have already interacted with (liked, rejected, skipped, pending)
     interacted_user_ids = MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)
-    candidates = Profile.objects.exclude(user=user).exclude(user__id__in=interacted_user_ids)
+    candidates = Profile.objects.exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=seen_ids)
 
     preference_filtered = []
     for c in candidates:
