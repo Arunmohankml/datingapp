@@ -235,16 +235,21 @@
                 <p class="hint">e.g. English, Tamil</p>
             </div>
         </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="id_pref_age_min">Min Age</label>
-                {{ form.pref_age_min }}
+
+        <!-- Range Slider -->
+        <div class="form-group">
+            <label>Discovery Age Range: <span id="age-range-label" style="color: var(--primary); font-weight: 700;">18 - 25</span></label>
+            <div class="range-slider-container">
+                <div class="slider-track"></div>
+                <input type="range" min="17" max="30" value="18" id="slider-min" class="slider-input">
+                <input type="range" min="17" max="30" value="25" id="slider-max" class="slider-input">
             </div>
-            <div class="form-group">
-                <label for="id_pref_age_max">Max Age</label>
+            <div style="display:none">
+                {{ form.pref_age_min }}
                 {{ form.pref_age_max }}
             </div>
         </div>
+
         <div class="form-row">
             <div class="form-group">
                 <label for="id_pref_campus">Preferred Campus</label>
@@ -263,4 +268,90 @@
         </div>
     </form>
 </div>
+
+<style>
+    .range-slider-container {
+        position: relative;
+        width: 100%;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        margin: 25px 0 15px;
+    }
+    .slider-track {
+        position: absolute;
+        height: 100%;
+        background: var(--primary);
+        border-radius: 3px;
+        z-index: 1;
+    }
+    .slider-input {
+        position: absolute;
+        width: 100%;
+        background: none;
+        pointer-events: none;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 6px;
+        top: 0;
+        margin: 0;
+        z-index: 2;
+    }
+    .slider-input::-webkit-slider-thumb {
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid var(--primary);
+        cursor: pointer;
+        pointer-events: auto;
+        -webkit-appearance: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    .slider-input::-webkit-slider-thumb:hover {
+        transform: scale(1.1);
+    }
+</style>
+
+<script>
+    const sliderMin = document.getElementById('slider-min');
+    const sliderMax = document.getElementById('slider-max');
+    const track = document.querySelector('.slider-track');
+    const label = document.getElementById('age-range-label');
+    const inputMin = document.getElementById('id_pref_age_min');
+    const inputMax = document.getElementById('id_pref_age_max');
+
+    function updateSlider() {
+        let minVal = parseInt(sliderMin.value);
+        let maxVal = parseInt(sliderMax.value);
+
+        if (minVal > maxVal) {
+            let tmp = minVal;
+            minVal = maxVal;
+            maxVal = tmp;
+        }
+
+        const minPercent = ((minVal - 17) / (30 - 17)) * 100;
+        const maxPercent = ((maxVal - 17) / (30 - 17)) * 100;
+
+        track.style.left = minPercent + "%";
+        track.style.width = (maxPercent - minPercent) + "%";
+
+        label.textContent = `${minVal} - ${maxVal}`;
+        inputMin.value = minVal;
+        inputMax.value = maxVal;
+    }
+
+    sliderMin.oninput = updateSlider;
+    sliderMax.oninput = updateSlider;
+
+    // Initialize
+    window.onload = () => {
+        // Use existing values if present
+        if (inputMin.value) sliderMin.value = inputMin.value;
+        if (inputMax.value) sliderMax.value = inputMax.value;
+        updateSlider();
+    };
+</script>
 {% endblock %}

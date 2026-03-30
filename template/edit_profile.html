@@ -94,13 +94,16 @@
                 <h3><i class="fas fa-sliders-h"></i> Discovery Settings</h3>
             </div>
             
-            <div class="form-row-multi">
-                <div class="form-field">
-                    <label>Min Age</label>
-                    {{ form.pref_age_min }}
+            <!-- Range Slider -->
+            <div class="form-field">
+                <label>Discovery Age Range: <span id="age-range-label" style="color: var(--primary); font-weight: 700;">18 - 25</span></label>
+                <div class="range-slider-container">
+                    <div class="slider-track"></div>
+                    <input type="range" min="17" max="30" value="18" id="slider-min" class="slider-input">
+                    <input type="range" min="17" max="30" value="25" id="slider-max" class="slider-input">
                 </div>
-                <div class="form-field">
-                    <label>Max Age</label>
+                <div style="display:none">
+                    {{ form.pref_age_min }}
                     {{ form.pref_age_max }}
                 </div>
             </div>
@@ -163,7 +166,7 @@
         border-radius: 50%;
         padding: 4px;
         background: linear-gradient(135deg, var(--primary), var(--accent));
-        box-shadow: 0 10px 30px rgba(139, 92, 246, 0.4);
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
     }
 
     .pfp-ring img, .pfp-placeholder {
@@ -171,8 +174,8 @@
         height: 100%;
         border-radius: 50%;
         object-fit: cover;
-        background: #1e293b;
-        border: 4px solid #1e293b;
+        background: #f1f5f9;
+        border: 4px solid #ffffff;
     }
 
     .pfp-placeholder {
@@ -196,8 +199,9 @@
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        border: 3px solid #1e293b;
+        border: 3px solid #ffffff;
         transition: 0.2s;
+        box-shadow: var(--shadow-md);
     }
 
     .pfp-edit-overlay:hover {
@@ -208,6 +212,7 @@
     .user-info-brief h2 {
         margin-bottom: 12px;
         font-size: 1.8rem;
+        color: var(--text-main);
     }
 
     .info-badges {
@@ -219,12 +224,12 @@
     }
 
     .badge {
-        background: rgba(255, 255, 255, 0.05);
+        background: #f1f5f9;
         padding: 6px 12px;
         border-radius: 20px;
         font-size: 0.85rem;
         color: var(--text-main);
-        border: 1px solid var(--glass-border);
+        border: 1px solid var(--border);
         display: flex;
         align-items: center;
         gap: 6px;
@@ -238,6 +243,7 @@
         justify-content: center;
         gap: 4px;
         margin-top: 10px;
+        font-weight: 600;
     }
 
     .section-card {
@@ -258,15 +264,16 @@
         align-items: center;
         gap: 10px;
         background: none;
-        -webkit-text-fill-color: var(--text-main);
+        color: var(--text-main);
     }
 
     .section-header .count {
         font-size: 0.8rem;
         color: var(--text-muted);
-        background: var(--glass-bg);
+        background: #f1f5f9;
         padding: 2px 8px;
         border-radius: 10px;
+        border: 1px solid var(--border);
     }
 
     .section-desc {
@@ -286,7 +293,7 @@
         border-radius: 12px;
         position: relative;
         overflow: hidden;
-        border: 1px solid var(--glass-border);
+        border: 1px solid var(--border);
     }
 
     .gallery-tile img {
@@ -299,7 +306,7 @@
         position: absolute;
         top: 5px;
         right: 5px;
-        background: rgba(244, 63, 94, 0.8);
+        background: rgba(244, 63, 94, 0.9);
         color: white;
         width: 24px;
         height: 24px;
@@ -309,13 +316,13 @@
         justify-content: center;
         font-size: 0.7rem;
         text-decoration: none;
-        backdrop-filter: blur(4px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .gallery-add-tile {
         aspect-ratio: 1;
         border-radius: 12px;
-        border: 2px dashed var(--glass-border);
+        border: 2px dashed var(--border);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -329,7 +336,7 @@
     .gallery-add-tile:hover {
         border-color: var(--primary);
         color: var(--primary);
-        background: rgba(139, 92, 246, 0.05);
+        background: rgba(99, 102, 241, 0.05);
     }
 
     .gallery-add-tile i { font-size: 1.5rem; }
@@ -338,10 +345,47 @@
     .form-field { margin-bottom: 20px; }
     .form-field small { display: block; margin-top: -12px; margin-bottom: 12px; font-size: 0.75rem; color: var(--text-muted); }
 
-    .form-row-multi {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
+    .range-slider-container {
+        position: relative;
+        width: 100%;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        margin: 25px 0 15px;
+    }
+    .slider-track {
+        position: absolute;
+        height: 100%;
+        background: var(--primary);
+        border-radius: 3px;
+        z-index: 1;
+    }
+    .slider-input {
+        position: absolute;
+        width: 100%;
+        background: none;
+        pointer-events: none;
+        -webkit-appearance: none;
+        appearance: none;
+        height: 6px;
+        top: 0;
+        margin: 0;
+        z-index: 2;
+    }
+    .slider-input::-webkit-slider-thumb {
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid var(--primary);
+        cursor: pointer;
+        pointer-events: auto;
+        -webkit-appearance: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    .slider-input::-webkit-slider-thumb:hover {
+        transform: scale(1.1);
     }
 
     .btn-full-width {
@@ -349,9 +393,9 @@
         padding: 16px;
         font-size: 1.1rem;
         margin-top: 10px;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
     }
 
-    /* Auto-submit PFP change */
     #id_profile_pic {
         display: none;
     }
@@ -359,12 +403,51 @@
 </style>
 
 <script>
-    // Link the overlay to the hidden file input
+    // Slider Logic
+    const sliderMin = document.getElementById('slider-min');
+    const sliderMax = document.getElementById('slider-max');
+    const track = document.querySelector('.slider-track');
+    const label = document.getElementById('age-range-label');
+    const inputMin = document.getElementById('id_pref_age_min');
+    const inputMax = document.getElementById('id_pref_age_max');
+
+    function updateSlider() {
+        let minVal = parseInt(sliderMin.value);
+        let maxVal = parseInt(sliderMax.value);
+
+        if (minVal > maxVal) {
+            let tmp = minVal;
+            minVal = maxVal;
+            maxVal = tmp;
+        }
+
+        const minPercent = ((minVal - 17) / (30 - 17)) * 100;
+        const maxPercent = ((maxVal - 17) / (30 - 17)) * 100;
+
+        track.style.left = minPercent + "%";
+        track.style.width = (maxPercent - minPercent) + "%";
+
+        label.textContent = `${minVal} - ${maxVal}`;
+        inputMin.value = minVal;
+        inputMax.value = maxVal;
+    }
+
+    sliderMin.oninput = updateSlider;
+    sliderMax.oninput = updateSlider;
+
+    // PFP Auto-submit
     const pfpInput = document.querySelector('#id_profile_pic');
     if (pfpInput) {
         pfpInput.onchange = function() {
             document.getElementById('profile-edit-form').submit();
         };
     }
+
+    // Initialize Slider
+    window.onload = () => {
+        if (inputMin && inputMin.value) sliderMin.value = inputMin.value;
+        if (inputMax && inputMax.value) sliderMax.value = inputMax.value;
+        updateSlider();
+    };
 </script>
 {% endblock %}

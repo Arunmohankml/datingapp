@@ -99,10 +99,17 @@ class ProfileForm(forms.ModelForm):
             'branch': forms.Select(choices=BRANCH_CHOICES, attrs={'class': 'form-control'}),
             'pref_campus': forms.Select(choices=[('any', 'Any Campus')] + [c for c in CAMPUS_CHOICES if c[0] != ''], attrs={'class': 'form-control'}),
             'pref_branch': forms.Select(choices=[('any', 'Any Branch')] + [c for c in BRANCH_CHOICES if c[0] != ''], attrs={'class': 'form-control'}),
-            'bio': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Write a short bio...'}),
-            'liked_songs': forms.Textarea(attrs={'rows': 2}),
-            'liked_movies': forms.Textarea(attrs={'rows': 2}),
-            'fav_shows': forms.Textarea(attrs={'rows': 2}),
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Write a short bio...'}),
+            'liked_songs': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'liked_movies': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'fav_shows': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'age': forms.NumberInput(attrs={'class': 'form-control'}),
+            'profile_pic': forms.FileInput(attrs={'class': 'form-control'}),
+            'living_place': forms.TextInput(attrs={'class': 'form-control'}),
+            'native_place': forms.TextInput(attrs={'class': 'form-control'}),
+            'pref_age_min': forms.NumberInput(attrs={'class': 'form-control'}),
+            'pref_age_max': forms.NumberInput(attrs={'class': 'form-control'}),
         }
 
     def clean_languages(self):
