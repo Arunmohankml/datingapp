@@ -87,7 +87,6 @@ class ProfileForm(forms.ModelForm):
             'languages', 'mother_tongues',
             'bio', 'liked_songs', 'liked_movies', 'fav_shows', 'interest_tags', 'looking_for',
             'pref_age_min', 'pref_age_max', 'pref_gender', 'pref_languages',
-            'pref_campus', 'pref_branch'
         ]
         widgets = {
             'gender': forms.Select(choices=GENDER_CHOICES, attrs={'class': 'form-control'}),
@@ -97,8 +96,6 @@ class ProfileForm(forms.ModelForm):
             'campus': forms.Select(choices=CAMPUS_CHOICES, attrs={'class': 'form-control'}),
             'course': forms.Select(choices=COURSE_CHOICES, attrs={'class': 'form-control'}),
             'branch': forms.Select(choices=BRANCH_CHOICES, attrs={'class': 'form-control'}),
-            'pref_campus': forms.Select(choices=[('any', 'Any Campus')] + [c for c in CAMPUS_CHOICES if c[0] != ''], attrs={'class': 'form-control'}),
-            'pref_branch': forms.Select(choices=[('any', 'Any Branch')] + [c for c in BRANCH_CHOICES if c[0] != ''], attrs={'class': 'form-control'}),
             'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Write a short bio...'}),
             'liked_songs': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'liked_movies': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
@@ -141,16 +138,15 @@ class ProfileEditForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = [
-            'profile_pic', 'bio', 'languages', 'mother_tongues', 'interest_tags', 
+            'profile_pic', 'name', 'bio', 'languages', 'mother_tongues', 'interest_tags', 
+            'living_place', 'native_place',
             'pref_age_min', 'pref_age_max', 'pref_gender', 'pref_languages',
-            'pref_campus', 'pref_branch', 'looking_for'
+            'looking_for'
         ]
         widgets = {
             'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'pref_gender': forms.Select(choices=PREF_GENDER_CHOICES, attrs={'class': 'form-control'}),
             'looking_for': forms.Select(choices=LOOKING_FOR_CHOICES, attrs={'class': 'form-control'}),
-            'pref_campus': forms.Select(choices=[('any', 'Any Campus')] + [c for c in CAMPUS_CHOICES if c[0] != ''], attrs={'class': 'form-control'}),
-            'pref_branch': forms.Select(choices=[('any', 'Any Branch')] + [c for c in BRANCH_CHOICES if c[0] != ''], attrs={'class': 'form-control'}),
             'pref_age_min': forms.NumberInput(attrs={'class': 'form-control'}),
             'pref_age_max': forms.NumberInput(attrs={'class': 'form-control'}),
             'profile_pic': forms.FileInput(attrs={'class': 'form-control'}),

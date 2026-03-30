@@ -67,31 +67,74 @@
             </div>
         </div>
 
-        <!-- 3. Bio & About -->
+        <!-- 3. Basic Details -->
         <div class="card section-card">
             <div class="section-header">
-                <h3><i class="fas fa-pen-nib"></i> About You</h3>
+                <h3><i class="fas fa-id-card"></i> Basic Details</h3>
             </div>
+            
+            <div class="form-field">
+                <label>Full Name</label>
+                {{ form.name }}
+            </div>
+
+            <div class="form-field">
+                <label>Living Place</label>
+                <input type="text" name="living_place" id="id_living_place" class="form-control" list="indian-cities" placeholder="Search city or town..." value="{{ form.living_place.value|default_if_none:'' }}">
+            </div>
+
+            <div class="form-field">
+                <label>Native Place</label>
+                <input type="text" name="native_place" id="id_native_place" class="form-control" list="indian-cities" placeholder="Search city or town..." value="{{ form.native_place.value|default_if_none:'' }}">
+            </div>
+        </div>
+
+        <!-- 4. Languages & About -->
+        <div class="card section-card">
+            <div class="section-header">
+                <h3><i class="fas fa-comment-dots"></i> Languages & Bio</h3>
+            </div>
+            
+            <div class="form-field">
+                <label>Languages Known</label>
+                <div class="tag-input-wrapper" data-field="languages" data-choices="English,Tamil,Telugu,Malayalam,Hindi,Assamese,Bengali,Bodo,Dogri,Gujarati,Kannada,Kashmiri,Konkani,Maithili,Manipuri,Marathi,Nepali,Odia,Punjabi,Sanskrit,Santali,Sindhi,Urdu">
+                    <div class="tag-container"></div>
+                    <input type="text" class="tag-search" placeholder="Search language...">
+                    <div class="choices-list"></div>
+                    <input type="hidden" name="languages" id="id_languages" value="{{ form.languages.value|join:',' }}">
+                </div>
+            </div>
+
+            <div class="form-field">
+                <label>Mother Tongue(s)</label>
+                <div class="tag-input-wrapper" data-field="mother_tongues" data-choices="English,Tamil,Telugu,Malayalam,Hindi,Assamese,Bengali,Bodo,Dogri,Gujarati,Kannada,Kashmiri,Konkani,Maithili,Manipuri,Marathi,Nepali,Odia,Punjabi,Sanskrit,Santali,Sindhi,Urdu">
+                    <div class="tag-container"></div>
+                    <input type="text" class="tag-search" placeholder="Search languages...">
+                    <div class="choices-list"></div>
+                    <input type="hidden" name="mother_tongues" id="id_mother_tongues" value="{{ form.mother_tongues.value|join:',' }}">
+                </div>
+            </div>
+
             <div class="form-field">
                 <label>Bio</label>
                 {{ form.bio }}
             </div>
+
             <div class="form-field">
-                <label>Languages</label>
-                {{ form.languages }}
-                <small>Separate with commas</small>
-            </div>
-            <div class="form-field">
-                <label>Interests</label>
-                {{ form.interest_tags }}
-                <small>e.g. Anime, Coding, Music</small>
+                <label>Interests / Hobbies</label>
+                <div class="tag-input-wrapper" data-field="interest_tags" data-choices="Photography,Traveling,Gaming,Music,Coding,Reading,Cooking,Fitness,Yoga,Art,Dancing,Movies,Anime,Fashion,Sports,Football,Cricket,Basketball,Startups,Crypto,Web3,Tech,Design,Writing,Gardening,Pets,Hiking,Board Games,Stand-up Comedy,Podcasts,Volunteering,Coffee,Tea,Foodie,Meditation,Shopping,Social Media,Netflix,Marvel,DC">
+                    <div class="tag-container"></div>
+                    <input type="text" class="tag-search" placeholder="Search interests...">
+                    <div class="choices-list"></div>
+                    <input type="hidden" name="interest_tags" id="id_interest_tags" value="{{ form.interest_tags.value|join:',' }}">
+                </div>
             </div>
         </div>
 
-        <!-- 4. Preferences -->
+        <!-- 5. Discovery Preferences -->
         <div class="card section-card">
             <div class="section-header">
-                <h3><i class="fas fa-sliders-h"></i> Discovery Settings</h3>
+                <h3><i class="fas fa-sliders-h"></i> Discovery Preferences</h3>
             </div>
             
             <!-- Range Slider -->
@@ -117,22 +160,142 @@
                 <label>Looking For</label>
                 {{ form.looking_for }}
             </div>
+
+            <div class="form-field">
+                <label>Preferred Language(s)</label>
+                <div class="tag-input-wrapper" data-field="pref_languages" data-choices="English,Tamil,Telugu,Malayalam,Hindi,Assamese,Bengali,Bodo,Dogri,Gujarati,Kannada,Kashmiri,Konkani,Maithili,Manipuri,Marathi,Nepali,Odia,Punjabi,Sanskrit,Santali,Sindhi,Urdu">
+                    <div class="tag-container"></div>
+                    <input type="text" class="tag-search" placeholder="Search languages...">
+                    <div class="choices-list"></div>
+                    <input type="hidden" name="pref_languages" id="id_pref_languages" value="{{ form.pref_languages.value|join:',' }}">
+                </div>
+            </div>
         </div>
 
         <button type="submit" class="btn btn-primary btn-full-width">
             <i class="fas fa-save"></i> Save Changes
         </button>
     </form>
-
-    <!-- Hidden Gallery form -->
-    {% if gallery.count < 5 %}
-    <form method="POST" enctype="multipart/form-data" id="gallery-form" style="display:none">
-        {% csrf_token %}
-        <input type="hidden" name="add_image" value="1">
-        <input type="file" name="image" id="gallery-upload-input" onchange="this.form.submit()">
-    </form>
-    {% endif %}
 </div>
+
+<!-- Indian Cities Datalist -->
+<datalist id="indian-cities">
+    <option value="Mumbai, Maharashtra">
+    <option value="Delhi, NCR">
+    <option value="Bangalore, Karnataka">
+    <option value="Hyderabad, Telangana">
+    <option value="Ahmedabad, Gujarat">
+    <option value="Chennai, Tamil Nadu">
+    <option value="Kolkata, West Bengal">
+    <option value="Surat, Gujarat">
+    <option value="Pune, Maharashtra">
+    <option value="Jaipur, Rajasthan">
+    <option value="Lucknow, Uttar Pradesh">
+    <option value="Kanpur, Uttar Pradesh">
+    <option value="Nagpur, Maharashtra">
+    <option value="Indore, Madhya Pradesh">
+    <option value="Thane, Maharashtra">
+    <option value="Bhopal, Madhya Pradesh">
+    <option value="Visakhapatnam, Andhra Pradesh">
+    <option value="Pimpri-Chinchwad, Maharashtra">
+    <option value="Patna, Bihar">
+    <option value="Vadodara, Gujarat">
+    <option value="Ghaziabad, Uttar Pradesh">
+    <option value="Ludhiana, Punjab">
+    <option value="Coimbatore, Tamil Nadu">
+    <option value="Agra, Uttar Pradesh">
+    <option value="Madurai, Tamil Nadu">
+    <option value="Nashik, Maharashtra">
+    <option value="Faridabad, Haryana">
+    <option value="Meerut, Uttar Pradesh">
+    <option value="Rajkot, Gujarat">
+    <option value="K कल्याण-डोम्बिवली, Maharashtra">
+    <option value="Vasai-Virar, Maharashtra">
+    <option value="Varanasi, Uttar Pradesh">
+    <option value="Srinagar, Jammu and Kashmir">
+    <option value="Aurangabad, Maharashtra">
+    <option value="Dhanbad, Jharkhand">
+    <option value="Amritsar, Punjab">
+    <option value="Navi Mumbai, Maharashtra">
+    <option value="Allahabad, Uttar Pradesh">
+    <option value="Ranchi, Jharkhand">
+    <option value="Howrah, West Bengal">
+    <option value="Jabalpur, Madhya Pradesh">
+    <option value="Gwalior, Madhya Pradesh">
+    <option value="Vijayawada, Andhra Pradesh">
+    <option value="Jodhpur, Rajasthan">
+    <option value="Raipur, Chhattisgarh">
+    <option value="Kota, Rajasthan">
+    <option value="Guwahati, Assam">
+    <option value="Chandigarh, UT">
+    <option value="Solapur, Maharashtra">
+    <option value="Hubli-Dharwad, Karnataka">
+    <option value="Bareilly, Uttar Pradesh">
+    <option value="Moradabad, Uttar Pradesh">
+    <option value="Mysore, Karnataka">
+    <option value="Gurgaon, Haryana">
+    <option value="Aligarh, Uttar Pradesh">
+    <option value="Jalandhar, Punjab">
+    <option value="Tiruchirappalli, Tamil Nadu">
+    <option value="Bhubaneswar, Odisha">
+    <option value="Salem, Tamil Nadu">
+    <option value="Warangal, Telangana">
+    <option value="Guntur, Andhra Pradesh">
+    <option value="Bhiwandi, Maharashtra">
+    <option value="Saharanpur, Uttar Pradesh">
+    <option value="Gorakhpur, Uttar Pradesh">
+    <option value="Bikaner, Rajasthan">
+    <option value="Amravati, Maharashtra">
+    <option value="Noida, Uttar Pradesh">
+    <option value="Jamshedpur, Jharkhand">
+    <option value="Bhilai, Chhattisgarh">
+    <option value="Cuttack, Odisha">
+    <option value="Firozabad, Uttar Pradesh">
+    <option value="Kochi, Kerala">
+    <option value="Nellore, Andhra Pradesh">
+    <option value="Bhavnagar, Gujarat">
+    <option value="Dehradun, Uttarakhand">
+    <option value="Durgapur, West Bengal">
+    <option value="Asansol, West Bengal">
+    <option value="Rourkela, Odisha">
+    <option value="Nanded, Maharashtra">
+    <option value="Kolhapur, Maharashtra">
+    <option value="Ajmer, Rajasthan">
+    <option value="Akola, Maharashtra">
+    <option value="Gulbarga, Karnataka">
+    <option value="Jamnagar, Gujarat">
+    <option value="Ujjain, Madhya Pradesh">
+    <option value="Loni, Uttar Pradesh">
+    <option value="Siliguri, West Bengal">
+    <option value="Jhansi, Uttar Pradesh">
+    <option value="Ulhasnagar, Maharashtra">
+    <option value="Jammu, Jammu and Kashmir">
+    <option value="Sangli-Miraj & Kupwad, Maharashtra">
+    <option value="Mangalore, Karnataka">
+    <option value="Erode, Tamil Nadu">
+    <option value="Belgaum, Karnataka">
+    <option value="Ambattur, Tamil Nadu">
+    <option value="Tirunelveli, Tamil Nadu">
+    <option value="Malegaon, Maharashtra">
+    <option value="Gaya, Bihar">
+    <option value="Jalgaon, Maharashtra">
+    <option value="Udaipur, Rajasthan">
+    <option value="Maheshtala, West Bengal">
+    <option value="Tiruppur, Tamil Nadu">
+    <option value="Davanagere, Karnataka">
+    <option value="Kozhikode, Kerala">
+    <option value="Akbarpur, Uttar Pradesh">
+    <option value="Anantapur, Andhra Pradesh">
+    <option value="Khammam, Telangana">
+    <option value="Karimnagar, Telangana">
+    <option value="Ramagundam, Telangana">
+    <option value="Kakinada, Andhra Pradesh">
+    <option value="Nizamabad, Telangana">
+    <option value="Shimoga, Karnataka">
+    <option value="Tumkur, Karnataka">
+    <option value="Hosur, Tamil Nadu">
+    <option value="Nagercoil, Tamil Nadu">
+</datalist>
 
 <style>
     .profile-edit-wrapper {
@@ -343,7 +506,66 @@
     .gallery-add-tile span { font-size: 0.75rem; font-weight: 600; }
 
     .form-field { margin-bottom: 20px; }
+    .form-field label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
     .form-field small { display: block; margin-top: -12px; margin-bottom: 12px; font-size: 0.75rem; color: var(--text-muted); }
+
+    /* Tag Input CSS */
+    .tag-input-wrapper {
+        position: relative;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 5px;
+        background: #f8fafc;
+        min-height: 46px;
+    }
+    .tag-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding-bottom: 2px;
+    }
+    .tag {
+        background: var(--primary);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 30px;
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tag i { cursor: pointer; opacity: 0.8; }
+    .tag i:hover { opacity: 1; }
+    .tag-search {
+        border: none !important;
+        margin: 0 !important;
+        padding: 8px !important;
+        width: 100% !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+    .choices-list {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 0 0 12px 12px;
+        z-index: 10;
+        max-height: 200px;
+        overflow-y: auto;
+        box-shadow: var(--shadow-lg);
+    }
+    .choices-list div {
+        padding: 10px 15px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: 0.2s;
+    }
+    .choices-list div:hover { background: #f1f5f9; color: var(--primary); }
 
     .range-slider-container {
         position: relative;
@@ -403,6 +625,73 @@
 </style>
 
 <script>
+    // Tag Input Logic
+    document.querySelectorAll('.tag-input-wrapper').forEach(wrapper => {
+        const fieldName = wrapper.dataset.field;
+        const allChoices = wrapper.dataset.choices.split(',');
+        const container = wrapper.querySelector('.tag-container');
+        const searchInput = wrapper.querySelector('.tag-search');
+        const choiceList = wrapper.querySelector('.choices-list');
+        const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+        
+        let tags = hiddenInput.value ? hiddenInput.value.split(',').filter(t => t) : [];
+
+        function renderTags() {
+            container.innerHTML = '';
+            tags.forEach(tag => {
+                const tagEl = document.createElement('span');
+                tagEl.className = 'tag';
+                tagEl.innerHTML = `${tag} <i class="fas fa-times" onclick="removeTagKey('${fieldName}', '${tag}')"></i>`;
+                container.appendChild(tagEl);
+            });
+            hiddenInput.value = tags.join(',');
+        }
+
+        window.removeTagKey = (field, tag) => {
+            if (field !== fieldName) return;
+            tags = tags.filter(t => t !== tag);
+            renderTags();
+        };
+
+        searchInput.onfocus = () => {
+            showChoices(searchInput.value);
+        };
+
+        searchInput.oninput = () => {
+            showChoices(searchInput.value);
+        };
+
+        function showChoices(query) {
+            choiceList.innerHTML = '';
+            const filtered = allChoices.filter(c => 
+                c.toLowerCase().includes(query.toLowerCase()) && !tags.includes(c)
+            );
+            
+            if (filtered.length > 0) {
+                choiceList.style.display = 'block';
+                filtered.forEach(choice => {
+                    const div = document.createElement('div');
+                    div.textContent = choice;
+                    div.onclick = () => {
+                        tags.push(choice);
+                        renderTags();
+                        searchInput.value = '';
+                        choiceList.style.display = 'none';
+                    };
+                    choiceList.appendChild(div);
+                });
+            } else {
+                choiceList.style.display = 'none';
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!wrapper.contains(e.target)) choiceList.style.display = 'none';
+        });
+
+        renderTags();
+    });
+
     // Slider Logic
     const sliderMin = document.getElementById('slider-min');
     const sliderMax = document.getElementById('slider-max');
@@ -414,19 +703,11 @@
     function updateSlider() {
         let minVal = parseInt(sliderMin.value);
         let maxVal = parseInt(sliderMax.value);
-
-        if (minVal > maxVal) {
-            let tmp = minVal;
-            minVal = maxVal;
-            maxVal = tmp;
-        }
-
+        if (minVal > maxVal) { [minVal, maxVal] = [maxVal, minVal]; }
         const minPercent = ((minVal - 17) / (30 - 17)) * 100;
         const maxPercent = ((maxVal - 17) / (30 - 17)) * 100;
-
         track.style.left = minPercent + "%";
         track.style.width = (maxPercent - minPercent) + "%";
-
         label.textContent = `${minVal} - ${maxVal}`;
         inputMin.value = minVal;
         inputMax.value = maxVal;
@@ -443,7 +724,7 @@
         };
     }
 
-    // Initialize Slider
+    // Initialize
     window.onload = () => {
         if (inputMin && inputMin.value) sliderMin.value = inputMin.value;
         if (inputMax && inputMax.value) sliderMax.value = inputMax.value;
