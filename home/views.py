@@ -10,7 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm
 from django.db.models import Q
-from .beeimg import upload_to_beeimg
+from .imagekit_utils import upload_to_imagekit
 
 
 # ---------------- PROFILE SETUP ----------------
@@ -27,9 +27,9 @@ def complete_profile(request):
             new_profile = form.save(commit=False)
             new_profile.user = user
             
-            # Handle BeeIMG Upload
+            # Handle ImageKit Upload
             if 'profile_pic' in request.FILES:
-                img_url = upload_to_beeimg(request.FILES['profile_pic'])
+                img_url = upload_to_imagekit(request.FILES['profile_pic'], folder="/profile_pics")
                 if img_url:
                     new_profile.profile_pic = img_url
             
@@ -462,9 +462,9 @@ def edit_profile(request):
             if form.is_valid():
                 updated_profile = form.save(commit=False)
                 
-                # Handle BeeIMG Upload
+                # Handle ImageKit Upload
                 if 'profile_pic' in request.FILES:
-                    img_url = upload_to_beeimg(request.FILES['profile_pic'])
+                    img_url = upload_to_imagekit(request.FILES['profile_pic'], folder="/profile_pics")
                     if img_url:
                         updated_profile.profile_pic = img_url
                 
@@ -478,9 +478,9 @@ def edit_profile(request):
             
             image_form = ProfileImageForm(request.POST, request.FILES)
             if image_form.is_valid():
-                # Handle BeeIMG Upload for gallery
+                # Handle ImageKit Upload for gallery
                 if 'image' in request.FILES:
-                    img_url = upload_to_beeimg(request.FILES['image'])
+                    img_url = upload_to_imagekit(request.FILES['image'], folder="/gallery")
                     if img_url:
                         ProfileImage.objects.create(profile=profile, image=img_url)
                 return redirect('edit_profile')

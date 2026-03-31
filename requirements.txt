@@ -8,3 +8,4 @@ Pillow==10.2.0
 cloudinary==1.41.0
 django-cloudinary-storage==0.3.0
 requests==2.31.0
+imagekitio==4.0.0
