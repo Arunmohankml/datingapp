@@ -50,9 +50,14 @@ def upload_to_imagekit(file_obj, folder="/user_uploads"):
             use_unique_file_name=True
         )
         
-        if upload_response and hasattr(upload_response, 'url'):
-            print(f"DEBUG: ImageKit 5.x upload success: {upload_response.url}")
-            return upload_response.url
+        # In 5.x, the response might be a pydantic model or dict
+        if upload_response:
+            if hasattr(upload_response, 'url'):
+                print(f"DEBUG: ImageKit 5.x upload success (attr): {upload_response.url}")
+                return upload_response.url
+            if isinstance(upload_response, dict) and 'url' in upload_response:
+                print(f"DEBUG: ImageKit 5.x upload success (dict): {upload_response['url']}")
+                return upload_response['url']
         
         print(f"DEBUG: ImageKit 5.x upload failed - no URL in response: {upload_response}")
         return None

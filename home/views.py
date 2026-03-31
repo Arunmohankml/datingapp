@@ -482,12 +482,13 @@ def edit_profile(request):
                 
                 # Handle ImageKit Upload
                 if 'profile_pic' in request.FILES:
-                    img_url = upload_to_imagekit(request.FILES['profile_pic'], folder="/profile_pics")
+                    submitted_pfp = request.FILES['profile_pic']
+                    img_url = upload_to_imagekit(submitted_pfp, folder="/profile_pics")
                     if img_url:
                         updated_profile.profile_pic = img_url
                         messages.success(request, "Profile picture updated successfully!")
                     else:
-                        messages.error(request, "Failed to upload profile picture to ImageKit. Please check your connection.")
+                        messages.error(request, "Failed to upload profile picture to ImageKit. Please check your credentials.")
                 
                 updated_profile.save()
                 return redirect('edit_profile')
