@@ -13,6 +13,7 @@ from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm
 from django.db.models import Q
 from .imagekit_utils import upload_to_imagekit
+from .cloudinary_utils import upload_to_cloudinary
 
 
 # ---------------- PROFILE SETUP ----------------
@@ -483,15 +484,15 @@ def edit_profile(request):
                 print("DEBUG: form.is_valid() is TRUE")
                 updated_profile = form.save(commit=False)
                 
-                # Handle ImageKit Upload
+                # Handle Cloudinary Upload
                 if 'profile_pic' in request.FILES:
                     submitted_pfp = request.FILES['profile_pic']
-                    img_url = upload_to_imagekit(submitted_pfp, folder="/profile_pics")
+                    img_url = upload_to_cloudinary(submitted_pfp, folder="profile_pics")
                     if img_url:
                         updated_profile.profile_pic = img_url
                         messages.success(request, "Profile picture updated successfully!")
                     else:
-                        messages.error(request, "Failed to upload profile picture to ImageKit. Please check your credentials.")
+                        messages.error(request, "Failed to upload profile picture to Cloudinary. Please check your credentials.")
                 
                 updated_profile.save()
                 return redirect('edit_profile')
@@ -505,14 +506,14 @@ def edit_profile(request):
             
             image_form = ProfileImageForm(request.POST, request.FILES)
             if image_form.is_valid():
-                # Handle ImageKit Upload for gallery
+                # Handle Cloudinary Upload for gallery
                 if 'image' in request.FILES:
-                    img_url = upload_to_imagekit(request.FILES['image'], folder="/gallery")
+                    img_url = upload_to_cloudinary(request.FILES['image'], folder="gallery")
                     if img_url:
                         ProfileImage.objects.create(profile=profile, image=img_url)
                         messages.success(request, "Gallery photo added successfully!")
                     else:
-                        messages.error(request, "Failed to upload gallery image. Please try again.")
+                        messages.error(request, "Failed to upload gallery image. Please check your credentials.")
                 return redirect('edit_profile')
 
     form = ProfileEditForm(instance=profile)

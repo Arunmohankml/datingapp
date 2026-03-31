@@ -152,8 +152,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Cloudinary Configuration
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': 'dhnosj6qj',
-    'API_KEY': '226993724373393',
-    'API_SECRET': 'i3rWzL8B2pu2EtGJXQdcBLivyIE'
+    'API_KEY': '662788289675188',
+    'API_SECRET': 'AkSJwDJJflQe0_2fghNBrnuIsIw'
 }
 
 if os.environ.get('VERCEL'):
