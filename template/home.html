@@ -114,7 +114,7 @@
 <div class="card quiz-card">
     {% if question %}
     <div class="profile-mini">
-        <img src="{% if request.user.profile.profile_pic %}{{ request.user.profile.profile_pic.url }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ request.user.username }}{% endif %}" alt="User">
+        <img src="{% if request.user.profile.profile_pic %}{{ request.user.profile.profile_pic }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ request.user.username }}{% endif %}" alt="User">
         <div>
             <h3>Discovery Module</h3>
             <p>Answer naturally to improve your matches</p>
@@ -150,9 +150,9 @@
                 <div style="display: flex; align-items: center; gap: 16px;">
                     <div class="mini-slider-wrapper" style="position: relative; width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2px solid var(--primary);">
                         <div class="mini-slider" style="display: flex; height: 100%; transition: transform 0.3s ease;">
-                            <img src="{% if m.profile.profile_pic %}{{ m.profile.profile_pic.url }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ m.profile.user.username }}{% endif %}" alt="PFP" style="min-width: 100%; height: 100%; object-fit: cover;">
+                            <img src="{% if m.profile.profile_pic %}{{ m.profile.profile_pic }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ m.profile.user.username }}{% endif %}" alt="PFP" style="min-width: 100%; height: 100%; object-fit: cover;">
                             {% for img in m.profile.images.all %}
-                                <img src="{{ img.image.url }}" alt="Gallery" style="min-width: 100%; height: 100%; object-fit: cover;">
+                                <img src="{{ img.image }}" alt="Gallery" style="min-width: 100%; height: 100%; object-fit: cover;">
                             {% endfor %}
                         </div>
                         {% if m.profile.images.count > 0 %}

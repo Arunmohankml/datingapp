@@ -132,7 +132,7 @@
     {% if chats %}
         {% for chat in chats %}
         <a href="{% url 'chat_view' chat.partner.id %}" class="chat-card">
-            <img src="{% if chat.partner.profile.profile_pic %}{{ chat.partner.profile.profile_pic.url }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ chat.partner.username }}{% endif %}" alt="{{ chat.partner.profile.name|default:chat.partner.username }}" class="chat-avatar">
+            <img src="{% if chat.partner.profile.profile_pic %}{{ chat.partner.profile.profile_pic }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ chat.partner.username }}{% endif %}" alt="{{ chat.partner.profile.name|default:chat.partner.username }}" class="chat-avatar">
             
             <div class="chat-details">
                 <div class="chat-header">

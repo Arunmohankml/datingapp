@@ -7,3 +7,4 @@ psycopg2-binary==2.9.9
 Pillow==10.2.0
 cloudinary==1.41.0
 django-cloudinary-storage==0.3.0
+requests==2.31.0

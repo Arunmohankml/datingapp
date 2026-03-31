@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm
 from django.db.models import Q
+from .beeimg import upload_to_beeimg
 
 
 # ---------------- PROFILE SETUP ----------------
@@ -25,12 +26,14 @@ def complete_profile(request):
         if form.is_valid():
             new_profile = form.save(commit=False)
             new_profile.user = user
-            try:
-                new_profile.save()
-            except OSError:
-                # Fallback for Read-only filesystem (Vercel)
-                new_profile.profile_pic = None
-                new_profile.save()
+            
+            # Handle BeeIMG Upload
+            if 'profile_pic' in request.FILES:
+                img_url = upload_to_beeimg(request.FILES['profile_pic'])
+                if img_url:
+                    new_profile.profile_pic = img_url
+            
+            new_profile.save()
             return redirect('home')
         # If form is invalid, fall through to re-render with errors
     else:
@@ -457,20 +460,29 @@ def edit_profile(request):
         if 'update_profile' in request.POST:
             form = ProfileEditForm(request.POST, request.FILES, instance=profile)
             if form.is_valid():
-                form.save()
+                updated_profile = form.save(commit=False)
+                
+                # Handle BeeIMG Upload
+                if 'profile_pic' in request.FILES:
+                    img_url = upload_to_beeimg(request.FILES['profile_pic'])
+                    if img_url:
+                        updated_profile.profile_pic = img_url
+                
+                updated_profile.save()
                 return redirect('edit_profile')
         
         # Handle Image Upload
         elif 'add_image' in request.POST:
             if profile.images.count() >= 5:
-                # Limit reached (could add a message)
                 return redirect('edit_profile')
             
             image_form = ProfileImageForm(request.POST, request.FILES)
             if image_form.is_valid():
-                new_img = image_form.save(commit=False)
-                new_img.profile = profile
-                new_img.save()
+                # Handle BeeIMG Upload for gallery
+                if 'image' in request.FILES:
+                    img_url = upload_to_beeimg(request.FILES['image'])
+                    if img_url:
+                        ProfileImage.objects.create(profile=profile, image=img_url)
                 return redirect('edit_profile')
 
     form = ProfileEditForm(instance=profile)

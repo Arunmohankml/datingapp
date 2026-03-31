@@ -7,7 +7,7 @@ class Profile(models.Model):
     # Basic Info
     name = models.CharField(max_length=100)
     gender = models.CharField(max_length=10, choices=[('male','Male'), ('female','Female'), ('other','Other')])
-    profile_pic = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    profile_pic = models.URLField(max_length=500, blank=True, null=True)
     age = models.PositiveIntegerField(null=True, blank=True)
     clg_year = models.IntegerField(null=True, blank=True)
     campus = models.CharField(max_length=100, default='', blank=True)
@@ -105,7 +105,7 @@ class Message(models.Model):
 
 class ProfileImage(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name="images")
-    image = models.ImageField(upload_to='profile_gallery/')
+    image = models.URLField(max_length=500)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

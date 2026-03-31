@@ -173,6 +173,7 @@ class ProfileEditForm(forms.ModelForm):
         return [x.strip() for x in data.split(',') if x.strip()]
 
 class ProfileImageForm(forms.ModelForm):
+    image = forms.ImageField(widget=forms.FileInput(attrs={'class': 'form-control'}))
     class Meta:
         model = ProfileImage
         fields = ['image']
