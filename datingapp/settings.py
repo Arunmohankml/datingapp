@@ -161,6 +161,11 @@ if os.environ.get('VERCEL'):
 else:
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
+# ImageKit Settings
+IMAGEKIT_PUBLIC_KEY = os.environ.get("IMAGEKIT_PUBLIC_KEY", "public_t9vvNeEKiVs9c7CpHjKHek0V+Aw=")
+IMAGEKIT_PRIVATE_KEY = os.environ.get("IMAGEKIT_PRIVATE_KEY", "private_qXEUvhHsNdmxrM8AqiEZzlfUg3s=")
+IMAGEKIT_URL_ENDPOINT = os.environ.get("IMAGEKIT_URL_ENDPOINT", "https://ik.imagekit.io/anlsbeoqrq")
+
 
 SITE_ID = 1
 
