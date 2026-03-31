@@ -3,7 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth import login as auth_login
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+from django.core.management import call_command
 import json
 from firebase_admin import auth as firebase_auth
 from django.views.decorators.csrf import csrf_exempt
@@ -511,3 +512,13 @@ def delete_profile_image(request, image_id):
     image = get_object_or_404(ProfileImage, id=image_id, profile__user=request.user)
     image.delete()
     return redirect('edit_profile')
+
+# ---------------- UTILS ----------------
+
+def run_migrations(request):
+    """Temporary view to run migrations on Vercel"""
+    try:
+        call_command('migrate')
+        return HttpResponse("Migrations applied successfully!")
+    except Exception as e:
+        return HttpResponse(f"Migration error: {str(e)}")

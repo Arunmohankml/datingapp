@@ -18,4 +18,5 @@ urlpatterns = [
     path("api/chat/<int:partner_id>/", views.chat_api_messages, name="chat_api_messages"),
     path("profile/edit/", views.edit_profile, name="edit_profile"),
     path("profile/image/delete/<int:image_id>/", views.delete_profile_image, name="delete_profile_image"),
+    path("run_migrations/", views.run_migrations, name="run_migrations"),
 ]
