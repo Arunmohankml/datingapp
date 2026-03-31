@@ -54,7 +54,7 @@
         {% csrf_token %}
         <input type="hidden" name="update_profile" value="1">
         <div style="display:none">
-            <input type="file" name="profile_pic" id="id_profile_pic" onchange="showLoadingAndSubmit(this)">
+            <input type="file" name="profile_pic" id="id_profile_pic" onchange="compressAndSubmit(this, 'profile-edit-form')">
         </div>
 
         <!-- 2. Gallery -->
@@ -198,7 +198,7 @@
     <form method="POST" enctype="multipart/form-data" id="gallery-form" style="display:none">
         {% csrf_token %}
         <input type="hidden" name="add_image" value="1">
-        <input type="file" name="image" id="gallery-upload-input" onchange="showLoadingAndSubmit(this)">
+        <input type="file" name="image" id="gallery-upload-input" onchange="compressAndSubmit(this, 'gallery-form')">
     </form>
 </div>
 
@@ -806,38 +806,95 @@
     sliderMin.oninput = updateSlider;
     sliderMax.oninput = updateSlider;
 
-    // PFP Auto-submit
-    const pfpInput = document.querySelector('#id_profile_pic');
-    if (pfpInput) {
-        pfpInput.onchange = function() {
-            document.getElementById('profile-edit-form').submit();
-        };
-    }
-
-    // Initialize
+    // Initialize sliders on load
     window.onload = () => {
         if (inputMin && inputMin.value) sliderMin.value = inputMin.value;
         if (inputMax && inputMax.value) sliderMax.value = inputMax.value;
         updateSlider();
     };
-    function showLoadingAndSubmit(input) {
-        console.log("DEBUG: showLoadingAndSubmit triggered for input:", input.id);
-        if (input.files && input.files[0]) {
-            console.log("DEBUG: File detected, showing overlay and submitting form...");
-            document.getElementById('loading-overlay').style.display = 'flex';
-            input.form.submit();
-        } else {
-            console.log("DEBUG: No file detected in input.");
+
+    // Consolidate PFP Auto-submit & Gallery Upload with Compression
+    async function compressAndSubmit(input, formId) {
+        console.log("DEBUG: compressAndSubmit triggered for form:", formId);
+        const file = input.files[0];
+        if (!file) return;
+
+        // Show loading overlay immediately
+        document.getElementById('loading-overlay').style.display = 'flex';
+
+        // 1. Check if compression is needed (standard images)
+        if (!file.type.startsWith('image/')) {
+            console.log("DEBUG: Non-image file, submitting normally...");
+            document.getElementById(formId).submit();
+            return;
+        }
+
+        try {
+            console.log(`DEBUG: Processing image: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`);
+            const compressedBlob = await compressImage(file, 1000, 0.8); // Resize to 1000px max, 80% quality
+            console.log(`DEBUG: Compression complete: ${(compressedBlob.size/1024/1024).toFixed(2)} MB`);
+
+            // 2. Prepare DataTransfer to swap the file in the input
+            const dataTransfer = new DataTransfer();
+            const newFile = new File([compressedBlob], file.name, { type: "image/jpeg" });
+            dataTransfer.items.add(newFile);
+            input.files = dataTransfer.files;
+
+            // 3. Submit the form
+            console.log("DEBUG: Swapped file in input, submitting form...");
+            document.getElementById(formId).submit();
+
+        } catch (error) {
+            console.error("DEBUG: Compression failed, trying fallback submit:", error);
+            document.getElementById(formId).submit();
         }
     }
 
-    // Also show loading on main button save
+    function compressImage(file, maxDimension, quality) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = event => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxDimension) {
+                            height *= maxDimension / width;
+                            width = maxDimension;
+                        }
+                    } else {
+                        if (height > maxDimension) {
+                            width *= maxDimension / height;
+                            height = maxDimension;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob((blob) => {
+                        resolve(blob);
+                    }, 'image/jpeg', quality);
+                };
+                img.onerror = (err) => reject(err);
+            };
+            reader.onerror = (err) => reject(err);
+        });
+    }
+
+    // Also show loading on main button save (no compression for non-pic fields)
     const profileForm = document.getElementById('profile-edit-form');
     if (profileForm) {
-        profileForm.onsubmit = function() {
-            console.log("DEBUG: Main profile form onsubmit triggered.");
+        profileForm.addEventListener('submit', function() {
             document.getElementById('loading-overlay').style.display = 'flex';
-        };
+        });
     }
 </script>
 {% endblock %}
