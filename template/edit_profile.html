@@ -9,6 +9,18 @@
         <p>Your digital identity at SRMIST</p>
     </div>
 
+    <!-- Feedback Messages -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- 1. Identity Preview (Read Only) -->
     <div class="card identity-card">
         <div class="pfp-container-large">
@@ -38,7 +50,9 @@
     <form method="POST" enctype="multipart/form-data" id="profile-edit-form">
         {% csrf_token %}
         <input type="hidden" name="update_profile" value="1">
-        <div style="display:none">{{ form.profile_pic }}</div>
+        <div style="display:none">
+            <input type="file" name="profile_pic" id="id_profile_pic">
+        </div>
 
         <!-- 2. Gallery -->
         <div class="card section-card">
@@ -59,14 +73,14 @@
                 {% endfor %}
 
                 {% if gallery.count < 5 %}
-                <div class="gallery-add-tile" onclick="document.getElementById('gallery-upload-input').click()">
+                <label for="gallery-upload-input" class="gallery-add-tile">
                     <i class="fas fa-plus-circle"></i>
                     <span>Upload</span>
-                </div>
+                </label>
                 {% endif %}
             </div>
         </div>
-
+        
         <!-- 3. Basic Details -->
         <div class="card section-card">
             <div class="section-header">
@@ -175,6 +189,13 @@
         <button type="submit" class="btn btn-primary btn-full-width">
             <i class="fas fa-save"></i> Save Changes
         </button>
+    </form>
+    
+    <!-- Hidden Gallery Upload Form -->
+    <form method="POST" enctype="multipart/form-data" id="gallery-form" style="display:none">
+        {% csrf_token %}
+        <input type="hidden" name="add_image" value="1">
+        <input type="file" name="image" id="gallery-upload-input" onchange="this.form.submit()">
     </form>
 </div>
 
@@ -616,6 +637,36 @@
         font-size: 1.1rem;
         margin-top: 10px;
         box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Alerts */
+    .messages-container {
+        margin-bottom: 20px;
+    }
+    .alert {
+        padding: 12px 16px;
+        border-radius: 12px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        animation: slideDown 0.3s ease;
+    }
+    .alert-success {
+        background: #ecfdf5;
+        color: #065f46;
+        border: 1px solid #10b981;
+    }
+    .alert-error, .alert-danger, .alert-warning {
+        background: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #f87171;
+    }
+    @keyframes slideDown {
+        from { transform: translateY(-10px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
     }
 
     #id_profile_pic {

@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth import login as auth_login
 from django.http import JsonResponse
@@ -32,6 +33,9 @@ def complete_profile(request):
                 img_url = upload_to_imagekit(request.FILES['profile_pic'], folder="/profile_pics")
                 if img_url:
                     new_profile.profile_pic = img_url
+                    messages.success(request, "Profile created successfully with your photo!")
+                else:
+                    messages.warning(request, "Profile created, but photo upload failed. Please try again.")
             
             new_profile.save()
             return redirect('home')
@@ -467,6 +471,9 @@ def edit_profile(request):
                     img_url = upload_to_imagekit(request.FILES['profile_pic'], folder="/profile_pics")
                     if img_url:
                         updated_profile.profile_pic = img_url
+                        messages.success(request, "Profile picture updated successfully!")
+                    else:
+                        messages.error(request, "Failed to upload profile picture to ImageKit. Please check your connection.")
                 
                 updated_profile.save()
                 return redirect('edit_profile')
@@ -483,6 +490,9 @@ def edit_profile(request):
                     img_url = upload_to_imagekit(request.FILES['image'], folder="/gallery")
                     if img_url:
                         ProfileImage.objects.create(profile=profile, image=img_url)
+                        messages.success(request, "Gallery photo added successfully!")
+                    else:
+                        messages.error(request, "Failed to upload gallery image. Please try again.")
                 return redirect('edit_profile')
 
     form = ProfileEditForm(instance=profile)

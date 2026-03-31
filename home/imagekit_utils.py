@@ -16,9 +16,11 @@ def upload_to_imagekit(file_obj, folder="/user_uploads"):
     Returns the file URL if successful, else None.
     """
     try:
-        # Read file content and encode to base64
+        # Read file content
         file_obj.seek(0)
         file_content = file_obj.read()
+        
+        print(f"DEBUG: Starting ImageKit upload for {file_obj.name} to {folder}...")
         
         # ImageKit Python SDK can handle files/base64
         # We'll use the file content directly
@@ -31,10 +33,14 @@ def upload_to_imagekit(file_obj, folder="/user_uploads"):
             }
         )
         
-        if upload_response and upload_response.url:
+        if upload_response and hasattr(upload_response, 'url'):
+            print(f"DEBUG: ImageKit upload success: {upload_response.url}")
             return upload_response.url
+        
+        print(f"DEBUG: ImageKit upload failed - no URL in response: {upload_response}")
         return None
         
     except Exception as e:
-        print(f"ImageKit Upload Error: {e}")
+        print(f"DEBUG: ImageKit Upload Exception: {str(e)}")
+        # It's important to re-raise or at least return None so the view knows it failed
         return None

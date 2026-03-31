@@ -61,6 +61,7 @@ BRANCH_CHOICES = [
 ]
 
 class ProfileForm(forms.ModelForm):
+    profile_pic = forms.ImageField(required=False, widget=forms.FileInput(attrs={'class': 'form-control'}))
     # Multiselect (JSON) fields as comma-separated strings
     languages = forms.CharField(
         required=False,
@@ -130,6 +131,7 @@ class ProfileForm(forms.ModelForm):
         return [x.strip() for x in data.split(',') if x.strip()]
 
 class ProfileEditForm(forms.ModelForm):
+    profile_pic = forms.ImageField(required=False, widget=forms.FileInput(attrs={'class': 'form-control'}))
     languages = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'English, Tamil'}))
     mother_tongues = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Hindi, Telugu'}))
     interest_tags = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'gaming, music'}))
