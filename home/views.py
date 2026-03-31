@@ -51,9 +51,22 @@ def complete_profile(request):
 @login_required
 def home(request):
     user = request.user
+    
+    # Try getting the profile, but catch schema errors if migration is needed
+    try:
+        profile, created = Profile.objects.get_or_create(user=user)
+    except Exception as e:
+        # If the database is broken (missing fields), try to migrate automatically
+        if os.environ.get('VERCEL'):
+            try:
+                from django.core.management import call_command
+                call_command('migrate', interactive=False)
+                profile, created = Profile.objects.get_or_create(user=user)
+            except Exception as e2:
+                return HttpResponse(f"Database error: {str(e2)}. Please visit /run_migrations/.")
+        else:
+            raise e
 
-    # Ensure user has a completed profile
-    profile, created = Profile.objects.get_or_create(user=user)
     if not profile.name:
         return redirect('complete_profile')
 

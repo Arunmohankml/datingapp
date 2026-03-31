@@ -1,17 +1,10 @@
 import os
 from django.core.wsgi import get_wsgi_application
-from django.core.management import call_command
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'datingapp.settings')
 
+# Boot the application safely. 
+# Do NOT run long operations (like migrations) here, as Vercel will kill the function.
 application = get_wsgi_application()
-
-# BRUTE FORCE: Auto-run migrations on Vercel startup
-if os.environ.get('VERCEL'):
-    try:
-        print("Vercel starting up: Running migrations...")
-        call_command('migrate', interactive=False)
-    except Exception as e:
-        print(f"Startup migration error: {str(e)}")
 
 app = application
