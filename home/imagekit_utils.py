@@ -1,33 +1,34 @@
 import os
-import base64
-from imagekitio import ImageKit
 from django.conf import settings
 
-# Configuration with careful fallbacks
+# EXTREME LAZY LOADING: No top-level ImageKit imports to prevent Vercel startup crashes
 def get_imagekit_instance():
     """
-    Lazy initialization of ImageKit 5.x Client.
-    Returns None if missing credentials instead of crashing.
+    Lazy initialization of ImageKit 5.x Client with internal imports.
+    This ensures the app boots even if the library is missing.
     """
-    private_key = os.environ.get("IMAGEKIT_PRIVATE_KEY") or getattr(settings, 'IMAGEKIT_PRIVATE_KEY', None)
-    
-    if not private_key:
-        print("DEBUG: ImageKit Private Key missing. Initialization skipped.")
-        return None
-        
     try:
-        # In v5.x, the constructor only takes private_key. 
+        from imagekitio import ImageKit
+        
+        private_key = os.environ.get("IMAGEKIT_PRIVATE_KEY") or getattr(settings, 'IMAGEKIT_PRIVATE_KEY', None)
+        
+        if not private_key:
+            print("DEBUG: ImageKit Private Key missing. Initialization skipped.")
+            return None
+            
         return ImageKit(private_key=private_key)
+    except ImportError:
+        print("DEBUG: imagekitio library not found in environment.")
+        return None
     except Exception as e:
         print(f"DEBUG: Failed to initialize ImageKit 5.x: {e}")
         return None
 
 def upload_to_imagekit(file_obj, folder="/user_uploads"):
     """
-    Uploads a file object to ImageKit using v5.x SDK with lazy client creation.
+    Uploads a file object to ImageKit using v5.x SDK with extreme lazy loading.
     Returns the file URL if successful, else None.
     """
-    # Lazy Init: Prevents startup crashes if library has issues
     ik = get_imagekit_instance()
     
     if not ik:
