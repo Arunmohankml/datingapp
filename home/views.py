@@ -476,8 +476,11 @@ def edit_profile(request):
     if request.method == "POST":
         # Handle Profile Info Update
         if 'update_profile' in request.POST:
+            print("DEBUG: edit_profile POST received (update_profile)")
+            print(f"FILES in request: {request.FILES.keys()}")
             form = ProfileEditForm(request.POST, request.FILES, instance=profile)
             if form.is_valid():
+                print("DEBUG: form.is_valid() is TRUE")
                 updated_profile = form.save(commit=False)
                 
                 # Handle ImageKit Upload
@@ -492,6 +495,8 @@ def edit_profile(request):
                 
                 updated_profile.save()
                 return redirect('edit_profile')
+            else:
+                print(f"DEBUG: form.is_valid() is FALSE. Errors: {form.errors}")
         
         # Handle Image Upload
         elif 'add_image' in request.POST:

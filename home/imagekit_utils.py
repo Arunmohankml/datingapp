@@ -30,17 +30,19 @@ def upload_to_imagekit(file_obj, folder="/user_uploads"):
     Returns the file URL if successful, else None.
     """
     ik = get_imagekit_instance()
+    print(f"DEBUG: upload_to_imagekit entry point for file: {file_obj.name}")
     
     if not ik:
-        print("DEBUG: ImageKit client not available for upload.")
+        print("DEBUG: ImageKit client not available for upload. Check your Private Key.")
         return None
         
     try:
         # Read file content
         file_obj.seek(0)
         file_content = file_obj.read()
+        print(f"DEBUG: File content length: {len(file_content)} bytes")
         
-        print(f"DEBUG: Starting ImageKit 5.x upload for {file_obj.name} to {folder}...")
+        print(f"DEBUG: Starting SDK ik.files.upload for {file_obj.name} to {folder}...")
         
         # ImageKit 5.x uses ik.files.upload()
         upload_response = ik.files.upload(
@@ -49,6 +51,7 @@ def upload_to_imagekit(file_obj, folder="/user_uploads"):
             folder=folder,
             use_unique_file_name=True
         )
+        print(f"DEBUG: SDK raw response received: {upload_response}")
         
         # In 5.x, the response might be a pydantic model or dict
         if upload_response:
@@ -63,5 +66,7 @@ def upload_to_imagekit(file_obj, folder="/user_uploads"):
         return None
         
     except Exception as e:
-        print(f"DEBUG: ImageKit 5.x Upload Exception: {str(e)}")
+        print(f"DEBUG: ImageKit 5.x [CRITICAL EXCEPTION] during upload: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return None
