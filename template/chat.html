@@ -136,7 +136,7 @@
             <a href="{% url 'connections' %}" style="text-decoration: none; color: var(--text-muted); margin-right: 8px;">
                 <i class="fas fa-chevron-left"></i>
             </a>
-            <img src="{% if partner.profile.profile_pic %}{{ partner.profile.profile_pic }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ partner.username }}{% endif %}" alt="Avatar">
+            <img src="{{ partner.profile.get_profile_pic_url }}" alt="Avatar">
             <div>
                 <h3>{{ partner.profile.name|default:partner.username }}</h3>
             </div>

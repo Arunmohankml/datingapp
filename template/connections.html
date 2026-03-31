@@ -88,7 +88,7 @@
         {% for req in incoming_requests %}
         <div class="user-row">
             <div class="user-info">
-                <img src="{% if req.sender.profile.profile_pic %}{{ req.sender.profile.profile_pic }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ req.sender.username }}{% endif %}" alt="Avatar">
+                <img src="{{ req.sender.profile.get_profile_pic_url }}" alt="Avatar">
                 <div>
                     <h4 style="margin:0; font-size: 15px;">{{ req.sender.profile.name|default:req.sender.username }}</h4>
                     <span style="font-size: 12px; color: var(--text-muted);">Wants to connect</span>
@@ -115,7 +115,7 @@
         {% for conn in connections %}
         <div class="user-row">
             <div class="user-info">
-                <img src="{% if conn.profile.profile_pic %}{{ conn.profile.profile_pic }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ conn.username }}{% endif %}" alt="Avatar">
+                <img src="{{ conn.profile.get_profile_pic_url }}" alt="Avatar">
                 <div>
                     <h4 style="margin:0; font-size: 15px;">{{ conn.profile.name|default:conn.username }}</h4>
                 </div>

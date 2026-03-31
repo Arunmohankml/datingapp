@@ -25,11 +25,7 @@
     <div class="card identity-card">
         <div class="pfp-container-large">
             <div class="pfp-ring">
-                {% if profile.profile_pic %}
-                    <img src="{{ profile.profile_pic }}" alt="Profile Picture" id="main-pfp">
-                {% else %}
-                    <div class="pfp-placeholder"><i class="fas fa-user"></i></div>
-                {% endif %}
+                <img src="{{ profile.get_profile_pic_url }}" alt="Profile Picture" id="main-pfp">
             </div>
             <label for="id_profile_pic" class="pfp-edit-overlay">
                 <i class="fas fa-camera"></i>
@@ -65,7 +61,7 @@
             <div class="gallery-grid-modern">
                 {% for img in gallery %}
                 <div class="gallery-tile">
-                    <img src="{{ img.image }}" alt="Gallery Image">
+                    <img src="{{ img.get_image_url }}" alt="Gallery Image">
                     <a href="{% url 'delete_profile_image' img.id %}" class="tile-delete" onclick="return confirm('Delete this photo?')">
                         <i class="fas fa-trash-alt"></i>
                     </a>

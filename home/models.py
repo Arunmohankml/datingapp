@@ -53,6 +53,14 @@ class Profile(models.Model):
     def __str__(self):
         return f"{self.name} - {self.user.email}"
 
+    @property
+    def get_profile_pic_url(self):
+        if self.profile_pic and (self.profile_pic.startswith('http://') or self.profile_pic.startswith('https://')):
+            return self.profile_pic
+        # Fallback to a nice avatar placeholder if the URL is broken or relative
+        name_param = self.name.replace(" ", "+") if self.name else "User"
+        return f"https://ui-avatars.com/api/?name={name_param}&background=6366f1&color=fff&size=256"
+
 class Question(models.Model):
     text = models.CharField(max_length=255)
 
@@ -110,3 +118,10 @@ class ProfileImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.profile.name}"
+
+    @property
+    def get_image_url(self):
+        if self.image and (self.image.startswith('http://') or self.image.startswith('https://')):
+            return self.image
+        # Fallback for old/broken gallery images
+        return "https://placehold.co/600x600/6366f1/ffffff?text=Image+Not+Found"

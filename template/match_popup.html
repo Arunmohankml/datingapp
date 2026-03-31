@@ -82,12 +82,12 @@
         <div class="profile-slider">
             <!-- Main PFP -->
             <div class="slide">
-                <img src="{% if match.profile_pic %}{{ match.profile_pic }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ match.user.username }}{% endif %}" alt="Main Profile">
+                <img src="{{ match.get_profile_pic_url }}" alt="Main Profile">
             </div>
             <!-- Gallery Images -->
             {% for img in match.images.all %}
             <div class="slide">
-                <img src="{{ img.image }}" alt="Gallery Image">
+                <img src="{{ img.get_image_url }}" alt="Gallery Image">
             </div>
             {% endfor %}
         </div>
