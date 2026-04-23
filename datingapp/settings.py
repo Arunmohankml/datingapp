@@ -184,15 +184,34 @@ if not firebase_admin._apps:
         firebase_config = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
         if firebase_config:
             try:
-                # Robust parsing: handles both raw JSON and escaped strings from Vercel envs
-                try:
-                    cred_dict = json.loads(firebase_config)
-                except json.JSONDecodeError:
-                    # If direct load fails, try fixing common escape issues
-                    fixed_config = firebase_config.replace('\\n', '\n')
-                    cred_dict = json.loads(fixed_config)
+                import ast
+                cred_dict = None
                 
-                # Double-fix the private_key specifically if it's still escaped inside the dict
+                # 1. Try standard JSON with strict=False (allows literal newlines inside strings)
+                try:
+                    cred_dict = json.loads(firebase_config, strict=False)
+                except Exception:
+                    pass
+                
+                # 2. Try replacing literal newlines with escaped newlines
+                if not cred_dict:
+                    try:
+                        cleaned = firebase_config.replace('\n', '\\n').replace('\r', '')
+                        cred_dict = json.loads(cleaned, strict=False)
+                    except Exception:
+                        pass
+                
+                # 3. Try ast.literal_eval in case it's a Python dict string
+                if not cred_dict:
+                    try:
+                        cred_dict = ast.literal_eval(firebase_config)
+                    except Exception:
+                        pass
+                
+                if not cred_dict:
+                    raise Exception("Could not parse FIREBASE_SERVICE_ACCOUNT variable.")
+                
+                # Ensure the private key has correct newlines
                 if 'private_key' in cred_dict:
                     cred_dict['private_key'] = cred_dict['private_key'].replace('\\n', '\n')
                 
