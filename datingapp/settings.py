@@ -220,15 +220,16 @@ if not firebase_admin._apps:
                         pass
                 
                 if not cred_dict:
-                    # Log a hint of what we received to help the user fix the Vercel UI
-                    received_snippet = firebase_config[:50] + "..." + firebase_config[-20:]
-                    print(f"Firebase Config Error: Received unparseable string: {received_snippet}")
-                    raise Exception("Could not parse FIREBASE_SERVICE_ACCOUNT variable.")
+                    # Log more info for debugging
+                    received_snippet = firebase_config[:20] + "..." + firebase_config[-20:]
+                    print(f"Firebase Config Error: Received unparseable string (length {len(firebase_config)}). Snippet: {received_snippet}")
+                    raise Exception(f"Could not parse FIREBASE_SERVICE_ACCOUNT. Starts with: {firebase_config[0] if firebase_config else 'Empty'}")
                 
                 # Ensure the private key has real newlines for the SDK
                 if 'private_key' in cred_dict:
                     pk = cred_dict['private_key']
                     if isinstance(pk, str):
+                        # Handle literal backslash-n and double backslashes
                         cred_dict['private_key'] = pk.replace('\\n', '\n').replace('\\\\n', '\n')
                 
                 cred = credentials.Certificate(cred_dict)
