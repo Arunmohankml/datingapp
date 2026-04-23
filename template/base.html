@@ -9,6 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="apple-touch-icon" href="/static/images/icon-192x192.png">
     
     <style>
         :root {
@@ -246,6 +249,68 @@
             padding: 0 4px;
         }
 
+        /* PWA Install Prompt */
+        .pwa-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 400px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            padding: 20px;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            border: 1px solid var(--border);
+            animation: slideUpPrompt 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes slideUpPrompt {
+            from { opacity: 0; transform: translate(-50%, 40px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        .pwa-prompt-content {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .pwa-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .pwa-text h3 {
+            margin: 0 0 4px 0;
+            font-size: 16px;
+        }
+        .pwa-text p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+        .pwa-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .pwa-actions .btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 14px;
+        }
+        .pwa-btn-cancel {
+            background: #f1f5f9;
+            color: var(--text-main);
+        }
+        .pwa-btn-cancel:hover {
+            background: #e2e8f0;
+        }
+
     </style>
     {% block head %}{% endblock %}
 </head>
@@ -306,5 +371,62 @@
         {% endif %}
         {% block body %}{% endblock %}
     </div>
+
+    <!-- PWA Install Prompt -->
+    <div id="pwa-install-prompt" class="pwa-prompt" style="display: none;">
+        <div class="pwa-prompt-content">
+            <img src="/static/images/icon-192x192.png" alt="App Icon" class="pwa-icon">
+            <div class="pwa-text">
+                <h3>Install SRM Match</h3>
+                <p>Add to your home screen for a full-screen app experience!</p>
+            </div>
+        </div>
+        <div class="pwa-actions">
+            <button id="pwa-cancel" class="btn pwa-btn-cancel">Later</button>
+            <button id="pwa-install" class="btn btn-primary">Install</button>
+        </div>
+    </div>
+
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('SW registered: ', registration.scope);
+                }).catch(err => {
+                    console.log('SW registration failed: ', err);
+                });
+            });
+        }
+
+        // PWA Install Prompt Logic
+        let deferredPrompt;
+        const installPrompt = document.getElementById('pwa-install-prompt');
+        const installBtn = document.getElementById('pwa-install');
+        const cancelBtn = document.getElementById('pwa-cancel');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            // Show the custom install prompt
+            installPrompt.style.display = 'flex';
+        });
+
+        installBtn.addEventListener('click', async () => {
+            installPrompt.style.display = 'none';
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                deferredPrompt = null;
+            }
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            installPrompt.style.display = 'none';
+        });
+    </script>
 </body>
 </html>
