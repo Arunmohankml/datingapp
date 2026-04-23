@@ -343,6 +343,10 @@ def api_verify_token(request):
         # --- LAZY FIREBASE INITIALIZATION ---
         if not firebase_admin._apps:
             try:
+                # Clear any ghost apps to prevent "app already exists" or "app does not exist" confusion
+                for app_name in list(firebase_admin._apps.keys()):
+                    firebase_admin.delete_app(firebase_admin._apps[app_name])
+                
                 cert_path = os.path.join(settings.BASE_DIR, 'serviceAccountKey.json')
                 if os.path.exists(cert_path):
                     cred = credentials.Certificate(cert_path)
@@ -350,9 +354,11 @@ def api_verify_token(request):
                 else:
                     firebase_config = os.environ.get('FIREBASE_SERVICE_ACCOUNT', '').strip()
                     if firebase_config:
+                        # Clean wrapping quotes
                         if (firebase_config.startswith('"') and firebase_config.endswith('"')):
                             firebase_config = firebase_config[1:-1]
                         
+                        # Ensure newlines are escaped for JSON
                         safe_config = firebase_config.replace('\n', '\\n').replace('\r', '')
                         try:
                             cred_dict = json.loads(safe_config, strict=False)
@@ -366,6 +372,7 @@ def api_verify_token(request):
                         
                         cred = credentials.Certificate(cred_dict)
                         firebase_admin.initialize_app(cred)
+                print("DEBUG: Firebase initialized successfully in view.")
             except Exception as e:
                 print(f"Firebase Lazy Init Error: {e}")
                 return JsonResponse({'success': False, 'error': f'Firebase Init Failure: {str(e)}'}, status=500)
@@ -373,7 +380,10 @@ def api_verify_token(request):
         try:
             data = json.loads(request.body)
             id_token = data.get('idToken')
-            decoded_token = firebase_auth.verify_id_token(id_token)
+            
+            # Use get_app() to ensure we are using the initialized default app
+            default_app = firebase_admin.get_app()
+            decoded_token = firebase_auth.verify_id_token(id_token, app=default_app)
             email = decoded_token.get('email', '')
             
             # if not email.endswith('@srmist.edu.in'):
