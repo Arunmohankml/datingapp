@@ -187,44 +187,55 @@ if not firebase_admin._apps:
     else:
         # Fallback for Vercel: Initializing with a default app or environment variables if configured
         import json
-        firebase_config = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
+        firebase_config = os.environ.get('FIREBASE_SERVICE_ACCOUNT', '').strip()
         if firebase_config:
+            # Remove wrapping quotes if Vercel added them twice
+            if (firebase_config.startswith('"') and firebase_config.endswith('"')) or \
+               (firebase_config.startswith("'") and firebase_config.endswith("'")):
+                firebase_config = firebase_config[1:-1]
+            
             try:
                 import ast
                 cred_dict = None
                 
-                # 1. Try standard JSON with strict=False (allows literal newlines inside strings)
-                try:
-                    cred_dict = json.loads(firebase_config, strict=False)
-                except Exception:
-                    pass
+                # 1. Clean common Vercel mangling: Replace literal \n strings with actual newlines
+                # but ONLY if they aren't already escaped.
+                cleaned_config = firebase_config.replace('\\n', '\n').replace('\\\\n', '\n')
                 
-                # 2. Try replacing literal newlines with escaped newlines
-                if not cred_dict:
+                # 2. Try standard JSON
+                try:
+                    cred_dict = json.loads(cleaned_config, strict=False)
+                except:
+                    # 3. Try original if cleaned failed
                     try:
-                        cleaned = firebase_config.replace('\n', '\\n').replace('\r', '')
-                        cred_dict = json.loads(cleaned, strict=False)
-                    except Exception:
+                        cred_dict = json.loads(firebase_config, strict=False)
+                    except:
                         pass
                 
-                # 3. Try ast.literal_eval in case it's a Python dict string
+                # 4. Final fallback: ast.literal_eval (handles Python-style dict strings)
                 if not cred_dict:
                     try:
                         cred_dict = ast.literal_eval(firebase_config)
-                    except Exception:
+                    except:
                         pass
                 
                 if not cred_dict:
+                    # Log a hint of what we received to help the user fix the Vercel UI
+                    received_snippet = firebase_config[:50] + "..." + firebase_config[-20:]
+                    print(f"Firebase Config Error: Received unparseable string: {received_snippet}")
                     raise Exception("Could not parse FIREBASE_SERVICE_ACCOUNT variable.")
                 
-                # Ensure the private key has correct newlines
+                # Ensure the private key has real newlines for the SDK
                 if 'private_key' in cred_dict:
-                    cred_dict['private_key'] = cred_dict['private_key'].replace('\\n', '\n')
+                    pk = cred_dict['private_key']
+                    if isinstance(pk, str):
+                        cred_dict['private_key'] = pk.replace('\\n', '\n').replace('\\\\n', '\n')
                 
                 cred = credentials.Certificate(cred_dict)
                 firebase_admin.initialize_app(cred)
+                print("Firebase Initialized Successfully.")
             except Exception as e:
-                print(f"Firebase error: {e}")
+                print(f"Firebase Critical Initialization Error: {e}")
 
 # Temporarily disabling COOP to fix the sign-in popup being blocked on Vercel
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
