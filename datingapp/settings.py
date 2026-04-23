@@ -13,11 +13,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 import dj_database_url
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass
+if not os.environ.get('VERCEL'):
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        pass
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -94,6 +95,11 @@ if os.environ.get('DATABASE_URL'):
             ssl_require=True if os.environ.get('VERCEL') else False
         )
     }
+    # Ensure SSL options are correctly set for Supabase/Vercel
+    if os.environ.get('VERCEL'):
+        DATABASES['default']['OPTIONS'] = {
+            'sslmode': 'require',
+        }
 else:
     # Fallback to SQLite for local development if no DB URL is set
     DATABASES = {

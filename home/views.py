@@ -139,11 +139,11 @@ def home(request):
     return render(request, "home.html", {"question": question, "progress": progress, "sparked_ids": sparked_ids})
 
 
-import numpy as np
+import math
 
 # ---------------- MATCHING LOGIC ----------------
 def calculate_match_score(user1, user2):
-    """Calculate match % between two users based on answers using Cosine Similarity and Euclidean distance"""
+    """Calculate match % between two users based on answers using Cosine Similarity and Euclidean distance (Pure Python)"""
     user1_answers = UserAnswer.objects.filter(user=user1).select_related('option')
     user2_answers = UserAnswer.objects.filter(user=user2).select_related('option')
     
@@ -155,23 +155,25 @@ def calculate_match_score(user1, user2):
     if not common_questions:
         return 0
     
-    v1 = np.array([user1_dict[q_id] for q_id in common_questions])
-    v2 = np.array([user2_dict[q_id] for q_id in common_questions])
+    v1 = [user1_dict[q_id] for q_id in common_questions]
+    v2 = [user2_dict[q_id] for q_id in common_questions]
     
-    # Euclidean distance
-    euc_dist = np.linalg.norm(v1 - v2)
+    # 1. Euclidean distance
+    euc_dist_sq = sum((x - y) ** 2 for x, y in zip(v1, v2))
+    euc_dist = math.sqrt(euc_dist_sq)
     euc_sim = 1 / (1 + euc_dist)
     
-    # Cosine Similarity
-    norm_v1 = np.linalg.norm(v1)
-    norm_v2 = np.linalg.norm(v2)
+    # 2. Cosine Similarity
+    dot_product = sum(x * y for x, y in zip(v1, v2))
+    norm_v1 = math.sqrt(sum(x * x for x in v1))
+    norm_v2 = math.sqrt(sum(x * x for x in v2))
     
     if norm_v1 == 0 and norm_v2 == 0:
         cos_sim = 1.0
     elif norm_v1 == 0 or norm_v2 == 0:
         cos_sim = 0.0
     else:
-        cos_sim = np.dot(v1, v2) / (norm_v1 * norm_v2)
+        cos_sim = dot_product / (norm_v1 * norm_v2)
         
     # Map [-1, 1] to [0, 1]
     normalized_cos_sim = (cos_sim + 1) / 2
