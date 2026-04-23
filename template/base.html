@@ -427,6 +427,31 @@
         cancelBtn.addEventListener('click', () => {
             installPrompt.style.display = 'none';
         });
+
+        // Detects if device is on iOS 
+        const isIos = () => {
+          const userAgent = window.navigator.userAgent.toLowerCase();
+          return /iphone|ipad|ipod/.test( userAgent );
+        }
+        // Detects if device is in standalone mode
+        const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+        // Show prompt manually for iOS since beforeinstallprompt is not supported
+        if (isIos() && !isInStandaloneMode()) {
+            setTimeout(() => {
+                installPrompt.querySelector('h3').innerText = "Install SRM Match";
+                installPrompt.querySelector('p').innerHTML = "To install the app, tap the <i class='fas fa-share-square'></i> <b>Share</b> icon below and select <b>'Add to Home Screen'</b>.";
+                installPrompt.querySelector('.pwa-actions').style.display = 'none';
+                installPrompt.style.display = 'flex';
+                
+                // Add a close button for the iOS prompt since actions are hidden
+                const closeBtn = document.createElement('button');
+                closeBtn.innerHTML = "&times;";
+                closeBtn.style.cssText = "position:absolute; top:10px; right:15px; background:none; border:none; font-size:24px; color:#94a3b8; cursor:pointer;";
+                closeBtn.onclick = () => installPrompt.style.display = 'none';
+                installPrompt.appendChild(closeBtn);
+            }, 3000); // delay so it doesn't pop up immediately on load
+        }
     </script>
 </body>
 </html>

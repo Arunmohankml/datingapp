@@ -1,7 +1,6 @@
 // Basic Service Worker for PWA
 const CACHE_NAME = 'srm-match-cache-v1';
 const urlsToCache = [
-  '/',
   '/static/images/icon-192x192.png',
   '/static/images/icon-512x512.png',
   '/manifest.json'
