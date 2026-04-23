@@ -1,10 +1,6 @@
 // Basic Service Worker for PWA
 const CACHE_NAME = 'srm-match-cache-v1';
-const urlsToCache = [
-  '/pwa-icons/icon-192x192.png',
-  '/pwa-icons/icon-512x512.png',
-  '/manifest.json'
-];
+const urlsToCache = [];
 
 self.addEventListener('install', event => {
   event.waitUntil(
