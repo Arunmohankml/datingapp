@@ -182,7 +182,18 @@ if not firebase_admin._apps:
         firebase_config = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
         if firebase_config:
             try:
-                cred_dict = json.loads(firebase_config)
+                # Robust parsing: handles both raw JSON and escaped strings from Vercel envs
+                try:
+                    cred_dict = json.loads(firebase_config)
+                except json.JSONDecodeError:
+                    # If direct load fails, try fixing common escape issues
+                    fixed_config = firebase_config.replace('\\n', '\n')
+                    cred_dict = json.loads(fixed_config)
+                
+                # Double-fix the private_key specifically if it's still escaped inside the dict
+                if 'private_key' in cred_dict:
+                    cred_dict['private_key'] = cred_dict['private_key'].replace('\\n', '\n')
+                
                 cred = credentials.Certificate(cred_dict)
                 firebase_admin.initialize_app(cred)
             except Exception as e:
