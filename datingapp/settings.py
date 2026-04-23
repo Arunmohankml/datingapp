@@ -176,46 +176,8 @@ LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = '/complete_profile/'
 LOGOUT_REDIRECT_URL = '/'
 
-import firebase_admin
-from firebase_admin import credentials
-
-if not firebase_admin._apps:
-    cert_path = os.path.join(BASE_DIR, 'serviceAccountKey.json')
-    if os.path.exists(cert_path):
-        cred = credentials.Certificate(cert_path)
-        firebase_admin.initialize_app(cred)
-    else:
-        # Fallback for Vercel: Initializing with a default app or environment variables if configured
-        import json
-        firebase_config = os.environ.get('FIREBASE_SERVICE_ACCOUNT', '').strip()
-        if firebase_config:
-            # Remove wrapping quotes if added by Vercel
-            if (firebase_config.startswith('"') and firebase_config.endswith('"')):
-                firebase_config = firebase_config[1:-1]
-            
-            try:
-                # 1. Ensure newlines are properly escaped for JSON (must be \n, not a real newline)
-                # This handles cases where the user pasted raw JSON with line breaks
-                safe_config = firebase_config.replace('\n', '\\n').replace('\r', '')
-                
-                # 2. Try to parse it immediately
-                try:
-                    cred_dict = json.loads(safe_config, strict=False)
-                except:
-                    # Fallback to original if safe_config failed
-                    cred_dict = json.loads(firebase_config, strict=False)
-                
-                # 3. Fix the private key newlines for the Firebase SDK
-                if 'private_key' in cred_dict:
-                    pk = cred_dict['private_key']
-                    if isinstance(pk, str):
-                        # The SDK needs REAL newlines
-                        cred_dict['private_key'] = pk.replace('\\n', '\n').replace('\\\\n', '\n')
-                
-                cred = credentials.Certificate(cred_dict)
-                firebase_admin.initialize_app(cred)
-            except Exception as e:
-                print(f"Firebase Config Error: {e}")
+# Firebase Configuration is now handled via lazy-loading in home/views.py
+# to ensure stability in the Vercel serverless environment.
 
 # Temporarily disabling COOP to fix the sign-in popup being blocked on Vercel
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None

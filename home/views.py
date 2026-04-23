@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.models import User
@@ -7,7 +8,8 @@ from django.http import JsonResponse, HttpResponse
 from django.core.management import call_command
 import json
 import os
-from firebase_admin import auth as firebase_auth
+from firebase_admin import auth as firebase_auth, credentials
+import firebase_admin
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement
@@ -338,6 +340,36 @@ def login_view(request):
 @csrf_exempt
 def api_verify_token(request):
     if request.method == 'POST':
+        # --- LAZY FIREBASE INITIALIZATION ---
+        if not firebase_admin._apps:
+            try:
+                cert_path = os.path.join(settings.BASE_DIR, 'serviceAccountKey.json')
+                if os.path.exists(cert_path):
+                    cred = credentials.Certificate(cert_path)
+                    firebase_admin.initialize_app(cred)
+                else:
+                    firebase_config = os.environ.get('FIREBASE_SERVICE_ACCOUNT', '').strip()
+                    if firebase_config:
+                        if (firebase_config.startswith('"') and firebase_config.endswith('"')):
+                            firebase_config = firebase_config[1:-1]
+                        
+                        safe_config = firebase_config.replace('\n', '\\n').replace('\r', '')
+                        try:
+                            cred_dict = json.loads(safe_config, strict=False)
+                        except:
+                            cred_dict = json.loads(firebase_config, strict=False)
+                        
+                        if 'private_key' in cred_dict:
+                            pk = cred_dict['private_key']
+                            if isinstance(pk, str):
+                                cred_dict['private_key'] = pk.replace('\\n', '\n').replace('\\\\n', '\n')
+                        
+                        cred = credentials.Certificate(cred_dict)
+                        firebase_admin.initialize_app(cred)
+            except Exception as e:
+                print(f"Firebase Lazy Init Error: {e}")
+                return JsonResponse({'success': False, 'error': f'Firebase Init Failure: {str(e)}'}, status=500)
+
         try:
             data = json.loads(request.body)
             id_token = data.get('idToken')
