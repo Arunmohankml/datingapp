@@ -9,3 +9,4 @@ cloudinary==1.41.0
 django-cloudinary-storage==0.3.0
 requests==2.31.0
 imagekitio>=5.0.0
+supabase==2.4.6
