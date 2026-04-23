@@ -107,10 +107,92 @@
         margin-bottom: 16px;
     }
 
+    .toggle-switch {
+        position: relative;
+        width: 48px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-switch label {
+        position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #cbd5e1; transition: .3s; border-radius: 24px;
+    }
+    .toggle-switch label:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .toggle-switch input:checked + label { background-color: var(--primary); }
+    .toggle-switch input:checked + label:before { transform: translate(24px, -50%); }
+
+    /* Quiz Transitions */
+    @keyframes qFadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .q-fade {
+        animation: qFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .options-list.locked {
+        pointer-events: none;
+        opacity: 0.7;
+    }
 </style>
 {% endblock %}
 
 {% block body %}
+{% if not_discoverable %}
+<div class="card" style="padding: 40px; text-align: center; max-width: 500px; margin: 40px auto; box-shadow: 0 20px 40px rgba(0,0,0,0.1);">
+    <div style="width: 80px; height: 80px; background: rgba(99, 102, 241, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; color: var(--primary); font-size: 32px;">
+        <i class="fas fa-eye-slash"></i>
+    </div>
+    <h2 style="font-size: 24px; margin-bottom: 12px; color: var(--text-main);">Discovery is Hidden</h2>
+    <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 32px;">Turn on discoverability to start matching with others and see who's around you.</p>
+    
+    <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--border);">
+        <div style="text-align: left;">
+            <span style="display: block; font-weight: 700; color: var(--text-main);">Enable Discovery</span>
+            <span style="font-size: 12px; color: var(--text-muted);">Appear in the match feed</span>
+        </div>
+        <div class="toggle-switch">
+            <input type="checkbox" id="discoverable-toggle-main" onchange="toggleDiscoverability()">
+            <label for="discoverable-toggle-main"></label>
+        </div>
+    </div>
+    
+    <p style="margin-top: 24px; font-size: 12px; color: var(--text-muted);">
+        <i class="fas fa-info-circle"></i> You can hide your profile anytime from Edit Profile.
+    </p>
+</div>
+
+<script>
+async function toggleDiscoverability() {
+    try {
+        const res = await fetch("{% url 'toggle_discoverable' %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        });
+        const data = await res.json();
+        if (data.success) {
+            // Smoothly reload or redirect to home to refresh the feed
+            window.location.reload();
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+</script>
+
+{% else %}
 <div class="card quiz-card">
     {% if question %}
     <div class="profile-mini">
@@ -125,21 +207,17 @@
         <div class="progress-fill" style="width: {{ progress|default:20 }}%;"></div>
     </div>
 
-    <div class="question-box">
-        <h2>{{ question.text }}</h2>
-        <p class="question-hint">Select the option that best describes you.</p>
-
-        <form method="POST" action="{% url 'answer_question' question.id %}" id="question-form">
-            {% csrf_token %}
-            <div class="options-list">
-                {% for option in question.options.all %}
-                <label class="option-label">
-                    <input type="radio" name="option" value="{{ option.id }}" onchange="this.form.submit()">
-                    <span>{{ option.text }}</span>
-                </label>
-                {% endfor %}
-            </div>
-        </form>
+    <div id="quiz-container" class="question-box">
+        <div id="quiz-loading" style="text-align: center; padding: 20px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary);"></i>
+            <p style="margin-top: 12px; color: var(--text-muted);">Loading questions...</p>
+        </div>
+        
+        <div id="quiz-active" style="display: none;">
+            <h2 id="q-text"></h2>
+            <p class="question-hint">Select the option that best describes you.</p>
+            <div class="options-list" id="options-container"></div>
+        </div>
     </div>
     {% else %}
     <div class="discovery-board">
@@ -167,7 +245,7 @@
                     </div>
                     <div>
                         <h4 style="margin: 0;">{{ m.profile.name }}, {{ m.profile.age }}</h4>
-                        <p style="margin: 4px 0; color: var(--text-muted); font-size: 13px;">{{ m.profile.branch }} • {{ m.profile.campus }}</p>
+                        <p style="margin: 4px 0; color: var(--text-muted); font-size: 13px;">{{ m.profile.course }} {{ m.profile.branch }} • Year {{ m.profile.clg_year }} • {{ m.profile.campus_display }}</p>
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <span style="display: inline-block; padding: 2px 8px; border-radius: 20px; background: #eef2ff; color: var(--primary); font-size: 11px; font-weight: 700;">{{ m.score }}% MATCH</span>
                         </div>
@@ -195,7 +273,110 @@
     </div>
     {% endif %}
 </div>
+{% endif %}
     <script>
+        // --- Fast Fire Quiz Logic ---
+        let currentQuestions = [];
+        let currentIdx = 0;
+        let batchAnswers = [];
+
+        async function loadBatch() {
+            try {
+                const res = await fetch("{% url 'get_quiz_batch' %}");
+                const data = await res.json();
+                if (data.questions && data.questions.length > 0) {
+                    currentQuestions = data.questions;
+                    currentIdx = 0;
+                    batchAnswers = [];
+                    showQuestion();
+                } else {
+                    // No more questions, reload to show matches
+                    window.location.reload();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function showQuestion() {
+            const q = currentQuestions[currentIdx];
+            const activeBox = document.getElementById('quiz-active');
+            const container = document.getElementById('options-container');
+            
+            document.getElementById('quiz-loading').style.display = 'none';
+            activeBox.style.display = 'block';
+            container.classList.remove('locked'); // Unlock inputs
+            
+            // Trigger animation
+            activeBox.classList.remove('q-fade');
+            void activeBox.offsetWidth; // Force reflow
+            activeBox.classList.add('q-fade');
+
+            document.getElementById('q-text').innerText = q.text;
+            container.innerHTML = '';
+            
+            q.options.forEach(opt => {
+                const label = document.createElement('label');
+                label.className = 'option-label';
+                label.innerHTML = `
+                    <input type="radio" name="option" value="${opt.id}" onchange="handleAnswer(${q.id}, ${opt.id})">
+                    <span>${opt.text}</span>
+                `;
+                container.appendChild(label);
+            });
+
+            // Update progress bar
+            const progress = ((currentIdx + 1) / currentQuestions.length) * 100;
+            document.querySelector('.progress-fill').style.width = progress + '%';
+        }
+
+        async function handleAnswer(qId, oId) {
+            batchAnswers.push({ question_id: qId, option_id: oId });
+            
+            // Lock inputs to prevent spam
+            document.getElementById('options-container').classList.add('locked');
+
+            // Visual feedback: highlight selected
+            const selected = document.querySelector(`input[value="${oId}"]`).closest('.option-label');
+            selected.style.backgroundColor = 'rgba(99, 102, 241, 0.1)';
+            selected.style.borderColor = 'var(--primary)';
+
+            if (currentIdx < currentQuestions.length - 1) {
+                // 1-second delay for smooth feel + anti-spam
+                setTimeout(() => {
+                    currentIdx++;
+                    showQuestion();
+                }, 1000);
+            } else {
+                // Batch complete - save and reload
+                setTimeout(async () => {
+                    document.getElementById('quiz-active').style.display = 'none';
+                    document.getElementById('quiz-loading').style.display = 'block';
+                    document.getElementById('quiz-loading').querySelector('p').innerText = "Analyzing your answers & finding matches...";
+                    
+                    try {
+                        await fetch("{% url 'save_quiz_batch' %}", {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({ answers: batchAnswers })
+                        });
+                        window.location.reload();
+                    } catch (e) {
+                        console.error(e);
+                        window.location.reload();
+                    }
+                }, 1000);
+            }
+        }
+
+        // Start if quiz container exists
+        if (document.getElementById('quiz-container')) {
+            loadBatch();
+        }
+
         function nextMiniSlide(btn) {
             const wrapper = btn.closest('.mini-slider-wrapper');
             const slider = wrapper.querySelector('.mini-slider');

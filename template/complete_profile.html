@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 
 {% block head %}
+<!-- face-api.js for face detection -->
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+<!-- nsfwjs for content moderation -->
+<script src="https://unpkg.com/nsfwjs@2.4.2/dist/browser/nsfwjs.min.js"></script>
 <style>
     .profile-setup-wrap {
         max-width: 600px;
@@ -98,6 +102,46 @@
     @media (max-width: 500px) {
         .form-row { grid-template-columns: 1fr; }
     }
+
+    /* Toggle Switch */
+    .toggle-switch {
+        position: relative;
+        width: 48px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .toggle-switch label {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #cbd5e1;
+        transition: .3s;
+        border-radius: 24px;
+    }
+    .toggle-switch label:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .toggle-switch input:checked + label {
+        background-color: var(--primary);
+    }
+    .toggle-switch input:checked + label:before {
+        transform: translate(24px, -50%);
+    }
 </style>
 {% endblock %}
 
@@ -163,9 +207,21 @@
         </div>
 
         <div class="section-title">📸 Profile Picture</div>
-        <div class="form-group">
-            <label for="id_profile_pic">Upload Photo</label>
-            {{ form.profile_pic }}
+        <div class="form-group" id="pfp-group">
+            <label for="id_profile_pic_file">Upload Your Photo <span style="color:#ef4444">*</span></label>
+            <div id="pfp-upload-area" style="border: 2px dashed var(--border); border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s;" onclick="document.getElementById('id_profile_pic_file').click()">
+                <img id="pfp-preview" src="" alt="" style="display:none; width:120px; height:120px; border-radius:50%; object-fit:cover; margin:0 auto 12px; border: 3px solid var(--primary);">
+                <div id="pfp-placeholder">
+                    <i class="fas fa-camera" style="font-size:32px; color:var(--text-muted); margin-bottom:8px; display:block;"></i>
+                    <p style="margin:0; color:var(--text-muted); font-size:13px;">Click to upload your profile photo</p>
+                    <p style="margin:4px 0 0; color:var(--text-muted); font-size:11px;">Must clearly show your face</p>
+                </div>
+            </div>
+            {{ form.profile_pic_file }}
+            <!-- Face detection status -->
+            <div id="face-status" style="margin-top:10px; padding:10px 14px; border-radius:10px; font-size:13px; font-weight:600; display:none;"></div>
+        </div>
+
         <div class="section-title">🌍 Location</div>
         <div class="form-row">
             <div class="form-group">
@@ -236,6 +292,32 @@
             <div style="display:none">
                 {{ form.pref_age_min }}
                 {{ form.pref_age_max }}
+            </div>
+        </div>
+
+        <div class="section-title">🖼️ Gallery Photos <span style="font-size:12px; font-weight:500; color:var(--text-muted);">(minimum 2 required)</span></div>
+        <div class="form-group" id="gallery-group">
+            <div id="gallery-preview-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px;"></div>
+            <div id="gallery-upload-area" style="border: 2px dashed var(--border); border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s;" onclick="document.getElementById('gallery-file-input').click()">
+                <i class="fas fa-images" style="font-size:28px; color:var(--text-muted); margin-bottom:8px; display:block;"></i>
+                <p style="margin:0; color:var(--text-muted); font-size:13px;">Click to add gallery photos</p>
+                <p id="gallery-count-label" style="margin:4px 0 0; font-size:12px; color:var(--primary); font-weight:700;">0 / 2 minimum added</p>
+            </div>
+            <input type="file" id="gallery-file-input" name="gallery_images" accept="image/*" multiple style="display:none;" onchange="handleGallerySelect(this)">
+            <div id="gallery-status" style="margin-top:10px; padding:10px 14px; border-radius:10px; font-size:13px; font-weight:600; display:none;"></div>
+        </div>
+
+        <div class="section-title">🔒 Privacy</div>
+        <div class="form-group">
+            <div style="display: flex; align-items: flex-start; gap: 12px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border);">
+                <div style="flex: 1;">
+                    <label for="id_is_discoverable" style="margin-bottom: 4px; cursor: pointer;">Make my profile discoverable</label>
+                    <p style="font-size: 11px; color: var(--text-muted); margin: 0;">When enabled, your profile will appear in the match feed and other users can discover you. You can change this anytime in Edit Profile.</p>
+                </div>
+                <div class="toggle-switch">
+                    <input type="checkbox" name="is_discoverable" id="id_is_discoverable" {% if form.is_discoverable.value %}checked{% endif %}>
+                    <label for="id_is_discoverable"></label>
+                </div>
             </div>
         </div>
 
@@ -474,23 +556,25 @@
         const choiceList = wrapper.querySelector('.choices-list');
         const hiddenInput = wrapper.querySelector('input[type="hidden"]');
         
-        let tags = hiddenInput.value ? hiddenInput.value.split(',').filter(t => t) : [];
+        let rawValue = hiddenInput.value || "";
+        if (rawValue.startsWith('[') && rawValue.endsWith(']')) {
+            rawValue = rawValue.slice(1, -1).replace(/'/g, "").replace(/"/g, "");
+        }
+        let tags = rawValue ? rawValue.split(',').map(t => t.trim()).filter(t => t) : [];
 
-        function renderTags() {
+        const renderTags = () => {
             container.innerHTML = '';
             tags.forEach(tag => {
                 const tagEl = document.createElement('span');
                 tagEl.className = 'tag';
-                tagEl.innerHTML = `${tag} <i class="fas fa-times" onclick="removeTag('${fieldName}', '${tag}')"></i>`;
+                tagEl.innerHTML = `${tag} <i class="fas fa-times"></i>`;
+                tagEl.querySelector('i').onclick = () => {
+                    tags = tags.filter(t => t !== tag);
+                    renderTags();
+                };
                 container.appendChild(tagEl);
             });
             hiddenInput.value = tags.join(',');
-        }
-
-        window.removeTag = (field, tag) => {
-            if (field !== fieldName) return;
-            tags = tags.filter(t => t !== tag);
-            renderTags();
         };
 
         searchInput.onfocus = () => {
@@ -562,5 +646,263 @@
         if (inputMax.value) sliderMax.value = inputMax.value;
         updateSlider();
     };
+
+    // ───── FACE DETECTION SETUP ─────
+    let faceModelsLoaded = false;
+    let pfpFaceValid = false;
+    let galleryFiles = [];
+
+    async function loadFaceModels() {
+        if (faceModelsLoaded) return;
+        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        faceModelsLoaded = true;
+    }
+
+    function showFaceStatus(msg, type) {
+        const el = document.getElementById('face-status');
+        el.style.display = 'block';
+        if (type === 'loading') {
+            el.style.background = '#f1f5f9'; el.style.color = '#64748b';
+            el.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${msg}`;
+        } else if (type === 'success') {
+            el.style.background = '#f0fdf4'; el.style.color = '#16a34a';
+            el.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`;
+        } else if (type === 'error') {
+            el.style.background = '#fef2f2'; el.style.color = '#dc2626';
+            el.innerHTML = `<i class="fas fa-times-circle"></i> ${msg}`;
+        }
+    }
+
+    // ───── AI VERIFICATION (FACE + NSFW) ─────
+    let nsfwModel = null;
+    async function loadNSFWModel() {
+        if (!nsfwModel) nsfwModel = await nsfwjs.load();
+        return nsfwModel;
+    }
+
+    async function detectFaceInFile(file, threshold = 0.4) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            const url = URL.createObjectURL(file);
+            img.onload = async () => {
+                try {
+                    // 1. Check for Face
+                    await loadFaceModels();
+                    const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: threshold }));
+                    if (detections.length === 0) {
+                        URL.revokeObjectURL(url);
+                        return resolve({ valid: false, error: "Face not detected." });
+                    }
+
+                    // 2. Check for Nudity / NSFW / Memes
+                    const model = await loadNSFWModel();
+                    const predictions = await model.classify(img);
+                    
+                    // Categorize the findings
+                    const porn = predictions.find(p => p.className === 'Porn');
+                    const hentai = predictions.find(p => p.className === 'Hentai');
+                    const drawing = predictions.find(p => p.className === 'Drawing');
+                    const neutral = predictions.find(p => p.className === 'Neutral');
+
+                    // Block explicit content
+                    if ((porn && porn.probability > 0.3) || (hentai && hentai.probability > 0.3)) {
+                        URL.revokeObjectURL(url);
+                        return resolve({ valid: false, error: "Inappropriate content detected." });
+                    }
+
+                    // Block drawings / digital memes / sketches
+                    if (drawing && drawing.probability > 0.5) {
+                        URL.revokeObjectURL(url);
+                        return resolve({ valid: false, error: "Digital drawings or memes are not allowed. Please upload a real photo." });
+                    }
+
+                    // Ensure it's a "Neutral" natural photo
+                    if (neutral && neutral.probability < 0.2) {
+                        URL.revokeObjectURL(url);
+                        return resolve({ valid: false, error: "Please upload a natural, clear photo of yourself." });
+                    }
+
+                    URL.revokeObjectURL(url);
+                    resolve({ valid: true });
+                } catch (e) {
+                    console.error("AI check error:", e);
+                    URL.revokeObjectURL(url);
+                    resolve({ valid: true }); // allow on technical error
+                }
+            };
+            img.onerror = () => { URL.revokeObjectURL(url); resolve({ valid: true }); };
+            img.src = url;
+        });
+    }
+
+    // ───── PFP CHANGE HANDLER ─────
+    document.getElementById('id_profile_pic_file').style.display = 'none';
+    document.getElementById('id_profile_pic_file').addEventListener('change', async function() {
+        if (!this.files || !this.files[0]) return;
+        const file = this.files[0];
+
+        // Show preview
+        const preview = document.getElementById('pfp-preview');
+        const placeholder = document.getElementById('pfp-placeholder');
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            placeholder.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+
+        // Run AI verification (Face + Safety)
+        showFaceStatus('Verifying photo safety...', 'loading');
+        pfpFaceValid = false;
+        const result = await detectFaceInFile(file);
+        if (result.valid) {
+            pfpFaceValid = true;
+            showFaceStatus('Face detected! Looking great.', 'success');
+            document.getElementById('pfp-upload-area').style.borderColor = '#16a34a';
+        } else {
+            pfpFaceValid = false;
+            let errMsg = result.error || "Please upload a clear photo showing your face.";
+            showFaceStatus(errMsg, 'error');
+            document.getElementById('pfp-upload-area').style.borderColor = '#dc2626';
+            this.value = '';
+            preview.style.display = 'none';
+            placeholder.style.display = 'block';
+        }
+    });
+
+    // ───── GALLERY HANDLER ─────
+    async function handleGallerySelect(input) {
+        if (!input.files || input.files.length === 0) return;
+        
+        const statusEl = document.getElementById('gallery-status');
+        statusEl.style.display = 'block';
+        statusEl.style.background = '#f1f5f9'; statusEl.style.color = '#64748b';
+        statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Verifying photos...`;
+
+        const newFiles = Array.from(input.files);
+        let rejectedCount = 0;
+
+        for (const file of newFiles) {
+            // Check if already added
+            if (galleryFiles.find(g => g.name === file.name && g.size === file.size)) continue;
+
+            // AI verification for gallery (Face/Human + Safety)
+            const result = await detectFaceInFile(file, 0.2);
+            
+            if (result.valid) {
+                galleryFiles.push(file);
+            } else {
+                rejectedCount++;
+            }
+        }
+
+        if (rejectedCount > 0) {
+            statusEl.style.display = 'block';
+            statusEl.style.background = '#fef2f2'; statusEl.style.color = '#dc2626';
+            statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${rejectedCount} photo(s) rejected. Please upload natural photos of yourself.`;
+            setTimeout(() => { renderGalleryPreviews(); }, 3000);
+        } else {
+            renderGalleryPreviews();
+        }
+        input.value = ''; // Reset input
+    }
+    window.handleGallerySelect = handleGallerySelect;
+
+    function renderGalleryPreviews() {
+        const grid = document.getElementById('gallery-preview-grid');
+        const countLabel = document.getElementById('gallery-count-label');
+        grid.innerHTML = '';
+
+        galleryFiles.forEach((file, idx) => {
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'position:relative; aspect-ratio:1; border-radius:12px; overflow:hidden; border:2px solid var(--border);';
+            const img = document.createElement('img');
+            img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
+            img.src = URL.createObjectURL(file);
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.innerHTML = '&times;';
+            removeBtn.style.cssText = 'position:absolute;top:4px;right:4px;background:rgba(220,38,38,0.9);color:white;border:none;border-radius:6px;width:24px;height:24px;font-size:14px;cursor:pointer;font-weight:bold;line-height:1;';
+            removeBtn.onclick = () => { galleryFiles.splice(idx, 1); renderGalleryPreviews(); };
+            wrap.appendChild(img);
+            wrap.appendChild(removeBtn);
+            grid.appendChild(wrap);
+        });
+
+        const count = galleryFiles.length;
+        const met = count >= 2;
+        countLabel.textContent = `${count} / 2 minimum added`;
+        countLabel.style.color = met ? '#16a34a' : 'var(--primary)';
+        document.getElementById('gallery-upload-area').style.borderColor = met ? '#16a34a' : 'var(--border)';
+
+        const statusEl = document.getElementById('gallery-status');
+        if (met) {
+            statusEl.style.display = 'block';
+            statusEl.style.background = '#f0fdf4'; statusEl.style.color = '#16a34a';
+            statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Gallery requirement met!`;
+        } else {
+            statusEl.style.display = 'none';
+        }
+    }
+
+    // ───── FORM SUBMIT: Validate + Compress + Submit ─────
+    document.querySelector('form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const form = this;
+        const btn = form.querySelector('.btn-submit');
+        const pfpInput = document.getElementById('id_profile_pic_file');
+
+        // Validate: PFP required
+        if (!pfpInput.files || !pfpInput.files[0]) {
+            showFaceStatus('Please upload a profile picture.', 'error');
+            pfpInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        // Validate: face must be detected
+        if (!pfpFaceValid) {
+            showFaceStatus('Face not detected. Please upload a clear photo showing your face.', 'error');
+            pfpInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+        // Validate: min 2 gallery images
+        if (galleryFiles.length < 2) {
+            const galleryStatus = document.getElementById('gallery-status');
+            galleryStatus.style.display = 'block';
+            galleryStatus.style.background = '#fef2f2'; galleryStatus.style.color = '#dc2626';
+            galleryStatus.innerHTML = '<i class="fas fa-times-circle"></i> Please add at least 2 gallery photos.';
+            document.getElementById('gallery-group').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        // All valid — compress & submit
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating your profile...';
+
+        try {
+            // Compress PFP
+            const compressedPfp = await compressImage(pfpInput.files[0]);
+            const pfpTransfer = new DataTransfer();
+            pfpTransfer.items.add(compressedPfp);
+            pfpInput.files = pfpTransfer.files;
+
+            // Compress & inject gallery files into the file input
+            const galleryInput = document.getElementById('gallery-file-input');
+            const galleryTransfer = new DataTransfer();
+            for (const gf of galleryFiles) {
+                try {
+                    const compressed = await compressImage(gf);
+                    galleryTransfer.items.add(compressed);
+                } catch { galleryTransfer.items.add(gf); }
+            }
+            galleryInput.files = galleryTransfer.files;
+
+            form.submit();
+        } catch (err) {
+            console.error('Submit error:', err);
+            form.submit(); // Fallback
+        }
+    });
 </script>
 {% endblock %}

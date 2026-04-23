@@ -4,11 +4,6 @@
 
 {% block head %}
 <style>
-    body {
-        align-items: flex-start !important;
-        padding-top: 80px;
-    }
-    
     .container {
         max-width: 600px !important;
     }
@@ -30,28 +25,28 @@
         align-items: center;
         padding: 16px;
         margin-bottom: 12px;
-        background: var(--surface);
+        background: white;
         border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
+        border-radius: 20px;
         text-decoration: none;
         color: inherit;
         transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+        cursor: pointer;
     }
     
     .chat-card:hover {
         transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         border-color: var(--primary);
     }
 
     .chat-avatar {
-        width: 56px;
-        height: 56px;
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
         object-fit: cover;
         margin-right: 16px;
         border: 2px solid var(--border);
-        background: var(--bg-color);
     }
     
     .chat-details {
@@ -67,8 +62,8 @@
     }
     
     .chat-name {
-        font-weight: 600;
-        font-size: 16px;
+        font-weight: 700;
+        font-size: 15px;
         color: var(--text-main);
         white-space: nowrap;
         overflow: hidden;
@@ -76,10 +71,9 @@
     }
     
     .chat-time {
-        font-size: 12px;
+        font-size: 11px;
         color: var(--text-muted);
         white-space: nowrap;
-        margin-left: 8px;
     }
     
     .chat-snippet-row {
@@ -89,26 +83,27 @@
     }
 
     .chat-snippet {
-        font-size: 14px;
+        font-size: 13px;
         color: var(--text-muted);
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        flex: 1;
         padding-right: 8px;
     }
     
     .unread-badge {
-        background-color: var(--primary);
+        background: var(--primary);
         color: white;
-        font-size: 11px;
-        font-weight: 700;
-        min-width: 20px;
-        height: 20px;
-        border-radius: 10px;
-        display: inline-flex;
+        min-width: 18px;
+        height: 18px;
+        border-radius: 9px;
+        display: flex;
         align-items: center;
         justify-content: center;
-        padding: 0 6px;
+        font-size: 10px;
+        font-weight: 800;
+        padding: 0 4px;
     }
     
     .empty-state {
@@ -131,35 +126,40 @@
     
     {% if chats %}
         {% for chat in chats %}
-        <a href="{% url 'chat_view' chat.partner.id %}" class="chat-card">
+        <div onclick="location.href='{% url 'chat_view' chat.partner.id %}'" class="chat-card">
             <img src="{% if chat.partner.profile.profile_pic %}{{ chat.partner.profile.profile_pic }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ chat.partner.username }}{% endif %}" alt="{{ chat.partner.profile.name|default:chat.partner.username }}" class="chat-avatar">
             
             <div class="chat-details">
                 <div class="chat-header">
                     <div class="chat-name">{{ chat.partner.profile.name|default:chat.partner.username }}</div>
-                    {% if chat.latest_message %}
-                        <div class="chat-time">{{ chat.timestamp|date:"M d, P" }}</div>
-                    {% endif %}
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        {% if chat.latest_message %}
+                            <div class="chat-time">{{ chat.timestamp|date:"M d, P" }}</div>
+                        {% endif %}
+                        <a href="{% url 'delete_chat' chat.partner.id %}" onclick="event.stopPropagation(); return confirm('Delete this entire chat?')" style="color: #94a3b8; font-size: 14px; padding: 4px;">
+                            <i class="fas fa-trash-alt"></i>
+                        </a>
+                    </div>
                 </div>
                 
                 <div class="chat-snippet-row">
-                    {% if chat.latest_message %}
-                        <div class="chat-snippet">
+                    <div class="chat-snippet">
+                        {% if chat.latest_message %}
                             {% if chat.latest_message.sender == request.user %}
-                                <span>You: </span>
+                                <span style="color: var(--primary); font-weight: 600;">You: </span>
                             {% endif %}
                             {{ chat.latest_message.text }}
-                        </div>
-                    {% else %}
-                        <div class="chat-snippet" style="font-style: italic;">No messages yet. Say hi!</div>
-                    {% endif %}
+                        {% else %}
+                            <span style="font-style: italic;">No messages yet. Say hi!</span>
+                        {% endif %}
+                    </div>
                     
                     {% if chat.unread_count > 0 %}
                         <div class="unread-badge">{{ chat.unread_count }}</div>
                     {% endif %}
                 </div>
             </div>
-        </a>
+        </div>
         {% endfor %}
     {% else %}
         <div class="empty-state">

@@ -1,0 +1,376 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<style>
+    /* Full page override for detail view */
+    body {
+        background: var(--bg-color);
+    }
+    nav { display: none !important; }
+    .container {
+        padding: 0 !important;
+        margin-top: 0 !important;
+        max-width: 100% !important;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Top Navigation Bar */
+    .top-bar {
+        background: rgba(255,255,255,0.9);
+        backdrop-filter: blur(10px);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+    .back-btn {
+        color: var(--text-main);
+        font-size: 20px;
+        text-decoration: none;
+    }
+    .top-bar h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+    }
+
+    /* Scrollable Content Area */
+    .detail-content {
+        flex: 1;
+        overflow-y: auto;
+        padding-bottom: 80px; /* Space for comment input */
+    }
+
+    /* Main Confession Card (No borders, full width) */
+    .main-post {
+        background: var(--surface);
+        padding: 20px;
+        margin-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+    }
+    .c-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .c-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .c-name {
+        font-weight: 700;
+        font-size: 16px;
+        color: var(--text-main);
+        margin: 0 0 2px;
+    }
+    .c-time {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+    .c-campus {
+        background: #f1f5f9;
+        color: var(--text-muted);
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-left: auto;
+    }
+    .c-text {
+        font-size: 18px;
+        line-height: 1.6;
+        color: var(--text-main);
+        margin-bottom: 16px;
+        word-break: break-word;
+    }
+    .c-image {
+        width: 100%;
+        border-radius: 16px;
+        margin-bottom: 16px;
+    }
+    
+    /* Stats */
+    .c-stats {
+        display: flex;
+        gap: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 15px;
+    }
+    .stat-item { display: flex; align-items: center; gap: 8px; }
+
+    /* Comments Section */
+    .comments-header {
+        padding: 16px 20px 8px;
+        font-weight: 700;
+        color: var(--text-main);
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .comment {
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(0,0,0,0.04);
+        display: flex;
+        gap: 12px;
+    }
+    .comment-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .comment-body {
+        flex: 1;
+    }
+    .comment-name {
+        font-weight: 700;
+        font-size: 14px;
+        margin: 0 0 4px;
+        display: flex;
+        justify-content: space-between;
+    }
+    .comment-time {
+        font-weight: 400;
+        color: var(--text-muted);
+        font-size: 12px;
+    }
+    .comment-text {
+        font-size: 14px;
+        line-height: 1.5;
+        color: var(--text-main);
+        margin: 0;
+    }
+
+    /* Fixed Comment Input */
+    .comment-box {
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: var(--surface);
+        padding: 12px 16px;
+        border-top: 1px solid var(--border);
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
+        z-index: 100;
+    }
+    .comment-form {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    .comment-input-row {
+        display: flex;
+        gap: 10px;
+    }
+    .comment-input {
+        flex: 1;
+        background: #f1f5f9;
+        border: none;
+        padding: 12px 16px;
+        border-radius: 24px;
+        font-size: 15px;
+        outline: none;
+        margin: 0 !important;
+    }
+    .send-btn {
+        background: var(--primary);
+        color: white;
+        border: none;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 18px;
+    }
+    .anon-toggle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        padding-left: 12px;
+    }
+    .anon-toggle input { margin: 0; }
+
+</style>
+{% endblock %}
+
+{% block body %}
+
+<!-- Top Bar -->
+<div class="top-bar">
+    <a href="{% url 'confessions_feed' %}" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+    <h3>Confession</h3>
+</div>
+
+<div class="detail-content">
+    
+    <!-- Main Post -->
+    <div class="main-post">
+        <div class="c-header">
+            <img src="{{ confession.display_pic }}" alt="Avatar" class="c-avatar">
+            <div>
+                <p class="c-name">{{ confession.display_name }}</p>
+                <p class="c-time">{{ confession.created_at|date:"M d, g:i A" }}</p>
+            </div>
+            {% if confession.campus %}
+            <div class="c-campus">{{ confession.campus }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="c-text">{{ confession.content|linebreaksbr }}</div>
+        
+        <!-- Action Buttons (Edit / Delete / Report) -->
+        <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+            {% if user.is_authenticated and confession.user == user %}
+                <a href="{% url 'edit_confession' confession.id %}" style="color: var(--primary); text-decoration: none; font-size: 13px; font-weight: 600;"><i class="fas fa-edit"></i> Edit</a>
+                <a href="{% url 'delete_confession' confession.id %}" onclick="return confirm('Delete this confession?')" style="color: #ef4444; text-decoration: none; font-size: 13px; font-weight: 600;"><i class="fas fa-trash"></i> Delete</a>
+            {% else %}
+                <button onclick="openReportModal()" style="background: none; border: none; color: #ef4444; font-size: 13px; font-weight: 600; cursor: pointer; padding: 0;"><i class="fas fa-flag"></i> Report</button>
+            {% endif %}
+            
+            {% if request.user.email == 'arunmohankml@gmail.com' and confession.user != user %}
+                <a href="{% url 'delete_confession' confession.id %}" onclick="return confirm('ADMIN: Delete this confession?')" style="color: #ef4444; text-decoration: none; font-size: 13px; font-weight: 600; margin-left: auto;"><i class="fas fa-shield-alt"></i> Admin Delete</a>
+            {% endif %}
+        </div>
+        
+        <div class="c-stats">
+            <div class="stat-item" id="likeBtn" style="cursor:pointer;" onclick="likeDetail()">
+                <i class="fas fa-heart" id="likeIcon"></i> <span id="likeCount">{{ confession.likes_count }}</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-comment"></i> {{ confession.comments.count }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Comments -->
+    <div class="comments-header">Comments</div>
+    
+    {% for comment in confession.comments.all %}
+    <div class="comment">
+        <img src="{{ comment.display_pic }}" alt="Avatar" class="comment-avatar">
+        <div class="comment-body">
+            <p class="comment-name">
+                {{ comment.display_name }}
+                <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+            </p>
+            <p class="comment-text">{{ comment.content }}</p>
+        </div>
+    </div>
+    {% empty %}
+    <p style="text-align:center; color:var(--text-muted); padding: 20px; font-size:14px;">No comments yet. Start the conversation!</p>
+    {% endfor %}
+    
+</div>
+
+<!-- Comment Input -->
+<div class="comment-box">
+    <form class="comment-form" method="POST" action="{% url 'add_comment' confession.id %}">
+        {% csrf_token %}
+        <div class="comment-input-row">
+            <input type="text" name="content" class="comment-input" placeholder="Add a comment..." required autocomplete="off">
+            <button type="submit" class="send-btn"><i class="fas fa-paper-plane"></i></button>
+        </div>
+        <label class="anon-toggle">
+            <input type="checkbox" name="is_anonymous" value="true" checked> Comment anonymously
+        </label>
+    </form>
+</div>
+
+<!-- Report Modal -->
+<div id="reportModal" class="modal-overlay">
+    <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+        <div class="modal-header">
+            <h3>Report Confession</h3>
+            <button class="close-modal" onclick="closeReportModal()">&times;</button>
+        </div>
+        <form method="POST" action="{% url 'report_confession' confession.id %}">
+            {% csrf_token %}
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">Why are you reporting this? Select all that apply:</p>
+            
+            <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer;">
+                    <input type="checkbox" name="reasons" value="Harassment"> Harassment
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer;">
+                    <input type="checkbox" name="reasons" value="Hate Speech"> Hate Speech
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer;">
+                    <input type="checkbox" name="reasons" value="Violence"> Violence
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer;">
+                    <input type="checkbox" name="reasons" value="Sexual Content"> Sexual Content
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer;">
+                    <input type="checkbox" name="reasons" value="Spam"> Spam
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer;">
+                    <input type="checkbox" name="reasons" value="Bullying"> Bullying
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer;">
+                    <input type="checkbox" name="reasons" value="Doxing"> Doxing
+                </label>
+                <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; cursor: pointer;">
+                    <input type="checkbox" name="reasons" value="Explicit Content"> Explicit Content
+                </label>
+            </div>
+            
+            <label style="font-size: 14px; font-weight: 700;">Other reason / details</label>
+            <textarea name="other_reason" rows="2" style="width: 100%; margin-top: 8px;" placeholder="Optional..."></textarea>
+            
+            <button type="submit" class="btn btn-primary" style="width:100%; margin-top: 20px; background: #ef4444; border: none; padding: 12px; border-radius: 12px; color: white; font-weight: 700;">Submit Report</button>
+        </form>
+    </div>
+</div>
+
+<style>
+    .modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+        display: none; align-items: center; justify-content: center; z-index: 2000; padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+        background: white; width: 100%; max-width: 400px; border-radius: 24px; padding: 24px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .close-modal { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted); }
+</style>
+
+<script>
+function openReportModal() { document.getElementById('reportModal').classList.add('active'); }
+function closeReportModal() { document.getElementById('reportModal').classList.remove('active'); }
+
+async function likeDetail() {
+    try {
+        const res = await fetch(`{% url 'like_confession' confession.id %}`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('likeCount').textContent = data.likes_count;
+            document.getElementById('likeIcon').style.color = '#ef4444';
+        }
+    } catch(err) {}
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SRM Wall</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --bg: #f8fafc;
+            --border: #e2e8f0;
+            --text-muted: #64748b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            touch-action: none;
+        }
+
+        #drawCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            cursor: crosshair;
+            background: #f1f5f9;
+        }
+
+        /* Toolbar — matches app style */
+        .toolbar {
+            position: fixed;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,255,255,0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            border-radius: 22px;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .color-dot {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+        .color-dot:hover { transform: scale(1.15); }
+        .color-dot.active { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,102,241,0.3); }
+
+        .sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+
+        .size-btn {
+            width: 26px; height: 26px;
+            border-radius: 8px;
+            background: #f1f5f9;
+            border: 1px solid var(--border);
+            color: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 9px;
+            font-weight: 800;
+            transition: 0.2s;
+        }
+        .size-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .zoom-indicator {
+            position: fixed;
+            top: 64px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(8px);
+            color: var(--text-muted);
+            padding: 3px 12px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            z-index: 100;
+            pointer-events: none;
+            border: 1px solid var(--border);
+        }
+
+        /* Bottom Nav — matches app */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: auto;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            z-index: 200;
+            padding: 6px 0;
+            padding-bottom: max(6px, env(safe-area-inset-bottom));
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 10px;
+            font-weight: 600;
+            padding: 6px 12px;
+            transition: 0.2s;
+            border-radius: 12px;
+        }
+        .nav-item i { font-size: 18px; }
+        .nav-item.active { color: var(--primary); }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed; inset: 0;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 14px;
+            z-index: 9999;
+            transition: opacity 0.4s;
+        }
+        .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+        .loading-spinner {
+            width: 32px; height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-overlay p { color: var(--text-muted); font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <p>Loading wall...</p>
+    </div>
+
+    <canvas id="drawCanvas"></canvas>
+
+    <div class="toolbar">
+        <div class="color-dot active" data-color="#0f172a" style="background:#0f172a;"></div>
+        <div class="color-dot" data-color="#ef4444" style="background:#ef4444;"></div>
+        <div class="color-dot" data-color="#f97316" style="background:#f97316;"></div>
+        <div class="color-dot" data-color="#eab308" style="background:#eab308;"></div>
+        <div class="color-dot" data-color="#22c55e" style="background:#22c55e;"></div>
+        <div class="color-dot" data-color="#3b82f6" style="background:#3b82f6;"></div>
+        <div class="color-dot" data-color="#6366f1" style="background:#6366f1;"></div>
+        <div class="color-dot" data-color="#ec4899" style="background:#ec4899;"></div>
+        <div class="color-dot" data-color="#06b6d4" style="background:#06b6d4;"></div>
+        <div class="sep"></div>
+        <div class="size-btn active" data-size="1.5">S</div>
+        <div class="size-btn" data-size="3">M</div>
+        <div class="size-btn" data-size="5">L</div>
+    </div>
+
+    <div class="zoom-indicator" id="zoomLabel">100%</div>
+
+    <div class="bottom-nav">
+        <a href="{% url 'home' %}" class="nav-item"><i class="fas fa-fire"></i><span>Match</span></a>
+        <a href="{% url 'connections' %}" class="nav-item"><i class="fas fa-bolt"></i><span>Connections</span></a>
+        <a href="{% url 'wall' %}" class="nav-item active"><i class="fas fa-paint-brush"></i><span>Wall</span></a>
+        <a href="{% url 'confessions_feed' %}" class="nav-item"><i class="fas fa-mask"></i><span>Confess</span></a>
+        <a href="{% url 'chat_list' %}" class="nav-item"><i class="fas fa-comment-dots"></i><span>Chats</span></a>
+        <a href="{% url 'edit_profile' %}" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
+    </div>
+
+<script>
+const VIRTUAL_W = 8000, VIRTUAL_H = 8000;
+const canvas = document.getElementById('drawCanvas');
+const ctx = canvas.getContext('2d');
+
+let scale = 1;
+// Everyone starts at center of the virtual canvas
+let offsetX = 0, offsetY = 0;
+let drawing = false, panning = false;
+let currentColor = '#0f172a';
+let brushSize = 1.5;
+let currentStroke = [];
+let allStrokes = [];
+let panStart = { x: 0, y: 0 };
+let spaceDown = false;
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    // Center on virtual canvas center
+    if (offsetX === 0 && offsetY === 0) {
+        offsetX = canvas.width / 2 - (VIRTUAL_W / 2) * scale;
+        offsetY = canvas.height / 2 - (VIRTUAL_H / 2) * scale;
+    }
+    redraw();
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function screenToWorld(sx, sy) {
+    return { x: (sx - offsetX) / scale, y: (sy - offsetY) / scale };
+}
+
+function drawStroke(s) {
+    if (!s.points || s.points.length < 2) return;
+    ctx.beginPath();
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = s.brush_size * scale;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.moveTo(s.points[0].x * scale + offsetX, s.points[0].y * scale + offsetY);
+    for (let i = 1; i < s.points.length; i++) {
+        ctx.lineTo(s.points[i].x * scale + offsetX, s.points[i].y * scale + offsetY);
+    }
+    ctx.stroke();
+}
+
+function drawGrid() {
+    const gridSize = 40 * scale;
+    if (gridSize < 5) return;
+    ctx.strokeStyle = 'rgba(0,0,0,0.04)';
+    ctx.lineWidth = 1;
+    const startX = offsetX % gridSize;
+    const startY = offsetY % gridSize;
+    ctx.beginPath();
+    for (let x = startX; x < canvas.width; x += gridSize) { ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); }
+    for (let y = startY; y < canvas.height; y += gridSize) { ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); }
+    ctx.stroke();
+}
+
+function redraw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#f1f5f9';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawGrid();
+    for (const s of allStrokes) drawStroke(s);
+    if (currentStroke.length > 1) drawStroke({ points: currentStroke, color: currentColor, brush_size: brushSize });
+}
+
+// Drawing
+canvas.addEventListener('pointerdown', e => {
+    if (e.button === 2 || spaceDown) { panning = true; panStart = { x: e.clientX - offsetX, y: e.clientY - offsetY }; canvas.style.cursor = 'grabbing'; return; }
+    drawing = true;
+    currentStroke = [screenToWorld(e.clientX, e.clientY)];
+});
+canvas.addEventListener('pointermove', e => {
+    if (panning) { offsetX = e.clientX - panStart.x; offsetY = e.clientY - panStart.y; redraw(); return; }
+    if (!drawing) return;
+    currentStroke.push(screenToWorld(e.clientX, e.clientY));
+    redraw();
+});
+canvas.addEventListener('pointerup', e => {
+    if (panning) { panning = false; canvas.style.cursor = 'crosshair'; return; }
+    if (!drawing) return;
+    drawing = false;
+    if (currentStroke.length > 1) {
+        const stroke = { points: [...currentStroke], color: currentColor, brush_size: brushSize };
+        allStrokes.push(stroke);
+        saveStroke(stroke);
+    }
+    currentStroke = [];
+});
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+window.addEventListener('keydown', e => { if (e.code === 'Space') { spaceDown = true; canvas.style.cursor = 'grab'; e.preventDefault(); } });
+window.addEventListener('keyup', e => { if (e.code === 'Space') { spaceDown = false; canvas.style.cursor = 'crosshair'; } });
+
+// Zoom
+canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const f = e.deltaY < 0 ? 1.12 : 0.88;
+    const ns = Math.max(0.15, Math.min(8, scale * f));
+    offsetX = e.clientX - (e.clientX - offsetX) * (ns / scale);
+    offsetY = e.clientY - (e.clientY - offsetY) * (ns / scale);
+    scale = ns;
+    document.getElementById('zoomLabel').textContent = Math.round(scale * 100) + '%';
+    redraw();
+}, { passive: false });
+
+// Pinch
+let lastDist = 0, lastCenter = {x:0,y:0};
+canvas.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+        drawing = false; currentStroke = [];
+        const dx = e.touches[0].clientX - e.touches[1].clientX, dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastDist = Math.sqrt(dx*dx+dy*dy);
+        lastCenter = { x:(e.touches[0].clientX+e.touches[1].clientX)/2, y:(e.touches[0].clientY+e.touches[1].clientY)/2 };
+    }
+}, {passive:false});
+canvas.addEventListener('touchmove', e => {
+    if (e.touches.length === 2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX-e.touches[1].clientX, dy = e.touches[0].clientY-e.touches[1].clientY;
+        const dist = Math.sqrt(dx*dx+dy*dy);
+        const c = { x:(e.touches[0].clientX+e.touches[1].clientX)/2, y:(e.touches[0].clientY+e.touches[1].clientY)/2 };
+        const ns = Math.max(0.15, Math.min(8, scale * (dist/lastDist)));
+        offsetX = c.x - (c.x-offsetX)*(ns/scale) + (c.x-lastCenter.x);
+        offsetY = c.y - (c.y-offsetY)*(ns/scale) + (c.y-lastCenter.y);
+        scale = ns; lastDist = dist; lastCenter = c;
+        document.getElementById('zoomLabel').textContent = Math.round(scale*100)+'%';
+        redraw();
+    }
+}, {passive:false});
+
+// Toolbar
+document.querySelectorAll('.color-dot').forEach(d => d.onclick = () => {
+    document.querySelectorAll('.color-dot').forEach(x => x.classList.remove('active'));
+    d.classList.add('active'); currentColor = d.dataset.color;
+});
+document.querySelectorAll('.size-btn').forEach(b => b.onclick = () => {
+    document.querySelectorAll('.size-btn').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); brushSize = parseFloat(b.dataset.size);
+});
+
+// Persistence
+async function saveStroke(s) {
+    try { await fetch('/api/wall/', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(s) }); } catch(e) {}
+}
+async function loadStrokes() {
+    try { const r = await fetch('/api/wall/'); const d = await r.json(); allStrokes = d.strokes||[]; redraw(); } catch(e) {}
+    document.getElementById('loadingOverlay').classList.add('hidden');
+}
+setInterval(async()=>{
+    try { const r=await fetch('/api/wall/'); const d=await r.json(); if(d.strokes&&d.strokes.length!==allStrokes.length){allStrokes=d.strokes;redraw();} } catch(e){}
+}, 5000);
+loadStrokes();
+</script>
+</body>
+</html>

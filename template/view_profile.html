@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<style>
+    .profile-page {
+        padding-bottom: 40px;
+    }
+
+    /* Hero Section */
+    .profile-hero {
+        text-align: center;
+        padding: 30px 20px 20px;
+    }
+    .profile-hero img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--primary);
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+    }
+    .profile-hero h1 {
+        font-size: 22px;
+        margin: 16px 0 4px;
+    }
+    .profile-hero .profile-meta {
+        color: var(--text-muted);
+        font-size: 13px;
+        margin: 0;
+    }
+    .profile-hero .looking-badge {
+        display: inline-block;
+        margin-top: 12px;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--primary);
+    }
+
+    /* Section Cards */
+    .profile-section {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .profile-section h3 {
+        font-size: 14px;
+        margin: 0 0 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-main);
+    }
+    .profile-section h3 i {
+        color: var(--primary);
+        font-size: 16px;
+    }
+
+    /* Bio */
+    .bio-text {
+        font-size: 14px;
+        line-height: 1.7;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    /* Tags Grid */
+    .tags-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .tag-badge {
+        background: #f0f0ff;
+        color: var(--primary);
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    /* Info Grid */
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    .info-item {
+        background: #f8fafc;
+        padding: 12px;
+        border-radius: 14px;
+        text-align: center;
+    }
+    .info-item .info-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .info-item .info-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-main);
+    }
+
+    /* Gallery */
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+    }
+    .gallery-grid img {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .gallery-grid img:hover {
+        transform: scale(1.03);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    .gallery-empty {
+        text-align: center;
+        padding: 20px;
+        color: var(--text-muted);
+        font-size: 13px;
+    }
+
+    /* Back button */
+    .back-bar {
+        display: flex;
+        align-items: center;
+        padding: 16px 0 8px;
+    }
+    .back-bar a {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: 14px;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+    .back-bar a:hover {
+        color: var(--primary);
+    }
+
+    /* Image lightbox */
+    .lightbox {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.9);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .lightbox.active { display: flex; }
+    .lightbox img {
+        max-width: 90%;
+        max-height: 85vh;
+        border-radius: 16px;
+        object-fit: contain;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="profile-page">
+
+    <div class="back-bar">
+        <a href="javascript:history.back()"><i class="fas fa-chevron-left"></i> Back</a>
+    </div>
+
+    <!-- Hero -->
+    <div class="profile-hero">
+        <div style="position: relative; display: inline-block;">
+            <img src="{{ profile.get_profile_pic_url }}" alt="Profile" class="profile-pic">
+            {% if spark_count > 0 %}
+            <div style="position: absolute; bottom: 0; right: 0; background: linear-gradient(45deg, #f59e0b, #fbbf24); color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4); border: 2px solid white; display: flex; align-items: center; gap: 4px;">
+                <i class="fas fa-bolt"></i> {{ spark_count }}
+            </div>
+            {% endif %}
+        </div>
+        
+        <h1 class="profile-name">{{ profile.name }}</h1>
+        <p class="profile-meta">{{ profile.campus_display }} • {{ profile.age }} yrs</p>
+        
+        {% if user.id != profile.user.id %}
+        <div style="margin-top: 16px; display: flex; gap: 10px; justify-content: center;">
+            <button id="sparkBtn" onclick="toggleSpark({{ profile.user.id }})" style="background: {% if has_sparked %}#fef3c7{% else %}#f1f5f9{% endif %}; color: {% if has_sparked %}#d97706{% else %}#64748b{% endif %}; border: 1px solid {% if has_sparked %}#fcd34d{% else %}var(--border){% endif %}; padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s;">
+                <i class="{% if has_sparked %}fas{% else %}far{% endif %} fa-bolt"></i>
+                <span id="sparkText">{% if has_sparked %}Sparked!{% else %}Give Spark{% endif %}</span>
+            </button>
+        </div>
+        {% endif %}
+
+        {% if profile.looking_for %}
+        <span class="looking-badge">
+            {% if profile.looking_for == 'friendship' %}Looking for Friendship
+            {% elif profile.looking_for == 'serious' %}Looking for Relationship
+            {% else %}Just Vibing ✌️
+            {% endif %}
+        </span>
+        {% endif %}
+    </div>
+
+    <!-- Bio -->
+    {% if profile.bio %}
+    <div class="profile-section">
+        <h3><i class="fas fa-quote-left"></i> About</h3>
+        <p class="bio-text">{{ profile.bio }}</p>
+    </div>
+    {% endif %}
+
+    <!-- Basic Info -->
+    <div class="profile-section">
+        <h3><i class="fas fa-id-card"></i> Info</h3>
+        <div class="info-grid">
+            {% if profile.course %}
+            <div class="info-item">
+                <div class="info-label">Course</div>
+                <div class="info-value">{{ profile.course }}</div>
+            </div>
+            {% endif %}
+            {% if profile.branch %}
+            <div class="info-item">
+                <div class="info-label">Branch</div>
+                <div class="info-value">{{ profile.branch }}</div>
+            </div>
+            {% endif %}
+
+            {% if profile.clg_year %}
+            <div class="info-item">
+                <div class="info-label">Year</div>
+                <div class="info-value">Year {{ profile.clg_year }}</div>
+            </div>
+            {% endif %}
+            {% if profile.living_place %}
+            <div class="info-item">
+                <div class="info-label">Living In</div>
+                <div class="info-value">{{ profile.living_place }}</div>
+            </div>
+            {% endif %}
+            {% if profile.native_place %}
+            <div class="info-item">
+                <div class="info-label">From</div>
+                <div class="info-value">{{ profile.native_place }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Languages -->
+    {% if profile.languages or profile.mother_tongues %}
+    <div class="profile-section">
+        <h3><i class="fas fa-language"></i> Languages</h3>
+        <div class="tags-grid">
+            {% for lang in profile.mother_tongues_list %}
+            <span class="tag-badge" style="background: #fdf2f8; color: #db2777;">{{ lang }}</span>
+            {% endfor %}
+            {% for lang in profile.languages_list %}
+            <span class="tag-badge">{{ lang }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Interests -->
+    {% if profile.interest_tags %}
+    <div class="profile-section">
+        <h3><i class="fas fa-star"></i> Interests</h3>
+        <div class="tags-grid">
+            {% for tag in profile.interest_tags_list %}
+            <span class="tag-badge">{{ tag }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Gallery -->
+    <div class="profile-section">
+        <h3><i class="fas fa-images"></i> Gallery</h3>
+        {% if gallery %}
+        <div class="gallery-grid">
+            {% for img in gallery %}
+            <img src="{{ img.get_image_url }}" alt="Photo" onclick="openLightbox(this.src)">
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="gallery-empty">
+            <i class="fas fa-camera" style="font-size: 24px; margin-bottom: 8px; display: block;"></i>
+            No photos yet
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <img src="" id="lightbox-img" alt="Full photo">
+</div>
+
+<script>
+function openLightbox(src) {
+    document.getElementById('lightbox-img').src = src;
+    document.getElementById('lightbox').classList.add('active');
+}
+function closeLightbox() {
+    document.getElementById('lightbox').classList.remove('active');
+}
+async function toggleSpark(userId) {
+    const btn = document.getElementById('sparkBtn');
+    const text = document.getElementById('sparkText');
+    const icon = btn.querySelector('i');
+    
+    try {
+        const res = await fetch(`/profile/spark/${userId}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        });
+        const data = await res.json();
+        if (data.success) {
+            if (data.action === 'added') {
+                btn.style.background = '#fef3c7';
+                btn.style.color = '#d97706';
+                btn.style.borderColor = '#fcd34d';
+                text.innerText = 'Sparked!';
+                icon.className = 'fas fa-bolt';
+            } else {
+                btn.style.background = '#f1f5f9';
+                btn.style.color = '#64748b';
+                btn.style.borderColor = 'var(--border)';
+                text.innerText = 'Give Spark';
+                icon.className = 'far fa-bolt';
+            }
+            // Optionally reload to update the badge count, or just update it via JS
+            location.reload(); 
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+</script>
+{% endblock %}

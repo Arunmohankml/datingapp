@@ -2,271 +2,371 @@
 
 {% block head %}
 <style>
-    .match-container {
+    nav { display: none !important; }
+    .container { margin-top: 0 !important; padding-top: 20px !important; padding-bottom: 40px !important; }
+
+    /* Match Header */
+    .match-header {
         text-align: center;
-        padding: 48px 24px;
+        margin-bottom: 24px;
+        animation: fadeIn 0.5s ease-out;
     }
-    
-    .match-title {
-        color: var(--primary);
-        font-size: 28px;
-        margin-bottom: 8px;
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-12px); }
+        to { opacity: 1; transform: translateY(0); }
     }
-    
-    .match-subtitle {
-        font-size: 16px;
-        margin-bottom: 32px;
-    }
-
-    .avatars {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: -20px;
-        margin-bottom: 32px;
-        position: relative;
-    }
-
-    .avatar-wrapper {
-        position: relative;
-        z-index: 2;
-        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    
-    .avatar-wrapper:first-child {
-        transform: translateX(15px);
-        z-index: 1;
-    }
-    .avatar-wrapper:last-child {
-        transform: translateX(-15px);
-        z-index: 3;
-    }
-
-    .avatars img {
-        width: 100px;
-        height: 100px;
+    .match-header .match-icon {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #6366f1, #818cf8);
         border-radius: 50%;
-        object-fit: cover;
-        border: 4px solid var(--surface);
-        background: var(--bg-color);
-        box-shadow: var(--shadow-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 14px;
+        font-size: 24px;
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+    }
+    .match-header h2 {
+        font-size: 22px;
+        margin: 0 0 4px;
+        color: var(--text-main);
+    }
+    .match-header p {
+        font-size: 14px;
+        color: var(--text-muted);
+        margin: 0;
     }
 
-    .match-score {
+    /* Photo Card */
+    .photo-card {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 3/4;
+        border-radius: 24px;
+        overflow: hidden;
+        margin-bottom: 16px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+    }
+    @keyframes scaleIn {
+        from { transform: scale(0.92); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    .photo-slider {
+        display: flex;
+        height: 100%;
+        transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .photo-slide {
+        min-width: 100%;
+        height: 100%;
+        position: relative;
+    }
+    .photo-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Progress bars at top */
+    .photo-progress {
+        position: absolute;
+        top: 10px;
+        left: 12px;
+        right: 12px;
+        display: flex;
+        gap: 4px;
+        z-index: 10;
+    }
+    .progress-bar {
+        flex: 1;
+        height: 3px;
+        background: rgba(255,255,255,0.35);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .progress-bar.active { background: white; }
+
+    /* Tap zones */
+    .tap-left, .tap-right {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 45%;
+        z-index: 5;
+    }
+    .tap-left { left: 0; }
+    .tap-right { right: 0; }
+
+    /* Name overlay at bottom of photo */
+    .photo-info {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 40px 20px 20px;
+        background: linear-gradient(transparent, rgba(0,0,0,0.55));
+        color: white;
+    }
+    .photo-info h3 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        color: white;
+    }
+    .photo-info span {
+        font-size: 13px;
+        opacity: 0.85;
+    }
+
+    /* Compatibility */
+    .compat-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 14px;
+        margin-bottom: 16px;
+        color: #166534;
+        font-weight: 700;
+        font-size: 14px;
+    }
+
+    /* Details Section */
+    .detail-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 14px;
+        box-shadow: var(--shadow-sm);
+    }
+    .detail-label {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        margin-bottom: 10px;
+    }
+
+    /* Info pills */
+    .pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .pill {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        background: #f0fdf4;
-        color: #166534;
-        padding: 8px 16px;
-        border-radius: 20px;
+        gap: 6px;
+        background: #f1f5f9;
+        color: var(--text-main);
+        padding: 8px 14px;
+        border-radius: 12px;
+        font-size: 13px;
         font-weight: 600;
+    }
+    .pill i { color: var(--primary); font-size: 12px; }
+
+    /* Tags */
+    .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .tag {
+        background: #eef2ff;
+        color: var(--primary);
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    /* Bio */
+    .bio {
         font-size: 14px;
-        margin-bottom: 32px;
-        border: 1px solid #bbf7d0;
+        line-height: 1.6;
+        color: var(--text-muted);
+        margin: 0;
     }
-    
-    .btn-block {
-        width: 100%;
-        padding: 12px;
+
+    /* Action Buttons */
+    .actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
     }
+    .btn-connect {
+        flex: 2;
+        padding: 16px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 16px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+        transition: 0.2s;
+    }
+    .btn-connect:hover { background: var(--primary-hover); transform: translateY(-2px); }
+    .btn-skip {
+        flex: 1;
+        padding: 16px;
+        background: #f1f5f9;
+        color: var(--text-main);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-skip:hover { background: #e2e8f0; }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="card match-container">
-    <h2 class="match-title">It's a Match! 🎉</h2>
-    <p class="match-subtitle">You vibe well with <strong>{{ match.name|default:match.user.username }}</strong></p>
-    
-    <div class="profile-slider-wrapper">
-        <div class="profile-slider">
-            <!-- Main PFP -->
-            <div class="slide">
-                <img src="{{ match.get_profile_pic_url }}" alt="Main Profile">
+
+<!-- Header -->
+<div class="match-header">
+    <div class="match-icon">💜</div>
+    <h2>It's a Match!</h2>
+    <p>You and <strong>{{ match.name|default:match.user.username }}</strong> vibe well together</p>
+</div>
+
+<!-- Photo Slider -->
+<div class="photo-card" id="photoCard" data-index="0">
+    <!-- Progress Bars -->
+    <div class="photo-progress" id="progressBars">
+        <div class="progress-bar active"></div>
+        {% for img in match.images.all %}
+        <div class="progress-bar"></div>
+        {% endfor %}
+    </div>
+
+    <div class="photo-slider" id="photoSlider">
+        <!-- Main PFP -->
+        <div class="photo-slide">
+            <div class="tap-left" onclick="changeSlide(-1)"></div>
+            <div class="tap-right" onclick="changeSlide(1)"></div>
+            <img src="{{ match.get_profile_pic_url }}" alt="{{ match.name }}">
+            <div class="photo-info">
+                <h3>{{ match.name|default:match.user.username }}{% if match.age %}, {{ match.age }}{% endif %}</h3>
+                <span>{{ match.campus_display }}</span>
             </div>
-            <!-- Gallery Images -->
-            {% for img in match.images.all %}
-            <div class="slide">
-                <img src="{{ img.get_image_url }}" alt="Gallery Image">
-            </div>
-            {% endfor %}
         </div>
-        
-        {% if match.images.count > 0 %}
-        <div class="slider-controls">
-            <button onclick="prevSlide(this)" class="slider-btn prev">❮</button>
-            <button onclick="nextSlide(this)" class="slider-btn next">❯</button>
+        <!-- Gallery -->
+        {% for img in match.images.all %}
+        <div class="photo-slide">
+            <div class="tap-left" onclick="changeSlide(-1)"></div>
+            <div class="tap-right" onclick="changeSlide(1)"></div>
+            <img src="{{ img.get_image_url }}" alt="Photo">
         </div>
-        <div class="slider-dots">
-            <span class="dot active" onclick="setSlide(this, 0)"></span>
-            {% for i in match.images.all %}
-            <span class="dot" onclick="setSlide(this, {{ forloop.counter }})"></span>
-            {% endfor %}
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Compatibility -->
+<div class="compat-row">
+    <i class="fas fa-check-circle"></i> {{ score }}% Compatible
+</div>
+
+<!-- Info Pills -->
+<div class="detail-card">
+    <div class="pills">
+        {% if match.age %}<div class="pill"><i class="fas fa-birthday-cake"></i> {{ match.age }} yrs</div>{% endif %}
+        {% if match.campus %}<div class="pill"><i class="fas fa-university"></i> {{ match.campus_display }}</div>{% endif %}
+        {% if match.course %}<div class="pill"><i class="fas fa-graduation-cap"></i> {{ match.course }}</div>{% endif %}
+        {% if match.branch %}<div class="pill"><i class="fas fa-code-branch"></i> {{ match.branch }}</div>{% endif %}
+        {% if match.clg_year %}<div class="pill"><i class="fas fa-calendar-alt"></i> Year {{ match.clg_year }}</div>{% endif %}
+        {% if match.living_place %}<div class="pill"><i class="fas fa-map-marker-alt"></i> {{ match.living_place }}</div>{% endif %}
+        {% if match.native_place %}<div class="pill"><i class="fas fa-home"></i> {{ match.native_place }}</div>{% endif %}
+        {% if match.looking_for %}
+        <div class="pill">
+            <i class="fas fa-heart"></i>
+            {% if match.looking_for == 'friendship' %}Friendship
+            {% elif match.looking_for == 'serious' %}Relationship
+            {% else %}Just Vibing{% endif %}
         </div>
         {% endif %}
     </div>
+</div>
 
-    <style>
-        .profile-slider-wrapper {
-            position: relative;
-            width: 250px;
-            height: 250px;
-            margin: 0 auto 32px;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: var(--shadow-lg);
-            border: 3px solid var(--primary);
-        }
-        .profile-slider {
-            display: flex;
-            transition: transform 0.4s ease-in-out;
-            height: 100%;
-        }
-        .slide {
-            min-width: 100%;
-            height: 100%;
-        }
-        .slide img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .slider-controls {
-            position: absolute;
-            top: 50%;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            transform: translateY(-50%);
-            padding: 0 10px;
-            pointer-events: none;
-        }
-        .slider-btn {
-            background: rgba(0,0,0,0.4);
-            color: white;
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            pointer-events: auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            transition: 0.2s;
-        }
-        .slider-btn:hover { background: var(--primary); }
-        
-        .slider-dots {
-            position: absolute;
-            bottom: 10px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-        }
-        .dot {
-            width: 8px;
-            height: 8px;
-            background: rgba(255,255,255,0.5);
-            border-radius: 50%;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .dot.active { background: white; width: 20px; border-radius: 10px; }
-    </style>
+<!-- Bio -->
+{% if match.bio %}
+<div class="detail-card">
+    <div class="detail-label">About</div>
+    <p class="bio">{{ match.bio }}</p>
+</div>
+{% endif %}
 
-    <script>
-        function updateSlider(wrapper, index) {
-            const slider = wrapper.querySelector('.profile-slider');
-            const slides = wrapper.querySelectorAll('.slide');
-            const dots = wrapper.querySelectorAll('.dot');
-            
-            if (index >= slides.length) index = 0;
-            if (index < 0) index = slides.length - 1;
-            
-            slider.style.transform = `translateX(-${index * 100}%)`;
-            
-            dots.forEach(d => d.classList.remove('active'));
-            if(dots[index]) dots[index].classList.add('active');
-            
-            wrapper.dataset.currentIndex = index;
-        }
-
-        function nextSlide(btn) {
-            const wrapper = btn.closest('.profile-slider-wrapper');
-            const currentIndex = parseInt(wrapper.dataset.currentIndex || 0);
-            updateSlider(wrapper, currentIndex + 1);
-        }
-
-        function prevSlide(btn) {
-            const wrapper = btn.closest('.profile-slider-wrapper');
-            const currentIndex = parseInt(wrapper.dataset.currentIndex || 0);
-            updateSlider(wrapper, currentIndex - 1);
-        }
-
-        function setSlide(dot, index) {
-            const wrapper = dot.closest('.profile-slider-wrapper');
-            updateSlider(wrapper, index);
-        }
-    </script>
-    
-    <div class="match-score">
-        <svg style="margin-right: 6px;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        {{ score }}% Compatibility
-    </div>
-    
-    <!-- Expandable Profile Details Section -->
-    <div class="profile-details-wrapper" style="text-align: left; background: var(--bg-color); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 16px; margin-bottom: 24px;">
-        <details>
-            <summary style="font-weight: 600; cursor: pointer; color: var(--text-main); font-size: 15px; outline: none;">
-                View Profile Details 
-            </summary>
-            
-            <div style="margin-top: 16px; font-size: 14px; color: var(--text-muted);">
-                <div style="margin-bottom: 8px;">
-                    <strong style="color: var(--text-main);">Age:</strong> {{ match.age|default:"Not specified" }}
-                </div>
-                
-                {% if match.campus or match.branch %}
-                <div style="margin-bottom: 8px;">
-                    <strong style="color: var(--text-main);">University Info:</strong> 
-                    {% if match.course %}{{ match.course }} in {% endif %}
-                    {{ match.branch|default:"Undeclared" }}, {{ match.campus|default:"Unknown Campus" }}
-                </div>
-                {% endif %}
-
-                {% if match.bio %}
-                <div style="margin-bottom: 8px;">
-                    <strong style="color: var(--text-main);">Bio:</strong><br>
-                    {{ match.bio }}
-                </div>
-                {% endif %}
-
-                {% if match.interest_tags %}
-                <div style="margin-bottom: 8px;">
-                    <strong style="color: var(--text-main);">Interests:</strong><br>
-                    <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;">
-                        {% for tag in match.interest_tags %}
-                            <span style="background: var(--surface); border: 1px solid var(--border); padding: 2px 8px; border-radius: 12px; font-size: 12px; color: var(--primary);">{{ tag }}</span>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-        </details>
-    </div>
-    
-    <div style="display: flex; gap: 12px; margin-top: 10px;">
-        <form action="{% url 'send_match_request' match.user.id %}" method="POST" style="flex: 2;">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-primary btn-block" style="width: 100%;">Connect</button>
-        </form>
-        <form action="{% url 'skip_match' match.user.id %}" method="POST" style="flex: 1;">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-block" style="width: 100%; background: #f3f4f6; color: var(--text-main); border: 1px solid var(--border);">Skip</button>
-        </form>
+<!-- Interests -->
+{% if match.interest_tags %}
+<div class="detail-card">
+    <div class="detail-label">Interests</div>
+    <div class="tags">
+        {% for tag in match.interest_tags_list %}
+        <span class="tag">{{ tag }}</span>
+        {% endfor %}
     </div>
 </div>
+{% endif %}
+
+<!-- Languages -->
+{% if match.languages %}
+<div class="detail-card">
+    <div class="detail-label">Languages</div>
+    <div class="tags">
+        {% for lang in match.languages_list %}
+        <span class="tag">{{ lang }}</span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Actions -->
+<div class="actions">
+    <form action="{% url 'send_match_request' match.user.id %}" method="POST" style="flex:2;">
+        {% csrf_token %}
+        <button type="submit" class="btn-connect" style="width:100%;"><i class="fas fa-bolt"></i> Connect</button>
+    </form>
+    <form action="{% url 'skip_match' match.user.id %}" method="POST" style="flex:1;">
+        {% csrf_token %}
+        <button type="submit" class="btn-skip" style="width:100%;">Skip</button>
+    </form>
+</div>
+
+<script>
+    const slider = document.getElementById('photoSlider');
+    const bars = document.querySelectorAll('#progressBars .progress-bar');
+    const total = slider.querySelectorAll('.photo-slide').length;
+    let current = 0;
+
+    function goTo(n) {
+        current = Math.max(0, Math.min(n, total - 1));
+        slider.style.transform = `translateX(-${current * 100}%)`;
+        bars.forEach((b, i) => b.classList.toggle('active', i <= current));
+    }
+    function changeSlide(dir) { goTo(current + dir); }
+
+    // Swipe
+    let sx = 0;
+    const card = document.getElementById('photoCard');
+    card.addEventListener('touchstart', e => sx = e.touches[0].clientX, {passive:true});
+    card.addEventListener('touchend', e => {
+        const d = sx - e.changedTouches[0].clientX;
+        if (Math.abs(d) > 40) changeSlide(d > 0 ? 1 : -1);
+    }, {passive:true});
+</script>
 {% endblock %}

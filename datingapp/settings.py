@@ -13,6 +13,10 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 import dj_database_url
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -66,6 +70,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'home.context_processors.unread_messages_count',
             ],
         },
     },
@@ -77,29 +82,24 @@ WSGI_APPLICATION = 'datingapp.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-# Enforce Neon Cloud Database in Production
-if os.environ.get('VERCEL'):
-    if os.environ.get('DATABASE_URL'):
-        DATABASES['default'] = dj_database_url.config(
+# Database Configuration
+# We prioritize Supabase/Postgres if DATABASE_URL is provided
+if os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL'),
             conn_max_age=600,
-            ssl_require=True
+            ssl_require=True if os.environ.get('VERCEL') else False
         )
-    else:
-        # If running on Vercel without DATABASE_URL, this will warn us visually
-        print("DATABASE_URL NOT FOUND ON VERCEL!")
-elif os.environ.get('DATABASE_URL'):
-    DATABASES['default'] = dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-    )
+    }
+else:
+    # Fallback to SQLite for local development if no DB URL is set
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -149,22 +149,13 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Cloudinary Configuration
-CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'dhnosj6qj',
-    'API_KEY': '662788289675188',
-    'API_SECRET': 'AkSJwDJJflQe0_2fghNBrnuIsIw'
-}
+# Supabase Configuration
+SUPABASE_URL = os.environ.get('SUPABASE_URL')
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
 
-if os.environ.get('VERCEL'):
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-else:
-    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-
-# ImageKit Settings
-IMAGEKIT_PUBLIC_KEY = os.environ.get("IMAGEKIT_PUBLIC_KEY", "public_t9vvNeEKiVs9c7CpHjKHek0V+Aw=")
-IMAGEKIT_PRIVATE_KEY = os.environ.get("IMAGEKIT_PRIVATE_KEY", "private_qXEUvhHsNdmxrM8AqiEZzlfUg3s=")
-IMAGEKIT_URL_ENDPOINT = os.environ.get("IMAGEKIT_URL_ENDPOINT", "https://ik.imagekit.io/anlsbeoqrq")
+# We'll use our custom Supabase utility for storage
+# But we keep standard MEDIA settings for local fallback if needed
+DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 
 SITE_ID = 1

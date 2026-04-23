@@ -1,514 +1,190 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block body %}
-<div class="profile-edit-wrapper">
-    <!-- Header -->
-    <div class="edit-header">
-        <h1>My Profile</h1>
-        <p>Your digital identity at SRMIST</p>
-    </div>
-
-    <!-- Feedback Messages -->
-    <div id="loading-overlay" class="loading-overlay" style="display: none;">
-        <div class="loader-content">
-            <div class="spinner"></div>
-            <p>Uploading your photo...</p>
-        </div>
-    </div>
-
-    {% if messages %}
-    <div class="messages-container">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">
-            <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
-            {{ message }}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <!-- 1. Identity Preview (Read Only) -->
-    <div class="card identity-card">
-        <div class="pfp-container-large">
-            <div class="pfp-ring">
-                <img src="{{ profile.get_profile_pic_url }}" alt="Profile Picture" id="main-pfp">
-            </div>
-            <label for="id_profile_pic" class="pfp-edit-overlay">
-                <i class="fas fa-camera"></i>
-            </label>
-        </div>
-        
-        <div class="user-info-brief">
-            <h2>{{ profile.name }}</h2>
-            <div class="info-badges">
-                <span class="badge"><i class="fas fa-birthday-cake"></i> {{ profile.age }}</span>
-                <span class="badge"><i class="fas fa-venus-mars"></i> {{ profile.gender|title }}</span>
-                <span class="badge"><i class="fas fa-university"></i> {{ profile.campus }}</span>
-            </div>
-            <p class="verification-note"><i class="fas fa-check-circle"></i> Verified SRM Student</p>
-        </div>
-    </div>
-
-    <form method="POST" enctype="multipart/form-data" id="profile-edit-form">
-        {% csrf_token %}
-        <input type="hidden" name="update_profile" value="1">
-        <div style="display:none">
-            <input type="file" name="profile_pic" id="id_profile_pic" onchange="compressAndSubmit(this, 'profile-edit-form')">
-        </div>
-
-        <!-- 2. Gallery -->
-        <div class="card section-card">
-            <div class="section-header">
-                <h3><i class="fas fa-images"></i> Image Gallery</h3>
-                <span class="count">{{ gallery.count }}/5</span>
-            </div>
-            <p class="section-desc">Add more photos to express your personality.</p>
-            
-            <div class="gallery-grid-modern">
-                {% for img in gallery %}
-                <div class="gallery-tile">
-                    <img src="{{ img.get_image_url }}" alt="Gallery Image">
-                    <a href="{% url 'delete_profile_image' img.id %}" class="tile-delete" onclick="return confirm('Delete this photo?')">
-                        <i class="fas fa-trash-alt"></i>
-                    </a>
-                </div>
-                {% endfor %}
-
-                {% if gallery.count < 5 %}
-                <label for="gallery-upload-input" class="gallery-add-tile">
-                    <i class="fas fa-plus-circle"></i>
-                    <span>Upload</span>
-                </label>
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- 3. Basic Details -->
-        <div class="card section-card">
-            <div class="section-header">
-                <h3><i class="fas fa-id-card"></i> Basic Details</h3>
-            </div>
-            
-            <div class="form-field">
-                <label>Full Name</label>
-                {{ form.name }}
-            </div>
-
-            <div class="form-field">
-                <label>Living Place</label>
-                <input type="text" name="living_place" id="id_living_place" class="form-control" list="indian-cities" placeholder="Search city or town..." value="{{ form.living_place.value|default_if_none:'' }}">
-            </div>
-
-            <div class="form-field">
-                <label>Native Place</label>
-                <input type="text" name="native_place" id="id_native_place" class="form-control" list="indian-cities" placeholder="Search city or town..." value="{{ form.native_place.value|default_if_none:'' }}">
-            </div>
-        </div>
-
-        <!-- 4. Languages & About -->
-        <div class="card section-card">
-            <div class="section-header">
-                <h3><i class="fas fa-comment-dots"></i> Languages & Bio</h3>
-            </div>
-            
-            <div class="form-field">
-                <label>Languages Known</label>
-                <div class="tag-input-wrapper" data-field="languages" data-choices="English,Tamil,Telugu,Malayalam,Hindi,Assamese,Bengali,Bodo,Dogri,Gujarati,Kannada,Kashmiri,Konkani,Maithili,Manipuri,Marathi,Nepali,Odia,Punjabi,Sanskrit,Santali,Sindhi,Urdu">
-                    <div class="tag-container"></div>
-                    <input type="text" class="tag-search" placeholder="Search language...">
-                    <div class="choices-list"></div>
-                    <input type="hidden" name="languages" id="id_languages" value="{{ form.languages.value|join:',' }}">
-                </div>
-            </div>
-
-            <div class="form-field">
-                <label>Mother Tongue(s)</label>
-                <div class="tag-input-wrapper" data-field="mother_tongues" data-choices="English,Tamil,Telugu,Malayalam,Hindi,Assamese,Bengali,Bodo,Dogri,Gujarati,Kannada,Kashmiri,Konkani,Maithili,Manipuri,Marathi,Nepali,Odia,Punjabi,Sanskrit,Santali,Sindhi,Urdu">
-                    <div class="tag-container"></div>
-                    <input type="text" class="tag-search" placeholder="Search languages...">
-                    <div class="choices-list"></div>
-                    <input type="hidden" name="mother_tongues" id="id_mother_tongues" value="{{ form.mother_tongues.value|join:',' }}">
-                </div>
-            </div>
-
-            <div class="form-field">
-                <label>Bio</label>
-                {{ form.bio }}
-            </div>
-
-            <div class="form-field">
-                <label>Interests / Hobbies</label>
-                <div class="tag-input-wrapper" data-field="interest_tags" data-choices="Photography,Traveling,Gaming,Music,Coding,Reading,Cooking,Fitness,Yoga,Art,Dancing,Movies,Anime,Fashion,Sports,Football,Cricket,Basketball,Startups,Crypto,Web3,Tech,Design,Writing,Gardening,Pets,Hiking,Board Games,Stand-up Comedy,Podcasts,Volunteering,Coffee,Tea,Foodie,Meditation,Shopping,Social Media,Netflix,Marvel,DC">
-                    <div class="tag-container"></div>
-                    <input type="text" class="tag-search" placeholder="Search interests...">
-                    <div class="choices-list"></div>
-                    <input type="hidden" name="interest_tags" id="id_interest_tags" value="{{ form.interest_tags.value|join:',' }}">
-                </div>
-            </div>
-        </div>
-
-        <!-- 5. Discovery Preferences -->
-        <div class="card section-card">
-            <div class="section-header">
-                <h3><i class="fas fa-sliders-h"></i> Discovery Preferences</h3>
-            </div>
-            
-            <!-- Range Slider -->
-            <div class="form-field">
-                <label>Discovery Age Range: <span id="age-range-label" style="color: var(--primary); font-weight: 700;">18 - 25</span></label>
-                <div class="range-slider-container">
-                    <div class="slider-track"></div>
-                    <input type="range" min="17" max="30" value="18" id="slider-min" class="slider-input">
-                    <input type="range" min="17" max="30" value="25" id="slider-max" class="slider-input">
-                </div>
-                <div style="display:none">
-                    {{ form.pref_age_min }}
-                    {{ form.pref_age_max }}
-                </div>
-            </div>
-
-            <div class="form-field">
-                <label>Interested In</label>
-                {{ form.pref_gender }}
-            </div>
-
-            <div class="form-field">
-                <label>Looking For</label>
-                {{ form.looking_for }}
-            </div>
-
-            <div class="form-field">
-                <label>Preferred Language(s)</label>
-                <div class="tag-input-wrapper" data-field="pref_languages" data-choices="English,Tamil,Telugu,Malayalam,Hindi,Assamese,Bengali,Bodo,Dogri,Gujarati,Kannada,Kashmiri,Konkani,Maithili,Manipuri,Marathi,Nepali,Odia,Punjabi,Sanskrit,Santali,Sindhi,Urdu">
-                    <div class="tag-container"></div>
-                    <input type="text" class="tag-search" placeholder="Search languages...">
-                    <div class="choices-list"></div>
-                    <input type="hidden" name="pref_languages" id="id_pref_languages" value="{{ form.pref_languages.value|join:',' }}">
-                </div>
-            </div>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-full-width">
-            <i class="fas fa-save"></i> Save Changes
-        </button>
-    </form>
-    
-    <!-- Hidden Gallery Upload Form -->
-    <form method="POST" enctype="multipart/form-data" id="gallery-form" style="display:none">
-        {% csrf_token %}
-        <input type="hidden" name="add_image" value="1">
-        <input type="file" name="image" id="gallery-upload-input" onchange="compressAndSubmit(this, 'gallery-form')">
-    </form>
-</div>
-
-<!-- Indian Cities Datalist -->
-<datalist id="indian-cities">
-    <option value="Mumbai, Maharashtra">
-    <option value="Delhi, NCR">
-    <option value="Bangalore, Karnataka">
-    <option value="Hyderabad, Telangana">
-    <option value="Ahmedabad, Gujarat">
-    <option value="Chennai, Tamil Nadu">
-    <option value="Kolkata, West Bengal">
-    <option value="Surat, Gujarat">
-    <option value="Pune, Maharashtra">
-    <option value="Jaipur, Rajasthan">
-    <option value="Lucknow, Uttar Pradesh">
-    <option value="Kanpur, Uttar Pradesh">
-    <option value="Nagpur, Maharashtra">
-    <option value="Indore, Madhya Pradesh">
-    <option value="Thane, Maharashtra">
-    <option value="Bhopal, Madhya Pradesh">
-    <option value="Visakhapatnam, Andhra Pradesh">
-    <option value="Pimpri-Chinchwad, Maharashtra">
-    <option value="Patna, Bihar">
-    <option value="Vadodara, Gujarat">
-    <option value="Ghaziabad, Uttar Pradesh">
-    <option value="Ludhiana, Punjab">
-    <option value="Coimbatore, Tamil Nadu">
-    <option value="Agra, Uttar Pradesh">
-    <option value="Madurai, Tamil Nadu">
-    <option value="Nashik, Maharashtra">
-    <option value="Faridabad, Haryana">
-    <option value="Meerut, Uttar Pradesh">
-    <option value="Rajkot, Gujarat">
-    <option value="K कल्याण-डोम्बिवली, Maharashtra">
-    <option value="Vasai-Virar, Maharashtra">
-    <option value="Varanasi, Uttar Pradesh">
-    <option value="Srinagar, Jammu and Kashmir">
-    <option value="Aurangabad, Maharashtra">
-    <option value="Dhanbad, Jharkhand">
-    <option value="Amritsar, Punjab">
-    <option value="Navi Mumbai, Maharashtra">
-    <option value="Allahabad, Uttar Pradesh">
-    <option value="Ranchi, Jharkhand">
-    <option value="Howrah, West Bengal">
-    <option value="Jabalpur, Madhya Pradesh">
-    <option value="Gwalior, Madhya Pradesh">
-    <option value="Vijayawada, Andhra Pradesh">
-    <option value="Jodhpur, Rajasthan">
-    <option value="Raipur, Chhattisgarh">
-    <option value="Kota, Rajasthan">
-    <option value="Guwahati, Assam">
-    <option value="Chandigarh, UT">
-    <option value="Solapur, Maharashtra">
-    <option value="Hubli-Dharwad, Karnataka">
-    <option value="Bareilly, Uttar Pradesh">
-    <option value="Moradabad, Uttar Pradesh">
-    <option value="Mysore, Karnataka">
-    <option value="Gurgaon, Haryana">
-    <option value="Aligarh, Uttar Pradesh">
-    <option value="Jalandhar, Punjab">
-    <option value="Tiruchirappalli, Tamil Nadu">
-    <option value="Bhubaneswar, Odisha">
-    <option value="Salem, Tamil Nadu">
-    <option value="Warangal, Telangana">
-    <option value="Guntur, Andhra Pradesh">
-    <option value="Bhiwandi, Maharashtra">
-    <option value="Saharanpur, Uttar Pradesh">
-    <option value="Gorakhpur, Uttar Pradesh">
-    <option value="Bikaner, Rajasthan">
-    <option value="Amravati, Maharashtra">
-    <option value="Noida, Uttar Pradesh">
-    <option value="Jamshedpur, Jharkhand">
-    <option value="Bhilai, Chhattisgarh">
-    <option value="Cuttack, Odisha">
-    <option value="Firozabad, Uttar Pradesh">
-    <option value="Kochi, Kerala">
-    <option value="Nellore, Andhra Pradesh">
-    <option value="Bhavnagar, Gujarat">
-    <option value="Dehradun, Uttarakhand">
-    <option value="Durgapur, West Bengal">
-    <option value="Asansol, West Bengal">
-    <option value="Rourkela, Odisha">
-    <option value="Nanded, Maharashtra">
-    <option value="Kolhapur, Maharashtra">
-    <option value="Ajmer, Rajasthan">
-    <option value="Akola, Maharashtra">
-    <option value="Gulbarga, Karnataka">
-    <option value="Jamnagar, Gujarat">
-    <option value="Ujjain, Madhya Pradesh">
-    <option value="Loni, Uttar Pradesh">
-    <option value="Siliguri, West Bengal">
-    <option value="Jhansi, Uttar Pradesh">
-    <option value="Ulhasnagar, Maharashtra">
-    <option value="Jammu, Jammu and Kashmir">
-    <option value="Sangli-Miraj & Kupwad, Maharashtra">
-    <option value="Mangalore, Karnataka">
-    <option value="Erode, Tamil Nadu">
-    <option value="Belgaum, Karnataka">
-    <option value="Ambattur, Tamil Nadu">
-    <option value="Tirunelveli, Tamil Nadu">
-    <option value="Malegaon, Maharashtra">
-    <option value="Gaya, Bihar">
-    <option value="Jalgaon, Maharashtra">
-    <option value="Udaipur, Rajasthan">
-    <option value="Maheshtala, West Bengal">
-    <option value="Tiruppur, Tamil Nadu">
-    <option value="Davanagere, Karnataka">
-    <option value="Kozhikode, Kerala">
-    <option value="Akbarpur, Uttar Pradesh">
-    <option value="Anantapur, Andhra Pradesh">
-    <option value="Khammam, Telangana">
-    <option value="Karimnagar, Telangana">
-    <option value="Ramagundam, Telangana">
-    <option value="Kakinada, Andhra Pradesh">
-    <option value="Nizamabad, Telangana">
-    <option value="Shimoga, Karnataka">
-    <option value="Tumkur, Karnataka">
-    <option value="Hosur, Tamil Nadu">
-    <option value="Nagercoil, Tamil Nadu">
-</datalist>
-
+{% block head %}
+<!-- face-api.js for face detection -->
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+<!-- nsfwjs for content moderation -->
+<script src="https://unpkg.com/nsfwjs@2.4.2/dist/browser/nsfwjs.min.js"></script>
 <style>
-    .profile-edit-wrapper {
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.7);
+        --glass-border: rgba(255, 255, 255, 0.3);
+    }
+
+    .edit-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px 16px 80px;
+    }
+
+    /* Tabs */
+    .edit-tabs {
         display: flex;
-        flex-direction: column;
-        gap: 24px;
-        padding-bottom: 60px;
-    }
-
-    .edit-header {
-        text-align: center;
-        margin-bottom: 8px;
-    }
-
-    .identity-card {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        padding-top: 40px;
-    }
-
-    .pfp-container-large {
-        position: relative;
-        margin-bottom: 20px;
-    }
-
-    .pfp-ring {
-        width: 140px;
-        height: 140px;
-        border-radius: 50%;
-        padding: 4px;
-        background: linear-gradient(135deg, var(--primary), var(--accent));
-        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
-    }
-
-    .pfp-ring img, .pfp-placeholder {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        object-fit: cover;
+        gap: 8px;
         background: #f1f5f9;
-        border: 4px solid #ffffff;
+        padding: 4px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+        position: sticky;
+        top: 10px;
+        z-index: 100;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
 
-    .pfp-placeholder {
+    .tab-btn {
+        flex: 1;
+        padding: 10px;
+        border: none;
+        background: none;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: 0.3s;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 3rem;
-        color: var(--text-muted);
+        gap: 8px;
     }
 
-    .pfp-edit-overlay {
+    .tab-btn.active {
+        background: white;
+        color: var(--primary);
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* Sections */
+    .edit-section {
+        display: none;
+        animation: fadeIn 0.4s ease;
+    }
+
+    .edit-section.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* PFP Section */
+    .pfp-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 32px;
+        position: relative;
+    }
+
+    .pfp-main-wrap {
+        position: relative;
+        width: 140px;
+        height: 140px;
+    }
+
+    .pfp-main {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid white;
+        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.2);
+    }
+
+    .pfp-edit-btn {
         position: absolute;
         bottom: 5px;
         right: 5px;
         background: var(--primary);
         color: white;
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        border: 3px solid #ffffff;
-        transition: 0.2s;
+        border: 3px solid white;
         box-shadow: var(--shadow-md);
+        transition: 0.2s;
     }
 
-    .pfp-edit-overlay:hover {
+    .pfp-edit-btn:hover {
         transform: scale(1.1);
         background: var(--primary-hover);
     }
 
-    .user-info-brief h2 {
-        margin-bottom: 12px;
-        font-size: 1.8rem;
-        color: var(--text-main);
-    }
-
-    .info-badges {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-bottom: 16px;
-    }
-
-    .badge {
-        background: #f1f5f9;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        color: var(--text-main);
-        border: 1px solid var(--border);
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .verification-note {
-        font-size: 0.8rem;
-        color: #10b981; /* Success Green */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        margin-top: 10px;
-        font-weight: 600;
-    }
-
-    .section-card {
+    /* Cards */
+    .glass-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
         padding: 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.03);
+        position: relative;
+        z-index: 1;
+        transition: z-index 0.2s;
+    }
+    .glass-card:focus-within {
+        z-index: 100;
     }
 
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-    }
-
-    .section-header h3 {
-        margin: 0;
-        font-size: 1.2rem;
+    .glass-card h3 {
+        margin-bottom: 20px;
+        font-size: 1.1rem;
         display: flex;
         align-items: center;
         gap: 10px;
-        background: none;
         color: var(--text-main);
     }
 
-    .section-header .count {
-        font-size: 0.8rem;
-        color: var(--text-muted);
-        background: #f1f5f9;
-        padding: 2px 8px;
-        border-radius: 10px;
-        border: 1px solid var(--border);
-    }
-
-    .section-desc {
-        font-size: 0.85rem;
-        margin-top: -8px;
-        margin-bottom: 20px;
-    }
-
-    .gallery-grid-modern {
+    /* Gallery */
+    .gallery-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 12px;
     }
 
-    .gallery-tile {
+    .gallery-item {
         aspect-ratio: 1;
-        border-radius: 12px;
-        position: relative;
+        border-radius: 16px;
         overflow: hidden;
+        position: relative;
         border: 1px solid var(--border);
     }
 
-    .gallery-tile img {
+    .gallery-item img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
 
-    .tile-delete {
+    .gallery-delete {
         position: absolute;
-        top: 5px;
-        right: 5px;
+        top: 8px;
+        right: 8px;
         background: rgba(244, 63, 94, 0.9);
         color: white;
-        width: 24px;
-        height: 24px;
-        border-radius: 6px;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 0.7rem;
         text-decoration: none;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        font-size: 0.8rem;
+        backdrop-filter: blur(4px);
     }
 
-    .gallery-add-tile {
+    .gallery-add {
         aspect-ratio: 1;
-        border-radius: 12px;
+        border-radius: 16px;
         border: 2px dashed var(--border);
         display: flex;
         flex-direction: column;
@@ -516,384 +192,748 @@
         justify-content: center;
         gap: 8px;
         cursor: pointer;
-        transition: 0.2s;
         color: var(--text-muted);
+        transition: 0.3s;
     }
 
-    .gallery-add-tile:hover {
+    .gallery-add:hover {
         border-color: var(--primary);
         color: var(--primary);
         background: rgba(99, 102, 241, 0.05);
     }
 
-    .gallery-add-tile i { font-size: 1.5rem; }
-    .gallery-add-tile span { font-size: 0.75rem; font-weight: 600; }
-
-    .form-field { margin-bottom: 20px; }
-    .form-field label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; }
-    .form-field small { display: block; margin-top: -12px; margin-bottom: 12px; font-size: 0.75rem; color: var(--text-muted); }
-
-    /* Tag Input CSS */
-    .tag-input-wrapper {
-        position: relative;
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        padding: 5px;
-        background: #f8fafc;
-        min-height: 46px;
+    /* Forms */
+    .form-group {
+        margin-bottom: 24px;
+        position: relative; /* Ensure dropdowns are relative to the group */
     }
-    .tag-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        padding-bottom: 2px;
+
+    .form-group label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 8px;
     }
-    .tag {
+
+    .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1.5px solid var(--border);
+        border-radius: 14px;
+        font-size: 15px;
+        transition: 0.3s;
+        background: white;
+        box-sizing: border-box;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }    /* Dropdown Selection Styles - New Layout */
+    .dropdown-container { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+    .dropdown-chips { display: flex; flex-wrap: wrap; gap: 8px; min-height: 20px; }
+    
+    .chip { 
+        background: rgba(99, 102, 241, 0.1); color: var(--primary); 
+        padding: 6px 12px; border-radius: 12px; font-size: 13px; 
+        font-weight: 600; display: flex; align-items: center; gap: 6px;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    .chip i { cursor: pointer; font-size: 11px; opacity: 0.7; transition: 0.2s; }
+    .chip i:hover { color: #ef4444; opacity: 1; }
+    
+    .dropdown-search-wrap { position: relative; width: 100%; }
+    .dropdown-input-box { 
+        width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); 
+        border-radius: 14px; font-size: 14px; background: white; outline: none; 
+        transition: 0.3s; box-sizing: border-box;
+    }
+    .dropdown-input-box:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+    
+    .dropdown-menu { 
+        position: absolute; top: 105%; left: 0; right: 0; background: white; 
+        border: 1px solid var(--border); border-radius: 16px; max-height: 220px; 
+        overflow-y: auto; z-index: 5000; display: none; 
+        box-shadow: 0 15px 35px rgba(0,0,0,0.15); margin-top: 4px;
+        padding: 8px;
+    }
+    .dropdown-menu.active { display: block; }
+    .dropdown-item { 
+        padding: 10px 14px; cursor: pointer; font-size: 14px; border-radius: 10px;
+        transition: 0.2s; display: flex; justify-content: space-between; align-items: center;
+    }
+    .dropdown-item:hover { background: #f8fafc; color: var(--primary); }
+    .dropdown-item.selected { opacity: 0.5; pointer-events: none; background: #f1f5f9; }
+
+    /* Fixed Save Button - Smaller */
+    .save-btn-fixed {
+        position: fixed;
+        bottom: 90px; /* Above the nav bar */
+        right: 20px;
+        width: auto;
+        padding: 12px 24px;
+        border-radius: 30px;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        z-index: 100;
+        font-weight: 700;
+        font-size: 14px;
         background: var(--primary);
         color: white;
-        padding: 4px 10px;
-        border-radius: 30px;
-        font-size: 13px;
-        font-weight: 600;
+        border: none;
+        cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
+        transition: transform 0.2s, background 0.2s;
     }
-    .tag i { cursor: pointer; opacity: 0.8; }
-    .tag i:hover { opacity: 1; }
-    .tag-search {
-        border: none !important;
-        margin: 0 !important;
-        padding: 8px !important;
-        width: 100% !important;
-        box-shadow: none !important;
-        background: transparent !important;
-    }
-    .choices-list {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: white;
-        border: 1px solid var(--border);
-        border-radius: 0 0 12px 12px;
-        z-index: 10;
-        max-height: 200px;
-        overflow-y: auto;
-        box-shadow: var(--shadow-lg);
-    }
-    .choices-list div {
-        padding: 10px 15px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: 0.2s;
-    }
-    .choices-list div:hover { background: #f1f5f9; color: var(--primary); }
-
-    .range-slider-container {
-        position: relative;
-        width: 100%;
-        height: 6px;
-        background: #e2e8f0;
-        border-radius: 3px;
-        margin: 25px 0 15px;
-    }
-    .slider-track {
-        position: absolute;
-        height: 100%;
-        background: var(--primary);
-        border-radius: 3px;
-        z-index: 1;
-    }
-    .slider-input {
-        position: absolute;
-        width: 100%;
-        background: none;
-        pointer-events: none;
-        -webkit-appearance: none;
-        appearance: none;
-        height: 6px;
-        top: 0;
-        margin: 0;
-        z-index: 2;
-    }
-    .slider-input::-webkit-slider-thumb {
-        height: 20px;
-        width: 20px;
-        border-radius: 50%;
-        background: white;
-        border: 2px solid var(--primary);
-        cursor: pointer;
-        pointer-events: auto;
-        -webkit-appearance: none;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: transform 0.2s;
-    }
-    .slider-input::-webkit-slider-thumb:hover {
-        transform: scale(1.1);
-    }
-
-    .btn-full-width {
-        width: 100%;
-        padding: 16px;
-        font-size: 1.1rem;
-        margin-top: 10px;
-        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-    }
-
-    /* Alerts */
-    .messages-container {
-        margin-bottom: 20px;
-    }
-    .alert {
-        padding: 12px 16px;
-        border-radius: 12px;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-size: 0.9rem;
-        font-weight: 500;
-        animation: slideDown 0.3s ease;
-    }
-    .alert-success {
-        background: #ecfdf5;
-        color: #065f46;
-        border: 1px solid #10b981;
-    }
-    .alert-error, .alert-danger, .alert-warning {
-        background: #fef2f2;
-        color: #991b1b;
-        border: 1px solid #f87171;
-    }
-    @keyframes slideDown {
-        from { transform: translateY(-10px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-    }
-
-    #id_profile_pic {
-        display: none;
+    .save-btn-fixed:active {
+        transform: scale(0.95);
     }
 
     /* Loading Overlay */
-    .loading-overlay {
+    .upload-overlay {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(5px);
-        display: flex;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(255,255,255,0.9);
+        display: none;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         z-index: 10000;
-        flex-direction: column;
+        backdrop-filter: blur(8px);
     }
-    .spinner {
+
+    .loader {
         width: 48px;
         height: 48px;
-        border: 5px solid var(--border);
-        border-bottom-color: var(--primary);
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid var(--primary);
         border-radius: 50%;
-        display: inline-block;
-        box-sizing: border-box;
-        animation: rotation 1s linear infinite;
+        animation: spin 1s linear infinite;
         margin-bottom: 16px;
     }
-    @keyframes rotation {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Toggle Switch */
+    .toggle-switch {
+        position: relative;
+        width: 48px;
+        height: 24px;
+        flex-shrink: 0;
     }
-    .loader-content p {
-        color: var(--text-main);
-        font-weight: 600;
-        margin: 0;
-        text-align: center;
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-switch label {
+        position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #cbd5e1; transition: .3s; border-radius: 24px;
+    }
+    .toggle-switch label:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .toggle-switch input:checked + label {
+        background-color: var(--primary);
+    }
+    .toggle-switch input:checked + label:before {
+        transform: translate(24px, -50%);
     }
 </style>
+{% endblock %}
+
+{% block body %}
+<div class="edit-container">
+    <div class="pfp-header">
+        <div class="pfp-main-wrap">
+            <img src="{{ profile.get_profile_pic_url }}" alt="Me" class="pfp-main" id="preview-pfp">
+            <label for="id_pfp_instant" class="pfp-edit-btn" id="pfp-edit-label">
+                <i class="fas fa-camera"></i>
+            </label>
+            <!-- Face detection status for edit page -->
+            <div id="pfp-face-status" style="display:none; position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap; background:#fef2f2; color:#dc2626; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
+            {% if spark_count > 0 %}
+            <div style="position: absolute; top: -5px; right: -5px; background: linear-gradient(45deg, #f59e0b, #fbbf24); color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4); border: 2px solid white; display: flex; align-items: center; gap: 4px;">
+                <i class="fas fa-bolt"></i> {{ spark_count }}
+            </div>
+            {% endif %}
+        </div>
+        <h2 style="margin-top: 16px; margin-bottom: 4px;">{{ profile.name }}</h2>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 12px;">{{ profile.campus_display }} • {{ profile.age }} years</p>
+        
+        <form method="POST" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" style="background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </form>
+
+        {% if not profile.profile_pic %}
+        <p style="color: var(--primary); font-size: 12px; margin-top: 12px;"><i class="fas fa-info-circle"></i> Tip: Upload a photo to complete your profile!</p>
+        {% endif %}
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="edit-tabs">
+        <button class="tab-btn active" onclick="switchTab('basic')">
+            <i class="fas fa-user-edit"></i> Basic
+        </button>
+        <button class="tab-btn" onclick="switchTab('gallery')">
+            <i class="fas fa-images"></i> Gallery
+        </button>
+        <button class="tab-btn" onclick="switchTab('edu')">
+            <i class="fas fa-graduation-cap"></i> Edu
+        </button>
+        <button class="tab-btn" onclick="switchTab('prefs')">
+            <i class="fas fa-heart"></i> Prefs
+        </button>
+    </div>
+
+    <!-- Main Edit Form -->
+    <form method="POST" enctype="multipart/form-data" id="profile-edit-form">
+        {% csrf_token %}
+        <input type="hidden" name="update_profile" value="1">
+        
+        <!-- PFP input removed from here -->
+
+        <!-- Basic Info Section -->
+        <div id="section-basic" class="edit-section active">
+            <div class="glass-card">
+                <h3><i class="fas fa-id-card"></i> Basic Info</h3>
+                <!-- Hidden: passes name validation without showing editable field -->
+                <input type="hidden" name="name" value="{{ profile.name }}">
+                <div class="form-group">
+                    <label>Bio</label>
+                    {{ form.bio }}
+                </div>
+                <div class="form-group">
+                    <label>Living Place</label>
+                    <input type="text" name="living_place" id="id_living_place" class="form-control" list="indian-cities" placeholder="Search city..." value="{{ form.living_place.value|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label>Native Place (From)</label>
+                    <input type="text" name="native_place" id="id_native_place" class="form-control" list="indian-cities" placeholder="Where are you from?" value="{{ form.native_place.value|default_if_none:'' }}">
+                </div>
+                <div class="form-group">
+                    <label>Mother Tongue(s) {% if profile.mother_tongues %}(Locked){% endif %}</label>
+                    {% if profile.mother_tongues %}
+                        <!-- Locked View -->
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+                            {% for lang in profile.mother_tongues_list %}
+                            <span style="background: #f1f5f9; color: var(--text-main); padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; border: 1px solid var(--border);">{{ lang }}</span>
+                            {% endfor %}
+                        </div>
+                        <input type="hidden" name="mother_tongues" value="{{ profile.mother_tongues }}">
+                    {% else %}
+                        <!-- Editable View (only if empty) -->
+                        <div class="dropdown-container" id="dropdown-mother_tongues" data-field="mother_tongues" data-options="Hindi,Tamil,Malayalam,Telugu,Kannada,Marathi,Bengali,Punjabi,Gujarati,English">
+                            <div class="dropdown-chips"></div>
+                            <div class="dropdown-search-wrap">
+                                <input type="text" class="dropdown-input-box" placeholder="Select your mother tongue...">
+                                <div class="dropdown-menu"></div>
+                            </div>
+                            <!-- Hidden input that JS reads/writes -->
+                            <input type="hidden" name="mother_tongues" id="id_mother_tongues" value="">
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label>Languages</label>
+                    {{ form.languages }}
+                    <div class="dropdown-container" id="dropdown-languages" data-field="languages" data-options="English,Tamil,Hindi,Malayalam,Kannada,Telugu,Marathi,Bengali,Punjabi,Gujarati">
+                        <div class="dropdown-chips"></div>
+                        <div class="dropdown-search-wrap">
+                            <input type="text" class="dropdown-input-box" placeholder="Search languages...">
+                            <div class="dropdown-menu"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <h3><i class="fas fa-star"></i> Interests</h3>
+                <div class="form-group">
+                    <label>Interests</label>
+                    {{ form.interest_tags }}
+                    <div class="dropdown-container" id="dropdown-interests" data-field="interest_tags" data-options="Photography,Gaming,Music,Reading,Travel,Cooking,Coding,Movies,Sports,Fitness">
+                        <div class="dropdown-chips"></div>
+                        <div class="dropdown-search-wrap">
+                            <input type="text" class="dropdown-input-box" placeholder="Search interests...">
+                            <div class="dropdown-menu"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Education Section -->
+        <div id="section-edu" class="edit-section">
+            <div class="glass-card">
+                <h3><i class="fas fa-graduation-cap"></i> Education</h3>
+                <div class="form-group">
+                    <label>Campus (Locked)</label>
+                    {{ form.campus }}
+                    <input type="hidden" name="campus" value="{{ profile.campus }}">
+                </div>
+                <div class="form-group">
+                    <label>Course</label>
+                    {{ form.course }}
+                </div>
+                <div class="form-group">
+                    <label>Branch</label>
+                    {{ form.branch }}
+                </div>
+                <div class="form-group">
+                    <label>Year of Study</label>
+                    {{ form.clg_year }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Preferences Section -->
+        <div id="section-prefs" class="edit-section">
+            <div class="glass-card">
+                <h3><i class="fas fa-search-heart"></i> Preferences</h3>
+                <div class="form-group">
+                    <label>Looking For</label>
+                    {{ form.looking_for }}
+                </div>
+                <div class="form-group">
+                    <label>Interested In</label>
+                    {{ form.pref_gender }}
+                </div>
+                <div class="form-group">
+                    <label>Age Range: <span id="age-label" style="color: var(--primary);">{{ form.pref_age_min.value }} - {{ form.pref_age_max.value }}</span></label>
+                    <div class="range-slider-container">
+                        <div class="slider-track" id="slider-track"></div>
+                        <input type="range" min="18" max="30" value="{{ form.pref_age_min.value }}" id="range-min" class="slider-input">
+                        <input type="range" min="18" max="30" value="{{ form.pref_age_max.value }}" id="range-max" class="slider-input">
+                    </div>
+                    <input type="hidden" name="pref_age_min" id="id_pref_age_min" value="{{ form.pref_age_min.value }}">
+                    <input type="hidden" name="pref_age_max" id="id_pref_age_max" value="{{ form.pref_age_max.value }}">
+                </div>
+                <div class="form-group">
+                    <label>Preferred Languages</label>
+                    {{ form.pref_languages }}
+                    <div class="dropdown-container" id="dropdown-pref_languages" data-field="pref_languages" data-options="English,Hindi,Tamil,Malayalam,Telugu,Kannada,Marathi,Other">
+                        <div class="dropdown-chips"></div>
+                        <div class="dropdown-search-wrap">
+                            <input type="text" class="dropdown-input-box" placeholder="Search preferred languages...">
+                            <div class="dropdown-menu"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div style="display: flex; align-items: flex-start; gap: 12px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border);">
+                        <div style="flex: 1;">
+                            <label for="id_is_discoverable" style="margin-bottom: 4px; cursor: pointer;">Make my profile discoverable</label>
+                            <p style="font-size: 11px; color: var(--text-muted); margin: 0;">When enabled, your profile will appear in the match feed and other users can discover you.</p>
+                        </div>
+                        <div class="toggle-switch">
+                            <input type="checkbox" name="is_discoverable" id="id_is_discoverable" {% if profile.is_discoverable %}checked{% endif %}>
+                            <label for="id_is_discoverable"></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary save-btn-fixed" id="save-btn">
+            <i class="fas fa-save"></i> Save All Changes
+        </button>
+    </form>
+
+    <!-- Gallery Section (Separate Form) -->
+    <div id="section-gallery" class="edit-section">
+        <div class="glass-card">
+            <h3><i class="fas fa-images"></i> Photo Gallery <span style="font-size: 12px; margin-left: auto;">{{ gallery.count }}/5</span></h3>
+            <div class="gallery-grid">
+                {% for img in gallery %}
+                <div class="gallery-item">
+                    <img src="{{ img.get_image_url }}" alt="Gallery">
+                    <a href="{% url 'delete_profile_image' img.id %}" class="gallery-delete" onclick="return confirm('Delete photo?')">
+                        <i class="fas fa-times"></i>
+                    </a>
+                </div>
+                {% endfor %}
+
+                {% if gallery.count < 5 %}
+                <label for="id_gallery_file" class="gallery-add">
+                    <i class="fas fa-plus"></i>
+                    <span>Add Photo</span>
+                </label>
+                {% endif %}
+            </div>
+        </div>
+        <form method="POST" enctype="multipart/form-data" id="gallery-form" style="display: none;">
+            {% csrf_token %}
+            <input type="hidden" name="add_image" value="1">
+            <input type="file" name="image_file" id="id_gallery_file" onchange="handleGalleryUpload(this)">
+        </form>
+
+        <!-- Hidden PFP Upload Form -->
+        <form method="POST" enctype="multipart/form-data" id="pfp-instant-form" style="display: none;">
+            {% csrf_token %}
+            <input type="hidden" name="update_pfp_instant" value="1">
+            <input type="file" name="profile_pic_file" id="id_pfp_instant" accept="image/*">
+        </form>
+    </div>
+</div>
+
+<!-- Upload Overlay -->
+<div id="upload-overlay" class="upload-overlay">
+    <div class="loader"></div>
+    <p id="upload-text">Uploading your photo...</p>
+</div>
+
+<!-- Cities Datalist -->
+<datalist id="indian-cities">
+    <option value="Chennai, Tamil Nadu">
+    <option value="Kanchipuram, Tamil Nadu">
+    <option value="Trichy, Tamil Nadu">
+    <option value="Madurai, Tamil Nadu">
+    <option value="Coimbatore, Tamil Nadu">
+    <option value="Bangalore, Karnataka">
+    <option value="Hyderabad, Telangana">
+    <option value="Delhi, NCR">
+</datalist>
 
 <script>
-    // Tag Input Logic
-    document.querySelectorAll('.tag-input-wrapper').forEach(wrapper => {
-        const fieldName = wrapper.dataset.field;
-        const allChoices = wrapper.dataset.choices.split(',');
-        const container = wrapper.querySelector('.tag-container');
-        const searchInput = wrapper.querySelector('.tag-search');
-        const choiceList = wrapper.querySelector('.choices-list');
-        const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+    function switchTab(tabId) {
+        document.querySelectorAll('.edit-section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         
-        let tags = hiddenInput.value ? hiddenInput.value.split(',').filter(t => t) : [];
+        document.getElementById('section-' + tabId).classList.add('active');
+        document.querySelector(`.tab-btn[onclick="switchTab('${tabId}')"]`).classList.add('active');
+    }
 
-        function renderTags() {
-            container.innerHTML = '';
-            tags.forEach(tag => {
-                const tagEl = document.createElement('span');
-                tagEl.className = 'tag';
-                tagEl.innerHTML = `${tag} <i class="fas fa-times" onclick="removeTagKey('${fieldName}', '${tag}')"></i>`;
-                container.appendChild(tagEl);
+    function showOverlay(text) {
+        document.getElementById('upload-text').innerText = text;
+        document.getElementById('upload-overlay').style.display = 'flex';
+    }
+
+    // PFP Instant Upload
+    async function handlePfpInstantUpload(input) {
+        if (input.files && input.files[0]) {
+            showOverlay("Compressing & Uploading...");
+            try {
+                const compressed = await compressImage(input.files[0]);
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(compressed);
+                input.files = dataTransfer.files;
+                document.getElementById('pfp-instant-form').submit();
+            } catch (err) {
+                console.error("Compression failed:", err);
+                document.getElementById('pfp-instant-form').submit(); // Fallback to original
+            }
+        }
+    }
+
+    // Gallery Upload
+    async function handleGalleryUpload(input) {
+        if (input.files && input.files[0]) {
+            showOverlay("Verifying Photo Safety...");
+            
+            try {
+                const file = input.files[0];
+                
+                // Human detection (flexible 0.2 threshold)
+                await loadFaceModels();
+                const imgEl = new Image();
+                const url = URL.createObjectURL(file);
+                imgEl.src = url;
+                await new Promise(r => imgEl.onload = r);
+                const detections = await faceapi.detectAllFaces(imgEl, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.2 }));
+                
+                if (detections.length === 0) {
+                    URL.revokeObjectURL(url);
+                    hideOverlay();
+                    alert("Human not detected. Please upload natural photos of yourself.");
+                    input.value = '';
+                    return;
+                }
+
+                // Nudity/NSFW/Meme detection
+                const model = await loadNSFWModel();
+                const predictions = await model.classify(imgEl);
+                
+                const porn = predictions.find(p => p.className === 'Porn');
+                const hentai = predictions.find(p => p.className === 'Hentai');
+                const drawing = predictions.find(p => p.className === 'Drawing');
+                const neutral = predictions.find(p => p.className === 'Neutral');
+
+                URL.revokeObjectURL(url);
+
+                if ((porn && porn.probability > 0.3) || (hentai && hentai.probability > 0.3)) {
+                    hideOverlay();
+                    alert("Inappropriate content detected. Please keep your gallery community-friendly.");
+                    input.value = '';
+                    return;
+                }
+
+                if (drawing && drawing.probability > 0.5) {
+                    hideOverlay();
+                    alert("Digital drawings or memes are not allowed. Please upload real photos.");
+                    input.value = '';
+                    return;
+                }
+
+                if (neutral && neutral.probability < 0.2) {
+                    hideOverlay();
+                    alert("Please upload a natural, clear photo of yourself.");
+                    input.value = '';
+                    return;
+                }
+
+                const compressed = await compressImage(file);
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(compressed);
+                input.files = dataTransfer.files;
+                document.getElementById('gallery-form').submit();
+            } catch (err) {
+                console.error("Gallery verification failed:", err);
+                document.getElementById('gallery-form').submit(); // Fallback
+            }
+        }
+    }
+
+    let nsfwModel = null;
+    async function loadNSFWModel() {
+        if (!nsfwModel) nsfwModel = await nsfwjs.load();
+        return nsfwModel;
+    }
+
+    function hideOverlay() {
+        document.getElementById('upload-overlay').style.display = 'none';
+    }
+
+    // Initialize Searchable Dropdowns (Properly handles existing data)
+    document.querySelectorAll('.dropdown-container').forEach(container => {
+        const fieldName = container.dataset.field;
+        const options = container.dataset.options.split(',');
+        const hiddenInput = document.querySelector(`input[name="${fieldName}"]`);
+        if (!hiddenInput) return;
+        
+        const chipsContainer = container.querySelector('.dropdown-chips');
+        const searchInput = container.querySelector('.dropdown-input-box');
+        const menu = container.querySelector('.dropdown-menu');
+
+        // Parse existing values from the hidden input
+        let rawVal = hiddenInput.value || "";
+        // Aggressively clean up any stringified Python list residue
+        rawVal = rawVal.replace(/[\[\]'"]/g, "").trim();
+        let selected = rawVal ? rawVal.split(',').map(x => x.trim()).filter(x => x && x.toLowerCase() !== 'none') : [];
+        
+        function renderChips() {
+            chipsContainer.innerHTML = '';
+            selected.forEach(val => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.innerHTML = `${val} <i class="fas fa-times"></i>`;
+                chip.querySelector('i').onclick = (e) => {
+                    e.stopPropagation();
+                    selected = selected.filter(s => s !== val);
+                    renderChips();
+                };
+                chipsContainer.appendChild(chip);
             });
-            hiddenInput.value = tags.join(',');
+            hiddenInput.value = selected.join(',');
         }
 
-        window.removeTagKey = (field, tag) => {
-            if (field !== fieldName) return;
-            tags = tags.filter(t => t !== tag);
-            renderTags();
-        };
+        searchInput.addEventListener('focus', () => {
+            renderMenu(searchInput.value);
+            menu.classList.add('active');
+        });
 
-        searchInput.onfocus = () => {
-            showChoices(searchInput.value);
-        };
+        searchInput.addEventListener('input', () => {
+            renderMenu(searchInput.value);
+            menu.classList.add('active');
+        });
 
-        searchInput.oninput = () => {
-            showChoices(searchInput.value);
-        };
-
-        function showChoices(query) {
-            choiceList.innerHTML = '';
-            const filtered = allChoices.filter(c => 
-                c.toLowerCase().includes(query.toLowerCase()) && !tags.includes(c)
+        function renderMenu(filter = '') {
+            menu.innerHTML = '';
+            const filtered = options.filter(o => 
+                o.toLowerCase().includes(filter.toLowerCase()) && !selected.includes(o)
             );
             
             if (filtered.length > 0) {
-                choiceList.style.display = 'block';
-                filtered.forEach(choice => {
-                    const div = document.createElement('div');
-                    div.textContent = choice;
-                    div.onclick = () => {
-                        tags.push(choice);
-                        renderTags();
+                filtered.forEach(o => {
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item';
+                    item.innerText = o;
+                    item.onclick = (e) => {
+                        e.stopPropagation();
+                        if (fieldName === 'mother_tongues') {
+                            selected = [o];
+                        } else {
+                            if (!selected.includes(o)) selected.push(o);
+                        }
+                        renderChips();
                         searchInput.value = '';
-                        choiceList.style.display = 'none';
+                        menu.classList.remove('active');
                     };
-                    choiceList.appendChild(div);
+                    menu.appendChild(item);
                 });
             } else {
-                choiceList.style.display = 'none';
+                const noResult = document.createElement('div');
+                noResult.className = 'dropdown-item no-results';
+                noResult.innerText = 'No matches found';
+                menu.appendChild(noResult);
             }
         }
 
+        // Close menu on click outside
         document.addEventListener('click', (e) => {
-            if (!wrapper.contains(e.target)) choiceList.style.display = 'none';
+            if (!container.contains(e.target)) menu.classList.remove('active');
         });
 
-        renderTags();
+        // Immediate first render to show existing bubbles
+        renderChips();
     });
 
-    // Slider Logic
-    const sliderMin = document.getElementById('slider-min');
-    const sliderMax = document.getElementById('slider-max');
-    const track = document.querySelector('.slider-track');
-    const label = document.getElementById('age-range-label');
-    const inputMin = document.getElementById('id_pref_age_min');
-    const inputMax = document.getElementById('id_pref_age_max');
+    window.removeTagFromField = (field, val) => window['removeTag_' + field](val);
 
-    function updateSlider() {
-        let minVal = parseInt(sliderMin.value);
-        let maxVal = parseInt(sliderMax.value);
-        if (minVal > maxVal) { [minVal, maxVal] = [maxVal, minVal]; }
-        const minPercent = ((minVal - 17) / (30 - 17)) * 100;
-        const maxPercent = ((maxVal - 17) / (30 - 17)) * 100;
-        track.style.left = minPercent + "%";
-        track.style.width = (maxPercent - minPercent) + "%";
-        label.textContent = `${minVal} - ${maxVal}`;
-        inputMin.value = minVal;
-        inputMax.value = maxVal;
+    // Slider Logic
+    const rMin = document.getElementById('range-min');
+    const rMax = document.getElementById('range-max');
+    const track = document.getElementById('slider-track');
+    const ageLabel = document.getElementById('age-label');
+    const hMin = document.getElementById('id_pref_age_min');
+    const hMax = document.getElementById('id_pref_age_max');
+
+    function update() {
+        let v1 = parseInt(rMin.value);
+        let v2 = parseInt(rMax.value);
+        if (v1 > v2) [v1, v2] = [v2, v1];
+        
+        const p1 = ((v1 - 18) / (30 - 18)) * 100;
+        const p2 = ((v2 - 18) / (30 - 18)) * 100;
+        
+        track.style.left = p1 + "%";
+        track.style.width = (p2 - p1) + "%";
+        ageLabel.innerText = `${v1} - ${v2}`;
+        hMin.value = v1;
+        hMax.value = v2;
     }
 
-    sliderMin.oninput = updateSlider;
-    sliderMax.oninput = updateSlider;
+    rMin.oninput = update;
+    rMax.oninput = update;
+    update();
 
-    // Initialize sliders on load
-    window.onload = () => {
-        if (inputMin && inputMin.value) sliderMin.value = inputMin.value;
-        if (inputMax && inputMax.value) sliderMax.value = inputMax.value;
-        updateSlider();
+    // Form Submit Loader
+    document.getElementById('profile-edit-form').onsubmit = () => {
+        showOverlay("Saving your profile...");
     };
 
-    // Consolidate PFP Auto-submit & Gallery Upload with Compression
-    async function compressAndSubmit(input, formId) {
-        console.log("DEBUG: compressAndSubmit triggered for form:", formId);
-        const file = input.files[0];
-        if (!file) return;
+    // ───── FACE DETECTION FOR INSTANT PFP UPLOAD ─────
+    let faceModelsLoaded = false;
+    const pfpInstantInput = document.getElementById('id_pfp_instant');
+    const pfpInstantForm = document.getElementById('pfp-instant-form');
+    const pfpFaceStatus = document.getElementById('pfp-face-status');
 
-        // Show loading overlay immediately
-        document.getElementById('loading-overlay').style.display = 'flex';
-
-        // 1. Check if compression is needed (standard images)
-        if (!file.type.startsWith('image/')) {
-            console.log("DEBUG: Non-image file, submitting normally...");
-            document.getElementById(formId).submit();
-            return;
-        }
-
-        try {
-            console.log(`DEBUG: Processing image: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`);
-            const compressedBlob = await compressImage(file, 1000, 0.8); // Resize to 1000px max, 80% quality
-            console.log(`DEBUG: Compression complete: ${(compressedBlob.size/1024/1024).toFixed(2)} MB`);
-
-            // 2. Prepare DataTransfer to swap the file in the input
-            const dataTransfer = new DataTransfer();
-            const newFile = new File([compressedBlob], file.name, { type: "image/jpeg" });
-            dataTransfer.items.add(newFile);
-            input.files = dataTransfer.files;
-
-            // 3. Submit the form
-            console.log("DEBUG: Swapped file in input, submitting form...");
-            document.getElementById(formId).submit();
-
-        } catch (error) {
-            console.error("DEBUG: Compression failed, trying fallback submit:", error);
-            document.getElementById(formId).submit();
-        }
+    async function loadFaceModels() {
+        if (faceModelsLoaded) return;
+        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        faceModelsLoaded = true;
     }
 
-    function compressImage(file, maxDimension, quality) {
-        return new Promise((resolve, reject) => {
+    if (pfpInstantInput) {
+        pfpInstantInput.addEventListener('change', async function() {
+            if (!this.files || !this.files[0]) return;
+            const file = this.files[0];
+            const label = document.getElementById('pfp-edit-label');
+
+            // Preview immediately
             const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = event => {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    let width = img.width;
-                    let height = img.height;
-
-                    if (width > height) {
-                        if (width > maxDimension) {
-                            height *= maxDimension / width;
-                            width = maxDimension;
-                        }
-                    } else {
-                        if (height > maxDimension) {
-                            width *= maxDimension / height;
-                            height = maxDimension;
-                        }
-                    }
-
-                    canvas.width = width;
-                    canvas.height = height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, width, height);
-
-                    canvas.toBlob((blob) => {
-                        resolve(blob);
-                    }, 'image/jpeg', quality);
-                };
-                img.onerror = (err) => reject(err);
+            reader.onload = (e) => {
+                document.getElementById('preview-pfp').src = e.target.result;
             };
-            reader.onerror = (err) => reject(err);
-        });
-    }
+            reader.readAsDataURL(file);
 
-    // Also show loading on main button save (no compression for non-pic fields)
-    const profileForm = document.getElementById('profile-edit-form');
-    if (profileForm) {
-        profileForm.addEventListener('submit', function() {
-            document.getElementById('loading-overlay').style.display = 'flex';
+            // Show checking status
+            pfpFaceStatus.style.display = 'block';
+            pfpFaceStatus.style.background = '#f1f5f9';
+            pfpFaceStatus.style.color = '#64748b';
+            pfpFaceStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking photo...';
+            label.style.pointerEvents = 'none';
+
+            try {
+                await loadFaceModels();
+                const imgEl = new Image();
+                const url = URL.createObjectURL(file);
+                imgEl.src = url;
+                await new Promise(r => imgEl.onload = r);
+                const detections = await faceapi.detectAllFaces(imgEl, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }));
+                
+                if (detections.length === 0) {
+                    URL.revokeObjectURL(url);
+                    pfpFaceStatus.style.background = '#fef2f2';
+                    pfpFaceStatus.style.color = '#dc2626';
+                    pfpFaceStatus.innerHTML = '<i class="fas fa-times-circle"></i> Face not detected. Please upload a clear photo showing your face.';
+                    this.value = '';
+                    document.getElementById('preview-pfp').src = "{{ profile.get_profile_pic_url }}";
+                    label.style.pointerEvents = 'auto';
+                    setTimeout(() => { pfpFaceStatus.style.display = 'none'; }, 5000);
+                    return;
+                }
+
+                // Nudity/NSFW/Meme check
+                pfpFaceStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking photo safety...';
+                const model = await loadNSFWModel();
+                const predictions = await model.classify(imgEl);
+                
+                const porn = predictions.find(p => p.className === 'Porn');
+                const hentai = predictions.find(p => p.className === 'Hentai');
+                const drawing = predictions.find(p => p.className === 'Drawing');
+                const neutral = predictions.find(p => p.className === 'Neutral');
+                
+                URL.revokeObjectURL(url);
+
+                let error = null;
+                if ((porn && porn.probability > 0.3) || (hentai && hentai.probability > 0.3)) {
+                    error = "Inappropriate content detected.";
+                } else if (drawing && drawing.probability > 0.5) {
+                    error = "Digital drawings or memes are not allowed.";
+                } else if (neutral && neutral.probability < 0.2) {
+                    error = "Please upload a natural photo of yourself.";
+                }
+
+                if (error) {
+                    pfpFaceStatus.style.background = '#fef2f2';
+                    pfpFaceStatus.style.color = '#dc2626';
+                    pfpFaceStatus.innerHTML = `<i class="fas fa-times-circle"></i> ${error}`;
+                    this.value = '';
+                    document.getElementById('preview-pfp').src = "{{ profile.get_profile_pic_url }}";
+                    label.style.pointerEvents = 'auto';
+                    setTimeout(() => { pfpFaceStatus.style.display = 'none'; }, 5000);
+                    return;
+                }
+
+                // All good — success
+                pfpFaceStatus.style.background = '#f0fdf4';
+                pfpFaceStatus.style.color = '#16a34a';
+                pfpFaceStatus.innerHTML = '<i class="fas fa-check-circle"></i> Face detected & Safe! Uploading...';
+                setTimeout(() => {
+                    showOverlay("Updating profile picture...");
+                    pfpInstantForm.submit();
+                }, 600);
+            } catch (err) {
+                console.error('Face detection error:', err);
+                // On model load failure, allow upload to proceed
+                showOverlay("Updating profile picture...");
+                pfpInstantForm.submit();
+            }
         });
     }
 </script>

@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<style>
+    .edit-page {
+        padding: 20px 0;
+    }
+    .edit-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: var(--shadow-sm);
+    }
+    .edit-card h2 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        font-size: 20px;
+        color: var(--primary);
+    }
+    textarea {
+        width: 100%;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px;
+        font-family: inherit;
+        font-size: 15px;
+        margin-bottom: 20px;
+        outline: none;
+        resize: none;
+    }
+    textarea:focus {
+        border-color: var(--primary);
+    }
+    .actions {
+        display: flex;
+        gap: 12px;
+    }
+    .btn-save {
+        flex: 1;
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .btn-cancel {
+        flex: 1;
+        background: #f1f5f9;
+        color: #64748b;
+        border: none;
+        padding: 12px;
+        border-radius: 12px;
+        font-weight: 700;
+        text-align: center;
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="edit-page">
+    <div class="edit-card">
+        <h2>Edit Confession</h2>
+        <form method="POST">
+            {% csrf_token %}
+            <textarea name="content" rows="6">{{ confession.content }}</textarea>
+            <div class="actions">
+                <a href="{% url 'confession_detail' confession.id %}" class="btn-cancel">Cancel</a>
+                <button type="submit" class="btn-save">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

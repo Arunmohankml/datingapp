@@ -1,0 +1,384 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<style>
+    /* Feed Container */
+    .confession-page {
+        padding-bottom: 60px;
+    }
+
+    /* Page Header */
+    .page-header {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+    .page-header h2 {
+        font-size: 24px;
+        color: var(--text-main);
+        margin: 0 0 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    .page-header p {
+        font-size: 14px;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    /* Filters Bar */
+    .filter-bar {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+    }
+    .filter-bar form {
+        display: flex;
+        gap: 12px;
+        width: 100%;
+    }
+    .filter-select {
+        flex: 1;
+        padding: 10px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: var(--surface);
+        color: var(--text-main);
+        font-size: 14px;
+        font-weight: 600;
+        outline: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 16px;
+    }
+
+    /* Create Post Button */
+    .create-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--primary);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 16px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 15px;
+        justify-content: center;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+        cursor: pointer;
+        border: none;
+        width: 100%;
+        transition: 0.2s;
+    }
+    .create-btn:hover {
+        background: var(--primary-hover);
+        transform: translateY(-2px);
+    }
+
+    /* Confession Card */
+    .c-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        cursor: pointer;
+        transition: 0.2s;
+        text-decoration: none;
+        display: block;
+        color: inherit;
+    }
+    .c-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    }
+
+    /* Card Header */
+    .c-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    .c-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: var(--border);
+    }
+    .c-meta {
+        flex: 1;
+    }
+    .c-name {
+        font-weight: 700;
+        font-size: 15px;
+        color: var(--text-main);
+        margin: 0 0 2px;
+    }
+    .c-time {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+    .c-campus {
+        background: #f1f5f9;
+        color: var(--text-muted);
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    /* Card Content */
+    .c-content {
+        font-size: 15px;
+        line-height: 1.6;
+        color: var(--text-main);
+        margin-bottom: 12px;
+        word-break: break-word;
+    }
+    .c-image {
+        width: 100%;
+        max-height: 300px;
+        object-fit: cover;
+        border-radius: 14px;
+        margin-bottom: 12px;
+    }
+
+    /* Card Footer */
+    .c-footer {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border-top: 1px solid var(--border);
+        padding-top: 12px;
+        color: var(--text-muted);
+    }
+    .c-action {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    .c-action i {
+        font-size: 16px;
+    }
+    .c-action.like-btn {
+        z-index: 10;
+    }
+    .c-action.like-btn.liked {
+        color: #ef4444;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--text-muted);
+        background: var(--surface);
+        border-radius: 20px;
+        border: 1px dashed var(--border);
+    }
+    .empty-state i {
+        font-size: 32px;
+        margin-bottom: 12px;
+        color: var(--border);
+    }
+
+    /* Modal for Create */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(4px);
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        z-index: 2000;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+        background: var(--bg-color);
+        width: 100%;
+        max-width: 500px;
+        border-radius: 24px 24px 0 0;
+        padding: 24px;
+        animation: slideUp 0.3s ease-out;
+    }
+    @keyframes slideUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .modal-header h3 { margin: 0; font-size: 20px; }
+    .close-modal { background: none; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer; }
+    
+    .toggle-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+        padding: 12px;
+        background: var(--surface);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+    }
+    .toggle-row label { margin: 0; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    
+    /* Toggle Switch */
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--primary); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="confession-page">
+
+    <div class="page-header">
+        <h2><i class="fas fa-mask" style="color:var(--primary);"></i> Confessions</h2>
+        <p>Share your secrets, stay anonymous.</p>
+        {% if is_admin %}
+        <a href="{% url 'admin_dashboard' %}" style="display: inline-block; margin-top: 10px; background: #0f172a; color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none;"><i class="fas fa-shield-alt"></i> Admin Panel</a>
+        {% endif %}
+    </div>
+
+    <!-- Create Button -->
+    <button class="create-btn" onclick="openCreateModal()">
+        <i class="fas fa-pen"></i> Write a Confession
+    </button>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+        <form method="GET" action="{% url 'confessions_feed' %}" id="filterForm">
+            <select name="sort" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="latest" {% if current_sort == 'latest' %}selected{% endif %}>Latest</option>
+                <option value="top" {% if current_sort == 'top' %}selected{% endif %}>Top Rated</option>
+            </select>
+            <select name="campus" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                <option value="">All Campuses</option>
+                <option value="KTR" {% if current_campus == 'KTR' %}selected{% endif %}>KTR</option>
+                <option value="RMP" {% if current_campus == 'RMP' %}selected{% endif %}>RMP</option>
+                <option value="VDP" {% if current_campus == 'VDP' %}selected{% endif %}>VDP</option>
+            </select>
+        </form>
+    </div>
+
+    <!-- Feed -->
+    <div class="feed">
+        {% if confessions %}
+            {% for c in confessions %}
+            <a href="{% url 'confession_detail' c.id %}" class="c-card">
+                <div class="c-header">
+                    <img src="{{ c.display_pic }}" alt="Avatar" class="c-avatar">
+                    <div class="c-meta">
+                        <p class="c-name">{{ c.display_name }}</p>
+                        <p class="c-time">{{ c.created_at|timesince }} ago</p>
+                    </div>
+                    {% if c.campus %}
+                    <div class="c-campus">{{ c.campus }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="c-content">{{ c.content|truncatechars:200|linebreaksbr }}</div>
+                
+                {% if c.image %}
+                <img src="{{ c.image }}" alt="Attachment" class="c-image">
+                {% endif %}
+
+                <div class="c-footer">
+                    <div class="c-action like-btn" onclick="likeConfession(event, {{ c.id }}, this)">
+                        <i class="fas fa-heart"></i> <span class="like-count">{{ c.likes_count }}</span>
+                    </div>
+                    <div class="c-action">
+                        <i class="fas fa-comment"></i> {{ c.comments.count }}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-comment-slash"></i>
+                <h3>No confessions yet</h3>
+                <p>Be the first to share a secret!</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Create Modal -->
+<div class="modal-overlay" id="createModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>New Confession</h3>
+            <button class="close-modal" onclick="closeCreateModal()">&times;</button>
+        </div>
+        
+        <form method="POST" action="{% url 'create_confession' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <textarea name="content" rows="4" placeholder="What's on your mind?..." required></textarea>
+            
+            <div class="toggle-row">
+                <label><i class="fas fa-mask" style="color:var(--primary);"></i> Post Anonymously</label>
+                <label class="switch">
+                    <input type="checkbox" name="is_anonymous" value="true" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <label>Select Campus (Optional)</label>
+            <select name="campus">
+                <option value="">None</option>
+                <option value="KTR">KTR</option>
+                <option value="RMP">RMP</option>
+                <option value="VDP">VDP</option>
+            </select>
+            
+            <button type="submit" class="create-btn" style="margin-bottom:0;">Post Confession</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function openCreateModal() { document.getElementById('createModal').classList.add('active'); }
+function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
+
+async function likeConfession(e, id, btn) {
+    e.preventDefault(); // prevent opening the card link
+    e.stopPropagation();
+    
+    try {
+        const res = await fetch(`/confessions/${id}/like/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+            }
+        });
+        const data = await res.json();
+        if (data.success) {
+            btn.classList.add('liked');
+            btn.querySelector('.like-count').textContent = data.likes_count;
+        }
+    } catch(err) {}
+}
+</script>
+
+{% endblock %}

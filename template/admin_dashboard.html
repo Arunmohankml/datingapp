@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<style>
+    .admin-container {
+        padding: 20px 0;
+    }
+    .admin-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 20px;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow-sm);
+    }
+    .admin-card h3 {
+        margin-top: 0;
+        margin-bottom: 16px;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .item-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .item-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+    }
+    .item-info {
+        flex: 1;
+        min-width: 0;
+    }
+    .item-title {
+        font-weight: 700;
+        font-size: 14px;
+        margin-bottom: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .item-meta {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+    .btn-danger {
+        background: #fee2e2;
+        color: #ef4444;
+        border: 1px solid #fecaca;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-danger:hover {
+        background: #fecaca;
+    }
+    .btn-secondary {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid var(--border);
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="admin-container">
+    <h2 style="margin-bottom: 20px;">Admin Dashboard</h2>
+
+    <!-- Wall Controls -->
+    <div class="admin-card">
+        <h3><i class="fas fa-paint-brush"></i> Wall Management</h3>
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">Reset the anonymous wall strokes.</p>
+        <form action="{% url 'admin_action' %}" method="POST" onsubmit="return confirm('Erase everything on the wall?')">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="clear_wall">
+            <button type="submit" class="btn-danger">Erase All Scribbles</button>
+        </form>
+    </div>
+
+    <!-- Reported Confessions -->
+    <div class="admin-card">
+        <h3><i class="fas fa-flag"></i> Reported Confessions</h3>
+        <div class="item-list">
+            {% for c in reported_confessions %}
+            <div class="item-row" style="flex-direction: column; align-items: stretch; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="item-info">
+                        <div class="item-title">{{ c.content|truncatechars:100 }}</div>
+                        <div class="item-meta">By {{ c.display_name }} • {{ c.reports.count }} reports</div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="{% url 'confession_detail' c.id %}" class="btn-secondary">View</a>
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete_confession">
+                            <input type="hidden" name="target_id" value="{{ c.id }}">
+                            <button type="submit" class="btn-danger">Delete</button>
+                        </form>
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="dismiss_confession">
+                            <input type="hidden" name="target_id" value="{{ c.id }}">
+                            <button type="submit" class="btn-secondary">Dismiss</button>
+                        </form>
+                    </div>
+                </div>
+                <!-- Reasons List -->
+                <div style="padding: 10px; background: #fff1f2; border-radius: 8px; font-size: 12px; color: #be123c;">
+                    <strong>Reasons:</strong>
+                    {% for report in c.reports.all %}
+                        <div style="margin-top: 4px; border-top: 1px solid #fecaca; padding-top: 4px;">
+                            {{ report.reasons|join:", " }} {% if report.other_reason %}- {{ report.other_reason }}{% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <p style="font-size: 14px; color: var(--text-muted);">No reports yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- User Chat Reports -->
+    <div class="admin-card">
+        <h3><i class="fas fa-user-shield"></i> User Chat Reports</h3>
+        <div class="item-list">
+            {% for r in user_reports %}
+            <div class="item-row" style="flex-direction: column; align-items: stretch; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="item-info">
+                        <div class="item-title">Reported: {{ r.reported_user.username }}</div>
+                        <div class="item-meta">By: {{ r.reporter.username }} • {{ r.created_at|date:"M d, g:i A" }}</div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete_user_report">
+                            <input type="hidden" name="target_id" value="{{ r.id }}">
+                            <button type="submit" class="btn-secondary">Dismiss</button>
+                        </form>
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="ban_user">
+                            <input type="hidden" name="target_id" value="{{ r.reported_user.profile.id }}">
+                            <button type="submit" class="btn-danger">Ban User</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div style="padding: 12px; background: #f1f5f9; border-radius: 12px; border: 1px solid var(--border);">
+                    <p style="font-size: 13px; font-weight: 700; color: #ef4444; margin-bottom: 8px;">
+                        Reasons: {{ r.reasons|join:", " }} {% if r.other_reason %}- {{ r.other_reason }}{% endif %}
+                    </p>
+                    
+                    <details style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 10px;">
+                        <summary style="font-size: 12px; font-weight: 700; cursor: pointer; color: var(--primary); outline: none;">
+                            <i class="fas fa-history"></i> View Chat Log Snapshot
+                        </summary>
+                        <div style="margin-top: 10px; max-height: 300px; overflow-y: auto;">
+                            <p style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; border-bottom: 1px solid var(--border);">Evidence Log</p>
+                            {% for msg in r.chat_snapshot %}
+                            <div style="margin-bottom: 8px; font-size: 12px;">
+                                <span style="font-weight: 700; color: var(--primary);">{{ msg.sender }}:</span>
+                                <span style="color: var(--text-main);">{{ msg.content }}</span>
+                                <span style="font-size: 10px; color: var(--text-muted); float: right;">{{ msg.time }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </details>
+                </div>
+            </div>
+            {% empty %}
+            <p style="font-size: 14px; color: var(--text-muted);">No chat reports yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- User Management -->
+    <div class="admin-card">
+        <h3><i class="fas fa-users"></i> User Management</h3>
+        <div class="item-list">
+            {% for p in all_users %}
+            <div class="item-row">
+                <div class="item-info">
+                    <div class="item-title">{{ p.name }}</div>
+                    <div class="item-meta">{{ p.user.email }} {% if p.is_banned %}<span style="color:#ef4444;">(BANNED)</span>{% endif %}</div>
+                </div>
+                <form action="{% url 'admin_action' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="target_id" value="{{ p.id }}">
+                    {% if p.is_banned %}
+                        <input type="hidden" name="action" value="unban_user">
+                        <button type="submit" class="btn-secondary">Unban</button>
+                    {% else %}
+                        <input type="hidden" name="action" value="ban_user">
+                        <button type="submit" class="btn-danger">Ban</button>
+                    {% endif %}
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

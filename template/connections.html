@@ -2,54 +2,82 @@
 
 {% block head %}
 <style>
+    .container {
+        padding: 20px 12px !important;
+    }
+    .card {
+        padding: 16px !important;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
     .conn-header {
-        margin-bottom: 24px;
+        margin-bottom: 20px;
         padding-bottom: 16px;
         border-bottom: 1px solid var(--border);
     }
-    
+    .conn-header h2 {
+        font-size: 20px;
+        margin-bottom: 0;
+    }
+
     .section-title {
-        font-size: 14px;
+        font-size: 12px;
         text-transform: uppercase;
         color: var(--text-muted);
-        letter-spacing: 0.05em;
-        margin-bottom: 16px;
-        margin-top: 32px;
+        letter-spacing: 0.08em;
+        margin-bottom: 12px;
+        margin-top: 28px;
+        font-weight: 700;
     }
 
     .user-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 12px 16px;
+        padding: 12px;
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        margin-bottom: 12px;
+        border-radius: 16px;
+        margin-bottom: 10px;
+        box-sizing: border-box;
+        gap: 8px;
     }
 
     .user-info {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
+        min-width: 0; /* Prevents text from overflowing */
+        flex: 1;
     }
 
     .user-info img {
-        width: 40px;
-        height: 40px;
+        width: 42px;
+        height: 42px;
         border-radius: 50%;
         background-color: var(--border);
         object-fit: cover;
+        flex-shrink: 0;
     }
-    
+
+    .user-info h4 {
+        margin: 0;
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
     .actions {
         display: flex;
-        gap: 8px;
+        gap: 6px;
+        flex-shrink: 0;
     }
 
     .btn-icon {
-        width: 36px;
-        height: 36px;
+        width: 34px;
+        height: 34px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -57,20 +85,38 @@
         border: none;
         cursor: pointer;
         color: white;
+        font-size: 13px;
+        transition: 0.2s;
     }
+    .btn-icon:hover { transform: scale(1.1); }
 
     .btn-accept { background: #10b981; }
     .btn-reject { background: #ef4444; }
-    .btn-chat { background: var(--primary); text-decoration: none; padding: 6px 16px; border-radius: var(--radius-md); font-size: 14px;}
+
+    .btn-chat {
+        background: var(--primary);
+        text-decoration: none;
+        padding: 8px 14px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 600;
+        color: white !important;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: 0.2s;
+    }
     .btn-chat:hover { background: var(--primary-hover); }
 
     .empty-state {
         text-align: center;
-        padding: 40px 20px;
+        padding: 30px 20px;
         color: var(--text-muted);
-        font-size: 14px;
-        background: #fdfdfd;
-        border-radius: var(--radius-md);
+        font-size: 13px;
+        background: #fafafa;
+        border-radius: 16px;
         border: 1px dashed var(--border);
     }
 </style>

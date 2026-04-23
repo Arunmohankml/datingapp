@@ -6,14 +6,14 @@ from django.contrib.auth import login as auth_login
 from django.http import JsonResponse, HttpResponse
 from django.core.management import call_command
 import json
+import os
 from firebase_admin import auth as firebase_auth
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage
+from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm
 from django.db.models import Q
-from .imagekit_utils import upload_to_imagekit
-from .cloudinary_utils import upload_to_cloudinary
+from .supabase_utils import upload_to_supabase
 
 
 # ---------------- PROFILE SETUP ----------------
@@ -30,22 +30,29 @@ def complete_profile(request):
             new_profile = form.save(commit=False)
             new_profile.user = user
             
-            # Handle ImageKit Upload
-            if 'profile_pic' in request.FILES:
-                img_url = upload_to_imagekit(request.FILES['profile_pic'], folder="/profile_pics")
+            # Handle Supabase Upload for PFP
+            if 'profile_pic_file' in request.FILES:
+                img_url = upload_to_supabase(request.FILES['profile_pic_file'], bucket="images", path="profile_pics")
                 if img_url:
                     new_profile.profile_pic = img_url
-                    messages.success(request, "Profile created successfully with your photo!")
                 else:
                     messages.warning(request, "Profile created, but photo upload failed. Please try again.")
             
             new_profile.save()
+
+            # Handle gallery images uploaded during onboarding
+            gallery_files = request.FILES.getlist('gallery_images')
+            for gf in gallery_files:
+                img_url = upload_to_supabase(gf, bucket="images", path="gallery")
+                if img_url:
+                    ProfileImage.objects.create(profile=new_profile, image=img_url)
+
+            messages.success(request, "Profile created successfully!")
             return redirect('home')
         # If form is invalid, fall through to re-render with errors
     else:
         form = ProfileForm(instance=profile)
 
-    # BUG FIX: was incorrectly rendering home.html — must render complete_profile.html
     return render(request, 'complete_profile.html', {'form': form})
 
 # ---------------- HOME / QUIZ ----------------
@@ -71,6 +78,10 @@ def home(request):
     if not profile.name:
         return redirect('complete_profile')
 
+    # If user is not discoverable, they can't see the feed
+    if not profile.is_discoverable:
+        return render(request, "home.html", {"not_discoverable": True, "profile": profile})
+
     # Get answered questions count
     answered_ids = list(UserAnswer.objects.filter(user=user).values_list("question_id", flat=True))
     ans_count = len(answered_ids)
@@ -88,10 +99,13 @@ def home(request):
     question = Question.objects.exclude(id__in=answered_ids).first()
 
     if not question:
-        # ── DISCOVERY MODE: Fetch and Rank All Potential Matches ──
-        # Filter candidates who don't have ANY match request from this user
+        # DISCOVERY MODE: Fetch and Rank All Potential Matches
+        # Filter candidates: exclude self, already liked/skipped, and blocked users
         interacted_user_ids = MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)
-        candidates = Profile.objects.exclude(user=user).exclude(user__id__in=interacted_user_ids)
+        blocked_user_ids = list(BlockedUser.objects.filter(blocker=user).values_list('blocked_id', flat=True)) + \
+                           list(BlockedUser.objects.filter(blocked=user).values_list('blocker_id', flat=True))
+        
+        candidates = Profile.objects.filter(is_discoverable=True).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=blocked_user_ids)
         
         matches_list = []
         for c in candidates:
@@ -109,16 +123,20 @@ def home(request):
         # Sort by best score
         matches_list.sort(key=lambda x: x['score'], reverse=True)
         
+        sparked_ids = list(Spark.objects.filter(sender=user).values_list('receiver_id', flat=True))
+        
         return render(request, "home.html", {
             "all_done": True, 
             "progress": 100,
-            "matches": matches_list[:20]  # Show top 20
+            "matches": matches_list[:20],  # Show top 20
+            "sparked_ids": sparked_ids
         })
 
     total_q_db = Question.objects.count()
     progress = int((ans_count / total_q_db) * 100) if total_q_db > 0 else 0
+    sparked_ids = list(Spark.objects.filter(sender=user).values_list('receiver_id', flat=True))
 
-    return render(request, "home.html", {"question": question, "progress": progress})
+    return render(request, "home.html", {"question": question, "progress": progress, "sparked_ids": sparked_ids})
 
 
 import numpy as np
@@ -164,6 +182,60 @@ def calculate_match_score(user1, user2):
     return int(combined_score)
 
 
+    return int(combined_score)
+
+
+# ---------------- FAST QUIZ API ----------------
+from django.http import JsonResponse
+import json
+
+@login_required
+def get_quiz_batch(request):
+    """Returns a batch of 15 questions. If all are answered, loops back to oldest ones."""
+    answered_ids = UserAnswer.objects.filter(user=request.user).values_list('question_id', flat=True)
+    
+    # Try to get 15 unanswered
+    questions = list(Question.objects.exclude(id__in=answered_ids).order_by('?')[:15])
+    
+    # If we don't have enough unanswered, fill with answered ones (to allow looping)
+    if len(questions) < 15:
+        needed = 15 - len(questions)
+        loop_questions = Question.objects.filter(id__in=answered_ids).order_by('?')[:needed]
+        questions.extend(list(loop_questions))
+    
+    data = []
+    for q in questions:
+        data.append({
+            'id': q.id,
+            'text': q.text,
+            'options': [{'id': o.id, 'text': o.text} for o in q.options.all()]
+        })
+    
+    return JsonResponse({'questions': data})
+
+@login_required
+def save_quiz_batch(request):
+    """Saves a batch of answers and triggers match check if needed."""
+    if request.method == "POST":
+        try:
+            body = json.loads(request.body)
+            answers = body.get('answers', []) # List of {question_id, option_id}
+            
+            for ans in answers:
+                question = get_object_or_404(Question, id=ans['question_id'])
+                option = get_object_or_404(Option, id=ans['option_id'])
+                UserAnswer.objects.update_or_create(
+                    user=request.user,
+                    question=question,
+                    defaults={"option": option},
+                )
+            
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False})
+
+
 # ---------------- ANSWER QUESTION ----------------
 @login_required
 def answer_question(request, question_id):
@@ -198,7 +270,7 @@ def check_match(request):
     
     # Exclude ANY users we have already interacted with (liked, rejected, skipped, pending)
     interacted_user_ids = MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)
-    candidates = Profile.objects.exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=seen_ids)
+    candidates = Profile.objects.filter(is_discoverable=True).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=seen_ids)
 
     preference_filtered = []
     for c in candidates:
@@ -279,7 +351,19 @@ def api_verify_token(request):
             # Log the user in
             auth_login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             
-            return JsonResponse({'success': True})
+            # Check if profile is complete
+            profile = getattr(user, 'profile', None)
+            profile_complete = profile is not None and bool(profile.name)
+            
+            # Sync round count to avoid immediate check_match popup for existing users
+            if profile_complete:
+                ans_count = UserAnswer.objects.filter(user=user).count()
+                request.session['rounds_shown'] = ans_count // 10
+            
+            return JsonResponse({
+                'success': True,
+                'profile_complete': profile_complete
+            })
         except Exception as e:
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
@@ -351,29 +435,38 @@ def chat_list_view(request):
     accepted_sent = MatchRequest.objects.filter(sender=user, status='accepted')
     accepted_received = MatchRequest.objects.filter(receiver=user, status='accepted')
     
+    # Get blocked user IDs to filter out
+    blocked_ids = set(BlockedUser.objects.filter(blocker=user).values_list('blocked_id', flat=True)) | \
+                  set(BlockedUser.objects.filter(blocked=user).values_list('blocker_id', flat=True))
+    
     connected_users = []
     for req in accepted_sent:
-        connected_users.append(req.receiver)
+        if req.receiver.id not in blocked_ids:
+            connected_users.append(req.receiver)
     for req in accepted_received:
-        connected_users.append(req.sender)
+        if req.sender.id not in blocked_ids:
+            connected_users.append(req.sender)
         
     chats = []
     for partner in connected_users:
         latest_msg = Message.objects.filter(
-            Q(sender=user, receiver=partner) | Q(sender=partner, receiver=user)
+            (Q(sender=user, receiver=partner, sender_deleted=False)) |
+            (Q(sender=partner, receiver=user, receiver_deleted=False))
         ).order_by('-timestamp').first()
         
-        unread_count = Message.objects.filter(sender=partner, receiver=user, is_read=False).count()
-        
-        chats.append({
-            'partner': partner,
-            'latest_message': latest_msg,
-            'unread_count': unread_count,
-            'timestamp': latest_msg.timestamp if latest_msg else None
-        })
+        # Only show chat in Inbox if there is at least one visible message
+        if latest_msg:
+            unread_count = Message.objects.filter(sender=partner, receiver=user, is_read=False, receiver_deleted=False).count()
+            
+            chats.append({
+                'partner': partner,
+                'latest_message': latest_msg,
+                'unread_count': unread_count,
+                'timestamp': latest_msg.timestamp
+            })
         
     # Sort so that chats with the most recent messages appear first
-    chats.sort(key=lambda x: x['timestamp'].timestamp() if x['timestamp'] else 0, reverse=True)
+    chats.sort(key=lambda x: x['timestamp'].timestamp() if x.get('timestamp') else 0, reverse=True)
     
     return render(request, 'chat_list.html', {'chats': chats})
 
@@ -400,13 +493,20 @@ def chat_view(request, partner_id):
             try:
                 data = json.loads(request.body)
                 text = data.get('text')
+                parent_id = data.get('parent_id')
             except json.JSONDecodeError:
                 text = None
+                parent_id = None
         else:
             text = request.POST.get('text')
+            parent_id = request.POST.get('parent_id')
             
         if text:
-            msg = Message.objects.create(sender=request.user, receiver=partner, text=text)
+            reply_to_msg = None
+            if parent_id:
+                reply_to_msg = Message.objects.filter(id=parent_id).first()
+                
+            msg = Message.objects.create(sender=request.user, receiver=partner, text=text, reply_to=reply_to_msg)
             if is_ajax:
                 return JsonResponse({
                     'success': True,
@@ -414,7 +514,12 @@ def chat_view(request, partner_id):
                         'id': msg.id,
                         'text': msg.text,
                         'sender_id': msg.sender_id,
-                        'timestamp': msg.timestamp.strftime("%H:%M")
+                        'timestamp': msg.timestamp.strftime("%H:%M"),
+                        'reply_to': {
+                            'id': msg.reply_to.id,
+                            'text': msg.reply_to.text,
+                            'sender_name': msg.reply_to.sender.profile.name if hasattr(msg.reply_to.sender, 'profile') else msg.reply_to.sender.username
+                        } if msg.reply_to else None
                     }
                 })
             return redirect('chat_view', partner_id=partner.id)
@@ -422,17 +527,21 @@ def chat_view(request, partner_id):
         if is_ajax:
             return JsonResponse({'success': False, 'error': 'Empty message'}, status=400)
             
-    messages = Message.objects.filter(
-        Q(sender=request.user, receiver=partner) |
-        Q(sender=partner, receiver=request.user)
-    ).order_by('timestamp')
+    chat_messages = Message.objects.filter(
+        (Q(sender=request.user, receiver=partner, sender_deleted=False)) |
+        (Q(sender=partner, receiver=request.user, receiver_deleted=False))
+    ).exclude(text__startswith='__SPIN__:') .order_by('timestamp')
     
     # Mark messages as read
     Message.objects.filter(sender=partner, receiver=request.user, is_read=False).update(is_read=True)
     
-    return render(request, 'chat.html', {
-        'partner': partner,
-        'messages': messages
+    # Spark status
+    has_sparked = Spark.objects.filter(sender=request.user, receiver=partner).exists()
+    
+    return render(request, "chat.html", {
+        "partner": partner,
+        "chat_messages": chat_messages,
+        "has_sparked": has_sparked
     })
 
 
@@ -449,9 +558,15 @@ def chat_api_messages(request, partner_id):
     if not is_connected:
         return JsonResponse({'error': 'Not connected'}, status=403)
         
+    from django.utils import timezone
+    from datetime import timedelta
+    recent_cutoff = timezone.now() - timedelta(seconds=15)
+
     messages = Message.objects.filter(
-        Q(sender=request.user, receiver=partner) |
-        Q(sender=partner, receiver=request.user)
+        (Q(sender=request.user, receiver=partner, sender_deleted=False)) |
+        (Q(sender=partner, receiver=request.user, receiver_deleted=False))
+    ).exclude(
+        Q(text__startswith='__SPIN__:') & Q(timestamp__lt=recent_cutoff)
     ).order_by('timestamp')
     
     # Mark incoming unread messages as read
@@ -463,12 +578,91 @@ def chat_api_messages(request, partner_id):
             'id': msg.id,
             'text': msg.text,
             'sender_id': msg.sender_id,
-            'timestamp': msg.timestamp.strftime("%H:%M")
+            'timestamp': msg.timestamp.strftime("%H:%M"),
+            'reply_to': {
+                'id': msg.reply_to.id,
+                'text': msg.reply_to.text,
+                'sender_name': msg.reply_to.sender.profile.name if hasattr(msg.reply_to.sender, 'profile') else msg.reply_to.sender.username
+            } if msg.reply_to else None
         })
         
     return JsonResponse({'messages': msg_list})
 
 # ---------------- PROFILE MANAGEMENT ----------------
+
+@login_required
+def view_profile(request, user_id):
+    target_user = get_object_or_404(User, id=user_id)
+    profile = get_object_or_404(Profile, user=target_user)
+    
+    # Matching logic (simplified)
+    my_profile = request.user.profile
+    score = 0
+    if my_profile.campus == profile.campus: score += 20
+    
+    # Spark logic
+    spark_count = Spark.objects.filter(receiver=target_user).count()
+    has_sparked = Spark.objects.filter(sender=request.user, receiver=target_user).exists()
+    
+    # Gallery
+    gallery = profile.images.all()
+    
+    return render(request, "view_profile.html", {
+        "profile": profile,
+        "score": score,
+        "spark_count": spark_count,
+        "has_sparked": has_sparked,
+        "gallery": gallery
+    })
+
+@login_required
+def block_user(request, user_id):
+    target_user = get_object_or_404(User, id=user_id)
+    if target_user != request.user:
+        BlockedUser.objects.get_or_create(blocker=request.user, blocked=target_user)
+        # Also remove any match requests
+        MatchRequest.objects.filter(
+            (Q(sender=request.user) & Q(receiver=target_user)) |
+            (Q(sender=target_user) & Q(receiver=request.user))
+        ).delete()
+        messages.success(request, f"You have blocked {target_user.username}.")
+    return redirect('home')
+
+@login_required
+def delete_chat(request, partner_id):
+    partner = get_object_or_404(User, id=partner_id)
+    # Soft delete for the current user
+    # If I am the sender, set sender_deleted = True
+    # If I am the receiver, set receiver_deleted = True
+    Message.objects.filter(sender=request.user, receiver=partner).update(sender_deleted=True)
+    Message.objects.filter(sender=partner, receiver=request.user).update(receiver_deleted=True)
+    
+    messages.success(request, "Chat cleared for you.")
+    return redirect('chat_list')
+@login_required
+def toggle_spark(request, user_id):
+    target_user = get_object_or_404(User, id=user_id)
+    if target_user == request.user:
+        return JsonResponse({'success': False, 'error': 'Cannot spark yourself'})
+        
+    spark_qs = Spark.objects.filter(sender=request.user, receiver=target_user)
+    if spark_qs.exists():
+        spark_qs.delete()
+        action = 'removed'
+    else:
+        Spark.objects.create(sender=request.user, receiver=target_user)
+        action = 'added'
+        
+    new_count = Spark.objects.filter(receiver=target_user).count()
+    return JsonResponse({'success': True, 'action': action, 'new_count': new_count})
+
+@login_required
+@csrf_exempt
+def toggle_discoverable(request):
+    profile = request.user.profile
+    profile.is_discoverable = not profile.is_discoverable
+    profile.save()
+    return JsonResponse({'success': True, 'is_discoverable': profile.is_discoverable})
 
 @login_required
 def edit_profile(request):
@@ -484,20 +678,57 @@ def edit_profile(request):
                 print("DEBUG: form.is_valid() is TRUE")
                 updated_profile = form.save(commit=False)
                 
-                # Handle Cloudinary Upload
-                if 'profile_pic' in request.FILES:
-                    submitted_pfp = request.FILES['profile_pic']
-                    img_url = upload_to_cloudinary(submitted_pfp, folder="profile_pics")
+                # Handle Supabase Upload
+                if 'profile_pic_file' in request.FILES:
+                    submitted_pfp = request.FILES['profile_pic_file']
+                    img_url = upload_to_supabase(submitted_pfp, bucket="images", path="profile_pics")
+                    print(f"DEBUG: PFP Uploaded, URL: {img_url}")
                     if img_url:
                         updated_profile.profile_pic = img_url
                         messages.success(request, "Profile picture updated successfully!")
                     else:
-                        messages.error(request, "Failed to upload profile picture to Cloudinary. Please check your credentials.")
+                        messages.error(request, "Failed to upload profile picture to Supabase. Please check your credentials.")
                 
+                # The form already handles clg_year, course, branch, etc.
+                # but we explicitly save the tag fields to ensure they match our new JS dropdowns
+                # Specialized handling for tag-like fields to ensure clean data
+                for field in ['languages', 'mother_tongues', 'interest_tags', 'pref_languages']:
+                    if field in request.POST:
+                        val = request.POST.get(field, '').strip()
+                        
+                        # CLEANUP: Strip brackets and quotes if they exist
+                        if val.startswith('[') and val.endswith(']'):
+                            val = val[1:-1].replace("'", "").replace('"', "")
+                        
+                        # MOTHER TONGUE LOCK: Only allow saving if currently empty
+                        if field == 'mother_tongues':
+                            current_val = getattr(profile, 'mother_tongues', '')
+                            if not current_val:
+                                setattr(updated_profile, field, val)
+                            else:
+                                # Keep the old value
+                                setattr(updated_profile, field, current_val)
+                        else:
+                            setattr(updated_profile, field, val)
+
                 updated_profile.save()
+                messages.success(request, "Profile updated successfully!")
                 return redirect('edit_profile')
             else:
                 print(f"DEBUG: form.is_valid() is FALSE. Errors: {form.errors}")
+                messages.error(request, f"Form validation failed: {form.errors.as_text()}")
+        
+        # Handle Instant PFP Upload
+        elif 'update_pfp_instant' in request.POST:
+            if 'profile_pic_file' in request.FILES:
+                img_url = upload_to_supabase(request.FILES['profile_pic_file'], bucket="images", path="profile_pics")
+                if img_url:
+                    profile.profile_pic = img_url
+                    profile.save()
+                    messages.success(request, "Profile picture updated successfully!")
+                else:
+                    messages.error(request, "Failed to upload profile picture. Check Supabase policies.")
+            return redirect('edit_profile')
         
         # Handle Image Upload
         elif 'add_image' in request.POST:
@@ -506,9 +737,9 @@ def edit_profile(request):
             
             image_form = ProfileImageForm(request.POST, request.FILES)
             if image_form.is_valid():
-                # Handle Cloudinary Upload for gallery
-                if 'image' in request.FILES:
-                    img_url = upload_to_cloudinary(request.FILES['image'], folder="gallery")
+                # Handle Supabase Upload for gallery
+                if 'image_file' in request.FILES:
+                    img_url = upload_to_supabase(request.FILES['image_file'], bucket="images", path="gallery")
                     if img_url:
                         ProfileImage.objects.create(profile=profile, image=img_url)
                         messages.success(request, "Gallery photo added successfully!")
@@ -519,18 +750,28 @@ def edit_profile(request):
     form = ProfileEditForm(instance=profile)
     image_form = ProfileImageForm()
     gallery = profile.images.all()
+    spark_count = Spark.objects.filter(receiver=request.user).count()
 
     return render(request, "edit_profile.html", {
         "form": form,
         "image_form": image_form,
         "gallery": gallery,
-        "profile": profile
+        "profile": profile,
+        "spark_count": spark_count
     })
 
 @login_required
 def delete_profile_image(request, image_id):
     image = get_object_or_404(ProfileImage, id=image_id, profile__user=request.user)
+    profile = image.profile
+    gallery_count = profile.images.count()
+
+    if gallery_count <= 2:
+        messages.error(request, "You must keep at least 2 images in your gallery.")
+        return redirect('edit_profile')
+
     image.delete()
+    messages.success(request, "Photo removed.")
     return redirect('edit_profile')
 
 # ---------------- UTILS ----------------
@@ -542,3 +783,269 @@ def run_migrations(request):
         return HttpResponse("Migrations applied successfully!")
     except Exception as e:
         return HttpResponse(f"Migration error: {str(e)}")
+
+
+# ---------------- ANONYMOUS WALL ----------------
+
+def wall_view(request):
+    return render(request, 'wall.html')
+
+
+@csrf_exempt
+def wall_api(request):
+    if request.method == 'GET':
+        strokes = WallStroke.objects.all().values('id', 'points', 'color', 'brush_size')
+        return JsonResponse({'strokes': list(strokes)})
+
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            stroke = WallStroke.objects.create(
+                points=data['points'],
+                color=data['color'],
+                brush_size=data['brush_size']
+            )
+            return JsonResponse({'success': True, 'id': stroke.id})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
+
+# ---------------- CONFESSIONS ----------------
+
+def confessions_feed(request):
+    sort_by = request.GET.get('sort', 'latest')
+    campus_filter = request.GET.get('campus', '')
+    
+    is_admin = request.user.is_authenticated and request.user.email == 'arunmohankml@gmail.com'
+    
+    confessions = Confession.objects.all()
+    
+    if not is_admin:
+        # For normal users, hide heavily flagged posts if you want, or just show everything
+        pass
+
+    if campus_filter:
+        confessions = confessions.filter(campus__iexact=campus_filter)
+        
+    if sort_by == 'top':
+        confessions = confessions.order_by('-likes_count', '-created_at')
+    else:
+        confessions = confessions.order_by('-created_at')
+        
+    return render(request, 'confessions.html', {
+        'confessions': confessions,
+        'current_sort': sort_by,
+        'current_campus': campus_filter,
+        'is_admin': is_admin
+    })
+
+@login_required
+def create_confession(request):
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        is_anonymous = request.POST.get('is_anonymous') == 'true'
+        campus = request.POST.get('campus', '')
+        
+        if request.user.profile.is_banned:
+            messages.error(request, "You are banned.")
+            return redirect('confessions_feed')
+
+        Confession.objects.create(
+            user=request.user,
+            content=content,
+            image='',
+            campus=campus,
+            is_anonymous=is_anonymous
+        )
+        messages.success(request, 'Confession posted!')
+        return redirect('confessions_feed')
+    return redirect('confessions_feed')
+
+@login_required
+def edit_confession(request, confession_id):
+    confession = get_object_or_404(Confession, id=confession_id)
+    if confession.user != request.user:
+        messages.error(request, "Not authorized.")
+        return redirect('confession_detail', confession_id=confession_id)
+    
+    if request.method == 'POST':
+        content = request.POST.get('content')
+        if content:
+            confession.content = content
+            confession.save()
+            messages.success(request, "Updated!")
+        return redirect('confession_detail', confession_id=confession_id)
+    
+    return render(request, 'edit_confession.html', {'confession': confession})
+
+@login_required
+def delete_confession(request, confession_id):
+    confession = get_object_or_404(Confession, id=confession_id)
+    is_admin = request.user.email == 'arunmohankml@gmail.com'
+    
+    if confession.user == request.user or is_admin:
+        confession.delete()
+        messages.success(request, "Confession deleted.")
+        return redirect('confessions_feed')
+    
+    messages.error(request, "Not authorized.")
+    return redirect('confession_detail', confession_id=confession_id)
+
+@login_required
+def report_confession(request, confession_id):
+    confession = get_object_or_404(Confession, id=confession_id)
+    if request.method == 'POST':
+        reasons = request.POST.getlist('reasons')
+        other_reason = request.POST.get('other_reason', '')
+        ConfessionReport.objects.update_or_create(
+            confession=confession,
+            user=request.user,
+            defaults={
+                'reasons': reasons,
+                'other_reason': other_reason
+            }
+        )
+        confession.is_flagged = True
+        confession.save()
+        messages.success(request, "Report submitted.")
+    return redirect('confession_detail', confession_id=confession_id)
+
+@login_required
+def report_user(request, user_id):
+    reported_user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        reasons = request.POST.getlist('reasons')
+        other_reason = request.POST.get('other_reason', '')
+        
+        # Get recent chat history between these two users
+        messages_qs = Message.objects.filter(
+            (Q(sender=request.user) & Q(receiver=reported_user)) |
+            (Q(sender=reported_user) & Q(receiver=request.user))
+        ).order_by('-timestamp')[:50]
+        
+        chat_snapshot = []
+        for m in messages_qs:
+            chat_snapshot.append({
+                'sender': m.sender.username,
+                'content': m.text,
+                'time': m.timestamp.strftime("%Y-%m-%d %H:%M")
+            })
+            
+        UserReport.objects.create(
+            reported_user=reported_user,
+            reporter=request.user,
+            reasons=reasons,
+            other_reason=other_reason,
+            chat_snapshot=chat_snapshot
+        )
+        messages.success(request, f"Reported {reported_user.username}. We will review the chat logs.")
+    return redirect('chat_view', partner_id=user_id)
+
+def confession_detail(request, confession_id):
+    confession = get_object_or_404(Confession, id=confession_id)
+    return render(request, 'confession_detail.html', {'confession': confession})
+
+@login_required
+def add_comment(request, confession_id):
+    if request.method == 'POST':
+        confession = get_object_or_404(Confession, id=confession_id)
+        content = request.POST.get('content')
+        is_anonymous = request.POST.get('is_anonymous') == 'true'
+        
+        if content:
+            ConfessionComment.objects.create(
+                confession=confession,
+                user=request.user,
+                content=content,
+                is_anonymous=is_anonymous
+            )
+    return redirect('confession_detail', confession_id=confession_id)
+
+@csrf_exempt
+def like_confession(request, confession_id):
+    if request.method == 'POST':
+        if not request.session.session_key:
+            request.session.create()
+        session_key = request.session.session_key
+        
+        confession = get_object_or_404(Confession, id=confession_id)
+        like, created = ConfessionLike.objects.get_or_create(
+            confession=confession,
+            session_key=session_key
+        )
+        
+        if created:
+            confession.likes_count += 1
+            confession.save()
+            return JsonResponse({'success': True, 'likes_count': confession.likes_count})
+        else:
+            return JsonResponse({'success': False, 'error': 'Already liked'})
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+
+# ---------------- ADMIN MENU ----------------
+
+def is_admin_check(user):
+    return user.is_authenticated and user.email == 'arunmohankml@gmail.com'
+
+@login_required
+def admin_dashboard(request):
+    if not is_admin_check(request.user):
+        return HttpResponse("Not authorized", status=403)
+    
+    reported_confessions = Confession.objects.filter(is_flagged=True).order_by('-created_at')
+    user_reports = UserReport.objects.all().order_by('-created_at')
+    all_users = Profile.objects.all().order_by('-created_at')
+    
+    return render(request, 'admin_dashboard.html', {
+        'reported_confessions': reported_confessions,
+        'user_reports': user_reports,
+        'all_users': all_users
+    })
+
+@login_required
+def admin_action(request):
+    if not is_admin_check(request.user):
+        return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        target_id = request.POST.get('target_id')
+        
+        if action == 'delete_confession':
+            Confession.objects.filter(id=target_id).delete()
+        elif action == 'dismiss_confession':
+            Confession.objects.filter(id=target_id).update(is_flagged=False)
+            ConfessionReport.objects.filter(confession_id=target_id).delete()
+        elif action == 'delete_user_report':
+            UserReport.objects.filter(id=target_id).delete()
+        elif action == 'clear_wall':
+            WallStroke.objects.all().delete()
+        elif action == 'ban_user':
+            profile = get_object_or_404(Profile, id=target_id)
+            profile.is_banned = True
+            profile.save()
+        elif action == 'unban_user':
+            profile = get_object_or_404(Profile, id=target_id)
+            profile.is_banned = False
+            profile.save()
+            
+        return redirect('admin_dashboard')
+    
+    return redirect('admin_dashboard')
+@login_required
+def announcements_view(request):
+    is_admin = is_admin_check(request.user)
+    
+    if request.method == 'POST' and is_admin:
+        text = request.POST.get('text')
+        if text:
+            Announcement.objects.create(text=text)
+            messages.success(request, "Announcement posted successfully!")
+            return redirect('announcements')
+            
+    announcements = Announcement.objects.all()
+    return render(request, 'announcements.html', {
+        'announcements': announcements,
+        'is_admin': is_admin
+    })
