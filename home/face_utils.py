@@ -1,4 +1,3 @@
-import numpy as np
 import base64
 from io import BytesIO
 from PIL import Image
@@ -6,8 +5,9 @@ import os
 import traceback
 
 def decode_image(base64_string):
-    """Decode base64 image string to OpenCV format (lazy load cv2)"""
+    """Decode base64 image string to OpenCV format (lazy load cv2/numpy)"""
     import cv2
+    import numpy as np
     if 'base64,' in base64_string:
         base64_string = base64_string.split('base64,')[1]
     
