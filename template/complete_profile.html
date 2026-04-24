@@ -484,6 +484,7 @@
                 </div>
 
                 <input type="hidden" name="verification_image_data" id="verification-image-data">
+                <input type="hidden" name="verification_image_url" id="verification-image-url">
                 <input type="hidden" name="verification_status" id="verification-status-input" value="pending">
             </div>
 
@@ -1071,7 +1072,12 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
             body: JSON.stringify({ image: verificationBase64, path: 'verification' })
-        }).then(r => r.json()).then(d => { if (d.success) console.log("Verification image uploaded to Supabase:", d.url); });
+        }).then(r => r.json()).then(d => { 
+            if (d.success) {
+                console.log("Verification image uploaded to Supabase:", d.url);
+                document.getElementById('verification-image-url').value = d.url;
+            }
+        });
 
         document.getElementById('pfp-group').style.opacity = '1';
         document.getElementById('pfp-group').style.pointerEvents = 'auto';

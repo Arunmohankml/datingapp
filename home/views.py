@@ -47,10 +47,17 @@ def complete_profile(request):
             
             # Face Verification Data (Simplified)
             verify_data = request.POST.get('verification_image_data')
+            verify_url_client = request.POST.get('verification_image_url')
             verify_status = request.POST.get('verification_status', 'pending')
             
-            if verify_data:
-                # Save base64 to Supabase
+            if verify_url_client:
+                # Use URL directly from client (most reliable)
+                new_profile.verification_image = verify_url_client
+                new_profile.verification_status = verify_status
+                if verify_status == 'verified':
+                    new_profile.is_face_verified = True
+            elif verify_data:
+                # Fallback: Save base64 to Supabase on server
                 from .supabase_utils import upload_base64_to_supabase
                 verify_url = upload_base64_to_supabase(verify_data, bucket="images", path="verification")
                 if verify_url:
