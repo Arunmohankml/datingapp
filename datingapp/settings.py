@@ -218,3 +218,6 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 
 # TMDB API
 TMDB_API_KEY = os.environ.get('TMDB_API_KEY')
+
+# Clarifai
+CLARIFAI_PAT = os.environ.get('CLARIFAI_PAT')
