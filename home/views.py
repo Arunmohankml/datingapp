@@ -1318,6 +1318,7 @@ def verify_face_live(request):
     if request.method != 'POST': 
         return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
     
+    import traceback
     try:
         data = json.loads(request.body)
         img_f = data.get('image_front') or data.get('image')
@@ -1339,15 +1340,20 @@ def verify_face_live(request):
         def upload_b64(b64, name):
             if not b64: return None
             try:
+                print(f"[VERIFY-LIVE] Processing {name}...")
                 if 'base64,' in b64: b64 = b64.split('base64,')[1]
                 img_data = base64.b64decode(b64)
+                print(f"[VERIFY-LIVE] Decoded {name} ({len(img_data)} bytes)")
                 f_obj = ContentFile(img_data, name=f"{name}_{request.user.id}.jpg")
                 url = upload_to_supabase(f_obj, bucket="images", path="verification_baselines")
                 if not url:
-                    print(f"[VERIFY-LIVE] Upload failed for {name}")
+                    print(f"[VERIFY-LIVE] Supabase upload returned None for {name}")
+                else:
+                    print(f"[VERIFY-LIVE] Upload success for {name}: {url}")
                 return url
             except Exception as e:
                 print(f"[VERIFY-LIVE] Upload Exception for {name}: {e}")
+                traceback.print_exc()
                 return None
 
         print("[VERIFY-LIVE] Uploading images...")

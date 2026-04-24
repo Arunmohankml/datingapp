@@ -221,3 +221,7 @@ TMDB_API_KEY = os.environ.get('TMDB_API_KEY')
 
 # Clarifai
 CLARIFAI_PAT = os.environ.get('CLARIFAI_PAT')
+
+# Payload limits for face verification
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB

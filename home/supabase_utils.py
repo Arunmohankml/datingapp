@@ -5,12 +5,18 @@ from PIL import Image
 import io
 
 # Initialize Supabase Client
-SUPABASE_URL = os.environ.get('SUPABASE_URL', '')
-SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '')
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '').strip()
+SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '').strip()
 
 supabase: Client = None
 if SUPABASE_URL and SUPABASE_KEY:
-    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print("DEBUG: Supabase Client Initialized.")
+    except Exception as e:
+        print(f"CRITICAL ERROR: Supabase Initialization Failed: {e}")
+else:
+    print("WARNING: Supabase URL or Key missing in environment.")
 
 def compress_image(file_obj, max_width=1000, quality=70):
     """
