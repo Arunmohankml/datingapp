@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, RedirectView
 from django.http import FileResponse
 import os
 
@@ -32,4 +32,5 @@ urlpatterns = [
     path('manifest.json', TemplateView.as_view(template_name='manifest.json', content_type='application/json')),
     path('sw.js', TemplateView.as_view(template_name='sw.js', content_type='application/javascript')),
     path('pwa-icons/<str:filename>', serve_pwa_icon),
+    path('favicon.ico', RedirectView.as_view(url='/static/images/icon-192x192.png')),
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

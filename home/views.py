@@ -19,7 +19,7 @@ import math
 from .models import Profile, UserVerification, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm
 from .supabase_utils import upload_to_supabase
-from .face_utils import decode_image, detect_face, check_liveness_best_effort, compare_faces, save_base64_to_temp, analyze_gender
+# AI imports moved inside functions to prevent Vercel crashes
 
 # Safe print for Windows console encoding issues
 def safe_print(msg):
@@ -57,6 +57,7 @@ def complete_profile(request):
                     baselines = [uv.image_front, uv.image_left, uv.image_right]
                     baselines = [b for b in baselines if b]
                     
+                    from .face_utils import compare_faces
                     status, info, data_dict = compare_faces(img_url, baselines, target_gender=uv.gender)
                     
                     if status == 'REJECT':
@@ -792,6 +793,7 @@ def edit_profile(request):
                     print(f"DEBUG: PFP Uploaded, URL: {img_url}")
                     if img_url:
                         # Compare faces
+                        from .face_utils import compare_faces
                         match, error = compare_faces(img_url, profile.verification_image)
                         if match:
                             updated_profile.profile_pic = img_url
@@ -1331,6 +1333,7 @@ def verify_face_live(request):
         from concurrent.futures import ThreadPoolExecutor
 
         def analyze_gender_task():
+            from .face_utils import save_base64_to_temp, analyze_gender
             temp_path = save_base64_to_temp(img_f, f"gender_check_{request.user.id}.jpg")
             gender, conf = analyze_gender(temp_path)
             if os.path.exists(temp_path): os.remove(temp_path)
@@ -1421,6 +1424,7 @@ def compare_pfp_live(request):
         gallery_paths = [get_path(b, f"angle_{i}") for i, b in enumerate(baselines)]
         gallery_paths = [p for p in gallery_paths if p]
 
+        from .face_utils import save_base64_to_temp, compare_faces
         probe_path = save_base64_to_temp(image_data, f"probe_{request.user.id}.jpg")
 
         # Use stored baseline gender for comparison
