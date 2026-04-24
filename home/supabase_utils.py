@@ -64,6 +64,8 @@ def upload_to_supabase(file_obj, bucket="images", path="dating_app/"):
         filename = f"{timestamp}_{filename}"
         full_path = f"{path.strip('/')}/{filename}"
         
+        print(f"DEBUG: Attempting upload to bucket '{bucket}' at path '{full_path}'")
+        
         # Read file content
         file_obj.seek(0)
         

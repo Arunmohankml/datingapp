@@ -1462,9 +1462,9 @@
             } else {
                 status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${data.message || data.error || 'Verification Failed'}`;
                 status.style.color = "#f87171";
-                currentPhase = 1;
                 isVerifying = false;
-                updatePhaseUI();
+                // We don't reset currentPhase to 1, allowing the user to retry the submission
+                // without re-scanning all 3 angles if it was just a connection/upload error.
             }
         } catch (err) {
             status.innerHTML = '<i class="fas fa-times-circle"></i> Connection error. Try again.';
