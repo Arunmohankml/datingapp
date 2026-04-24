@@ -219,9 +219,10 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 # TMDB API
 TMDB_API_KEY = os.environ.get('TMDB_API_KEY')
 
+
 # Clarifai
 CLARIFAI_PAT = os.environ.get('CLARIFAI_PAT')
 
-# Payload limits for face verification
+# Payload limits for image uploads
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB

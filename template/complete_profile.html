@@ -448,86 +448,64 @@
         </div>
 
         <div class="form-step" id="step7">
-            <div class="step-title">📸 Photos & Privacy</div>
+            <div class="step-title">📸 Your Photos</div>
             
-            <div id="face-verification-section" style="margin-bottom: 30px; text-align: center; padding: 0; background: #f8fafc; border: 2px dashed var(--border); border-radius: 24px; overflow: hidden; position: relative; min-height: 200px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);">
-                <!-- Initial State -->
-                <div id="not-verified-ui" style="padding: 40px 24px;">
-                    <div style="width: 64px; height: 64px; background: rgba(99, 102, 241, 0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-                        <i class="fas fa-user-shield" style="font-size: 28px; color: var(--primary);"></i>
-                    </div>
-                    <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 8px; color: var(--text-main);">Identity Verification</h3>
-                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px; max-width: 280px; margin-left: auto; margin-right: auto;">A quick live scan to keep the community real. Show a <b>thumbs up</b> to verify.</p>
-                    <button type="button" class="verify-btn-trigger" onclick="startInlineVerification()" style="background: var(--primary); color: white; border: none; padding: 12px 28px; border-radius: 14px; font-weight: 700; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); transition: 0.3s;">
-                        <i class="fas fa-video"></i> Start Live Scan
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px;">Add your best photos to start making connections!</p>
+
+            <!-- Face Verification Section -->
+            <div id="face-verification-section" style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 24px; margin-bottom: 24px; text-align: center; transition: 0.3s;">
+                <div id="verify-initial-ui">
+                    <i class="fas fa-shield-alt" style="font-size: 32px; color: var(--primary); margin-bottom: 12px; display: block;"></i>
+                    <h4 style="margin: 0 0 8px; font-size: 16px;">Identity Verification</h4>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Quickly verify your identity to get a "Verified" badge and 2x more matches!</p>
+                    <button type="button" onclick="startVerification()" class="btn" style="background: var(--primary); color: white; border-radius: 12px; padding: 10px 20px; font-weight: 700; border: none; cursor: pointer;">
+                        Verify Identity
                     </button>
                 </div>
 
-                <!-- Camera State (Hidden by default) -->
-                <div id="camera-ui" style="display: none; position: relative; width: 100%; aspect-ratio: 4/5; background: #000;">
-                    <video id="verify-video" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
-                    
-                    <!-- Scanning Overlay -->
-                    <div class="scan-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; border: 2px solid rgba(99, 102, 241, 0.3); box-shadow: inset 0 0 100px rgba(0,0,0,0.5);">
-                        <div class="scan-line" style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(to right, transparent, var(--primary), transparent); box-shadow: 0 0 20px var(--primary); animation: scanMove 3s infinite linear;"></div>
-                        <div class="face-guide-oval" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 65%; border: 2px dashed rgba(255,255,255,0.4); border-radius: 50% 50% 40% 40%;"></div>
+                <div id="verify-camera-ui" style="display: none;">
+                    <div style="position: relative; width: 100%; max-width: 320px; margin: 0 auto; aspect-ratio: 3/4; border-radius: 16px; overflow: hidden; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                        <video id="verify-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                        <canvas id="verify-canvas" style="display: none;"></canvas>
+                        <div id="face-guide" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 60%; border: 2px dashed rgba(255,255,255,0.5); border-radius: 50% 50% 45% 45%; pointer-events: none;"></div>
+                        <div id="gesture-hint" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-hand-paper"></i> Show Thumbs Up to Capture
+                        </div>
                     </div>
-
-                    <div id="gesture-hint" style="position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(12px); padding: 10px 20px; border-radius: 20px; color: white; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; white-space: nowrap; border: 1px solid rgba(255,255,255,0.2); z-index: 10;">
-                        <i class="fas fa-camera"></i> Align your face
-                    </div>
-
-                    <div id="verify-status" style="position: absolute; top: 24px; left: 50%; transform: translateX(-50%); color: white; font-weight: 700; font-size: 14px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 10;"></div>
-
-
-                    <button type="button" onclick="stopInlineVerification()" style="position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.5); color: white; border: none; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <canvas id="verify-canvas" style="display:none;"></canvas>
+                    <p id="verify-status" style="margin-top: 16px; font-size: 13px; font-weight: 700; color: var(--primary);"></p>
                 </div>
 
-                <!-- Success State -->
-                <div id="verified-ui" style="display: none; padding: 40px 24px; background: #f0fdf4;">
-                    <div style="width: 64px; height: 64px; background: #16a34a; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; color: white;">
-                        <i class="fas fa-check" style="font-size: 28px;"></i>
+                <div id="verify-success-ui" style="display: none;">
+                    <div style="width: 60px; height: 60px; background: #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 24px;">
+                        <i class="fas fa-check-circle"></i>
                     </div>
-                    <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 8px; color: #16a34a;">Identity Verified!</h3>
-                    <p style="font-size: 13px; color: #15803d; margin-bottom: 0;">Your profile is now secured and ready for photos.</p>
+                    <h4 style="margin: 0 0 4px; color: #16a34a;">Identity Scanned!</h4>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 0;">Verification image secured. Now upload your profile picture.</p>
                 </div>
+
+                <input type="hidden" name="verification_image_data" id="verification-image-data">
+                <input type="hidden" name="verification_status" id="verification-status-input" value="pending">
             </div>
 
-            <style>
-                @keyframes scanMove {
-                    0% { top: 0%; }
-                    100% { top: 100%; }
-                }
-            </style>
-
-            <div class="form-group" id="pfp-group" style="display: none;">
+            <div class="form-group" id="pfp-group" style="opacity: 0.5; pointer-events: none; transition: 0.3s;">
                 <label for="id_profile_pic_file">Profile Picture <span style="color:#ef4444">*</span></label>
                 <div id="pfp-upload-area" style="border: 2px dashed var(--border); border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background:#f8fafc;" onclick="document.getElementById('id_profile_pic_file').click()">
                     <img id="pfp-preview" src="" alt="" style="display:none; width:120px; height:120px; border-radius:50%; object-fit:cover; margin:0 auto 12px; border: 3px solid var(--primary); box-shadow:0 4px 10px rgba(0,0,0,0.1);">
                     <div id="pfp-placeholder">
                         <i class="fas fa-camera" style="font-size:32px; color:var(--primary); margin-bottom:8px; display:block;"></i>
                         <p style="margin:0; color:var(--text-main); font-weight:600; font-size:14px;">Upload your best photo</p>
-                        <p style="margin:4px 0 0; color:var(--text-muted); font-size:11px;">Must clearly show your face</p>
                     </div>
                 </div>
                 {{ form.profile_pic_file }}
-                <!-- Face detection status -->
-                <div id="face-status" style="margin-top:10px; padding:10px 14px; border-radius:10px; font-size:13px; font-weight:600; display:none;"></div>
             </div>
 
-            <div class="form-group" id="gallery-group" style="margin-top:24px; display: none;">
+            <div class="form-group" id="gallery-group" style="margin-top:24px;">
                 <label>Gallery Photos <span style="font-size:11px; font-weight:500; color:var(--text-muted);">(Min 2 required)</span></label>
                 <div id="gallery-preview-grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px;"></div>
                 <div id="gallery-upload-area" style="border: 2px dashed var(--border); border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background:#f8fafc;" onclick="document.getElementById('gallery-file-input').click()">
                     <i class="fas fa-images" style="font-size:28px; color:var(--primary); margin-bottom:8px; display:block;"></i>
                     <p style="margin:0; color:var(--text-main); font-weight:600; font-size:14px;">Add to your gallery</p>
                     <p id="gallery-count-label" style="margin:4px 0 0; font-size:12px; color:var(--primary); font-weight:700;">0 / 2 minimum added</p>
-                    <p style="margin:8px 0 0; font-size:11px; color:var(--text-muted); font-weight:500;">
-                        <i class="fas fa-shield-alt" style="color:var(--primary);"></i> AI scanned for spam & explicit content. <b>Face not required.</b>
-                    </p>
                 </div>
                 <input type="file" id="gallery-file-input" name="gallery_images" accept="image/*" multiple style="display:none;" onchange="handleGallerySelect(this)">
                 <div id="gallery-status" style="margin-top:10px; padding:10px 14px; border-radius:10px; font-size:13px; font-weight:600; display:none;"></div>
@@ -957,540 +935,272 @@
                 const canvas = document.createElement('canvas');
                 let width = img.width;
                 let height = img.height;
-
                 if (width > maxWidth) {
                     height = Math.round((height * maxWidth) / width);
                     width = maxWidth;
                 }
-
                 canvas.width = width;
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                
                 canvas.toBlob((blob) => {
                     if(!blob) return reject(new Error("Canvas toBlob failed"));
-                    const compressedFile = new File([blob], file.name, {
-                        type: 'image/jpeg',
-                        lastModified: Date.now()
-                    });
-                    resolve(compressedFile);
+                    resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
                 }, 'image/jpeg', quality);
             };
             img.onerror = reject;
         });
     }
 
-    // ───── FACE DETECTION SETUP ─────
-    let pfpFaceValid = false;
+    // ───── VERIFICATION & GALLERY LOGIC ─────
+    let verificationCaptured = false;
+    let verificationBase64 = null;
+    let verificationDescriptor = null;
     let galleryFiles = [];
-    window.faceModelsLoaded = window.faceModelsLoaded || false;
-    async function loadFaceModels() {
-        if (window.faceModelsLoaded) return;
-        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-        window.faceModelsLoaded = true;
-    }
-
-    function showFaceStatus(msg, type) {
-        const el = document.getElementById('face-status');
-        el.style.display = 'block';
-        if (type === 'loading') {
-            el.style.background = '#f1f5f9'; el.style.color = '#64748b';
-            el.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${msg}`;
-        } else if (type === 'success') {
-            el.style.background = '#f0fdf4'; el.style.color = '#16a34a';
-            el.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`;
-        } else if (type === 'warning') {
-            el.style.background = '#fffbeb'; el.style.color = '#b45309';
-            el.innerHTML = `<i class="fas fa-info-circle"></i> ${msg}`;
-        } else if (type === 'error') {
-            el.style.background = '#fef2f2'; el.style.color = '#dc2626';
-            el.innerHTML = `<i class="fas fa-times-circle"></i> ${msg}`;
-        }
-    }
-
-    // ───── AI VERIFICATION (FACE + NSFW) ─────
-    window.nsfwModelInstance = window.nsfwModelInstance || null;
-    window.nsfwLoadFailed = window.nsfwLoadFailed || false;
-    async function loadNSFWModel() {
-        if (window.nsfwLoadFailed) return null;
-        if (window.nsfwModelInstance) return window.nsfwModelInstance;
-        try {
-            // Using a reliable CDN for the model instead of the broken default cloudfront URL
-            const modelUrl = 'https://cdn.jsdelivr.net/gh/infinitered/nsfwjs@master/models/mobilenet_v2/';
-            window.nsfwModelInstance = await nsfwjs.load(modelUrl);
-            return window.nsfwModelInstance;
-        } catch (e) {
-            console.warn("NSFW model failed to load from CDN. Security check blocked.", e);
-            window.nsfwLoadFailed = true;
-            return null;
-        }
-    }
-
-    async function detectFaceInFile(file, threshold = 0.4) {
-        return new Promise((resolve) => {
-            const img = new Image();
-            const url = URL.createObjectURL(file);
-            img.onload = async () => {
-                try {
-                    await loadFaceModels();
-                    const detections = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: threshold }));
-                    if (detections.length === 0) {
-                        URL.revokeObjectURL(url);
-                        return resolve({ valid: false, error: "Face not detected." });
-                    }
-
-                    // NSFW check (optional - gracefully skip if model unavailable)
-                    const model = await loadNSFWModel();
-                    if (model) {
-                        const predictions = await model.classify(img);
-                        
-                        const porn = predictions.find(p => p.className === 'Porn');
-                        const hentai = predictions.find(p => p.className === 'Hentai');
-                        const drawing = predictions.find(p => p.className === 'Drawing');
-
-                        if ((porn && porn.probability > 0.3) || (hentai && hentai.probability > 0.3)) {
-                            URL.revokeObjectURL(url);
-                            return resolve({ valid: false, error: "Inappropriate content detected." });
-                        }
-
-                        if (drawing && drawing.probability > 0.5) {
-                            URL.revokeObjectURL(url);
-                            return resolve({ valid: false, error: "Digital drawings or memes are not allowed. Please upload a real photo." });
-                        }
-                    }
-
-                    URL.revokeObjectURL(url);
-                    resolve({ valid: true });
-                } catch (e) {
-                    console.error("AI check error:", e);
-                    URL.revokeObjectURL(url);
-                    // Face was detected, just NSFW check failed - allow it through
-                    resolve({ valid: true });
-                }
-            };
-            img.onerror = () => { URL.revokeObjectURL(url); resolve({ valid: true }); };
-            img.src = url;
-        });
-    }
-
-    // ───── PFP CHANGE HANDLER ─────
-    document.getElementById('id_profile_pic_file').style.display = 'none';
-    document.getElementById('id_profile_pic_file').addEventListener('change', async function() {
-        if (!this.files || !this.files[0]) return;
-        const file = this.files[0];
-
-        const preview = document.getElementById('pfp-preview');
-        const placeholder = document.getElementById('pfp-placeholder');
-        
-        // Show loading state immediately while we read and analyze
-        showFaceStatus('Verifying photo safety & identity...', 'loading');
-        pfpFaceValid = false;
-        
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const imageData = e.target.result;
-            preview.src = imageData;
-            preview.style.display = 'block';
-            placeholder.style.display = 'none';
-
-            // Identity Verification: Ensure PFP matches the live-scanned person
-            try {
-                // ── Visible elapsed timer while API is running ──
-                let pfpTimerSecs = 0;
-                const pfpTimerEl = document.getElementById('face-status');
-                const funMessages = [
-                    'Scanning your face... 🔍',
-                    'Running AI magic... 🤖',
-                    'Almost there... ✨',
-                    'Double-checking... 🧐',
-                    'Hang tight, nearly done! 🚀'
-                ];
-                function showPfpTimer() {
-                    pfpTimerSecs++;
-                    const msg = funMessages[Math.min(Math.floor(pfpTimerSecs / 3), funMessages.length - 1)];
-                    pfpTimerEl.style.display = 'block';
-                    pfpTimerEl.style.background = '#f1f5f9';
-                    pfpTimerEl.style.color = '#6366f1';
-                    pfpTimerEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${msg} <span style="font-size:11px;opacity:0.7;margin-left:6px;">${pfpTimerSecs}s</span>`;
-                }
-                showPfpTimer(); // show immediately
-                const pfpTimerInterval = setInterval(showPfpTimer, 1000);
-
-                const resp = await fetch('/api/face/compare-pfp/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: imageData })
-                });
-                clearInterval(pfpTimerInterval); // stop the timer once we get a response
-
-                const data = await resp.json();
-
-                if (data.success) {
-                    pfpFaceValid = true;
-                    if (data.manual_review) {
-                        showFaceStatus(data.message, 'warning');
-                        document.getElementById('pfp-upload-area').style.borderColor = '#f59e0b';
-                    } else {
-                        showFaceStatus('Identity verified! Looking great. ✅', 'success');
-                        document.getElementById('pfp-upload-area').style.borderColor = '#16a34a';
-                    }
-                } else {
-                    pfpFaceValid = false;
-                    showFaceStatus(data.error || "Face mismatch!", 'error');
-                    document.getElementById('pfp-upload-area').style.borderColor = '#dc2626';
-                    document.getElementById('id_profile_pic_file').value = '';
-                    preview.style.display = 'none';
-                    placeholder.style.display = 'block';
-                }
-            } catch (err) {
-                console.error("Identity check failed:", err);
-                pfpFaceValid = true; // Fallback to allow if server error
-                showFaceStatus('Identity verified.', 'success');
-            }
-        };
-        reader.readAsDataURL(file);
-    });
-
-    // ───── GALLERY CONTENT MODERATION ─────
-    async function checkGalleryImage(file) {
-        // Verification disabled temporarily as requested
-        return { ok: true };
-    }
-
-    // ───── GALLERY HANDLER ─────
-    async function handleGallerySelect(input) {
-        if (!input.files || input.files.length === 0) return;
-
-        const statusEl = document.getElementById('gallery-status');
-        statusEl.style.display = 'block';
-        statusEl.style.background = '#f1f5f9'; statusEl.style.color = '#64748b';
-        statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Checking photos...`;
-
-        const newFiles = Array.from(input.files);
-        let rejectedCount = 0;
-        const rejectedReasons = [];
-
-        for (const file of newFiles) {
-            if (galleryFiles.find(g => g.name === file.name && g.size === file.size)) continue;
-            statusEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Checking "${file.name.slice(0,20)}..."  (${galleryFiles.length + 1} processed)`;
-            const result = await checkGalleryImage(file);
-            if (result.ok) {
-                galleryFiles.push(file);
-            } else {
-                rejectedCount++;
-                rejectedReasons.push(result.reason);
-            }
-        }
-
-        if (rejectedCount > 0) {
-            statusEl.style.background = '#fef2f2'; statusEl.style.color = '#dc2626';
-            statusEl.innerHTML = `<i class="fas fa-times-circle"></i> ${rejectedCount} photo(s) blocked: ${rejectedReasons[0]}`;
-            setTimeout(() => renderGalleryPreviews(), 3500);
-        } else {
-            renderGalleryPreviews();
-        }
-        input.value = '';
-    }
-    window.handleGallerySelect = handleGallerySelect;
-
-    function renderGalleryPreviews() {
-        const grid = document.getElementById('gallery-preview-grid');
-        const countLabel = document.getElementById('gallery-count-label');
-        grid.innerHTML = '';
-
-        galleryFiles.forEach((file, idx) => {
-            const wrap = document.createElement('div');
-            wrap.style.cssText = 'position:relative; aspect-ratio:1; border-radius:12px; overflow:hidden; border:2px solid var(--border);';
-            const img = document.createElement('img');
-            img.style.cssText = 'width:100%; height:100%; object-fit:cover;';
-            img.src = URL.createObjectURL(file);
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.innerHTML = '&times;';
-            removeBtn.style.cssText = 'position:absolute;top:4px;right:4px;background:rgba(220,38,38,0.9);color:white;border:none;border-radius:6px;width:24px;height:24px;font-size:14px;cursor:pointer;font-weight:bold;line-height:1;';
-            removeBtn.onclick = () => { galleryFiles.splice(idx, 1); renderGalleryPreviews(); };
-            wrap.appendChild(img);
-            wrap.appendChild(removeBtn);
-            grid.appendChild(wrap);
-        });
-
-        const count = galleryFiles.length;
-        const met = count >= 2;
-        countLabel.textContent = `${count} / 2 minimum added`;
-        countLabel.style.color = met ? '#16a34a' : 'var(--primary)';
-        document.getElementById('gallery-upload-area').style.borderColor = met ? '#16a34a' : 'var(--border)';
-
-        const statusEl = document.getElementById('gallery-status');
-        if (met) {
-            statusEl.style.display = 'block';
-            statusEl.style.background = '#f0fdf4'; statusEl.style.color = '#16a34a';
-            statusEl.innerHTML = `<i class="fas fa-check-circle"></i> Gallery requirement met!`;
-        } else {
-            statusEl.style.display = 'none';
-        }
-    }
-
-    // ───── FORM SUBMIT: Validate + Compress + Submit ─────
-    document.getElementById('profileForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const form = this;
-        const btn = form.querySelector('.btn-submit');
-        const pfpInput = document.getElementById('id_profile_pic_file');
-
-        if (!pfpInput.files || !pfpInput.files[0]) {
-            showFaceStatus('Please upload a profile picture.', 'error');
-            return;
-        }
-        if (!pfpFaceValid) {
-            showFaceStatus('Identity mismatch. Please upload a clear photo of yourself.', 'error');
-            return;
-        }
-        if (galleryFiles.length < 2) {
-            const galleryStatus = document.getElementById('gallery-status');
-            galleryStatus.style.display = 'block';
-            galleryStatus.style.background = '#fef2f2'; galleryStatus.style.color = '#dc2626';
-            galleryStatus.innerHTML = '<i class="fas fa-times-circle"></i> Please add at least 2 gallery photos.';
-            return;
-        }
-
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating your profile...';
-
-        try {
-            // Compress PFP
-            const compressedPfp = await compressImage(pfpInput.files[0]);
-            const pfpTransfer = new DataTransfer();
-            pfpTransfer.items.add(compressedPfp);
-            pfpInput.files = pfpTransfer.files;
-
-            // Compress & inject gallery files into the file input
-            const galleryInput = document.getElementById('gallery-file-input');
-            const galleryTransfer = new DataTransfer();
-            for (const gf of galleryFiles) {
-                try {
-                    const compressed = await compressImage(gf);
-                    galleryTransfer.items.add(compressed);
-                } catch { galleryTransfer.items.add(gf); }
-            }
-            galleryInput.files = galleryTransfer.files;
-
-            form.submit();
-        } catch (err) {
-            console.error('Submit error:', err);
-            form.submit(); // Fallback
-        }
-    });
-</script>
-<script>
-    let verifyStream = null;
-    let hands = null;
-    let camera = null;
-    let isVerifying = false;
     let lastGestureTime = 0;
-    let isFaceVerified = false;
+    let verifyStream = null;
+    let camera = null;
+    let modelsLoaded = false;
 
-    let currentPhase = 1; // 1: Front, 2: Left, 3: Right
-    let capturedImages = {
-        image_front: null,
-        image_left: null,
-        image_right: null
-    };
-
-    // ───── PHASE TIMER ─────  (removed)
-
-    async function startInlineVerification() {
-        currentPhase = 1;
-        capturedImages = { image_front: null, image_left: null, image_right: null };
-        document.getElementById('not-verified-ui').style.display = 'none';
-        document.getElementById('camera-ui').style.display = 'block';
-        document.getElementById('face-verification-section').style.borderStyle = 'solid';
-        document.getElementById('face-verification-section').style.borderColor = 'var(--primary)';
-
-        updatePhaseUI();
-
-        const video = document.getElementById('verify-video');
-
-        try {
-            verifyStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'user', width: 640, height: 480 }
-            });
-            video.srcObject = verifyStream;
-            initMediaPipe();
-        } catch (err) {
-            console.error(err);
-            alert('Could not access camera. Please check permissions.');
-            stopInlineVerification();
-        }
-    }
-
-    function updatePhaseUI() {
-        const hint = document.getElementById('gesture-hint');
+    async function loadAllModels() {
+        if (modelsLoaded) return;
         const status = document.getElementById('verify-status');
-        
-        if (currentPhase === 1) {
-            hint.innerHTML = '<i class="fas fa-user"></i> Step 1: Look Front & Thumbs Up';
-            status.innerHTML = 'Phase: Frontal Profile';
-        } else if (currentPhase === 2) {
-            hint.innerHTML = '<i class="fas fa-arrow-left"></i> Step 2: Turn Slightly Left & Thumbs Up';
-            status.innerHTML = 'Phase: Left Profile';
-        } else if (currentPhase === 3) {
-            hint.innerHTML = '<i class="fas fa-arrow-right"></i> Step 3: Turn Slightly Right & Thumbs Up';
-            status.innerHTML = 'Phase: Right Profile';
+        status.innerText = 'Loading AI Models...';
+        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+        try {
+            await Promise.all([
+                faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+                faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+                faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
+                faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL)
+            ]);
+            modelsLoaded = true;
+            status.innerText = 'AI Models Loaded.';
+        } catch (err) {
+            console.error("Model load error:", err);
+            status.innerText = 'AI Load Failed. Check internet.';
         }
     }
 
-    function stopInlineVerification() {
-        if (verifyStream) {
-            verifyStream.getTracks().forEach(track => track.stop());
-        }
-        if (camera) camera.stop();
-
-        document.getElementById('not-verified-ui').style.display = 'block';
-        document.getElementById('camera-ui').style.display = 'none';
-        document.getElementById('face-verification-section').style.borderStyle = 'dashed';
-        document.getElementById('face-verification-section').style.borderColor = 'var(--border)';
-        isVerifying = false;
-    }
-
-    function initMediaPipe() {
+    async function startVerification() {
         const video = document.getElementById('verify-video');
+        const container = document.getElementById('verify-camera-ui');
+        container.style.display = 'block';
+        document.getElementById('verify-initial-ui').style.display = 'none';
         
-        hands = new Hands({
-            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-        });
+        await loadAllModels();
         
-        hands.setOptions({
-            maxNumHands: 1,
-            modelComplexity: 1,
-            minDetectionConfidence: 0.7,
-            minTrackingConfidence: 0.7
-        });
-        
-        hands.onResults(onHandResults);
-        
+        try {
+            verifyStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
+            video.srcObject = verifyStream;
+        } catch (err) {
+            alert("Could not access camera.");
+            return;
+        }
+
+        const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
+        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.7 });
+        hands.onResults(onVerificationResults);
+
         camera = new Camera(video, {
             onFrame: async () => {
-                if (isVerifying) return;
+                if (verificationCaptured) return;
                 await hands.send({ image: video });
             },
-            width: 640,
-            height: 480
+            width: 640, height: 480
         });
         camera.start();
+        document.getElementById('verify-status').innerText = 'System Ready. Show Thumbs Up 👍';
     }
 
-    function onHandResults(results) {
-        const hint = document.getElementById('gesture-hint');
+    async function onVerificationResults(results) {
+        if (verificationCaptured) return;
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
             const landmarks = results.multiHandLandmarks[0];
-            const isThumbUp = landmarks[4].y < landmarks[3].y && 
-                             landmarks[4].y < landmarks[2].y &&
-                             landmarks[8].y > landmarks[6].y && 
-                             landmarks[12].y > landmarks[10].y;
-            
+            const isThumbUp = landmarks[4].y < landmarks[3].y && landmarks[4].y < landmarks[2].y && landmarks[8].y > landmarks[6].y && landmarks[12].y > landmarks[10].y;
             if (isThumbUp) {
                 const now = Date.now();
                 if (now - lastGestureTime > 2000) {
                     lastGestureTime = now;
-                    handlePhaseCapture();
+                    captureVerification();
                 }
             }
         }
     }
 
-    async function handlePhaseCapture() {
-        if (isVerifying) return;
-
+    async function captureVerification() {
         const video = document.getElementById('verify-video');
         const canvas = document.getElementById('verify-canvas');
+        const status = document.getElementById('verify-status');
+        status.innerText = 'Capturing & Analyzing...';
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        const imageData = canvas.toDataURL('image/jpeg', 0.8);
-
-        if (currentPhase === 1) {
-            capturedImages.image_front = imageData;
-            currentPhase = 2;
-            updatePhaseUI();
-        } else if (currentPhase === 2) {
-            capturedImages.image_left = imageData;
-            currentPhase = 3;
-            updatePhaseUI();
-        } else if (currentPhase === 3) {
-            capturedImages.image_right = imageData;
-            await submitAllPhases();
+        // High accuracy detection for verification image
+        const fullDetection = await faceapi.detectSingleFace(video, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceDescriptor().withAgeAndGender();
+        
+        if (!fullDetection) {
+            status.innerText = 'Face not detected! Please look at the camera.';
+            status.style.color = '#ef4444';
+            return;
         }
+
+        const selectedGender = document.getElementById('id_gender').value;
+        const detectedGender = fullDetection.gender;
+        if (selectedGender !== 'other' && selectedGender !== detectedGender) {
+            status.innerText = `Gender mismatch! Form says ${selectedGender}, but camera sees ${detectedGender}.`;
+            status.style.color = '#ef4444';
+            return;
+        }
+
+        verificationCaptured = true;
+        verificationDescriptor = fullDetection.descriptor;
+        canvas.width = 400; canvas.height = 400;
+        canvas.getContext('2d').drawImage(video, 0, 0, 400, 400);
+        verificationBase64 = canvas.toDataURL('image/jpeg', 0.8);
+        document.getElementById('verification-image-data').value = verificationBase64;
+
+        if (camera) camera.stop();
+        if (verifyStream) verifyStream.getTracks().forEach(t => t.stop());
+
+        document.getElementById('verify-camera-ui').style.display = 'none';
+        document.getElementById('verify-success-ui').style.display = 'block';
+        document.getElementById('face-verification-section').style.borderColor = '#16a34a';
+        document.getElementById('face-verification-section').style.background = '#f0fdf4';
+
+        fetch('/api/upload/base64/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ image: verificationBase64, path: 'verification' })
+        }).then(r => r.json()).then(d => { if (d.success) console.log("Verification image uploaded to Supabase:", d.url); });
+
+        document.getElementById('pfp-group').style.opacity = '1';
+        document.getElementById('pfp-group').style.pointerEvents = 'auto';
     }
 
-    async function submitAllPhases() {
-        isVerifying = true;
-        const status = document.getElementById('verify-status');
-        status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving Face Profiles...';
-
+    async function compareLocally(pfpImgElement) {
+        if (!verificationDescriptor) return;
+        const statusText = document.getElementById('verify-success-ui').querySelector('p');
+        statusText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing Face...';
+        
         try {
-            const resp = await fetch('/api/face/verify-live/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(capturedImages)
-            });
-            const data = await resp.json();
-            
-            if (data.success) {
-                status.innerHTML = '<i class="fas fa-check-circle"></i> Profiles Secured!';
-                status.style.color = "#4ade80";
-                isFaceVerified = true;
-                
-                if (verifyStream) {
-                    verifyStream.getTracks().forEach(track => track.stop());
-                }
-                if (camera) camera.stop();
+            const pfpDetection = await faceapi.detectSingleFace(pfpImgElement).withFaceLandmarks().withFaceDescriptor();
+            if (!pfpDetection) {
+                statusText.innerHTML = '<i class="fas fa-times-circle"></i> No face detected in PFP!';
+                statusText.style.color = '#ef4444';
+                return;
+            }
 
-                setTimeout(() => {
-                    document.getElementById('camera-ui').style.display = 'none';
-                    document.getElementById('verified-ui').style.display = 'block';
-                    document.getElementById('pfp-group').style.display = 'block';
-                    document.getElementById('gallery-group').style.display = 'block';
-                    document.getElementById('submit-btn').disabled = false;
-                    document.getElementById('submit-btn').style.opacity = '1';
-                    document.getElementById('submit-btn').style.cursor = 'pointer';
-                    document.getElementById('face-verification-section').style.borderColor = '#16a34a';
-                    document.getElementById('face-verification-section').style.background = '#f0fdf4';
-                }, 1000);
+            const distance = faceapi.euclideanDistance(verificationDescriptor, pfpDetection.descriptor);
+            console.log("Face Distance:", distance);
+            
+            const isMatch = distance < 0.6; // Strict threshold from test project
+            if (isMatch) {
+                statusText.innerHTML = '<i class="fas fa-check-circle"></i> Profiles Match! (Accepted)';
+                statusText.style.color = '#16a34a';
+                document.getElementById('verification-status-input').value = 'verified';
             } else {
-                status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${data.message || data.error || 'Verification Failed'}`;
-                status.style.color = "#f87171";
-                isVerifying = false;
-                // We don't reset currentPhase to 1, allowing the user to retry the submission
-                // without re-scanning all 3 angles if it was just a connection/upload error.
+                statusText.innerHTML = '<i class="fas fa-times-circle"></i> Identity mismatch! (Rejected)';
+                statusText.style.color = '#ef4444';
+                document.getElementById('verification-status-input').value = 'rejected';
+                
+                // Clear PFP as requested by user
+                const pfpInput = document.getElementById('id_profile_pic_file');
+                const preview = document.getElementById('pfp-preview');
+                const placeholder = document.getElementById('pfp-placeholder');
+                
+                pfpInput.value = ''; // Clear file input
+                preview.src = ''; // Clear preview
+                preview.style.display = 'none';
+                placeholder.style.display = 'block';
+                
+                checkStep7Validity(); // Disable submit button
+                
+                alert("Rejected: Profile picture does not match verification photo. Please upload a clear photo of yourself.");
             }
         } catch (err) {
-            status.innerHTML = '<i class="fas fa-times-circle"></i> Connection error. Try again.';
-            status.style.color = "#f87171";
-            isVerifying = false;
+            console.error(err);
+            statusText.innerText = 'Analysis failed. Try again.';
         }
     }
 
-    // Update PFP Upload logic to handle Manual Review
-    // This is already in handlePfpSelect, but we need to ensure it shows the right message
-    
-    // We'll also need to update the PFP comparison logic in the same template
+    function handlePfpSelect(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const preview = document.getElementById('pfp-preview');
+                const placeholder = document.getElementById('pfp-placeholder');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+                
+                checkStep7Validity();
 
-    // ───── FORM SUBMISSION INTERCEPT ─────
+                // Start local comparison
+                const tempImg = new Image();
+                tempImg.src = e.target.result;
+                tempImg.onload = () => compareLocally(tempImg);
+
+                fetch('/api/upload/base64/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: JSON.stringify({ image: e.target.result, path: 'profile_pics' })
+                }).then(r => r.json()).then(d => { if (d.success) console.log("PFP uploaded to Supabase:", d.url); });
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function handleGallerySelect(input) {
+        if (input.files && input.files.length > 0) {
+            Array.from(input.files).forEach(file => { if (galleryFiles.length < 5) galleryFiles.push(file); });
+            updateGalleryUI();
+        }
+    }
+
+    function updateGalleryUI() {
+        const grid = document.getElementById('gallery-preview-grid');
+        const countLabel = document.getElementById('gallery-count-label');
+        grid.innerHTML = '';
+        galleryFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.className = 'gallery-item';
+                div.style.position = 'relative'; div.style.aspectRatio = '1/1';
+                div.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">
+                    <button type="button" onclick="removeGalleryItem(${index})" style="position:absolute; top:-5px; right:-5px; width:22px; height:22px; background:#ef4444; color:white; border:none; border-radius:50%; font-size:10px; cursor:pointer;"><i class="fas fa-times"></i></button>`;
+                grid.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+        countLabel.innerText = `${galleryFiles.length} / 2 minimum added`;
+        countLabel.style.color = galleryFiles.length >= 2 ? '#16a34a' : 'var(--primary)';
+        checkStep7Validity();
+    }
+
+    function removeGalleryItem(index) { galleryFiles.splice(index, 1); updateGalleryUI(); }
+
+    function checkStep7Validity() {
+        const pfpInput = document.getElementById('id_profile_pic_file');
+        const submitBtn = document.getElementById('submit-btn');
+        const hasPfp = pfpInput.files.length > 0 || (document.getElementById('pfp-preview').src && !document.getElementById('pfp-preview').src.endsWith('/'));
+        const hasGallery = galleryFiles.length >= 2;
+        submitBtn.disabled = !(hasPfp && hasGallery);
+        submitBtn.style.opacity = (hasPfp && hasGallery) ? '1' : '0.5';
+    }
+
     document.getElementById('profileForm').addEventListener('submit', function(e) {
-        // We must sync the filtered galleryFiles array into the actual file input before submit
         const galleryInput = document.getElementById('gallery-file-input');
         if (galleryFiles.length > 0) {
             const dt = new DataTransfer();
             galleryFiles.forEach(file => dt.items.add(file));
             galleryInput.files = dt.files;
-        } else {
-            // If they are required but we have 0, standard HTML5 validation or backend will catch it
-            galleryInput.value = '';
         }
     });
 
+    document.addEventListener('DOMContentLoaded', () => {
+        const pfpInput = document.getElementById('id_profile_pic_file');
+        if (pfpInput) { pfpInput.addEventListener('change', function() { handlePfpSelect(this); }); }
+    });
 </script>
 {% endblock %}

@@ -21,7 +21,6 @@ urlpatterns = [
     path("chats/", views.chat_list_view, name="chat_list"),
     path("api/chat/<int:partner_id>/", views.chat_api_messages, name="chat_api_messages"),
     path("profile/edit/", views.edit_profile, name="edit_profile"),
-    path("profile/reverify/", views.reverify_profile, name="reverify_profile"),
     path("settings/", views.settings_view, name="settings"),
     path("settings/delete/", views.delete_account, name="delete_account"),
     path("profile/<int:user_id>/", views.view_profile, name="view_profile"),
@@ -46,8 +45,6 @@ urlpatterns = [
     path("master/dashboard/", views.admin_dashboard, name="admin_dashboard"),
     path("master/action/", views.admin_action, name="admin_action"),
     path("api/movies/search/", views.search_movies, name="search_movies"),
-    path("api/face/verify-live/", views.verify_face_live, name="verify_face_live"),
-    path("api/face/compare-pfp/", views.compare_pfp_live, name="compare_pfp_live"),
-    path("face/migrate/", views.migrate_face_verification, name="migrate_face_verification"),
     path("api/favorites/save/", views.save_favorites, name="save_favorites"),
+    path("api/upload/base64/", views.upload_base64_api, name="upload_base64_api"),
 ]

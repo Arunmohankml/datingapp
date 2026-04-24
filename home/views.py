@@ -8,6 +8,7 @@ from django.http import JsonResponse, HttpResponse
 from django.core.management import call_command
 import json
 import os
+import requests
 import firebase_admin
 from firebase_admin import auth as firebase_auth, credentials
 from django.views.decorators.csrf import csrf_exempt
@@ -16,7 +17,7 @@ from django.core.files.base import ContentFile
 import base64
 import math
 
-from .models import Profile, UserVerification, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong
+from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm
 from .supabase_utils import upload_to_supabase
 # AI imports moved inside functions to prevent Vercel crashes
@@ -44,42 +45,27 @@ def complete_profile(request):
             new_profile = form.save(commit=False)
             new_profile.user = user
             
-            # Sync from UserVerification
-            uv = getattr(user, 'verification', None)
+            # Face Verification Data (Simplified)
+            verify_data = request.POST.get('verification_image_data')
+            verify_status = request.POST.get('verification_status', 'pending')
             
+            if verify_data:
+                # Save base64 to Supabase
+                from .supabase_utils import upload_base64_to_supabase
+                verify_url = upload_base64_to_supabase(verify_data, bucket="images", path="verification")
+                if verify_url:
+                    new_profile.verification_image = verify_url
+                    new_profile.verification_status = verify_status
+                    if verify_status == 'verified':
+                        new_profile.is_face_verified = True
+
             if 'profile_pic_file' in request.FILES:
-                if not uv or not uv.image_front:
-                    messages.error(request, "Please complete face verification first.")
-                    return render(request, 'complete_profile.html', {'form': form})
-                
                 img_url = upload_to_supabase(request.FILES['profile_pic_file'], bucket="images", path="profile_pics")
                 if img_url:
-                    baselines = [uv.image_front, uv.image_left, uv.image_right]
-                    baselines = [b for b in baselines if b]
-                    
-                    from .face_utils import compare_faces
-                    status, info, data_dict = compare_faces(img_url, baselines, target_gender=uv.gender)
-                    
-                    if status == 'REJECT':
-                        messages.error(request, info)
-                        return render(request, 'complete_profile.html', {'form': form})
-                    
                     new_profile.profile_pic = img_url
-                    new_profile.is_face_verified = (status == 'PASS')
-                    new_profile.verification_status = 'verified' if status == 'PASS' else 'manual_review'
-                    
-                    # Update Verification Record
-                    uv.is_verified = (status == 'PASS')
-                    uv.status = 'verified' if status == 'PASS' else 'manual_review'
-                    if data_dict:
-                        uv.face_match_score = data_dict.get('score')
-                        uv.profile_photo_gender = data_dict.get('p_gender')
-                    uv.save()
                 else:
                     messages.warning(request, "Photo upload failed.")
-            elif uv and uv.is_verified:
-                new_profile.is_face_verified = True
-            
+
             new_profile.save()
 
             # Gallery
@@ -758,51 +744,25 @@ def toggle_discoverable(request):
     return JsonResponse({'success': True, 'is_discoverable': profile.is_discoverable})
 
 @login_required
-def reverify_profile(request):
-    try:
-        profile = request.user.profile
-    except Profile.DoesNotExist:
-        return redirect('setup')
-    
-    return render(request, 'reverify_profile.html', {
-        'profile': profile
-    })
-
-@login_required
 def edit_profile(request):
     profile = get_object_or_404(Profile, user=request.user)
     
     if request.method == "POST":
         # Handle Profile Info Update
         if 'update_profile' in request.POST:
-            print("DEBUG: edit_profile POST received (update_profile)")
-            print(f"FILES in request: {request.FILES.keys()}")
             form = ProfileEditForm(request.POST, request.FILES, instance=profile)
             if form.is_valid():
-                print("DEBUG: form.is_valid() is TRUE")
                 updated_profile = form.save(commit=False)
                 
                 # Handle Supabase Upload
                 if 'profile_pic_file' in request.FILES:
-                    if not profile.is_face_verified:
-                        messages.error(request, "Please verify your face before updating your profile picture.")
-                        return redirect('edit_profile')
-                        
                     submitted_pfp = request.FILES['profile_pic_file']
                     img_url = upload_to_supabase(submitted_pfp, bucket="images", path="profile_pics")
-                    print(f"DEBUG: PFP Uploaded, URL: {img_url}")
                     if img_url:
-                        # Compare faces
-                        from .face_utils import compare_faces
-                        match, error = compare_faces(img_url, profile.verification_image)
-                        if match:
-                            updated_profile.profile_pic = img_url
-                            messages.success(request, "Profile picture updated successfully!")
-                        else:
-                            messages.error(request, f"Face mismatch: The photo does not match your verified face. {error if error else ''}")
-                            return redirect('edit_profile')
+                        updated_profile.profile_pic = img_url
+                        messages.success(request, "Profile picture updated successfully!")
                     else:
-                        messages.error(request, "Failed to upload profile picture to Supabase. Please check your credentials.")
+                        messages.error(request, "Failed to upload profile picture to Supabase.")
                 
                 # The form already handles clg_year, course, branch, etc.
                 # but we explicitly save the tag fields to ensure they match our new JS dropdowns
@@ -835,10 +795,6 @@ def edit_profile(request):
         
         # Handle Instant PFP Upload
         elif 'update_pfp_instant' in request.POST:
-            if not profile.is_face_verified:
-                messages.error(request, "Please verify your face first.")
-                return redirect('edit_profile')
-                
             if 'profile_pic_file' in request.FILES:
                 img_url = upload_to_supabase(request.FILES['profile_pic_file'], bucket="images", path="profile_pics")
                 if img_url:
@@ -846,7 +802,7 @@ def edit_profile(request):
                     profile.save()
                     messages.success(request, "Profile picture updated successfully!")
                 else:
-                    messages.error(request, "Failed to upload profile picture. Check Supabase policies.")
+                    messages.error(request, "Failed to upload profile picture.")
             return redirect('edit_profile')
         
         # Handle Image Upload
@@ -1254,8 +1210,34 @@ def search_movies(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-@login_required
+
 @csrf_exempt
+@login_required
+def upload_base64_api(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Invalid request'}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        base64_str = data.get('image')
+        path = data.get('path', 'temp')
+        bucket = data.get('bucket', 'images')
+        
+        if not base64_str:
+            return JsonResponse({'success': False, 'message': 'Missing image data'}, status=400)
+            
+        from .supabase_utils import upload_base64_to_supabase
+        url = upload_base64_to_supabase(base64_str, bucket=bucket, path=path)
+        
+        if url:
+            return JsonResponse({'success': True, 'url': url})
+        else:
+            return JsonResponse({'success': False, 'message': 'Upload failed'}, status=500)
+            
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
 def save_favorites(request):
     if request.method == 'POST':
         try:
@@ -1294,6 +1276,7 @@ def save_favorites(request):
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
 
+
 def safe_print(msg):
     try:
         print(msg)
@@ -1303,196 +1286,3 @@ def safe_print(msg):
         except:
             pass
 
-
-
-@login_required
-@csrf_exempt
-def verify_face_live(request):
-    """
-    Receives 3 base64 images and saves to UserVerification + Supabase.
-    Sequential processing for Vercel stability.
-    """
-    print("================ VERIFY LIVE DEBUG ================")
-    print(f"User: {request.user} (ID: {request.user.id})")
-    
-    if request.method != 'POST': 
-        return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
-    
-    import traceback
-    try:
-        data = json.loads(request.body)
-        img_f = data.get('image_front') or data.get('image')
-        img_l = data.get('image_left')
-        img_r = data.get('image_right')
-        
-        if not img_f: 
-            return JsonResponse({'success': False, 'message': 'Front image required'}, status=400)
-
-        # 1. Analyze baseline gender (Clarifai/DeepFace)
-        from .face_utils import save_base64_to_temp, analyze_gender
-        print("[VERIFY-LIVE] Analyzing baseline gender...")
-        temp_path = save_base64_to_temp(img_f, f"gender_check_{request.user.id}.jpg")
-        baseline_gender, baseline_conf = analyze_gender(temp_path)
-        if os.path.exists(temp_path): os.remove(temp_path)
-        print(f"[VERIFY-LIVE] Detected Gender: {baseline_gender} ({baseline_conf}%)")
-
-        # 2. Upload to Supabase
-        def upload_b64(b64, name):
-            if not b64: return None
-            try:
-                print(f"[VERIFY-LIVE] Processing {name}...")
-                if 'base64,' in b64: b64 = b64.split('base64,')[1]
-                img_data = base64.b64decode(b64)
-                print(f"[VERIFY-LIVE] Decoded {name} ({len(img_data)} bytes)")
-                f_obj = ContentFile(img_data, name=f"{name}_{request.user.id}.jpg")
-                url = upload_to_supabase(f_obj, bucket="images", path="verification_baselines")
-                if not url:
-                    print(f"[VERIFY-LIVE] Supabase upload returned None for {name}")
-                else:
-                    print(f"[VERIFY-LIVE] Upload success for {name}: {url}")
-                return url
-            except Exception as e:
-                print(f"[VERIFY-LIVE] Upload Exception for {name}: {e}")
-                traceback.print_exc()
-                return None
-
-        print("[VERIFY-LIVE] Uploading images...")
-        url_f = upload_b64(img_f, "front")
-        url_l = upload_b64(img_l, "left")
-        url_r = upload_b64(img_r, "right")
-
-        if not url_f:
-            return JsonResponse({
-                'success': False, 
-                'message': 'Front photo upload failed. Please ensure your camera is working and check your internet connection.'
-            }, status=400)
-
-        # 3. Save to UserVerification
-        uv, _ = UserVerification.objects.update_or_create(
-            user=request.user,
-            defaults={
-                'image_front': url_f,
-                'image_left': url_l,
-                'image_right': url_r,
-                'gender': baseline_gender,
-                'status': 'pending',
-                'is_verified': False
-            }
-        )
-        
-        # Sync to Profile for UI feedback
-        profile = getattr(request.user, 'profile', None)
-        if profile:
-            profile.verification_status = 'pending'
-            profile.save()
-
-        return JsonResponse({'success': True, 'message': 'Face profiles secured!'})
-            
-    except Exception as e:
-        import traceback
-        print("VERIFY LIVE CRITICAL ERROR:", str(e))
-        traceback.print_exc()
-        return JsonResponse({'success': False, 'message': f'Server Error: {str(e)}'}, status=400)
-
-@login_required
-@csrf_exempt
-def compare_pfp_live(request):
-    """
-    Dual-model PFP comparison against UserVerification.
-    Uses stored baseline gender for strict rejection.
-    """
-    if request.method != 'POST': return JsonResponse({'success': False}, status=405)
-    
-    try:
-        data = json.loads(request.body)
-        image_data = data.get('image')
-        if not image_data: return JsonResponse({'success': False, 'error': 'No image'}, status=400)
-            
-        uv = getattr(request.user, 'verification', None)
-        if not uv or not uv.image_front:
-            return JsonResponse({'success': False, 'error': 'Please complete face scan first.'}, status=400)
-
-        # Collect baselines
-        baselines = [uv.image_front, uv.image_left, uv.image_right]
-        baselines = [b for b in baselines if b]
-
-        # Helper to convert to path
-        def get_path(val, name):
-            if not val: return None
-            if str(val).startswith('http'):
-                import requests as req_lib
-                resp = req_lib.get(val, timeout=10)
-                if resp.status_code == 200:
-                    temp_dir = os.environ.get('TEMP', '/tmp') if os.name == 'nt' else '/tmp'
-                    path = os.path.join(temp_dir, f"baseline_{name}_{request.user.id}.jpg")
-                    with open(path, 'wb') as f: f.write(resp.content)
-                    return path
-            return None
-
-        gallery_paths = [get_path(b, f"angle_{i}") for i, b in enumerate(baselines)]
-        gallery_paths = [p for p in gallery_paths if p]
-
-        from .face_utils import save_base64_to_temp, compare_faces
-        probe_path = save_base64_to_temp(image_data, f"probe_{request.user.id}.jpg")
-
-        # Use stored baseline gender for comparison
-        status, info, data_dict = compare_faces(probe_path, gallery_paths, target_gender=uv.gender)
-        print(f"[COMPARE-PFP] Result: {status} | Data: {data_dict}")
-
-        # Handle Decisions
-        if status == 'PASS':
-            uv.is_verified = True
-            uv.status = 'verified'
-        elif status == 'REVIEW':
-            uv.status = 'manual_review'
-        else:
-            uv.status = 'rejected'
-            
-        if data_dict:
-            uv.face_match_score = data_dict.get('score')
-            uv.profile_photo_gender = data_dict.get('p_gender')
-        uv.save()
-
-        # Update Profile sync
-        profile = getattr(request.user, 'profile', None)
-        if profile:
-            profile.is_face_verified = (status == 'PASS')
-            profile.verification_status = 'verified' if status == 'PASS' else ('manual_review' if status == 'REVIEW' else 'rejected')
-            profile.save()
-
-        # Cleanup
-        for p in gallery_paths + [probe_path]:
-            if p and os.path.exists(p): os.remove(p)
-
-        if status == 'PASS':
-            return JsonResponse({'success': True, 'message': 'Identity verified! Looking great.'})
-        elif status == 'REVIEW':
-            return JsonResponse({
-                'success': True,
-                'manual_review': True,
-                'message': "We're reviewing your photo"
-            })
-        else:
-            return JsonResponse({'success': False, 'error': info}, status=400)
-
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
-
-@login_required
-def migrate_face_verification(request):
-    """
-    One-time migration for existing users: use current PFP as verification image.
-    """
-    if not request.user.is_staff and request.user.email != 'arunmohankml@gmail.com':
-        return HttpResponse("Unauthorized", status=403)
-        
-    profiles = Profile.objects.filter(is_face_verified=False).exclude(profile_pic='')
-    count = 0
-    for p in profiles:
-        if p.profile_pic and ('http' in p.profile_pic):
-            p.verification_image = p.profile_pic
-            p.is_face_verified = True
-            p.save()
-            count += 1
-            
-    return HttpResponse(f"Migrated {count} profiles successfully.")

@@ -3,6 +3,7 @@ from supabase import create_client, Client
 from django.conf import settings
 from PIL import Image
 import io
+import uuid
 
 # Initialize Supabase Client
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '').strip()
@@ -107,4 +108,29 @@ def upload_to_supabase(file_obj, bucket="images", path="dating_app/"):
                 return public_url
             except:
                 return None
+        return None
+
+def upload_base64_to_supabase(base64_str, bucket="images", path="verification"):
+    """
+    Decodes base64 string and uploads to Supabase Storage.
+    """
+    if not supabase: return None
+    try:
+        import base64
+        import uuid
+        if ',' in base64_str:
+            base64_str = base64_str.split(',')[1]
+        
+        img_data = base64.b64decode(base64_str)
+        filename = f"{uuid.uuid4()}.webp"
+        full_path = f"{path.strip('/')}/{filename}"
+        
+        res = supabase.storage.from_(bucket).upload(
+            path=full_path,
+            file=img_data,
+            file_options={"content-type": "image/webp", "x-upsert": "true"}
+        )
+        return supabase.storage.from_(bucket).get_public_url(full_path)
+    except Exception as e:
+        print(f"ERROR: Base64 upload failed: {e}")
         return None

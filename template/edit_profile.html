@@ -344,81 +344,6 @@
     .toggle-switch input:checked + label:before {
         transform: translate(24px, -50%);
     }
-    /* Face Verify Modal */
-    .verify-modal {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.9);
-        z-index: 99999;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-        color: white;
-        text-align: center;
-    }
-    .verify-cam-wrap {
-        position: relative;
-        width: 100%;
-        max-width: 400px;
-        aspect-ratio: 3/4;
-        border-radius: 24px;
-        overflow: hidden;
-        background: #1e293b;
-        box-shadow: 0 0 50px rgba(99, 102, 241, 0.3);
-        margin-bottom: 20px;
-    }
-    #verify-video { width: 100%; height: 100%; object-fit: cover; }
-    .face-guide {
-        position: absolute;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        width: 70%; height: 60%;
-        border: 2px dashed rgba(255,255,255,0.5);
-        border-radius: 50% 50% 45% 45%;
-        pointer-events: none;
-    }
-    .gesture-hint {
-        position: absolute;
-        bottom: 20px; left: 50%;
-        transform: translateX(-50%);
-        background: rgba(255,255,255,0.2);
-        backdrop-filter: blur(10px);
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-size: 14px;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        white-space: nowrap;
-    }
-    .verify-close {
-        position: absolute;
-        top: 20px; right: 20px;
-        width: 40px; height: 40px;
-        background: rgba(255,255,255,0.1);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-    }
-    .verify-btn-trigger {
-        margin-top: 10px;
-        padding: 8px 16px;
-        border-radius: 20px;
-        background: #6366f1;
-        color: white;
-        font-weight: 700;
-        font-size: 13px;
-        border: none;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
 </style>
 {% endblock %}
 
@@ -427,11 +352,9 @@
     <div class="pfp-header">
         <div class="pfp-main-wrap">
             <img src="{{ profile.get_profile_pic_url }}" alt="Me" class="pfp-main" id="preview-pfp">
-            {% if profile.is_face_verified %}
             <label for="id_pfp_instant" class="pfp-edit-btn" id="pfp-edit-label">
                 <i class="fas fa-camera"></i>
             </label>
-            {% endif %}
             <!-- Face detection status for edit page -->
             <div id="pfp-face-status" style="display:none; position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap; background:#fef2f2; color:#dc2626; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
             {% if spark_count > 0 %}
@@ -447,15 +370,6 @@
             <i class="fas fa-cog"></i> Settings
         </a>
 
-        {% if not profile.is_face_verified %}
-        <a href="{% url 'reverify_profile' %}" class="verify-btn-trigger" style="text-decoration:none;">
-            <i class="fas fa-shield-alt"></i> Verify Identity
-        </a>
-        {% else %}
-        <div style="margin-top: 10px; color: #16a34a; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 4px;">
-            <i class="fas fa-check-circle"></i> Identity Verified
-        </div>
-        {% endif %}
 
         {% if not profile.profile_pic %}
         <p style="color: var(--primary); font-size: 12px; margin-top: 12px;"><i class="fas fa-info-circle"></i> Tip: Upload a photo to complete your profile!</p>
@@ -1083,33 +997,118 @@
         this.submit();
     });
 
-    // ─── INSTANT PFP UPLOAD (verified users — no re-check needed) ───
+    // ─── INSTANT PFP UPLOAD WITH FACE VERIFICATION ───
     const pfpInstantInput = document.getElementById('id_pfp_instant');
     const pfpInstantForm = document.getElementById('pfp-instant-form');
+    const pfpFaceStatus = document.getElementById('pfp-face-status');
+    let modelsLoaded = false;
+
+    async function loadFaceModels() {
+        if (modelsLoaded) return;
+        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+        try {
+            await Promise.all([
+                faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+                faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+                faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+                faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL)
+            ]);
+            modelsLoaded = true;
+        } catch (err) {
+            console.error("AI Models failed to load:", err);
+        }
+    }
 
     if (pfpInstantInput) {
         pfpInstantInput.addEventListener('change', async function() {
             if (!this.files || !this.files[0]) return;
+            const file = this.files[0];
 
-            // Preview immediately
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                document.getElementById('preview-pfp').src = e.target.result;
-            };
-            reader.readAsDataURL(this.files[0]);
+            showOverlay("Verifying identity...");
+            await loadFaceModels();
 
-            // Compress then submit
             try {
-                const compressed = await compressImage(this.files[0]);
-                const dt = new DataTransfer();
-                dt.items.add(compressed);
-                this.files = dt.files;
-            } catch (e) {
-                console.warn('Compression skipped:', e);
-            }
+                // 1. Get descriptor from verification image (original scan) - Robust Fetch Method
+                const verificationUrl = "{{ profile.verification_image }}";
+                if (!verificationUrl || verificationUrl === "None") {
+                    throw new Error("No verification image found. Please redo your identity scan.");
+                }
 
-            showOverlay("Updating profile picture...");
-            pfpInstantForm.submit();
+                const verifyImg = new Image();
+                try {
+                    const response = await fetch(verificationUrl);
+                    const blob = await response.blob();
+                    verifyImg.src = URL.createObjectURL(blob);
+                } catch (e) {
+                    console.warn("Secure fetch failed, falling back to direct load:", e);
+                    verifyImg.crossOrigin = "anonymous";
+                    verifyImg.src = verificationUrl;
+                }
+                
+                await new Promise((resolve, reject) => {
+                    verifyImg.onload = resolve;
+                    verifyImg.onerror = () => reject(new Error("Failed to load verification image from storage."));
+                });
+
+                // Try high-accuracy detection first
+                let verifyDetection = await faceapi.detectSingleFace(verifyImg, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceDescriptor();
+                
+                // Fallback to TinyFaceDetector if SSD fails
+                if (!verifyDetection) {
+                    console.log("SSD failed on verification image, trying TinyFaceDetector...");
+                    verifyDetection = await faceapi.detectSingleFace(verifyImg, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.1 })).withFaceLandmarks().withFaceDescriptor();
+                }
+
+                if (!verifyDetection) {
+                    throw new Error("Face not detected in original scan. Please contact support or redo verification.");
+                }
+
+                // 2. Get descriptor from new PFP
+                const pfpImg = new Image();
+                pfpImg.src = URL.createObjectURL(file);
+                await new Promise(resolve => pfpImg.onload = resolve);
+                
+                let pfpDetection = await faceapi.detectSingleFace(pfpImg, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceDescriptor();
+                if (!pfpDetection) {
+                    pfpDetection = await faceapi.detectSingleFace(pfpImg, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+                }
+                
+                if (!pfpDetection) {
+                    hideOverlay();
+                    pfpFaceStatus.innerText = "No face detected in new photo!";
+                    pfpFaceStatus.style.display = "block";
+                    this.value = ''; 
+                    return;
+                }
+
+                // 3. Compare
+                const distance = faceapi.euclideanDistance(verifyDetection.descriptor, pfpDetection.descriptor);
+                console.log("Edit PFP Comparison Distance:", distance);
+
+                if (distance < 0.6) {
+                    pfpFaceStatus.style.display = "none";
+                    showOverlay("Updating profile picture...");
+                    try {
+                        const compressed = await compressImage(file);
+                        const dt = new DataTransfer();
+                        dt.items.add(compressed);
+                        this.files = dt.files;
+                    } catch (e) { console.warn('Compression skipped'); }
+                    pfpInstantForm.submit();
+                } else {
+                    hideOverlay();
+                    pfpFaceStatus.innerText = "Identity mismatch! (Rejected)";
+                    pfpFaceStatus.style.display = "block";
+                    this.value = ''; 
+                    alert("Rejected: This photo doesn't match your original verification scan.");
+                }
+
+            } catch (err) {
+                console.error("Verification error:", err);
+                hideOverlay();
+                alert(err.message || "Verification failed. Please try again.");
+                this.value = '';
+            }
         });
     }
 </script>
