@@ -150,7 +150,7 @@
         }
         
         .nav-link i {
-            font-size: 20px;
+            font-size: 16px;
         }
 
         .nav-link:hover, .nav-link.active {
@@ -372,6 +372,105 @@
         {% block body %}{% endblock %}
     </div>
 
+    <!-- Global Bottom Sheet Modal -->
+    <div id="global-warning-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; opacity: 0; transition: opacity 0.3s ease;"></div>
+    <div id="global-warning-modal" style="display: none; position: fixed; bottom: -100%; left: 0; width: 100%; background: white; border-radius: 24px 24px 0 0; padding: 30px 24px 40px; box-shadow: 0 -10px 40px rgba(0,0,0,0.15); z-index: 10001; transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-sizing: border-box; max-height: 90vh; overflow-y: auto;">
+        <div style="width: 40px; height: 5px; background: #cbd5e1; border-radius: 3px; margin: 0 auto 24px;"></div>
+        <h2 id="gwm-title" style="font-size: 22px; font-weight: 800; color: var(--text-main); margin-bottom: 12px; text-align: center;"></h2>
+        <div id="gwm-content" style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 32px;"></div>
+        <div id="gwm-actions" style="display: flex; gap: 12px;"></div>
+    </div>
+
+    <script>
+        function showWarningModal(id, title, contentHTML, buttonsOptions) {
+            const overlay = document.getElementById('global-warning-overlay');
+            const modal = document.getElementById('global-warning-modal');
+            const titleEl = document.getElementById('gwm-title');
+            const contentEl = document.getElementById('gwm-content');
+            const actionsEl = document.getElementById('gwm-actions');
+
+            titleEl.innerHTML = title;
+            contentEl.innerHTML = contentHTML;
+            actionsEl.innerHTML = '';
+
+            const hideModal = () => {
+                modal.style.bottom = '-100%';
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    overlay.style.display = 'none';
+                }, 400);
+            };
+
+            buttonsOptions.forEach(btn => {
+                const b = document.createElement('button');
+                b.className = btn.isPrimary ? 'btn btn-primary' : 'btn';
+                if (!btn.isPrimary) {
+                    b.style.background = '#f1f5f9';
+                    b.style.color = 'var(--text-main)';
+                }
+                b.style.flex = '1';
+                b.style.padding = '14px';
+                b.style.fontSize = '15px';
+                b.style.fontWeight = '700';
+                b.innerText = btn.text;
+                b.onclick = () => {
+                    if (btn.onClick) btn.onClick();
+                    if (btn.hideModal !== false) hideModal();
+                };
+                actionsEl.appendChild(b);
+            });
+
+            overlay.style.display = 'block';
+            modal.style.display = 'block';
+            void overlay.offsetWidth;
+            overlay.style.opacity = '1';
+            modal.style.bottom = '0';
+        }
+
+        function checkAndShowWarning(id, title, contentHTML, buttonText, onAgree) {
+            if (localStorage.getItem('agreed_' + id)) {
+                if (onAgree) onAgree();
+                return;
+            }
+            showWarningModal(id, title, contentHTML, [
+                {
+                    text: buttonText,
+                    isPrimary: true,
+                    onClick: () => {
+                        localStorage.setItem('agreed_' + id, 'true');
+                        if (onAgree) onAgree();
+                    }
+                }
+            ]);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const showLogoutWarning = (e, callback) => {
+                e.preventDefault();
+                showWarningModal(
+                    'logout_warning',
+                    'Leaving so soon?',
+                    '<div style="text-align:center;"><p>Any unsaved progress in your 15-question quiz or your current drawing will be lost.</p></div>',
+                    [
+                        { text: 'Stay Here', isPrimary: false },
+                        { text: 'Logout', isPrimary: true, onClick: callback }
+                    ]
+                );
+            };
+
+            const logoutLinks = document.querySelectorAll('a[href="{% url "logout" %}"]');
+            logoutLinks.forEach(link => {
+                link.addEventListener('click', (e) => showLogoutWarning(e, () => window.location.href = link.getAttribute('href')));
+            });
+
+            const logoutForms = document.querySelectorAll('form[action="{% url "logout" %}"]');
+            logoutForms.forEach(form => {
+                form.addEventListener('submit', (e) => showLogoutWarning(e, () => form.submit()));
+            });
+        });
+    </script>
+
     <!-- PWA Install Prompt -->
     <div id="pwa-install-prompt" class="pwa-prompt" style="display: none;">
         <div class="pwa-prompt-content">
@@ -411,7 +510,9 @@
             // Stash the event so it can be triggered later.
             deferredPrompt = e;
             // Show the custom install prompt
-            installPrompt.style.display = 'flex';
+            if (localStorage.getItem('pwaPromptDismissed') !== 'true') {
+                installPrompt.style.display = 'flex';
+            }
         });
 
         installBtn.addEventListener('click', async () => {
@@ -426,6 +527,7 @@
 
         cancelBtn.addEventListener('click', () => {
             installPrompt.style.display = 'none';
+            localStorage.setItem('pwaPromptDismissed', 'true');
         });
 
         // Detects if device is on iOS 
@@ -438,19 +540,24 @@
 
         // Show prompt manually for iOS since beforeinstallprompt is not supported
         if (isIos() && !isInStandaloneMode()) {
-            setTimeout(() => {
-                installPrompt.querySelector('h3').innerText = "Install SRM Match";
-                installPrompt.querySelector('p').innerHTML = "To install the app, tap the <i class='fas fa-share-square'></i> <b>Share</b> icon below and select <b>'Add to Home Screen'</b>.";
-                installPrompt.querySelector('.pwa-actions').style.display = 'none';
-                installPrompt.style.display = 'flex';
-                
-                // Add a close button for the iOS prompt since actions are hidden
-                const closeBtn = document.createElement('button');
-                closeBtn.innerHTML = "&times;";
-                closeBtn.style.cssText = "position:absolute; top:10px; right:15px; background:none; border:none; font-size:24px; color:#94a3b8; cursor:pointer;";
-                closeBtn.onclick = () => installPrompt.style.display = 'none';
-                installPrompt.appendChild(closeBtn);
-            }, 3000); // delay so it doesn't pop up immediately on load
+            if (localStorage.getItem('pwaPromptDismissed') !== 'true') {
+                setTimeout(() => {
+                    installPrompt.querySelector('h3').innerText = "Install SRM Match";
+                    installPrompt.querySelector('p').innerHTML = "To install the app, tap the <i class='fas fa-share-square'></i> <b>Share</b> icon below and select <b>'Add to Home Screen'</b>.";
+                    installPrompt.querySelector('.pwa-actions').style.display = 'none';
+                    installPrompt.style.display = 'flex';
+                    
+                    // Add a close button for the iOS prompt since actions are hidden
+                    const closeBtn = document.createElement('button');
+                    closeBtn.innerHTML = "&times;";
+                    closeBtn.style.cssText = "position:absolute; top:10px; right:15px; background:none; border:none; font-size:24px; color:#94a3b8; cursor:pointer;";
+                    closeBtn.onclick = () => {
+                        installPrompt.style.display = 'none';
+                        localStorage.setItem('pwaPromptDismissed', 'true');
+                    };
+                    installPrompt.appendChild(closeBtn);
+                }, 3000); // delay so it doesn't pop up immediately on load
+            }
         }
     </script>
 </body>

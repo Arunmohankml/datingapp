@@ -269,11 +269,23 @@ def check_match(request):
     if profile is None:
         return redirect('home')
 
+    # Exclude ANY users we have already interacted with (liked, rejected, skipped, pending)
+    interacted_user_ids = MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)
+
+    # Check if we have a current match that hasn't been interacted with (prevents refresh bypass)
+    current_match_id = request.session.get('current_match_id')
+    if current_match_id and current_match_id not in interacted_user_ids:
+        best_match = Profile.objects.filter(user__id=current_match_id, is_discoverable=True).first()
+        if best_match:
+            score = calculate_match_score(user, best_match.user)
+            return render(request, "match_popup.html", {
+                "match": best_match,
+                "score": score
+            })
+
     # IDs of users already shown to this user in previous rounds (stored in session)
     seen_ids = request.session.get('seen_match_ids', [])
     
-    # Exclude ANY users we have already interacted with (liked, rejected, skipped, pending)
-    interacted_user_ids = MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)
     candidates = Profile.objects.filter(is_discoverable=True).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=seen_ids)
 
     preference_filtered = []
@@ -293,10 +305,6 @@ def check_match(request):
         if user_pref_ok and cand_pref_ok and user_age_ok and cand_age_ok:
             preference_filtered.append(c)
 
-    # Fall back to all unseen candidates if no one passes preference filter
-    if not preference_filtered:
-        preference_filtered = list(candidates)
-
     # ── Step 2: Rank by answer similarity ──
     best_match = None
     best_score = -1
@@ -311,6 +319,7 @@ def check_match(request):
         # Remember we showed this person
         seen_ids.append(best_match.user.id)
         request.session['seen_match_ids'] = seen_ids
+        request.session['current_match_id'] = best_match.user.id
         return render(request, "match_popup.html", {
             "match": best_match,
             "score": best_score
@@ -318,6 +327,7 @@ def check_match(request):
 
     # No one left to show — reset seen list and send back to quiz
     request.session['seen_match_ids'] = []
+    request.session['current_match_id'] = None
     return redirect("home")
 
 

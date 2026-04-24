@@ -124,7 +124,7 @@
             transition: 0.2s;
             border-radius: 12px;
         }
-        .nav-item i { font-size: 18px; }
+        .nav-item i { font-size: 16px; }
         .nav-item.active { color: var(--primary); }
 
         /* Loading */
@@ -186,7 +186,70 @@
         <a href="{% url 'edit_profile' %}" class="nav-item"><i class="fas fa-user"></i><span>Profile</span></a>
     </div>
 
+    <!-- Bottom Sheet Modal for Wall -->
+    <div id="global-warning-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; opacity: 0; transition: opacity 0.3s ease;"></div>
+    <div id="global-warning-modal" style="display: none; position: fixed; bottom: -100%; left: 0; width: 100%; background: white; border-radius: 24px 24px 0 0; padding: 30px 24px 40px; box-shadow: 0 -10px 40px rgba(0,0,0,0.15); z-index: 10001; transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-sizing: border-box; font-family: 'Inter', sans-serif;">
+        <div style="width: 40px; height: 5px; background: #cbd5e1; border-radius: 3px; margin: 0 auto 24px;"></div>
+        <h2 id="gwm-title" style="font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 12px; text-align: center;"></h2>
+        <div id="gwm-content" style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 32px;"></div>
+        <div id="gwm-actions" style="display: flex; gap: 12px;"></div>
+    </div>
+
 <script>
+function showWarningModal(id, title, contentHTML, buttonsOptions) {
+    const overlay = document.getElementById('global-warning-overlay');
+    const modal = document.getElementById('global-warning-modal');
+    const titleEl = document.getElementById('gwm-title');
+    const contentEl = document.getElementById('gwm-content');
+    const actionsEl = document.getElementById('gwm-actions');
+
+    titleEl.innerHTML = title;
+    contentEl.innerHTML = contentHTML;
+    actionsEl.innerHTML = '';
+
+    const hideModal = () => {
+        modal.style.bottom = '-100%';
+        overlay.style.opacity = '0';
+        setTimeout(() => { modal.style.display = 'none'; overlay.style.display = 'none'; }, 400);
+    };
+
+    buttonsOptions.forEach(btn => {
+        const b = document.createElement('button');
+        b.style.flex = '1'; b.style.padding = '14px'; b.style.fontSize = '15px'; b.style.fontWeight = '700';
+        b.style.borderRadius = '12px'; b.style.border = 'none'; b.style.cursor = 'pointer';
+        if (btn.isPrimary) {
+            b.style.background = '#6366f1'; b.style.color = 'white';
+        } else {
+            b.style.background = '#f1f5f9'; b.style.color = '#0f172a';
+        }
+        b.innerText = btn.text;
+        b.onclick = () => { if (btn.onClick) btn.onClick(); if (btn.hideModal !== false) hideModal(); };
+        actionsEl.appendChild(b);
+    });
+
+    overlay.style.display = 'block'; modal.style.display = 'block';
+    void overlay.offsetWidth;
+    overlay.style.opacity = '1'; modal.style.bottom = '0';
+}
+
+function checkAndShowWarning(id, title, contentHTML, buttonText, onAgree) {
+    if (localStorage.getItem('agreed_' + id)) { if (onAgree) onAgree(); return; }
+    showWarningModal(id, title, contentHTML, [{ text: buttonText, isPrimary: true, onClick: () => { localStorage.setItem('agreed_' + id, 'true'); if (onAgree) onAgree(); } }]);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    checkAndShowWarning(
+        'wall_warning',
+        'The Canvas is Public',
+        `<div style="text-align:center;">
+            <p>Express yourself, but keep it civil. Our automated filters and moderators are watching.</p>
+            <p style="margin-top:12px; color:#ef4444; font-weight:600;">STRICTLY NO: NSFW content, writing specific names for the purpose of defamation.</p>
+            <p style="font-size:12px; margin-top:4px;">(Fun till a limit is okay!)</p>
+        </div>`,
+        'Agree',
+        null
+    );
+});
 const VIRTUAL_W = 8000, VIRTUAL_H = 8000;
 const canvas = document.getElementById('drawCanvas');
 const ctx = canvas.getContext('2d');

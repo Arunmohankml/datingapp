@@ -1020,5 +1020,22 @@ async function toggleSpark(userId) {
         }
     } catch (e) { console.error(e); }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    checkAndShowWarning(
+        'chat_warning',
+        'Stay Safe!',
+        `<div style="text-align:left;">
+            <p>You're starting a new conversation. Remember:</p>
+            <ul style="margin-top:12px; padding-left:20px; display:flex; flex-direction:column; gap:8px;">
+                <li>Don't share your OTP or password.</li>
+                <li>If someone makes you uncomfortable, use the Report button immediately.</li>
+                <li>Be yourself—everyone else is taken.</li>
+            </ul>
+        </div>`,
+        'Got it!',
+        null
+    );
+});
 </script>
 {% endblock %}

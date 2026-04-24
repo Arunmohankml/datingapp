@@ -283,4 +283,26 @@
 
     document.getElementById('google-login-btn').addEventListener('click', handleLogin);
 </script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        showWarningModal(
+            'entry_gate',
+            'Welcome to the SRM Social Hub',
+            `<div style="text-align:left;">
+                <p>This is a verified space for SRM students to connect, confess, and create. By entering, you agree to play fair.</p>
+                <p style="font-weight:bold; margin-top:16px;">The "Rules of Engagement":</p>
+                <ul style="margin-top:8px; padding-left:20px; display:flex; flex-direction:column; gap:8px;">
+                    <li><b>No Fake IDs:</b> Use your authentic identity. We have a zero-tolerance policy for impersonation.</li>
+                    <li><b>No "Burner" Spam:</b> Meaningful interaction only. Repeatedly posting gibberish or ads will result in an immediate ban.</li>
+                    <li><b>Respect the Privacy:</b> What happens in the Hub stays in the Hub. Do not screenshot confessions for external bullying.</li>
+                    <li><b>The "Human" Rule:</b> Treat every profile like a person you have to sit next to in class tomorrow.</li>
+                </ul>
+            </div>`,
+            [
+                { text: 'I am an SRM Student & I Agree', isPrimary: true }
+            ]
+        );
+    });
+</script>
 {% endblock %}

@@ -379,6 +379,23 @@ async function likeConfession(e, id, btn) {
         }
     } catch(err) {}
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    checkAndShowWarning(
+        'confessions_warning',
+        'The Vault of Confessions',
+        `<div style="text-align:left;">
+            <p>This is a space for secrets, stories, and crushes—not for attacks.</p>
+            <ul style="margin-top:12px; padding-left:20px; display:flex; flex-direction:column; gap:8px;">
+                <li><b>Zero Defamation:</b> Do not use full names to spread rumors or hurt reputations.</li>
+                <li><b>Mental Health:</b> If you are struggling, please use the "Help" resources instead of posting.</li>
+            </ul>
+            <p style="margin-top:12px; font-size:12px; font-weight:600;">Disclaimer: Mods reserve the right to delete any post that borders on bullying or NSFW territory.</p>
+        </div>`,
+        'Enter Respectfully',
+        null
+    );
+});
 </script>
 
 {% endblock %}

@@ -373,9 +373,25 @@ async function toggleDiscoverability() {
         }
 
         // Start if quiz container exists
-        if (document.getElementById('quiz-container')) {
-            loadBatch();
-        }
+        document.addEventListener('DOMContentLoaded', () => {
+            if (document.getElementById('quiz-container')) {
+                checkAndShowWarning(
+                    'quiz_warning',
+                    'Ready to find your match?',
+                    `<div style="text-align:center;">
+                        <p>You're about to answer questions. Your matches are based on these answers, so be honest!</p>
+                        <div style="text-align:left; margin-top:16px;">
+                            <p><b>Skip or Connect:</b> You have the power.</p>
+                            <p style="margin-top:8px;"><b>Keep it Classy:</b> Harassment after a match will lead to a permanent device ban.</p>
+                        </div>
+                    </div>`,
+                    'Start the Quiz',
+                    () => {
+                        loadBatch();
+                    }
+                );
+            }
+        });
 
         function nextMiniSlide(btn) {
             const wrapper = btn.closest('.mini-slider-wrapper');
