@@ -12,6 +12,19 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+
+  // CRITICAL: Never intercept POST requests or API calls.
+  // POST bodies are consumed after first read — re-fetching causes ERR_FAILED.
+  if (event.request.method !== 'GET' || url.pathname.startsWith('/api/')) {
+    return; // Let browser handle it natively
+  }
+
+  // CRITICAL: Let browser natively handle cross-origin requests (e.g. CDNs for AI models)
+  if (url.origin !== location.origin) {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then(response => {

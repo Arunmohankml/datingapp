@@ -1,6 +1,29 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+class UserVerification(models.Model):
+    VERIFICATION_STATUS = (
+        ('pending', 'Pending Verification'),
+        ('verified', 'Verified'),
+        ('manual_review', 'Manual Review Required'),
+        ('rejected', 'Rejected'),
+    )
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='verification')
+    image_front = models.URLField(max_length=500, blank=True, null=True)
+    image_left = models.URLField(max_length=500, blank=True, null=True)
+    image_right = models.URLField(max_length=500, blank=True, null=True)
+    gender = models.CharField(max_length=20, blank=True, null=True) # Baseline gender
+    profile_photo_gender = models.CharField(max_length=20, blank=True, null=True)
+    face_match_score = models.FloatField(blank=True, null=True)
+    review_reason = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=VERIFICATION_STATUS, default='pending')
+    is_verified = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Verification for {self.user.username} - {self.status}"
+
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
@@ -46,6 +69,19 @@ class Profile(models.Model):
     pref_campus = models.CharField(max_length=100, blank=True)
     pref_branch = models.CharField(max_length=100, blank=True)
 
+    # Face Verification
+    VERIFICATION_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('verified', 'Verified'),
+        ('manual_review', 'Manual Review'),
+        ('rejected', 'Rejected'),
+    ]
+    verification_image = models.URLField(max_length=500, blank=True, null=True)
+    verification_image_left = models.URLField(max_length=500, blank=True, null=True)
+    verification_image_right = models.URLField(max_length=500, blank=True, null=True)
+    verification_status = models.CharField(max_length=20, choices=VERIFICATION_STATUS_CHOICES, default='pending')
+    is_face_verified = models.BooleanField(default=False)
+    
     # System
     is_banned = models.BooleanField(default=False)
     is_discoverable = models.BooleanField(default=False)
@@ -302,3 +338,26 @@ class Announcement(models.Model):
     
     class Meta:
         ordering = ['-created_at']
+
+class FavoriteMovie(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorite_movies')
+    tmdb_id = models.IntegerField()
+    title = models.CharField(max_length=255)
+    poster_url = models.URLField(max_length=500, blank=True, null=True)
+    release_year = models.CharField(max_length=10, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+class FavoriteSong(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorite_songs')
+    itunes_track_id = models.CharField(max_length=100)
+    title = models.CharField(max_length=255)
+    artist = models.CharField(max_length=255)
+    album = models.CharField(max_length=255, blank=True)
+    artwork_url = models.URLField(max_length=500, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']

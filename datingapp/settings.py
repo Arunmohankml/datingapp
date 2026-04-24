@@ -185,3 +185,6 @@ LOGOUT_REDIRECT_URL = '/'
 
 # Temporarily disabling COOP to fix the sign-in popup being blocked on Vercel
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+
+# TMDB API
+TMDB_API_KEY = os.environ.get('TMDB_API_KEY')

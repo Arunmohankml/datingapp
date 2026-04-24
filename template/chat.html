@@ -278,6 +278,57 @@
         font-size: 11px;
         font-weight: 600;
     }
+
+    /* Favorite Cards */
+    .vibe-section {
+        margin-top: 20px;
+        text-align: left;
+    }
+    .vibe-label {
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .vibe-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    .vibe-item {
+        position: relative;
+        text-align: center;
+    }
+    .vibe-item img {
+        width: 100%;
+        aspect-ratio: 1/1;
+        border-radius: 12px;
+        object-fit: cover;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border: 1px solid var(--border);
+    }
+    .vibe-item.movie img { aspect-ratio: 2/3; }
+    .vibe-item .vibe-title {
+        font-size: 10px;
+        font-weight: 700;
+        margin-top: 6px;
+        color: var(--text-main);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0 4px;
+    }
+    .vibe-item .vibe-subtitle {
+        font-size: 9px;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
     .profile-modal .close-modal {
         margin-top: 20px;
         padding: 10px 30px;
@@ -515,8 +566,8 @@
         <a href="{% url 'view_profile' partner.id %}">
             <img src="{{ partner.profile.get_profile_pic_url }}" alt="Avatar" class="chat-partner-pic">
         </a>
-        <div class="chat-header-info">
-            <h3 onclick="location.href='{% url 'view_profile' partner.id %}'" style="cursor:pointer;">{{ partner.profile.name|default:partner.username }}</h3>
+        <div class="chat-header-info" onclick="openProfileModal()" style="cursor:pointer;">
+            <h3>{{ partner.profile.name|default:partner.username }}</h3>
             <p>{{ partner.profile.campus_display }} • Online</p>
         </div>
         <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
@@ -649,6 +700,54 @@
         </form>
     </div>
 </div>
+
+<!-- Profile Modal -->
+<div id="profile-modal" class="profile-modal-overlay">
+    <div class="profile-modal">
+        <img src="{{ partner.profile.get_profile_pic_url }}" alt="Profile">
+        <h2>{{ partner.profile.name|default:partner.username }}</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin: 0;">{{ partner.profile.campus_display }} • {{ partner.profile.age }} yrs</p>
+        
+        <div class="profile-bio">{{ partner.profile.bio|default:"No bio yet." }}</div>
+        
+        <div class="profile-tags">
+            {% for tag in partner.profile.interest_tags_list %}
+            <span>{{ tag }}</span>
+            {% endfor %}
+        </div>
+
+        {% if partner.favorite_movies.exists or partner.favorite_songs.exists %}
+        <div class="vibe-section">
+            <div class="vibe-label"><i class="fas fa-music"></i> My Vibe</div>
+            
+            {% if partner.favorite_movies.exists %}
+            <div class="vibe-label" style="font-size: 10px; margin-top: 10px; opacity: 0.8;">Movies</div>
+            <div class="vibe-grid">
+                {% for movie in partner.favorite_movies.all %}
+                <div class="vibe-item movie">
+                    <img src="{{ movie.poster_url }}" alt="{{ movie.title }}">
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if partner.favorite_songs.exists %}
+            <div class="vibe-label" style="font-size: 10px; margin-top: 10px; opacity: 0.8;">Songs</div>
+            <div class="vibe-grid">
+                {% for song in partner.favorite_songs.all %}
+                <div class="vibe-item">
+                    <img src="{{ song.artwork_url }}" alt="{{ song.title }}">
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <button class="close-modal" onclick="closeProfileModal()">Close</button>
+    </div>
+</div>
+
 
 <style>
     .modal-overlay {

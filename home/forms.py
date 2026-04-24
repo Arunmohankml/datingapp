@@ -76,7 +76,7 @@ class ProfileForm(forms.ModelForm):
         widget=forms.TextInput(attrs={'placeholder': 'anime, food, humor'})
     )
     pref_languages = forms.CharField(
-        required=False,
+        required=True,
         widget=forms.TextInput(attrs={'placeholder': 'English, Hindi'})
     )
 
@@ -107,6 +107,17 @@ class ProfileForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        # Make specific fields mandatory for completion
+        mandatory_fields = [
+            'living_place', 'native_place', 
+            'clg_year', 'campus', 'course', 'branch',
+            'pref_age_min', 'pref_age_max', 'pref_gender', 'age'
+        ]
+        for field in mandatory_fields:
+            if field in self.fields:
+                self.fields[field].required = True
+
         # Convert list fields to comma-separated strings for the form
         if self.instance and self.instance.pk:
             if isinstance(self.instance.languages, list):

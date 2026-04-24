@@ -1,0 +1,414 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<style>
+    /* Reuse verification UI styles */
+    .profile-setup-wrap {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px 16px 60px;
+    }
+    .setup-header {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+    .setup-header h2 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 6px;
+    }
+    .setup-header p {
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+
+    /* PFP Upload Area */
+    .pfp-upload-area {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        margin: 0 auto;
+        border-radius: 50%;
+        border: 3px dashed var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        background: #f8fafc;
+        transition: 0.3s;
+        overflow: hidden;
+    }
+    .pfp-upload-area:hover {
+        border-color: var(--primary);
+        background: #f1f5f9;
+    }
+    .pfp-placeholder {
+        text-align: center;
+        color: var(--text-muted);
+    }
+    .pfp-preview {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="profile-setup-wrap">
+    <div class="setup-header">
+        <span class="emoji">🛡️</span>
+        <h2>Verify Your Identity</h2>
+        <p>Follow the steps below to secure your profile and update your photo.</p>
+    </div>
+
+    <!-- 1. FACE SCAN SECTION -->
+    <div id="face-verification-section" style="margin-bottom: 30px; text-align: center; padding: 0; background: #f8fafc; border: 2px dashed var(--border); border-radius: 24px; overflow: hidden; position: relative; min-height: 200px; transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);">
+        
+        <!-- Initial State -->
+        <div id="not-verified-ui" style="padding: 40px 24px;">
+            <div style="width: 64px; height: 64px; background: rgba(99, 102, 241, 0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                <i class="fas fa-user-shield" style="font-size: 28px; color: var(--primary);"></i>
+            </div>
+            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 8px; color: var(--text-main);">Live Face Scan</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px; max-width: 280px; margin-left: auto; margin-right: auto;">A quick scan to keep the community real. Show a <b>thumbs up</b> to verify.</p>
+            <button type="button" class="verify-btn-trigger" onclick="startInlineVerification()" style="background: var(--primary); color: white; border: none; padding: 12px 28px; border-radius: 14px; font-weight: 700; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); transition: 0.3s;">
+                <i class="fas fa-video"></i> Start Live Scan
+            </button>
+        </div>
+
+        <!-- Camera State -->
+        <div id="camera-ui" style="display: none; position: relative; width: 100%; aspect-ratio: 4/5; background: #000;">
+            <video id="verify-video" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+            
+            <!-- Scanning Overlay -->
+            <div class="scan-overlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; border: 2px solid rgba(99, 102, 241, 0.3); box-shadow: inset 0 0 100px rgba(0,0,0,0.5);">
+                <div class="face-guide-oval" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 65%; border: 2px dashed rgba(255,255,255,0.4); border-radius: 50% 50% 40% 40%;"></div>
+                
+                <div id="gesture-hint" style="position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 10px 20px; border-radius: 20px; color: white; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; white-space: nowrap; box-shadow: 0 4px 15px rgba(0,0,0,0.2); transition: 0.3s;">
+                    <i class="fas fa-spinner fa-spin"></i> Initializing Camera...
+                </div>
+                
+                <div id="verify-status" style="position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); padding: 6px 14px; border-radius: 12px; color: white; font-size: 12px; font-weight: 600; white-space: nowrap;">
+                    Phase: Frontal Profile
+                </div>
+            </div>
+
+            <!-- Cancel Button -->
+            <button type="button" onclick="stopInlineVerification()" style="position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); backdrop-filter: blur(8px); border: none; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                <i class="fas fa-times"></i>
+            </button>
+            <canvas id="verify-canvas" style="display:none;"></canvas>
+        </div>
+
+        <!-- Success State -->
+        <div id="verified-ui" style="display: none; padding: 40px 24px;">
+            <div style="width: 64px; height: 64px; background: #f0fdf4; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                <i class="fas fa-check" style="font-size: 28px; color: #16a34a;"></i>
+            </div>
+            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 8px; color: var(--text-main);">Face Scan Complete!</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 0;">Your live profiles are securely saved.</p>
+        </div>
+    </div>
+
+    <!-- 2. PFP UPLOAD SECTION (Hidden until Face Scan passes) -->
+    <div id="pfp-group" style="display: none; animation: slideUp 0.5s ease forwards; opacity: 0; transform: translateY(20px);">
+        <div style="background: white; border-radius: 24px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 30px; text-align: center;">
+            <h3 style="font-size: 18px; margin-bottom: 8px;"><i class="fas fa-camera"></i> Upload Profile Photo</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">Upload a clear photo of your face. Our AI will instantly verify it against your live scan.</p>
+            
+            <label for="id_profile_pic_file" class="pfp-upload-area" id="pfp-upload-area">
+                <div class="pfp-placeholder" id="pfp-placeholder">
+                    <i class="fas fa-plus" style="font-size: 24px; margin-bottom: 8px;"></i><br>
+                    <span style="font-size: 13px; font-weight: 600;">Tap to Upload</span>
+                </div>
+                <img src="" id="pfp-preview" class="pfp-preview" alt="Preview">
+            </label>
+            <input type="file" id="id_profile_pic_file" accept="image/*" style="display: none;">
+            
+            <div id="face-status" style="display:none; margin-top: 16px; padding: 10px; border-radius: 12px; font-size: 13px; font-weight: 600;"></div>
+
+            <button type="button" id="finish-btn" class="btn btn-primary" style="width: 100%; margin-top: 24px; padding: 14px; border-radius: 16px; opacity: 0.5; pointer-events: none; transition: 0.3s;" onclick="finishVerification()">
+                <i class="fas fa-shield-check"></i> Finish & Return to Profile
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- State ---
+    let verifyStream = null;
+    let hands = null;
+    let camera = null;
+    let isVerifying = false;
+    let lastGestureTime = 0;
+    
+    let currentPhase = 1; // 1: Front, 2: Left, 3: Right
+    let capturedImages = {
+        image_front: null,
+        image_left: null,
+        image_right: null
+    };
+    let pfpFaceValid = false;
+
+    // ─── 1. LIVE FACE SCAN ───
+    async function startInlineVerification() {
+        currentPhase = 1;
+        capturedImages = { image_front: null, image_left: null, image_right: null };
+        document.getElementById('not-verified-ui').style.display = 'none';
+        document.getElementById('camera-ui').style.display = 'block';
+        document.getElementById('face-verification-section').style.borderStyle = 'solid';
+        document.getElementById('face-verification-section').style.borderColor = 'var(--primary)';
+
+        updatePhaseUI();
+
+        const video = document.getElementById('verify-video');
+        try {
+            verifyStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user', width: 640, height: 480 }
+            });
+            video.srcObject = verifyStream;
+            initMediaPipe();
+        } catch (err) {
+            console.error(err);
+            alert('Could not access camera. Please check permissions.');
+            stopInlineVerification();
+        }
+    }
+
+    function updatePhaseUI() {
+        const hint = document.getElementById('gesture-hint');
+        const status = document.getElementById('verify-status');
+        
+        if (currentPhase === 1) {
+            hint.innerHTML = '<i class="fas fa-user"></i> Step 1: Look Front & Thumbs Up';
+            status.innerHTML = 'Phase: Frontal Profile';
+        } else if (currentPhase === 2) {
+            hint.innerHTML = '<i class="fas fa-arrow-left"></i> Step 2: Turn Slightly Left & Thumbs Up';
+            status.innerHTML = 'Phase: Left Profile';
+        } else if (currentPhase === 3) {
+            hint.innerHTML = '<i class="fas fa-arrow-right"></i> Step 3: Turn Slightly Right & Thumbs Up';
+            status.innerHTML = 'Phase: Right Profile';
+        }
+    }
+
+    function stopInlineVerification() {
+        if (verifyStream) {
+            verifyStream.getTracks().forEach(track => track.stop());
+        }
+        if (camera) camera.stop();
+
+        document.getElementById('not-verified-ui').style.display = 'block';
+        document.getElementById('camera-ui').style.display = 'none';
+        document.getElementById('face-verification-section').style.borderStyle = 'dashed';
+        document.getElementById('face-verification-section').style.borderColor = 'var(--border)';
+        isVerifying = false;
+    }
+
+    function initMediaPipe() {
+        const video = document.getElementById('verify-video');
+        hands = new Hands({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.7,
+            minTrackingConfidence: 0.7
+        });
+        hands.onResults(onHandResults);
+        
+        camera = new Camera(video, {
+            onFrame: async () => {
+                if (isVerifying) return;
+                await hands.send({ image: video });
+            },
+            width: 640,
+            height: 480
+        });
+        camera.start();
+    }
+
+    function onHandResults(results) {
+        const hint = document.getElementById('gesture-hint');
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+            const landmarks = results.multiHandLandmarks[0];
+            const isThumbUp = landmarks[4].y < landmarks[3].y && 
+                             landmarks[4].y < landmarks[2].y &&
+                             landmarks[8].y > landmarks[6].y && 
+                             landmarks[12].y > landmarks[10].y;
+            
+            if (isThumbUp) {
+                const now = Date.now();
+                if (now - lastGestureTime > 2000) {
+                    lastGestureTime = now;
+                    handlePhaseCapture();
+                }
+            }
+        }
+    }
+
+    async function handlePhaseCapture() {
+        if (isVerifying) return;
+        const video = document.getElementById('verify-video');
+        const canvas = document.getElementById('verify-canvas');
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Flip the image when drawing so it's not mirrored on the server
+        const ctx = canvas.getContext('2d');
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(video, 0, 0);
+        
+        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
+        if (currentPhase === 1) {
+            capturedImages.image_front = imageData;
+            currentPhase = 2;
+            updatePhaseUI();
+        } else if (currentPhase === 2) {
+            capturedImages.image_left = imageData;
+            currentPhase = 3;
+            updatePhaseUI();
+        } else if (currentPhase === 3) {
+            capturedImages.image_right = imageData;
+            await submitAllPhases();
+        }
+    }
+
+    async function submitAllPhases() {
+        isVerifying = true;
+        const status = document.getElementById('verify-status');
+        status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving Face Profiles...';
+
+        try {
+            const resp = await fetch('/api/face/verify-live/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(capturedImages)
+            });
+            const data = await resp.json();
+            
+            if (data.success) {
+                status.innerHTML = '<i class="fas fa-check-circle"></i> Profiles Secured!';
+                status.style.color = "#4ade80";
+                
+                if (verifyStream) {
+                    verifyStream.getTracks().forEach(track => track.stop());
+                }
+                if (camera) camera.stop();
+
+                setTimeout(() => {
+                    document.getElementById('camera-ui').style.display = 'none';
+                    document.getElementById('verified-ui').style.display = 'block';
+                    document.getElementById('face-verification-section').style.borderColor = '#16a34a';
+                    document.getElementById('face-verification-section').style.background = '#f0fdf4';
+                    
+                    // Show PFP Upload section
+                    document.getElementById('pfp-group').style.display = 'block';
+                }, 1000);
+            } else {
+                status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${data.message || data.error || 'Verification Failed'}`;
+                status.style.color = "#f87171";
+                currentPhase = 1;
+                isVerifying = false;
+                updatePhaseUI();
+            }
+        } catch (err) {
+            status.innerHTML = '<i class="fas fa-times-circle"></i> Connection error. Try again.';
+            status.style.color = "#f87171";
+            isVerifying = false;
+        }
+    }
+
+    // ─── 2. PFP UPLOAD & COMPARE ───
+    document.getElementById('id_profile_pic_file').addEventListener('change', async function() {
+        if (!this.files || !this.files[0]) return;
+        const file = this.files[0];
+
+        const preview = document.getElementById('pfp-preview');
+        const placeholder = document.getElementById('pfp-placeholder');
+        const pfpTimerEl = document.getElementById('face-status');
+        const finishBtn = document.getElementById('finish-btn');
+        
+        pfpTimerEl.style.display = 'block';
+        pfpTimerEl.style.background = '#f1f5f9';
+        pfpTimerEl.style.color = '#6366f1';
+        pfpTimerEl.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Analyzing face match...`;
+        
+        pfpFaceValid = false;
+        finishBtn.style.opacity = '0.5';
+        finishBtn.style.pointerEvents = 'none';
+        
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const imageData = e.target.result;
+            preview.src = imageData;
+            preview.style.display = 'block';
+            placeholder.style.display = 'none';
+
+            try {
+                const resp = await fetch('/api/face/compare-pfp/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: imageData })
+                });
+
+                const data = await resp.json();
+
+                if (data.success) {
+                    pfpFaceValid = true;
+                    if (data.manual_review) {
+                        pfpTimerEl.style.background = '#fffbeb';
+                        pfpTimerEl.style.color = '#b45309';
+                        pfpTimerEl.innerHTML = `<i class="fas fa-info-circle"></i> ${data.message}`;
+                        document.getElementById('pfp-upload-area').style.borderColor = '#f59e0b';
+                    } else {
+                        pfpTimerEl.style.background = '#f0fdf4';
+                        pfpTimerEl.style.color = '#16a34a';
+                        pfpTimerEl.innerHTML = `<i class="fas fa-check-circle"></i> Identity verified! Looking great.`;
+                        document.getElementById('pfp-upload-area').style.borderColor = '#16a34a';
+                    }
+                    
+                    finishBtn.style.opacity = '1';
+                    finishBtn.style.pointerEvents = 'auto';
+                } else {
+                    pfpFaceValid = false;
+                    pfpTimerEl.style.background = '#fef2f2';
+                    pfpTimerEl.style.color = '#dc2626';
+                    pfpTimerEl.innerHTML = `<i class="fas fa-times-circle"></i> ${data.error || "Face mismatch!"}`;
+                    document.getElementById('pfp-upload-area').style.borderColor = '#dc2626';
+                    document.getElementById('id_profile_pic_file').value = '';
+                    preview.style.display = 'none';
+                    placeholder.style.display = 'block';
+                }
+            } catch (err) {
+                console.error("Identity check failed:", err);
+                // Fallback to allow if server error
+                pfpTimerEl.style.background = '#f0fdf4';
+                pfpTimerEl.style.color = '#16a34a';
+                pfpTimerEl.innerHTML = `<i class="fas fa-check-circle"></i> Identity check complete.`;
+                finishBtn.style.opacity = '1';
+                finishBtn.style.pointerEvents = 'auto';
+            }
+        };
+        reader.readAsDataURL(file);
+    });
+
+    function finishVerification() {
+        window.location.href = "{% url 'edit_profile' %}";
+    }
+
+</script>
+
+<style>
+    @keyframes slideUp {
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}

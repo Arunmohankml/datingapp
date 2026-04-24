@@ -191,6 +191,58 @@
         </div>
     </div>
 
+    <!-- Face Verification Review Queue -->
+    <div class="admin-card">
+        <h3><i class="fas fa-camera-retro"></i> Face Verification Review</h3>
+        <div class="item-list">
+            {% for review in face_reviews %}
+            <div class="item-row" style="flex-direction: column; align-items: stretch; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="item-info">
+                        <div class="item-title">User: {{ review.user.username }}</div>
+                        <div class="item-meta">Distance Score: <strong>{{ review.face_match_score|default:"N/A" }}</strong> | 
+                        Base Gender: {{ review.gender|default:"N/A" }} | 
+                        PFP Gender: {{ review.profile_photo_gender|default:"N/A" }}</div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="approve_face">
+                            <input type="hidden" name="target_id" value="{{ review.id }}">
+                            <button type="submit" class="btn-secondary" style="color: #16a34a; border-color: #bbf7d0; background: #f0fdf4;">Approve</button>
+                        </form>
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reject_face">
+                            <input type="hidden" name="target_id" value="{{ review.id }}">
+                            <button type="submit" class="btn-danger">Reject</button>
+                        </form>
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="ban_user">
+                            <input type="hidden" name="target_id" value="{{ review.user.profile.id }}">
+                            <button type="submit" class="btn-danger" style="background: #000; color: #fff; border-color: #000;">Ban</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 12px; margin-top: 10px;">
+                    <div style="flex: 1; text-align: center;">
+                        <span style="font-size: 11px; font-weight: bold; color: var(--text-muted); display: block; margin-bottom: 4px;">Baseline Verification</span>
+                        <img src="{{ review.image_front }}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border);">
+                    </div>
+                    <div style="flex: 1; text-align: center;">
+                        <span style="font-size: 11px; font-weight: bold; color: var(--text-muted); display: block; margin-bottom: 4px;">Uploaded Profile Photo</span>
+                        <img src="{{ review.user.profile.profile_pic }}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border);">
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p style="font-size: 14px; color: var(--text-muted);">No profiles pending review.</p>
+            {% endfor %}
+        </div>
+    </div>
+
     <!-- User Management -->
     <div class="admin-card">
         <h3><i class="fas fa-users"></i> User Management</h3>

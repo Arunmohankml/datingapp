@@ -173,6 +173,57 @@
         border-radius: 16px;
         object-fit: contain;
     }
+
+    /* Favorite Cards (Vibe) */
+    .vibe-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 8px;
+    }
+    .vibe-item {
+        position: relative;
+        text-align: center;
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .vibe-item:hover { transform: translateY(-4px); }
+    .vibe-item img {
+        width: 100%;
+        aspect-ratio: 1/1;
+        border-radius: 14px;
+        object-fit: cover;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        border: 1px solid var(--border);
+    }
+    .vibe-item.movie img { aspect-ratio: 2/3; }
+    .vibe-item .vibe-title {
+        font-size: 11px;
+        font-weight: 700;
+        margin-top: 8px;
+        color: var(--text-main);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0 4px;
+    }
+    .vibe-item .vibe-subtitle {
+        font-size: 10px;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .vibe-cat-label {
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
 </style>
 {% endblock %}
 
@@ -194,7 +245,12 @@
             {% endif %}
         </div>
         
-        <h1 class="profile-name">{{ profile.name }}</h1>
+        <h1 class="profile-name">
+            {{ profile.name }}
+            {% if profile.is_face_verified %}
+            <i class="fas fa-check-circle" style="color: #6366f1; font-size: 16px; margin-left: 4px;" title="Verified Profile"></i>
+            {% endif %}
+        </h1>
         <p class="profile-meta">{{ profile.campus_display }} • {{ profile.age }} yrs</p>
         
         {% if user.id != profile.user.id %}
@@ -288,6 +344,44 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- My Vibe -->
+    {% if profile.user.favorite_movies.exists or profile.user.favorite_songs.exists %}
+    <div class="profile-section">
+        <h3><i class="fas fa-music"></i> My Vibe</h3>
+        
+        {% if profile.user.favorite_movies.exists %}
+        <div class="vibe-cat-label" style="margin-top: 4px;">
+            <i class="fas fa-film" style="color: var(--primary);"></i> Favorite Movies
+        </div>
+        <div class="vibe-grid" style="margin-bottom: 24px;">
+            {% for movie in profile.user.favorite_movies.all %}
+            <div class="vibe-item movie">
+                <img src="{{ movie.poster_url }}" alt="{{ movie.title }}">
+                <div class="vibe-title">{{ movie.title }}</div>
+                <div class="vibe-subtitle">{{ movie.release_year }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if profile.user.favorite_songs.exists %}
+        <div class="vibe-cat-label">
+            <i class="fas fa-headphones" style="color: var(--primary);"></i> Top Tracks
+        </div>
+        <div class="vibe-grid">
+            {% for song in profile.user.favorite_songs.all %}
+            <div class="vibe-item">
+                <img src="{{ song.artwork_url }}" alt="{{ song.title }}">
+                <div class="vibe-title">{{ song.title }}</div>
+                <div class="vibe-subtitle">{{ song.artist }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
 
     <!-- Gallery -->
     <div class="profile-section">

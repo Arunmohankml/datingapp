@@ -2,10 +2,6 @@
 {% load static %}
 
 {% block head %}
-<!-- face-api.js for face detection -->
-<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
-<!-- nsfwjs for content moderation -->
-<script src="https://unpkg.com/nsfwjs@2.4.2/dist/browser/nsfwjs.min.js"></script>
 <style>
     :root {
         --glass-bg: rgba(255, 255, 255, 0.7);
@@ -348,6 +344,81 @@
     .toggle-switch input:checked + label:before {
         transform: translate(24px, -50%);
     }
+    /* Face Verify Modal */
+    .verify-modal {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.9);
+        z-index: 99999;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        color: white;
+        text-align: center;
+    }
+    .verify-cam-wrap {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+        aspect-ratio: 3/4;
+        border-radius: 24px;
+        overflow: hidden;
+        background: #1e293b;
+        box-shadow: 0 0 50px rgba(99, 102, 241, 0.3);
+        margin-bottom: 20px;
+    }
+    #verify-video { width: 100%; height: 100%; object-fit: cover; }
+    .face-guide {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 70%; height: 60%;
+        border: 2px dashed rgba(255,255,255,0.5);
+        border-radius: 50% 50% 45% 45%;
+        pointer-events: none;
+    }
+    .gesture-hint {
+        position: absolute;
+        bottom: 20px; left: 50%;
+        transform: translateX(-50%);
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+    }
+    .verify-close {
+        position: absolute;
+        top: 20px; right: 20px;
+        width: 40px; height: 40px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+    }
+    .verify-btn-trigger {
+        margin-top: 10px;
+        padding: 8px 16px;
+        border-radius: 20px;
+        background: #6366f1;
+        color: white;
+        font-weight: 700;
+        font-size: 13px;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 </style>
 {% endblock %}
 
@@ -356,9 +427,11 @@
     <div class="pfp-header">
         <div class="pfp-main-wrap">
             <img src="{{ profile.get_profile_pic_url }}" alt="Me" class="pfp-main" id="preview-pfp">
+            {% if profile.is_face_verified %}
             <label for="id_pfp_instant" class="pfp-edit-btn" id="pfp-edit-label">
                 <i class="fas fa-camera"></i>
             </label>
+            {% endif %}
             <!-- Face detection status for edit page -->
             <div id="pfp-face-status" style="display:none; position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap; background:#fef2f2; color:#dc2626; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
             {% if spark_count > 0 %}
@@ -373,6 +446,16 @@
         <a href="{% url 'settings' %}" style="text-decoration: none; background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.2s;">
             <i class="fas fa-cog"></i> Settings
         </a>
+
+        {% if not profile.is_face_verified %}
+        <a href="{% url 'reverify_profile' %}" class="verify-btn-trigger" style="text-decoration:none;">
+            <i class="fas fa-shield-alt"></i> Verify Identity
+        </a>
+        {% else %}
+        <div style="margin-top: 10px; color: #16a34a; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+            <i class="fas fa-check-circle"></i> Identity Verified
+        </div>
+        {% endif %}
 
         {% if not profile.profile_pic %}
         <p style="color: var(--primary); font-size: 12px; margin-top: 12px;"><i class="fas fa-info-circle"></i> Tip: Upload a photo to complete your profile!</p>
@@ -469,6 +552,43 @@
                         </div>
                     </div>
                 </div>
+
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
+                    <h4 style="font-size: 14px; margin-bottom: 12px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-music" style="color: var(--primary);"></i> My Vibe (Optional)
+                    </h4>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Select up to 3 movies and 3 songs to display on your profile.</p>
+
+                    <!-- Movies -->
+                    <div class="form-group" style="margin-bottom: 24px;">
+                        <label style="font-size: 13px;"><i class="fas fa-film"></i> Favorite Movies (<span id="movie-count">0</span>/3)</label>
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
+                            <input type="text" id="movie-search-input" class="form-control" placeholder="Search for a movie..." style="margin-bottom: 0 !important; flex: 1;">
+                            <button type="button" class="btn btn-primary" onclick="searchMovies()" style="width: 42px; height: 42px; padding: 0; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;"><i class="fas fa-search"></i></button>
+                        </div>
+                        <div id="movie-search-results" style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px;"></div>
+                        
+                        <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Selected Movies</label>
+                        <div id="selected-movies" style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; min-height: 40px;">
+                            <span style="font-size: 12px; color: #94a3b8; font-style: italic;" id="no-movies-msg">No movies selected yet.</span>
+                        </div>
+                    </div>
+
+                    <!-- Songs -->
+                    <div class="form-group">
+                        <label style="font-size: 13px;"><i class="fas fa-headphones"></i> Favorite Songs (<span id="song-count">0</span>/3)</label>
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
+                            <input type="text" id="song-search-input" class="form-control" placeholder="Search for a song..." style="margin-bottom: 0 !important; flex: 1;">
+                            <button type="button" class="btn btn-primary" onclick="searchSongs()" style="width: 42px; height: 42px; padding: 0; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;"><i class="fas fa-search"></i></button>
+                        </div>
+                        <div id="song-search-results" style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px;"></div>
+                        
+                        <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Selected Songs</label>
+                        <div id="selected-songs" style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; min-height: 40px;">
+                            <span style="font-size: 12px; color: #94a3b8; font-style: italic;" id="no-songs-msg">No songs selected yet.</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -495,6 +615,7 @@
                 </div>
             </div>
         </div>
+
 
         <!-- Preferences Section -->
         <div id="section-prefs" class="edit-section">
@@ -639,66 +760,15 @@
     // Gallery Upload
     async function handleGalleryUpload(input) {
         if (input.files && input.files[0]) {
-            showOverlay("Verifying Photo Safety...");
-            
+            showOverlay("Compressing & Uploading...");
             try {
-                const file = input.files[0];
-                
-                // Human detection (flexible 0.2 threshold)
-                await loadFaceModels();
-                const imgEl = new Image();
-                const url = URL.createObjectURL(file);
-                imgEl.src = url;
-                await new Promise(r => imgEl.onload = r);
-                const detections = await faceapi.detectAllFaces(imgEl, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.2 }));
-                
-                if (detections.length === 0) {
-                    URL.revokeObjectURL(url);
-                    hideOverlay();
-                    alert("Human not detected. Please upload natural photos of yourself.");
-                    input.value = '';
-                    return;
-                }
-
-                // Nudity/NSFW/Meme detection
-                const model = await loadNSFWModel();
-                const predictions = await model.classify(imgEl);
-                
-                const porn = predictions.find(p => p.className === 'Porn');
-                const hentai = predictions.find(p => p.className === 'Hentai');
-                const drawing = predictions.find(p => p.className === 'Drawing');
-                const neutral = predictions.find(p => p.className === 'Neutral');
-
-                URL.revokeObjectURL(url);
-
-                if ((porn && porn.probability > 0.3) || (hentai && hentai.probability > 0.3)) {
-                    hideOverlay();
-                    alert("Inappropriate content detected. Please keep your gallery community-friendly.");
-                    input.value = '';
-                    return;
-                }
-
-                if (drawing && drawing.probability > 0.5) {
-                    hideOverlay();
-                    alert("Digital drawings or memes are not allowed. Please upload real photos.");
-                    input.value = '';
-                    return;
-                }
-
-                if (neutral && neutral.probability < 0.2) {
-                    hideOverlay();
-                    alert("Please upload a natural, clear photo of yourself.");
-                    input.value = '';
-                    return;
-                }
-
-                const compressed = await compressImage(file);
+                const compressed = await compressImage(input.files[0]);
                 const dataTransfer = new DataTransfer();
                 dataTransfer.items.add(compressed);
                 input.files = dataTransfer.files;
                 document.getElementById('gallery-form').submit();
             } catch (err) {
-                console.error("Gallery verification failed:", err);
+                console.error("Gallery upload failed:", err);
                 document.getElementById('gallery-form').submit(); // Fallback
             }
         }
@@ -827,111 +897,221 @@
     rMax.oninput = update;
     update();
 
-    // Form Submit Loader
-    document.getElementById('profile-edit-form').onsubmit = () => {
-        showOverlay("Saving your profile...");
-    };
+    // ───── MY VIBE (FAVORITES) LOGIC ─────
+    let selectedMovies = [];
+    let selectedSongs = [];
 
-    // ───── FACE DETECTION FOR INSTANT PFP UPLOAD ─────
-    let faceModelsLoaded = false;
+    // Initialize from template if they already exist
+    {% if profile.user.favorite_movies.all %}
+        {% for m in profile.user.favorite_movies.all %}
+            selectedMovies.push({
+                id: '{{ m.tmdb_id }}',
+                title: '{{ m.title|escapejs }}',
+                poster_url: '{{ m.poster_url }}',
+                release_year: '{{ m.release_year }}'
+            });
+        {% endfor %}
+    {% endif %}
+
+    {% if profile.user.favorite_songs.all %}
+        {% for s in profile.user.favorite_songs.all %}
+            selectedSongs.push({
+                id: '{{ s.itunes_track_id }}',
+                title: '{{ s.title|escapejs }}',
+                artist: '{{ s.artist|escapejs }}',
+                album: '{{ s.album|escapejs }}',
+                artwork_url: '{{ s.artwork_url }}'
+            });
+        {% endfor %}
+    {% endif %}
+
+    function renderFavorites() {
+        // Movies
+        const mContainer = document.getElementById('selected-movies');
+        document.getElementById('movie-count').innerText = selectedMovies.length;
+        if(selectedMovies.length === 0) {
+            mContainer.innerHTML = '<span style="font-size: 13px; color: #94a3b8; font-style: italic;">No movies selected yet.</span>';
+        } else {
+            mContainer.innerHTML = selectedMovies.map((m, i) => `
+                <div style="position: relative; width: 80px; text-align: center;">
+                    <div style="width: 100%; aspect-ratio: 2/3; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid var(--border);">
+                        <img src="${m.poster_url}" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <button type="button" onclick="removeMovie(${i})" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><i class="fas fa-times"></i></button>
+                    <div style="font-size: 10px; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; color: var(--text-main);">${m.title}</div>
+                </div>
+            `).join('');
+        }
+
+        // Songs
+        const sContainer = document.getElementById('selected-songs');
+        document.getElementById('song-count').innerText = selectedSongs.length;
+        if(selectedSongs.length === 0) {
+            sContainer.innerHTML = '<span style="font-size: 13px; color: #94a3b8; font-style: italic;">No songs selected yet.</span>';
+        } else {
+            sContainer.innerHTML = selectedSongs.map((s, i) => `
+                <div style="position: relative; width: 80px; text-align: center;">
+                    <div style="width: 100%; aspect-ratio: 1/1; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid var(--border);">
+                        <img src="${s.artwork_url}" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                    <button type="button" onclick="removeSong(${i})" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><i class="fas fa-times"></i></button>
+                    <div style="font-size: 10px; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; color: var(--text-main);">${s.title}</div>
+                </div>
+            `).join('');
+        }
+    }
+
+    renderFavorites(); // Call once on load
+
+    async function searchMovies() {
+        const query = document.getElementById('movie-search-input').value.trim();
+        const resultsDiv = document.getElementById('movie-search-results');
+        if(!query) return;
+        
+        resultsDiv.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); padding: 10px;">Searching...</div>';
+        try {
+            const res = await fetch(`/api/movies/search/?q=${encodeURIComponent(query)}`);
+            const data = await res.json();
+            if(data.results && data.results.length > 0) {
+                resultsDiv.innerHTML = data.results.map(m => `
+                    <div style="flex: 0 0 100px; text-align: center; cursor: pointer; transition: 0.2s;" onclick='addMovie(${JSON.stringify(m).replace(/'/g, "&apos;")})' class="search-item">
+                        <div style="width: 100%; aspect-ratio: 2/3; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #f1f5f9; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                            <img src="${m.poster_url || 'https://placehold.co/200x300?text=No+Poster'}" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <div style="font-size: 11px; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; color: var(--text-main); padding: 0 4px;">${m.title}</div>
+                        <div style="font-size: 10px; color: var(--text-muted);">${m.release_year}</div>
+                    </div>
+                `).join('');
+            } else {
+                resultsDiv.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); padding: 10px;">No movies found.</div>';
+            }
+        } catch(e) {
+            resultsDiv.innerHTML = '<div style="font-size: 12px; color: #ef4444; padding: 10px;">Failed to search.</div>';
+        }
+    }
+
+    async function searchSongs() {
+        const query = document.getElementById('song-search-input').value.trim();
+        const resultsDiv = document.getElementById('song-search-results');
+        if(!query) return;
+        
+        resultsDiv.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); padding: 10px;">Searching...</div>';
+        try {
+            // Use iTunes API
+            const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=10`);
+            const data = await res.json();
+            if(data.results && data.results.length > 0) {
+                resultsDiv.innerHTML = data.results.map(s => `
+                    <div style="flex: 0 0 100px; text-align: center; cursor: pointer; transition: 0.2s;" onclick='addSong(${JSON.stringify({id: s.trackId, title: s.trackName, artist: s.artistName, album: s.collectionName, artwork_url: s.artworkUrl100.replace("100x100bb", "400x400bb")}).replace(/'/g, "&apos;")})' class="search-item">
+                        <div style="width: 100%; aspect-ratio: 1/1; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #f1f5f9; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                            <img src="${s.artworkUrl100.replace("100x100bb", "400x400bb") || 'https://placehold.co/200x200?text=No+Art'}" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <div style="font-size: 11px; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; color: var(--text-main); padding: 0 4px;">${s.trackName}</div>
+                        <div style="font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.artistName}</div>
+                    </div>
+                `).join('');
+            } else {
+                resultsDiv.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); padding: 10px;">No songs found.</div>';
+            }
+        } catch(e) {
+            resultsDiv.innerHTML = '<div style="font-size: 12px; color: #ef4444; padding: 10px;">Failed to search.</div>';
+        }
+    }
+
+    // Add styles for hover
+    document.head.insertAdjacentHTML('beforeend', `<style>.search-item:hover { transform: translateY(-4px); }</style>`);
+
+    function addMovie(m) {
+        if(selectedMovies.length >= 3) {
+            alert("You can select only 3 movies max.");
+            return;
+        }
+        if(!selectedMovies.find(x => x.id == m.id)) {
+            selectedMovies.push(m);
+            renderFavorites();
+        }
+    }
+    window.addMovie = addMovie;
+
+    function addSong(s) {
+        if(selectedSongs.length >= 3) {
+            alert("You can select only 3 songs max.");
+            return;
+        }
+        if(!selectedSongs.find(x => x.id == s.id)) {
+            selectedSongs.push(s);
+            renderFavorites();
+        }
+    }
+    window.addSong = addSong;
+
+    function removeMovie(idx) {
+        selectedMovies.splice(idx, 1);
+        renderFavorites();
+    }
+    window.removeMovie = removeMovie;
+
+    function removeSong(idx) {
+        selectedSongs.splice(idx, 1);
+        renderFavorites();
+    }
+    window.removeSong = removeSong;
+
+    // Form Submit Loader
+    document.getElementById('profile-edit-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        showOverlay("Saving your profile...");
+        
+        try {
+            // First save the favorites via API
+            await fetch('/api/favorites/save/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    movies: selectedMovies,
+                    songs: selectedSongs
+                })
+            });
+        } catch(err) {
+            console.error('Failed to save favorites', err);
+            // Non-fatal, proceed with profile save
+        }
+        
+        // Then submit the main form via HTML submit
+        this.submit();
+    });
+
+    // ─── INSTANT PFP UPLOAD (verified users — no re-check needed) ───
     const pfpInstantInput = document.getElementById('id_pfp_instant');
     const pfpInstantForm = document.getElementById('pfp-instant-form');
-    const pfpFaceStatus = document.getElementById('pfp-face-status');
-
-    async function loadFaceModels() {
-        if (faceModelsLoaded) return;
-        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-        faceModelsLoaded = true;
-    }
 
     if (pfpInstantInput) {
         pfpInstantInput.addEventListener('change', async function() {
             if (!this.files || !this.files[0]) return;
-            const file = this.files[0];
-            const label = document.getElementById('pfp-edit-label');
 
             // Preview immediately
             const reader = new FileReader();
             reader.onload = (e) => {
                 document.getElementById('preview-pfp').src = e.target.result;
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(this.files[0]);
 
-            // Show checking status
-            pfpFaceStatus.style.display = 'block';
-            pfpFaceStatus.style.background = '#f1f5f9';
-            pfpFaceStatus.style.color = '#64748b';
-            pfpFaceStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking photo...';
-            label.style.pointerEvents = 'none';
-
+            // Compress then submit
             try {
-                await loadFaceModels();
-                const imgEl = new Image();
-                const url = URL.createObjectURL(file);
-                imgEl.src = url;
-                await new Promise(r => imgEl.onload = r);
-                const detections = await faceapi.detectAllFaces(imgEl, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 }));
-                
-                if (detections.length === 0) {
-                    URL.revokeObjectURL(url);
-                    pfpFaceStatus.style.background = '#fef2f2';
-                    pfpFaceStatus.style.color = '#dc2626';
-                    pfpFaceStatus.innerHTML = '<i class="fas fa-times-circle"></i> Face not detected. Please upload a clear photo showing your face.';
-                    this.value = '';
-                    document.getElementById('preview-pfp').src = "{{ profile.get_profile_pic_url }}";
-                    label.style.pointerEvents = 'auto';
-                    setTimeout(() => { pfpFaceStatus.style.display = 'none'; }, 5000);
-                    return;
-                }
-
-                // Nudity/NSFW/Meme check
-                pfpFaceStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking photo safety...';
-                const model = await loadNSFWModel();
-                const predictions = await model.classify(imgEl);
-                
-                const porn = predictions.find(p => p.className === 'Porn');
-                const hentai = predictions.find(p => p.className === 'Hentai');
-                const drawing = predictions.find(p => p.className === 'Drawing');
-                const neutral = predictions.find(p => p.className === 'Neutral');
-                
-                URL.revokeObjectURL(url);
-
-                let error = null;
-                if ((porn && porn.probability > 0.3) || (hentai && hentai.probability > 0.3)) {
-                    error = "Inappropriate content detected.";
-                } else if (drawing && drawing.probability > 0.5) {
-                    error = "Digital drawings or memes are not allowed.";
-                } else if (neutral && neutral.probability < 0.2) {
-                    error = "Please upload a natural photo of yourself.";
-                }
-
-                if (error) {
-                    pfpFaceStatus.style.background = '#fef2f2';
-                    pfpFaceStatus.style.color = '#dc2626';
-                    pfpFaceStatus.innerHTML = `<i class="fas fa-times-circle"></i> ${error}`;
-                    this.value = '';
-                    document.getElementById('preview-pfp').src = "{{ profile.get_profile_pic_url }}";
-                    label.style.pointerEvents = 'auto';
-                    setTimeout(() => { pfpFaceStatus.style.display = 'none'; }, 5000);
-                    return;
-                }
-
-                // All good — success
-                pfpFaceStatus.style.background = '#f0fdf4';
-                pfpFaceStatus.style.color = '#16a34a';
-                pfpFaceStatus.innerHTML = '<i class="fas fa-check-circle"></i> Face detected & Safe! Uploading...';
-                setTimeout(() => {
-                    showOverlay("Updating profile picture...");
-                    pfpInstantForm.submit();
-                }, 600);
-            } catch (err) {
-                console.error('Face detection error:', err);
-                // On model load failure, allow upload to proceed
-                showOverlay("Updating profile picture...");
-                pfpInstantForm.submit();
+                const compressed = await compressImage(this.files[0]);
+                const dt = new DataTransfer();
+                dt.items.add(compressed);
+                this.files = dt.files;
+            } catch (e) {
+                console.warn('Compression skipped:', e);
             }
+
+            showOverlay("Updating profile picture...");
+            pfpInstantForm.submit();
         });
     }
 </script>
+
 {% endblock %}

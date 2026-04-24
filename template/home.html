@@ -264,10 +264,20 @@ async function toggleDiscoverability() {
                         {% endif %}
                     </div>
                     <div>
-                        <h4 style="margin: 0;">{{ m.profile.name }}, {{ m.profile.age }}</h4>
+                        <h4 style="margin: 0;">
+                            {{ m.profile.name }}, {{ m.profile.age }}
+                            {% if m.profile.is_face_verified %}
+                            <i class="fas fa-check-circle" style="color: #6366f1; font-size: 14px; margin-left: 2px;" title="Verified Profile"></i>
+                            {% endif %}
+                        </h4>
                         <p style="margin: 4px 0; color: var(--text-muted); font-size: 13px;">{{ m.profile.course }} {{ m.profile.branch }} • Year {{ m.profile.clg_year }} • {{ m.profile.campus_display }}</p>
                         <div style="display: flex; align-items: center; gap: 6px;">
                             <span style="display: inline-block; padding: 2px 8px; border-radius: 20px; background: #eef2ff; color: var(--primary); font-size: 11px; font-weight: 700;">{{ m.score }}% MATCH</span>
+                            {% if m.profile.user.favorite_movies.exists or m.profile.user.favorite_songs.exists %}
+                            <span style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; background: #fdf2f8; color: #db2777; font-size: 11px; font-weight: 700;">
+                                <i class="fas fa-music"></i> VIBE
+                            </span>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

@@ -196,6 +196,45 @@
         margin: 0;
     }
 
+    /* Favorite Cards */
+    .vibe-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .vibe-item {
+        position: relative;
+        text-align: center;
+        animation: scaleIn 0.4s ease-out both;
+    }
+    .vibe-item img {
+        width: 100%;
+        aspect-ratio: 1/1;
+        border-radius: 12px;
+        object-fit: cover;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border: 1px solid var(--border);
+    }
+    .vibe-item.movie img { aspect-ratio: 2/3; }
+    .vibe-item .vibe-title {
+        font-size: 10px;
+        font-weight: 700;
+        margin-top: 6px;
+        color: var(--text-main);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0 4px;
+    }
+    .vibe-item .vibe-subtitle {
+        font-size: 9px;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
     /* Action Buttons */
     .actions {
         display: flex;
@@ -262,7 +301,12 @@
             <div class="tap-right" onclick="changeSlide(1)"></div>
             <img src="{{ match.get_profile_pic_url }}" alt="{{ match.name }}">
             <div class="photo-info">
-                <h3>{{ match.name|default:match.user.username }}{% if match.age %}, {{ match.age }}{% endif %}</h3>
+                <h3>
+                    {{ match.name|default:match.user.username }}{% if match.age %}, {{ match.age }}{% endif %}
+                    {% if match.is_face_verified %}
+                    <i class="fas fa-check-circle" style="color: #6366f1; font-size: 16px; margin-left: 4px;" title="Verified Profile"></i>
+                    {% endif %}
+                </h3>
                 <span>{{ match.campus_display }}</span>
             </div>
         </div>
@@ -334,6 +378,44 @@
     </div>
 </div>
 {% endif %}
+
+<!-- My Vibe Section -->
+{% if match.user.favorite_movies.exists or match.user.favorite_songs.exists %}
+<div class="detail-card">
+    <div class="detail-label"><i class="fas fa-music"></i> My Vibe</div>
+    
+    {% if match.user.favorite_movies.exists %}
+    <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-top: 12px; display: flex; align-items: center; gap: 6px;">
+        <i class="fas fa-film" style="color: var(--primary);"></i> Top Movies
+    </div>
+    <div class="vibe-grid">
+        {% for movie in match.user.favorite_movies.all %}
+        <div class="vibe-item movie">
+            <img src="{{ movie.poster_url }}" alt="{{ movie.title }}">
+            <div class="vibe-title">{{ movie.title }}</div>
+            <div class="vibe-subtitle">{{ movie.release_year }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if match.user.favorite_songs.exists %}
+    <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-top: 20px; display: flex; align-items: center; gap: 6px;">
+        <i class="fas fa-headphones" style="color: var(--primary);"></i> On Repeat
+    </div>
+    <div class="vibe-grid">
+        {% for song in match.user.favorite_songs.all %}
+        <div class="vibe-item">
+            <img src="{{ song.artwork_url }}" alt="{{ song.title }}">
+            <div class="vibe-title">{{ song.title }}</div>
+            <div class="vibe-subtitle">{{ song.artist }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
 
 <!-- Actions -->
 <div class="actions">
