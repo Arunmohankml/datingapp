@@ -122,6 +122,9 @@
 
 {% block body %}
 <div class="chats-container">
+    <a href="{% url 'home' %}" style="text-decoration: none; color: var(--text-muted); font-size: 16px; margin-bottom: 24px; display: inline-flex; align-items: center; gap: 8px;">
+        <i class="fas fa-arrow-left"></i> Back to Match
+    </a>
     <h2 class="page-title"><i class="fas fa-comment-dots"></i> Recent Chats</h2>
     
     {% if chats %}

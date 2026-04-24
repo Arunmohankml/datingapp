@@ -370,12 +370,9 @@
         <h2 style="margin-top: 16px; margin-bottom: 4px;">{{ profile.name }}</h2>
         <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 12px;">{{ profile.campus_display }} • {{ profile.age }} years</p>
         
-        <form method="POST" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button type="submit" style="background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
-        </form>
+        <a href="{% url 'settings' %}" style="text-decoration: none; background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.2s;">
+            <i class="fas fa-cog"></i> Settings
+        </a>
 
         {% if not profile.profile_pic %}
         <p style="color: var(--primary); font-size: 12px; margin-top: 12px;"><i class="fas fa-info-circle"></i> Tip: Upload a photo to complete your profile!</p>

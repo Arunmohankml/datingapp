@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<style>
+    .card {
+        background: white;
+        border-radius: 24px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.03);
+        transition: transform 0.2s;
+    }
+    .card:active {
+        transform: scale(0.98);
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="settings-container" style="max-width: 500px; margin: 0 auto; padding: 20px 16px;">
+    <!-- Back Button -->
+    <a href="{% url 'edit_profile' %}" style="text-decoration: none; color: var(--text-muted); font-size: 16px; margin-bottom: 24px; display: inline-flex; align-items: center; gap: 8px;">
+        <i class="fas fa-arrow-left"></i> Back to Profile
+    </a>
+
+    <h2 style="font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 32px;">Settings</h2>
+
+    <!-- Updates -->
+    <div class="card" style="padding: 20px; margin-bottom: 16px;">
+        <a href="{% url 'announcements' %}" style="display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: var(--text-main);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; background: rgba(99, 102, 241, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 18px;">
+                    <i class="fas fa-bullhorn"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 16px;">Latest Updates</h4>
+                    <p style="margin: 4px 0 0; font-size: 13px; color: var(--text-muted);">See news and announcements</p>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right" style="color: #cbd5e1;"></i>
+        </a>
+    </div>
+
+    <!-- Logout Form -->
+    <div class="card" style="padding: 20px; margin-bottom: 16px;">
+        <form method="POST" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" style="width: 100%; background: none; border: none; padding: 0; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: var(--text-main);">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 40px; height: 40px; background: #f1f5f9; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 18px;">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin: 0; font-size: 16px;">Logout</h4>
+                        <p style="margin: 4px 0 0; font-size: 13px; color: var(--text-muted);">Sign out of your account</p>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right" style="color: #cbd5e1;"></i>
+            </button>
+        </form>
+    </div>
+
+    <!-- Delete Account -->
+    <div class="card" style="padding: 20px; margin-top: 40px; border: 1px solid #fecaca; background: #fff5f5;">
+        <button id="delete-account-btn" style="width: 100%; background: none; border: none; padding: 0; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: #dc2626;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; background: #fee2e2; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #dc2626; font-size: 18px;">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 16px; font-weight: 700;">Delete Account</h4>
+                    <p style="margin: 4px 0 0; font-size: 13px; color: #ef4444;">Permanently remove your data</p>
+                </div>
+            </div>
+        </button>
+        <form id="delete-account-form" method="POST" action="{% url 'delete_account' %}" style="display: none;">
+            {% csrf_token %}
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const deleteBtn = document.getElementById('delete-account-btn');
+        const deleteForm = document.getElementById('delete-account-form');
+        
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                showWarningModal(
+                    'delete_account_warning',
+                    '<span style="color: #dc2626;">Delete Account?</span>',
+                    '<div style="text-align:center;"><p>Are you sure you want to permanently delete your account? This action <b>cannot</b> be undone. All your matches, chats, and confessions will be lost.</p></div>',
+                    [
+                        { text: 'Cancel', isPrimary: false },
+                        { 
+                            text: 'Delete Permanently', 
+                            isPrimary: true, 
+                            onClick: () => {
+                                deleteForm.submit();
+                            }
+                        }
+                    ]
+                );
+            });
+        }
+    });
+</script>
+{% endblock %}

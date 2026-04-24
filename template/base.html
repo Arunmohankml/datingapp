@@ -320,23 +320,8 @@
     <nav>
         <div class="nav-inner">
             <a href="{% url 'home' %}" class="nav-link" title="Discover"><i class="fas fa-fire"></i><span>Match</span></a>
-            <a href="{% url 'connections' %}" class="nav-link" title="Matches" style="position: relative;">
-                <i class="fas fa-bolt"></i>
-                <span>Connections</span>
-                {% if pending_connections_count > 0 %}
-                <span style="position: absolute; top: 4px; right: 20%; background: var(--primary); color: white; min-width: 16px; height: 16px; border-radius: 8px; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);">{{ pending_connections_count }}</span>
-                {% endif %}
-            </a>
-            <a href="{% url 'announcements' %}" class="nav-link" title="Updates"><i class="fas fa-bullhorn"></i><span>Updates</span></a>
             <a href="{% url 'wall' %}" class="nav-link" title="Wall"><i class="fas fa-paint-brush"></i><span>Wall</span></a>
             <a href="{% url 'confessions_feed' %}" class="nav-link" title="Confessions"><i class="fas fa-mask"></i><span>Confess</span></a>
-            <a href="{% url 'chat_list' %}" class="nav-link" title="Messages" style="position: relative;">
-                <i class="fas fa-comment-dots"></i>
-                <span>Chats</span>
-                {% if global_unread_count > 0 %}
-                <span style="position: absolute; top: 4px; right: 20%; background: #ef4444; color: white; min-width: 16px; height: 16px; border-radius: 8px; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid white; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);">{{ global_unread_count }}</span>
-                {% endif %}
-            </a>
             <a href="{% url 'edit_profile' %}" class="nav-link" title="Profile"><i class="fas fa-user"></i><span>Profile</span></a>
         </div>
     </nav>

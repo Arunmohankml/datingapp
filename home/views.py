@@ -1103,3 +1103,26 @@ def announcements_view(request):
         'announcements': announcements,
         'is_admin': is_admin
     })
+
+@login_required
+def settings_view(request):
+    return render(request, 'settings.html')
+
+@login_required
+def delete_account(request):
+    if request.method == 'POST':
+        # Get the user to delete
+        user_to_delete = request.user
+        
+        # Log out the user before deleting to clear session
+        from django.contrib.auth import logout
+        logout(request)
+        
+        # Delete the user. This will cascade and delete their profile, chats, confessions etc.
+        user_to_delete.delete()
+        
+        # Add a success message
+        messages.success(request, "Your account has been successfully deleted.")
+        return redirect('login')
+        
+    return redirect('settings')
