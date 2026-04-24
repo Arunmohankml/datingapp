@@ -1310,13 +1310,10 @@ def safe_print(msg):
 def verify_face_live(request):
     """
     Receives 3 base64 images and saves to UserVerification + Supabase.
-    Analyzes baseline gender.
+    Sequential processing for Vercel stability.
     """
     print("================ VERIFY LIVE DEBUG ================")
     print(f"User: {request.user} (ID: {request.user.id})")
-    print(f"Method: {request.method}")
-    print(f"Content-Length: {request.META.get('CONTENT_LENGTH')}")
-    print(f"Body size: {len(request.body)} bytes")
     
     if request.method != 'POST': 
         return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
@@ -1330,41 +1327,41 @@ def verify_face_live(request):
         if not img_f: 
             return JsonResponse({'success': False, 'message': 'Front image required'}, status=400)
 
-        from concurrent.futures import ThreadPoolExecutor
+        # 1. Analyze baseline gender (Clarifai/DeepFace)
+        from .face_utils import save_base64_to_temp, analyze_gender
+        print("[VERIFY-LIVE] Analyzing baseline gender...")
+        temp_path = save_base64_to_temp(img_f, f"gender_check_{request.user.id}.jpg")
+        baseline_gender, baseline_conf = analyze_gender(temp_path)
+        if os.path.exists(temp_path): os.remove(temp_path)
+        print(f"[VERIFY-LIVE] Detected Gender: {baseline_gender} ({baseline_conf}%)")
 
-        def analyze_gender_task():
-            from .face_utils import save_base64_to_temp, analyze_gender
-            temp_path = save_base64_to_temp(img_f, f"gender_check_{request.user.id}.jpg")
-            gender, conf = analyze_gender(temp_path)
-            if os.path.exists(temp_path): os.remove(temp_path)
-            return gender, conf
-
+        # 2. Upload to Supabase
         def upload_b64(b64, name):
             if not b64: return None
-            if 'base64,' in b64: b64 = b64.split('base64,')[1]
-            img_data = base64.b64decode(b64)
-            f_obj = ContentFile(img_data, name=f"{name}_{request.user.id}.jpg")
-            return upload_to_supabase(f_obj, bucket="images", path="verification_baselines")
+            try:
+                if 'base64,' in b64: b64 = b64.split('base64,')[1]
+                img_data = base64.b64decode(b64)
+                f_obj = ContentFile(img_data, name=f"{name}_{request.user.id}.jpg")
+                url = upload_to_supabase(f_obj, bucket="images", path="verification_baselines")
+                if not url:
+                    print(f"[VERIFY-LIVE] Upload failed for {name}")
+                return url
+            except Exception as e:
+                print(f"[VERIFY-LIVE] Upload Exception for {name}: {e}")
+                return None
 
-        print("[VERIFY-LIVE] Starting concurrent analysis and uploads...")
-        with ThreadPoolExecutor(max_workers=4) as executor:
-            future_gender = executor.submit(analyze_gender_task)
-            future_f = executor.submit(upload_b64, img_f, "front")
-            future_l = executor.submit(upload_b64, img_l, "left")
-            future_r = executor.submit(upload_b64, img_r, "right")
-
-            baseline_gender, baseline_conf = future_gender.result()
-            url_f = future_f.result()
-            url_l = future_l.result()
-            url_r = future_r.result()
-
-        print(f"[VERIFY-LIVE] Detected Baseline Gender: {baseline_gender} ({baseline_conf}%)")
+        print("[VERIFY-LIVE] Uploading images...")
+        url_f = upload_b64(img_f, "front")
+        url_l = upload_b64(img_l, "left")
+        url_r = upload_b64(img_r, "right")
 
         if not url_f:
-            print("[VERIFY-LIVE] ERROR: url_f is None. Upload to Supabase failed.")
-            return JsonResponse({'success': False, 'message': 'Upload to Supabase failed. Check storage.'}, status=400)
+            return JsonResponse({
+                'success': False, 
+                'message': 'Front photo upload failed. Please ensure your camera is working and check your internet connection.'
+            }, status=400)
 
-        # Save to UserVerification
+        # 3. Save to UserVerification
         uv, _ = UserVerification.objects.update_or_create(
             user=request.user,
             defaults={
@@ -1377,14 +1374,19 @@ def verify_face_live(request):
             }
         )
         
-        safe_print(f"UserVerification created for {request.user.id}")
+        # Sync to Profile for UI feedback
+        profile = getattr(request.user, 'profile', None)
+        if profile:
+            profile.verification_status = 'pending'
+            profile.save()
+
         return JsonResponse({'success': True, 'message': 'Face profiles secured!'})
             
     except Exception as e:
         import traceback
-        print("VERIFY LIVE ERROR:", str(e))
+        print("VERIFY LIVE CRITICAL ERROR:", str(e))
         traceback.print_exc()
-        return JsonResponse({'success': False, 'message': str(e)}, status=400)
+        return JsonResponse({'success': False, 'message': f'Server Error: {str(e)}'}, status=400)
 
 @login_required
 @csrf_exempt
