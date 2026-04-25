@@ -12,7 +12,11 @@ def get_supabase_client():
     if _supabase_client is not None:
         return _supabase_client
         
-    url = os.environ.get('SUPABASE_URL', '').strip().strip('"').strip("'")
+    url = os.environ.get('SUPABASE_URL', '').strip().strip('"').strip("'").rstrip('/')
+    # Remove /rest/v1 if the user accidentally pasted the full API endpoint
+    if url.endswith('/rest/v1'):
+        url = url[:-8].rstrip('/')
+        
     key = os.environ.get('SUPABASE_KEY', '').strip().strip('"').strip("'")
     
     if not url or not key:
@@ -22,7 +26,7 @@ def get_supabase_client():
         _supabase_client = create_client(url, key)
     except Exception as e:
         key_preview = key[:15] + "..." if len(key) > 15 else key
-        raise ValueError(f"{str(e)} | Key inside Vercel starts with: '{key_preview}'")
+        raise ValueError(f"{str(e)} | Key starts with: '{key_preview}'")
         
     return _supabase_client
 
