@@ -1468,36 +1468,54 @@
         }
     }
 
-    function handlePfpSelect(input) {
+    async function handlePfpSelect(input) {
         if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                const preview = document.getElementById('pfp-preview');
-                const placeholder = document.getElementById('pfp-placeholder');
-                preview.src = e.target.result;
-                preview.style.display = 'block';
-                placeholder.style.display = 'none';
+            try {
+                // Compress the image before anything else
+                const compressedFile = await compressImage(input.files[0], 0.7, 800);
                 
-                checkStep7Validity();
+                // Replace the input's file with the compressed one
+                const dt = new DataTransfer();
+                dt.items.add(compressedFile);
+                input.files = dt.files;
 
-                // Start local comparison
-                const tempImg = new Image();
-                tempImg.src = e.target.result;
-                tempImg.onload = () => compareLocally(tempImg);
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const preview = document.getElementById('pfp-preview');
+                    const placeholder = document.getElementById('pfp-placeholder');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    
+                    checkStep7Validity();
 
-                fetch('/api/upload/base64/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-                    body: JSON.stringify({ image: e.target.result, path: 'profile_pics' })
-                }).then(r => r.json()).then(d => { if (d.success) { /* upload success */ } });
-            };
-            reader.readAsDataURL(input.files[0]);
+                    // Start local comparison
+                    const tempImg = new Image();
+                    tempImg.src = e.target.result;
+                    tempImg.onload = () => compareLocally(tempImg);
+
+                    // Skip the redundant base64 API fetch here, as the form handles the file upload to Supabase.
+                };
+                reader.readAsDataURL(compressedFile);
+            } catch (err) {
+                console.error("Compression failed:", err);
+                alert("Failed to process profile picture. Please try another image.");
+            }
         }
     }
 
-    function handleGallerySelect(input) {
+    async function handleGallerySelect(input) {
         if (input.files && input.files.length > 0) {
-            Array.from(input.files).forEach(file => { if (galleryFiles.length < 5) galleryFiles.push(file); });
+            for (let i = 0; i < input.files.length; i++) {
+                if (galleryFiles.length < 5) {
+                    try {
+                        const compressedFile = await compressImage(input.files[i], 0.7, 800);
+                        galleryFiles.push(compressedFile);
+                    } catch (err) {
+                        console.error("Failed to compress gallery image:", err);
+                    }
+                }
+            }
             updateGalleryUI();
         }
     }
