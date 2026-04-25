@@ -11,22 +11,9 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-
-  // CRITICAL: Never intercept POST requests or API calls.
-  if (event.request.method !== 'GET' || url.pathname.startsWith('/api/')) {
-    return;
-  }
-
-  // CRITICAL: Let browser natively handle cross-origin requests (CDNs for AI models)
-  if (url.origin !== location.origin) {
-    return;
-  }
-
-  // Network first - don't serve cached redirects
-  event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
-  );
+  // Let the browser handle all network requests natively.
+  // We keep this event listener active because Chrome requires a fetch handler 
+  // to recognize the app as an installable PWA and trigger the install banner.
 });
 
 self.addEventListener('activate', event => {
