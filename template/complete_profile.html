@@ -1406,22 +1406,39 @@
 
         document.getElementById('verify-camera-ui').style.display = 'none';
         document.getElementById('verify-success-ui').style.display = 'block';
-        document.getElementById('face-verification-section').style.borderColor = '#16a34a';
-        document.getElementById('face-verification-section').style.background = '#f0fdf4';
-
-        fetch('/api/upload/base64/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-            body: JSON.stringify({ image: verificationBase64, path: 'verification' })
-        }).then(r => r.json()).then(d => { 
-            if (d.success) {
-                // upload success
-                document.getElementById('verification-image-url').value = d.url;
+        status.innerText = "Uploading verification scan...";
+        
+        try {
+            const res = await fetch('/api/upload/base64/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ image: verificationBase64, path: 'verification' })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                document.getElementById('verification-image-url').value = data.url;
+                status.innerText = "Scan secured and uploaded successfully!";
+                status.style.color = '#16a34a';
+                
+                document.getElementById('face-verification-section').style.borderColor = '#16a34a';
+                document.getElementById('face-verification-section').style.background = '#f0fdf4';
+                
+                document.getElementById('pfp-group').style.opacity = '1';
+                document.getElementById('pfp-group').style.pointerEvents = 'auto';
+            } else {
+                status.innerText = "Upload failed: " + data.message + ". Please try again.";
+                status.style.color = '#ef4444';
+                document.getElementById('verify-camera-ui').style.display = 'block';
+                document.getElementById('verify-success-ui').style.display = 'none';
             }
-        });
-
-        document.getElementById('pfp-group').style.opacity = '1';
-        document.getElementById('pfp-group').style.pointerEvents = 'auto';
+        } catch (e) {
+            console.error("Network error on verification upload", e);
+            status.innerText = "Network error. Please try again.";
+            status.style.color = '#ef4444';
+            document.getElementById('verify-camera-ui').style.display = 'block';
+            document.getElementById('verify-success-ui').style.display = 'none';
+        }
     }
 
     async function compareLocally(pfpImgElement) {
