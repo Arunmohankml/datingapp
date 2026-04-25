@@ -60,7 +60,7 @@ def complete_profile(request):
             elif verify_data:
                 # Fallback: Save base64 to Supabase on server
                 from .supabase_utils import upload_base64_to_supabase
-                verify_url = upload_base64_to_supabase(verify_data, bucket="images", path="verification")
+                verify_url, _ = upload_base64_to_supabase(verify_data, bucket="images", path="verification")
                 if verify_url:
                     new_profile.verification_image = verify_url
                     new_profile.verification_status = verify_status
@@ -1354,12 +1354,12 @@ def upload_base64_api(request):
             return JsonResponse({'success': False, 'message': 'Missing image data'}, status=400)
             
         from .supabase_utils import upload_base64_to_supabase
-        url = upload_base64_to_supabase(base64_str, bucket=bucket, path=path)
+        url, error_msg = upload_base64_to_supabase(base64_str, bucket=bucket, path=path)
         
         if url:
             return JsonResponse({'success': True, 'url': url})
         else:
-            return JsonResponse({'success': False, 'message': 'Upload failed'}, status=500)
+            return JsonResponse({'success': False, 'message': f'Upload failed: {error_msg}'}, status=500)
             
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)

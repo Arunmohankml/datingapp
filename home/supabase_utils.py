@@ -113,24 +113,41 @@ def upload_to_supabase(file_obj, bucket="images", path="dating_app/"):
 def upload_base64_to_supabase(base64_str, bucket="images", path="verification"):
     """
     Decodes base64 string and uploads to Supabase Storage.
+    Returns (public_url, error_message).
     """
-    if not supabase: return None
+    if not supabase: return None, "Supabase client not initialized"
     try:
         import base64
         import uuid
+        
+        mime_type = "image/jpeg"
+        ext = "jpg"
+        
         if ',' in base64_str:
+            prefix = base64_str.split(',')[0]
             base64_str = base64_str.split(',')[1]
+            if 'image/png' in prefix:
+                mime_type = 'image/png'
+                ext = 'png'
+            elif 'image/webp' in prefix:
+                mime_type = 'image/webp'
+                ext = 'webp'
+                
+        # Fix padding if necessary
+        missing_padding = len(base64_str) % 4
+        if missing_padding:
+            base64_str += '=' * (4 - missing_padding)
         
         img_data = base64.b64decode(base64_str)
-        filename = f"{uuid.uuid4()}.webp"
+        filename = f"{uuid.uuid4()}.{ext}"
         full_path = f"{path.strip('/')}/{filename}"
         
         res = supabase.storage.from_(bucket).upload(
             path=full_path,
             file=img_data,
-            file_options={"content-type": "image/webp", "x-upsert": "true"}
+            file_options={"content-type": mime_type, "x-upsert": "true"}
         )
-        return supabase.storage.from_(bucket).get_public_url(full_path)
+        return supabase.storage.from_(bucket).get_public_url(full_path), None
     except Exception as e:
         print(f"ERROR: Base64 upload failed: {e}")
-        return None
+        return None, str(e)
