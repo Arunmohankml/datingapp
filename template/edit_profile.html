@@ -227,43 +227,46 @@
         border-color: var(--primary);
         outline: none;
         box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-    }    .toggle-switch input:checked + label:before {
-        transform: translate(24px, -50%);
     }
 
-    /* Custom Searchable Dropdown Styles */
-    .searchable-dropdown {
-        position: relative;
-        width: 100%;
-    }
-    .dropdown-selected-container {
-        min-height: 46px;
-        padding: 8px 12px;
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        background: white;
+    /* Searchable Dropdown - Vertical chip layout */
+    .searchable-dropdown { position: relative; width: 100%; }
+    .selected-chips-list {
         display: flex;
-        flex-wrap: wrap;
+        flex-direction: column;
         gap: 6px;
-        cursor: text;
-        transition: 0.2s;
+        margin-bottom: 8px;
     }
-    .dropdown-selected-container:focus-within {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    .chip {
+        background: #eef2ff;
+        color: var(--primary);
+        border: 1px solid #c7d2fe;
+        padding: 7px 12px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
     }
-    .dropdown-search {
-        border: none !important;
-        background: transparent !important;
-        padding: 4px 0 !important;
-        margin: 0 !important;
-        width: auto !important;
-        flex: 1;
-        min-width: 60px;
-        box-shadow: none !important;
-        font-family: inherit;
+    .chip i { cursor: pointer; font-size: 11px; opacity: 0.6; }
+    .chip i:hover { opacity: 1; color: #ef4444; }
+    .dropdown-search-box {
+        width: 100%;
+        padding: 11px 16px;
+        border: 1.5px solid var(--border);
+        border-radius: 14px;
         font-size: 14px;
+        background: white;
+        box-sizing: border-box;
         outline: none;
+        transition: 0.2s;
+        font-family: inherit;
+    }
+    .dropdown-search-box:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
     }
     .dropdown-list {
         position: absolute;
@@ -273,7 +276,7 @@
         background: white;
         border: 1px solid var(--border);
         border-radius: 14px;
-        margin-top: 6px;
+        margin-top: 4px;
         max-height: 200px;
         overflow-y: auto;
         z-index: 5000;
@@ -286,65 +289,79 @@
         cursor: pointer;
         transition: 0.2s;
     }
-    .dropdown-item:hover {
-        background: #f8fafc;
-        color: var(--primary);
+    .dropdown-item:hover { background: #f8fafc; color: var(--primary); }
+
+    /* Age Slider */
+    .age-slider-wrap {
+        padding: 8px 0 4px;
     }
-    .chip {
+    .age-slider-wrap input[type=range] {
+        width: 100%;
+        -webkit-appearance: none;
+        height: 6px;
+        border-radius: 3px;
+        outline: none;
+        cursor: pointer;
+    }
+    .age-slider-wrap input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
         background: var(--primary);
-        color: white;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(99,102,241,0.4);
+        cursor: pointer;
+    }
+    .age-display {
+        text-align: center;
+        font-size: 28px;
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 4px;
+    }
+    .age-display small { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+
+    /* Simple Discovery Range */
+    .disc-range-wrap {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 12px;
+        margin-top: 8px;
     }
-    .chip i {
-        cursor: pointer;
-        font-size: 10px;
+    .disc-range-label {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-bottom: 4px;
     }
-
-    /* Range Slider Overhaul */
-    .premium-slider-container {
-        padding: 10px 0 20px;
+    .disc-range-input {
+        width: 65px;
+        padding: 8px 10px;
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 700;
+        text-align: center;
+        color: var(--primary);
+        background: #f8fafc;
+        outline: none;
+        -moz-appearance: textfield;
     }
-    .slider-track-wrap {
-        position: relative;
+    .disc-range-input:focus { border-color: var(--primary); background: white; }
+    .disc-range-input::-webkit-inner-spin-button,
+    .disc-range-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+    .disc-range-bar {
+        flex: 1;
         height: 6px;
         background: #e2e8f0;
         border-radius: 3px;
-        margin: 20px 0;
+        position: relative;
     }
-    .slider-track-highlight {
+    .disc-range-bar-fill {
         position: absolute;
         height: 100%;
         background: var(--primary);
         border-radius: 3px;
-    }
-    .range-input-wrap {
-        position: relative;
-        height: 0;
-    }
-    .range-input-wrap input {
-        position: absolute;
-        width: 100%;
-        top: -23px;
-        background: none;
-        pointer-events: none;
-        -webkit-appearance: none;
-    }
-    .range-input-wrap input::-webkit-slider-thumb {
-        height: 20px;
-        width: 20px;
-        border-radius: 50%;
-        background: white;
-        border: 2px solid var(--primary);
-        cursor: pointer;
-        pointer-events: auto;
-        -webkit-appearance: none;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
 </style>
 {% endblock %}
@@ -412,29 +429,27 @@
                     {{ form.bio }}
                 </div>
                 <div class="form-group">
-                    <label>Age: <span id="age-label-main" style="color: var(--primary); font-weight: 700;">{{ profile.age }}</span></label>
-                    <input type="range" min="18" max="30" value="{{ profile.age }}" class="slider-input" id="age-slider-main" style="width: 100%; margin-top: 10px;">
+                    <label>Age: <span id="age-label-main" style="color:var(--primary);font-weight:700;">{{ profile.age }}</span> <small style="color:var(--text-muted);font-size:13px;">yrs</small></label>
+                    <div class="age-slider-wrap">
+                        <input type="range" min="18" max="30" value="{{ profile.age }}" id="age-slider-main">
+                    </div>
                     <input type="hidden" name="age" id="id_age" value="{{ profile.age }}">
                 </div>
                 <div class="form-group">
                     <label>Living Place</label>
                     <div class="searchable-dropdown" id="drop-living">
-                        <div class="dropdown-selected-container">
-                            <div class="selected-items"></div>
-                            <input type="text" class="dropdown-search" placeholder="Search city...">
-                        </div>
-                        <div class="dropdown-list"></div>
+                        <div class="selected-chips-list" id="chips-living"></div>
+                        <input type="text" class="dropdown-search-box" id="search-living" placeholder="Search city..." autocomplete="off">
+                        <div class="dropdown-list" id="list-living"></div>
                         <input type="hidden" name="living_place" id="id_living_place" value="{{ profile.living_place }}">
                     </div>
                 </div>
                 <div class="form-group">
                     <label>Native Place (From)</label>
                     <div class="searchable-dropdown" id="drop-native">
-                        <div class="dropdown-selected-container">
-                            <div class="selected-items"></div>
-                            <input type="text" class="dropdown-search" placeholder="Search city...">
-                        </div>
-                        <div class="dropdown-list"></div>
+                        <div class="selected-chips-list" id="chips-native"></div>
+                        <input type="text" class="dropdown-search-box" id="search-native" placeholder="Search city..." autocomplete="off">
+                        <div class="dropdown-list" id="list-native"></div>
                         <input type="hidden" name="native_place" id="id_native_place" value="{{ profile.native_place }}">
                     </div>
                 </div>
@@ -449,11 +464,9 @@
                         <input type="hidden" name="mother_tongues" value="{{ profile.mother_tongues }}">
                     {% else %}
                         <div class="searchable-dropdown" id="drop-mothertongue">
-                            <div class="dropdown-selected-container">
-                                <div class="selected-items"></div>
-                                <input type="text" class="dropdown-search" placeholder="Select mother tongue...">
-                            </div>
-                            <div class="dropdown-list"></div>
+                            <div class="selected-chips-list" id="chips-mothertongue"></div>
+                            <input type="text" class="dropdown-search-box" id="search-mothertongue" placeholder="Select mother tongue..." autocomplete="off">
+                            <div class="dropdown-list" id="list-mothertongue"></div>
                             <input type="hidden" name="mother_tongues" id="id_mother_tongues" value="">
                         </div>
                     {% endif %}
@@ -461,11 +474,9 @@
                 <div class="form-group">
                     <label>Languages</label>
                     <div class="searchable-dropdown" id="drop-languages">
-                        <div class="dropdown-selected-container">
-                            <div class="selected-items"></div>
-                            <input type="text" class="dropdown-search" placeholder="Select languages...">
-                        </div>
-                        <div class="dropdown-list"></div>
+                        <div class="selected-chips-list" id="chips-languages"></div>
+                        <input type="text" class="dropdown-search-box" id="search-languages" placeholder="Select languages..." autocomplete="off">
+                        <div class="dropdown-list" id="list-languages"></div>
                         <input type="hidden" name="languages" id="id_languages" value="{{ profile.languages }}">
                     </div>
                 </div>
@@ -476,11 +487,9 @@
                 <div class="form-group">
                     <label>Interests</label>
                     <div class="searchable-dropdown" id="drop-interests">
-                        <div class="dropdown-selected-container">
-                            <div class="selected-items"></div>
-                            <input type="text" class="dropdown-search" placeholder="Select interests...">
-                        </div>
-                        <div class="dropdown-list"></div>
+                        <div class="selected-chips-list" id="chips-interests"></div>
+                        <input type="text" class="dropdown-search-box" id="search-interests" placeholder="Select interests..." autocomplete="off">
+                        <div class="dropdown-list" id="list-interests"></div>
                         <input type="hidden" name="interest_tags" id="id_interest_tags" value="{{ profile.interest_tags }}">
                     </div>
                 </div>
@@ -562,14 +571,16 @@
                     {{ form.pref_gender }}
                 </div>
                 <div class="form-group">
-                    <label>Age Range: <span id="range-label" style="color: var(--primary); font-weight: 700;">{{ profile.pref_age_min }} - {{ profile.pref_age_max }}</span></label>
-                    <div class="premium-slider-container">
-                        <div class="slider-track-wrap">
-                            <div id="range-track" class="slider-track-highlight"></div>
+                    <label>Age Range</label>
+                    <div class="disc-range-wrap">
+                        <div>
+                            <div class="disc-range-label">Min</div>
+                            <input type="number" class="disc-range-input" id="disc-min" min="18" max="30" value="{{ profile.pref_age_min }}">
                         </div>
-                        <div class="range-input-wrap">
-                            <input type="range" min="18" max="30" value="{{ profile.pref_age_min }}" id="range-min">
-                            <input type="range" min="18" max="30" value="{{ profile.pref_age_max }}" id="range-max">
+                        <div class="disc-range-bar"><div class="disc-range-bar-fill" id="disc-bar"></div></div>
+                        <div>
+                            <div class="disc-range-label">Max</div>
+                            <input type="number" class="disc-range-input" id="disc-max" min="18" max="30" value="{{ profile.pref_age_max }}">
                         </div>
                     </div>
                     <input type="hidden" name="pref_age_min" id="id_pref_age_min" value="{{ profile.pref_age_min }}">
@@ -578,11 +589,9 @@
                 <div class="form-group">
                     <label>Preferred Languages</label>
                     <div class="searchable-dropdown" id="drop-pref-languages">
-                        <div class="dropdown-selected-container">
-                            <div class="selected-items"></div>
-                            <input type="text" class="dropdown-search" placeholder="Select languages...">
-                        </div>
-                        <div class="dropdown-list"></div>
+                        <div class="selected-chips-list" id="chips-pref-languages"></div>
+                        <input type="text" class="dropdown-search-box" id="search-pref-languages" placeholder="Select languages..." autocomplete="off">
+                        <div class="dropdown-list" id="list-pref-languages"></div>
                         <input type="hidden" name="pref_languages" id="id_pref_languages" value="{{ profile.pref_languages }}">
                     </div>
                 </div>
@@ -721,137 +730,128 @@
     }
 
     // ───── SEARCHABLE DROPDOWN LOGIC ─────
-    const dropdownOptions = {
+    var dropdownOptions = {
         location: ["Mumbai, Maharashtra", "Delhi, NCR", "Bangalore, Karnataka", "Hyderabad, Telangana", "Ahmedabad, Gujarat", "Chennai, Tamil Nadu", "Kolkata, West Bengal", "Surat, Gujarat", "Pune, Maharashtra", "Jaipur, Rajasthan", "Lucknow, Uttar Pradesh", "Kanpur, Uttar Pradesh", "Nagpur, Maharashtra", "Indore, Madhya Pradesh", "Thane, Maharashtra", "Bhopal, Madhya Pradesh", "Visakhapatnam, Andhra Pradesh", "Pimpri-Chinchwad, Maharashtra", "Patna, Bihar", "Vadodara, Gujarat", "Ghaziabad, Uttar Pradesh", "Ludhiana, Punjab", "Coimbatore, Tamil Nadu", "Agra, Uttar Pradesh", "Madurai, Tamil Nadu", "Nashik, Maharashtra", "Faridabad, Haryana", "Meerut, Uttar Pradesh", "Rajkot, Gujarat", "Varanasi, Uttar Pradesh", "Srinagar, Jammu and Kashmir", "Aurangabad, Maharashtra", "Dhanbad, Jharkhand", "Amritsar, Punjab", "Navi Mumbai, Maharashtra", "Allahabad, Uttar Pradesh", "Ranchi, Jharkhand", "Howrah, West Bengal", "Jabalpur, Madhya Pradesh", "Gwalior, Madhya Pradesh", "Vijayawada, Andhra Pradesh", "Jodhpur, Rajasthan", "Raipur, Chhattisgarh", "Kota, Rajasthan", "Guwahati, Assam", "Chandigarh, UT", "Solapur, Maharashtra", "Hubli-Dharwad, Karnataka", "Bareilly, Uttar Pradesh", "Moradabad, Uttar Pradesh", "Mysore, Karnataka", "Gurgaon, Haryana", "Aligarh, Uttar Pradesh", "Jalandhar, Punjab", "Tiruchirappalli, Tamil Nadu", "Bhubaneswar, Odisha", "Salem, Tamil Nadu", "Warangal, Telangana", "Guntur, Andhra Pradesh", "Bhiwandi, Maharashtra", "Saharanpur, Uttar Pradesh"],
         interests: ["Photography", "Traveling", "Gaming", "Music", "Coding", "Reading", "Cooking", "Fitness", "Yoga", "Art", "Dancing", "Movies", "Anime", "Fashion", "Sports", "Football", "Cricket", "Basketball", "Startups", "Crypto", "Web3", "Tech", "Design", "Writing", "Gardening", "Pets", "Hiking", "Board Games", "Stand-up Comedy", "Podcasts", "Volunteering", "Coffee", "Tea", "Foodie", "Meditation", "Shopping", "Social Media", "Netflix", "Marvel", "DC"],
         languages: ["English", "Hindi", "Tamil", "Malayalam", "Telugu", "Kannada", "Marathi", "Bengali", "Punjabi", "Gujarati", "Assamese", "Bodo", "Dogri", "Kashmiri", "Konkani", "Maithili", "Manipuri", "Nepali", "Odia", "Sanskrit", "Santali", "Sindhi", "Urdu"],
         mother_tongue: ["Tamil", "Malayalam", "Hindi", "Telugu", "Kannada", "English", "Marathi", "Bengali", "Gujarati", "Punjabi", "Urdu"]
     };
 
-    function initSearchableDropdown(containerId, optionsKey, hiddenInputId, multi = true) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-        const options = dropdownOptions[optionsKey];
-        const hiddenInput = document.getElementById(hiddenInputId);
-        const searchInput = container.querySelector('.dropdown-search');
-        const list = container.querySelector('.dropdown-list');
-        const selectedContainer = container.querySelector('.selected-items');
-        
-        let initialValue = hiddenInput.value || "";
-        if (initialValue.startsWith('[') && initialValue.endsWith(']')) {
-            initialValue = initialValue.slice(1, -1).replace(/'/g, "").replace(/"/g, "");
-        }
-        let selected = initialValue ? initialValue.split(',').map(s => s.trim()).filter(s => s && s.toLowerCase() !== 'none') : [];
+    function initDropdown(searchId, listId, chipsId, hiddenId, optionsKey, multi) {
+        var searchEl = document.getElementById(searchId);
+        var listEl = document.getElementById(listId);
+        var chipsEl = document.getElementById(chipsId);
+        var hiddenEl = document.getElementById(hiddenId);
+        if (!searchEl || !listEl || !chipsEl || !hiddenEl) return;
+        var options = dropdownOptions[optionsKey];
 
-        function renderSelected() {
-            selectedContainer.innerHTML = '';
-            selected.forEach(val => {
-                const chip = document.createElement('div');
+        var rawVal = hiddenEl.value || '';
+        if (rawVal.startsWith('[') && rawVal.endsWith(']')) rawVal = rawVal.slice(1,-1).replace(/['"]/g,'');
+        var selected = rawVal ? rawVal.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+
+        function renderChips() {
+            chipsEl.innerHTML = '';
+            selected.forEach(function(val) {
+                var chip = document.createElement('div');
                 chip.className = 'chip';
-                chip.innerHTML = `${val} <i class="fas fa-times"></i>`;
-                chip.querySelector('i').onclick = (e) => {
+                chip.innerHTML = '<span>' + val + '</span><i class="fas fa-times"></i>';
+                chip.querySelector('i').onclick = function(e) {
                     e.stopPropagation();
-                    selected = selected.filter(v => v !== val);
-                    renderSelected();
-                    updateHiddenInput();
+                    selected = selected.filter(function(v) { return v !== val; });
+                    renderChips();
                 };
-                selectedContainer.appendChild(chip);
+                chipsEl.appendChild(chip);
             });
-            updateHiddenInput();
+            hiddenEl.value = selected.join(',');
         }
 
-        function updateHiddenInput() {
-            hiddenInput.value = selected.join(',');
-        }
-
-        function filterOptions(query) {
-            list.innerHTML = '';
-            const filtered = options.filter(o => 
-                o.toLowerCase().includes(query.toLowerCase()) && !selected.includes(o)
-            );
-            
+        function showList(query) {
+            listEl.innerHTML = '';
+            var filtered = options.filter(function(o) {
+                return o.toLowerCase().includes(query.toLowerCase()) && !selected.includes(o);
+            });
             if (filtered.length > 0) {
-                list.style.display = 'block';
-                filtered.forEach(o => {
-                    const item = document.createElement('div');
+                listEl.style.display = 'block';
+                filtered.forEach(function(o) {
+                    var item = document.createElement('div');
                     item.className = 'dropdown-item';
                     item.innerText = o;
-                    item.onclick = () => {
-                        if (multi) {
-                            selected.push(o);
-                        } else {
-                            selected = [o];
-                        }
-                        renderSelected();
-                        searchInput.value = '';
-                        list.style.display = 'none';
+                    item.onclick = function() {
+                        if (multi) { selected.push(o); } else { selected = [o]; }
+                        renderChips();
+                        searchEl.value = '';
+                        listEl.style.display = 'none';
                     };
-                    list.appendChild(item);
+                    listEl.appendChild(item);
                 });
             } else {
-                list.style.display = 'none';
+                listEl.style.display = 'none';
             }
         }
 
-        searchInput.onfocus = () => filterOptions(searchInput.value);
-        searchInput.oninput = (e) => filterOptions(e.target.value);
-        selectedContainer.onclick = () => searchInput.focus();
-        
-        document.addEventListener('click', (e) => {
-            if (!container.contains(e.target)) list.style.display = 'none';
+        searchEl.addEventListener('focus', function() { showList(searchEl.value); });
+        searchEl.addEventListener('input', function() { showList(searchEl.value); });
+        document.addEventListener('click', function(e) {
+            var wrap = searchEl.closest('.searchable-dropdown');
+            if (wrap && !wrap.contains(e.target)) listEl.style.display = 'none';
         });
-
-        renderSelected();
+        renderChips();
     }
 
     // ───── SLIDER LOGIC ─────
     function initAgeSlider() {
-        const slider = document.getElementById('age-slider-main');
-        const label = document.getElementById('age-label-main');
-        const hidden = document.getElementById('id_age');
-        if(!slider) return;
-        slider.oninput = () => {
+        var slider = document.getElementById('age-slider-main');
+        var label = document.getElementById('age-label-main');
+        var hidden = document.getElementById('id_age');
+        if (!slider) return;
+        function fill() {
+            var pct = ((slider.value - 18) / (30 - 18)) * 100;
+            slider.style.background = 'linear-gradient(to right, var(--primary) 0%, var(--primary) ' + pct + '%, #e2e8f0 ' + pct + '%, #e2e8f0 100%)';
             label.innerText = slider.value;
             hidden.value = slider.value;
-        };
+        }
+        slider.addEventListener('input', fill);
+        fill();
     }
 
-    function initRangeSlider() {
-        const rMin = document.getElementById('range-min');
-        const rMax = document.getElementById('range-max');
-        const track = document.getElementById('range-track');
-        const label = document.getElementById('range-label');
-        const hMin = document.getElementById('id_pref_age_min');
-        const hMax = document.getElementById('id_pref_age_max');
-        if(!rMin || !rMax) return;
-
-        function update() {
-            let v1 = parseInt(rMin.value);
-            let v2 = parseInt(rMax.value);
-            if (v1 > v2) { let tmp = v1; v1 = v2; v2 = tmp; }
-            const p1 = ((v1 - 18) / (30 - 18)) * 100;
-            const p2 = ((v2 - 18) / (30 - 18)) * 100;
-            track.style.left = p1 + "%";
-            track.style.width = (p2 - p1) + "%";
-            label.innerText = `${v1} - ${v2}`;
+    function initDiscoveryRange() {
+        var minEl = document.getElementById('disc-min');
+        var maxEl = document.getElementById('disc-max');
+        var bar = document.getElementById('disc-bar');
+        var hMin = document.getElementById('id_pref_age_min');
+        var hMax = document.getElementById('id_pref_age_max');
+        if (!minEl || !maxEl || !bar) return;
+        function updateBar() {
+            var v1 = Math.max(18, Math.min(30, parseInt(minEl.value) || 18));
+            var v2 = Math.max(18, Math.min(30, parseInt(maxEl.value) || 25));
+            if (v1 > v2) v2 = v1;
+            var p1 = ((v1 - 18) / 12) * 100;
+            var p2 = ((v2 - 18) / 12) * 100;
+            bar.style.left = p1 + '%';
+            bar.style.width = (p2 - p1) + '%';
             hMin.value = v1;
             hMax.value = v2;
         }
-        rMin.oninput = update;
-        rMax.oninput = update;
-        update();
+        minEl.addEventListener('input', updateBar);
+        maxEl.addEventListener('input', updateBar);
+        minEl.addEventListener('change', updateBar);
+        maxEl.addEventListener('change', updateBar);
+        updateBar();
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', function() {
         initAgeSlider();
-        initRangeSlider();
-        initSearchableDropdown('drop-living', 'location', 'id_living_place', false);
-        initSearchableDropdown('drop-native', 'location', 'id_native_place', false);
-        initSearchableDropdown('drop-mothertongue', 'mother_tongue', 'id_mother_tongues', false);
-        initSearchableDropdown('drop-interests', 'interests', 'id_interest_tags', true);
-        initSearchableDropdown('drop-languages', 'languages', 'id_languages', true);
-        initSearchableDropdown('drop-pref-languages', 'languages', 'id_pref_languages', true);
+        initDiscoveryRange();
+        initDropdown('search-living',        'list-living',        'chips-living',        'id_living_place',   'location',     false);
+        initDropdown('search-native',        'list-native',        'chips-native',        'id_native_place',   'location',     false);
+        initDropdown('search-mothertongue',  'list-mothertongue',  'chips-mothertongue',  'id_mother_tongues', 'mother_tongue', false);
+        initDropdown('search-interests',     'list-interests',     'chips-interests',     'id_interest_tags',  'interests',    true);
+        initDropdown('search-languages',     'list-languages',     'chips-languages',     'id_languages',      'languages',    true);
+        initDropdown('search-pref-languages','list-pref-languages','chips-pref-languages','id_pref_languages', 'languages',    true);
     });
+
+
+
 
     // ───── MY VIBE (FAVORITES) LOGIC ─────
     let selectedMovies = [];
