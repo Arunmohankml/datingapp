@@ -17,7 +17,7 @@ from django.core.files.base import ContentFile
 import base64
 import math
 
-from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong
+from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm
 from .supabase_utils import upload_to_supabase
 # AI imports moved inside functions to prevent Vercel crashes
@@ -133,36 +133,42 @@ def home(request):
 
     if not question:
         # DISCOVERY MODE: Fetch and Rank All Potential Matches
-        # Filter candidates: exclude self, already liked/skipped, and blocked users
         interacted_user_ids = MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)
         blocked_user_ids = list(BlockedUser.objects.filter(blocker=user).values_list('blocked_id', flat=True)) + \
                            list(BlockedUser.objects.filter(blocked=user).values_list('blocker_id', flat=True))
         
-        candidates = Profile.objects.filter(is_discoverable=True).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=blocked_user_ids)
+        candidates = Profile.objects.filter(is_discoverable=True).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=blocked_user_ids).select_related('user')
         
+        user_ans = UserAnswer.objects.filter(user=user).select_related('option')
+        user_dict = {ans.question_id: ans.option.weight for ans in user_ans}
+        
+        cand_user_ids = [c.user_id for c in candidates]
+        all_cand_ans = UserAnswer.objects.filter(user_id__in=cand_user_ids).select_related('option')
+        
+        cand_ans_map = {}
+        for ans in all_cand_ans:
+            if ans.user_id not in cand_ans_map: cand_ans_map[ans.user_id] = {}
+            cand_ans_map[ans.user_id][ans.question_id] = ans.option.weight
+
         matches_list = []
         for c in candidates:
-            # Mutual Preference Filter
             user_pref_ok = (profile.pref_gender == 'any' or profile.pref_gender == c.gender)
             cand_pref_ok = (c.pref_gender == 'any' or c.pref_gender == profile.gender)
             
             if user_pref_ok and cand_pref_ok:
-                score = calculate_match_score(user, c.user)
-                matches_list.append({
-                    'profile': c,
-                    'score': score
-                })
+                cand_dict = cand_ans_map.get(c.user_id, {})
+                score = calculate_match_score_optimized(user_dict, cand_dict)
+                matches_list.append({'profile': c, 'score': score})
         
-        # Sort by best score
         matches_list.sort(key=lambda x: x['score'], reverse=True)
-        
         sparked_ids = list(Spark.objects.filter(sender=user).values_list('receiver_id', flat=True))
         
         return render(request, "home.html", {
             "all_done": True, 
             "progress": 100,
             "matches": matches_list[:20],  # Show top 20
-            "sparked_ids": sparked_ids
+            "sparked_ids": sparked_ids,
+            "profile": profile
         })
 
     total_q_db = Question.objects.count()
@@ -175,121 +181,48 @@ def home(request):
 import math
 
 # ---------------- MATCHING LOGIC ----------------
-def calculate_match_score(user1, user2):
-    """Calculate match % between two users based on answers using Cosine Similarity and Euclidean distance (Pure Python)"""
-    user1_answers = UserAnswer.objects.filter(user=user1).select_related('option')
-    user2_answers = UserAnswer.objects.filter(user=user2).select_related('option')
+# ---------------- MATCHING LOGIC ----------------
+def calculate_match_score(user1_or_obj, user2_or_obj):
+    """Calculate match % between two users based on common answers."""
+    # Handle if objects or users are passed
+    u1 = user1_or_obj if hasattr(user1_or_obj, 'id') else user1_or_obj.user
+    u2 = user2_or_obj if hasattr(user2_or_obj, 'id') else user2_or_obj.user
     
-    user1_dict = {ans.question_id: ans.option.weight for ans in user1_answers}
-    user2_dict = {ans.question_id: ans.option.weight for ans in user2_answers}
+    user1_ans = UserAnswer.objects.filter(user=u1).select_related('option')
+    user2_ans = UserAnswer.objects.filter(user=u2).select_related('option')
     
-    common_questions = set(user1_dict.keys()).intersection(set(user2_dict.keys()))
+    u1_dict = {ans.question_id: ans.option.weight for ans in user1_ans}
+    u2_dict = {ans.question_id: ans.option.weight for ans in user2_ans}
     
-    if not common_questions:
-        return 0
+    common_questions = set(u1_dict.keys()).intersection(set(u2_dict.keys()))
+    if not common_questions: return 0
     
-    v1 = [user1_dict[q_id] for q_id in common_questions]
-    v2 = [user2_dict[q_id] for q_id in common_questions]
+    v1 = [u1_dict[q_id] for q_id in common_questions]
+    v2 = [u2_dict[q_id] for q_id in common_questions]
     
-    # 1. Euclidean distance
-    euc_dist_sq = sum((x - y) ** 2 for x, y in zip(v1, v2))
-    euc_dist = math.sqrt(euc_dist_sq)
+    # Blended Score: Cosine Similarity + Euclidean Distance
+    euc_dist = math.sqrt(sum((x - y) ** 2 for x, y in zip(v1, v2)))
     euc_sim = 1 / (1 + euc_dist)
     
-    # 2. Cosine Similarity
     dot_product = sum(x * y for x, y in zip(v1, v2))
     norm_v1 = math.sqrt(sum(x * x for x in v1))
     norm_v2 = math.sqrt(sum(x * x for x in v2))
+    cos_sim = dot_product / (norm_v1 * norm_v2) if (norm_v1 > 0 and norm_v2 > 0) else 0
     
-    if norm_v1 == 0 and norm_v2 == 0:
-        cos_sim = 1.0
-    elif norm_v1 == 0 or norm_v2 == 0:
-        cos_sim = 0.0
-    else:
-        cos_sim = dot_product / (norm_v1 * norm_v2)
-        
-    # Map [-1, 1] to [0, 1]
-    normalized_cos_sim = (cos_sim + 1) / 2
-    
-    # Blended Score: 60% Euclidean, 40% Cosine
-    combined_score = (0.6 * euc_sim + 0.4 * normalized_cos_sim) * 100
-    
-    return int(combined_score)
+    final_score = (cos_sim * 0.7) + (euc_sim * 0.3)
+    return int(round(final_score * 100))
+
+def calculate_match_score_optimized(u1_dict, u2_dict):
+    """Fast version for bulk ranking in discovery feed."""
+    common = set(u1_dict.keys()).intersection(set(u2_dict.keys()))
+    if not common: return 0
+    v1 = [u1_dict[q] for q in common]; v2 = [u2_dict[q] for q in common]
+    euc = 1 / (1 + math.sqrt(sum((x-y)**2 for x,y in zip(v1,v2))))
+    dot = sum(x*y for x,y in zip(v1,v2)); n1 = math.sqrt(sum(x*x for x in v1)); n2 = math.sqrt(sum(x*x for x in v2))
+    cos = dot / (n1*n2) if (n1>0 and n2>0) else 0
+    return int(round(((cos*0.7) + (euc*0.3)) * 100))
 
 
-    return int(combined_score)
-
-
-# ---------------- FAST QUIZ API ----------------
-from django.http import JsonResponse
-import json
-
-@login_required
-def get_quiz_batch(request):
-    """Returns a batch of 15 questions. If all are answered, loops back to oldest ones."""
-    answered_ids = UserAnswer.objects.filter(user=request.user).values_list('question_id', flat=True)
-    
-    # Try to get 15 unanswered
-    questions = list(Question.objects.exclude(id__in=answered_ids).order_by('?')[:15])
-    
-    # If we don't have enough unanswered, fill with answered ones (to allow looping)
-    if len(questions) < 15:
-        needed = 15 - len(questions)
-        loop_questions = Question.objects.filter(id__in=answered_ids).order_by('?')[:needed]
-        questions.extend(list(loop_questions))
-    
-    data = []
-    for q in questions:
-        data.append({
-            'id': q.id,
-            'text': q.text,
-            'options': [{'id': o.id, 'text': o.text} for o in q.options.all()]
-        })
-    
-    return JsonResponse({'questions': data})
-
-@login_required
-def save_quiz_batch(request):
-    """Saves a batch of answers and triggers match check if needed."""
-    if request.method == "POST":
-        try:
-            body = json.loads(request.body)
-            answers = body.get('answers', []) # List of {question_id, option_id}
-            
-            for ans in answers:
-                question = get_object_or_404(Question, id=ans['question_id'])
-                option = get_object_or_404(Option, id=ans['option_id'])
-                UserAnswer.objects.update_or_create(
-                    user=request.user,
-                    question=question,
-                    defaults={"option": option},
-                )
-            
-            return JsonResponse({'success': True})
-        except Exception as e:
-            return JsonResponse({'success': False, 'error': str(e)})
-    return JsonResponse({'success': False})
-
-
-# ---------------- ANSWER QUESTION ----------------
-@login_required
-def answer_question(request, question_id):
-    question = get_object_or_404(Question, id=question_id)
-
-    if request.method == "POST":
-        option_id = request.POST.get("option")
-        if option_id:
-            option = get_object_or_404(Option, id=option_id)
-            UserAnswer.objects.update_or_create(
-                user=request.user,
-                question=question,
-                defaults={"option": option},
-            )
-
-        # BUG FIX: redirect to home so the 5-question session-break logic runs properly
-        return redirect('home')
-
-    return redirect('home')
 
 
 # ---------------- CHECK MATCH POPUP ----------------
@@ -362,11 +295,6 @@ def check_match(request):
     request.session['current_match_id'] = None
     return redirect("home")
 
-
-# ---------------- SETUP PAGE ----------------
-@login_required
-def setup(request):
-    return render(request, "setup.html")
 
 
 # ---------------- FIREBASE LOGIN ----------------
@@ -461,7 +389,12 @@ def send_match_request(request, receiver_id):
     if request.method == 'POST':
         receiver = get_object_or_404(User, id=receiver_id)
         if receiver != request.user:
-            MatchRequest.objects.get_or_create(sender=request.user, receiver=receiver)
+            req, created = MatchRequest.objects.get_or_create(sender=request.user, receiver=receiver)
+            if created:
+                broadcast_event(f'chat_{receiver.id}', 'new_connection', {
+                    'sender_id': request.user.id,
+                    'sender_name': request.user.profile.name if hasattr(request.user, 'profile') else request.user.username
+                })
         
         # Reset last_match_count so they can continue answering
         # request.session['last_match_count'] it was already set in home
@@ -496,10 +429,10 @@ def reject_match(request, req_id):
 
 @login_required
 def connections_view(request):
-    incoming_requests = MatchRequest.objects.filter(receiver=request.user, status='pending')
+    incoming_requests = MatchRequest.objects.filter(receiver=request.user, status='pending').select_related('sender__profile')
     # Accepted matches can be either sent or received
-    accepted_sent = MatchRequest.objects.filter(sender=request.user, status='accepted')
-    accepted_received = MatchRequest.objects.filter(receiver=request.user, status='accepted')
+    accepted_sent = MatchRequest.objects.filter(sender=request.user, status='accepted').select_related('receiver__profile')
+    accepted_received = MatchRequest.objects.filter(receiver=request.user, status='accepted').select_related('sender__profile')
     
     connections = []
     for req in accepted_sent:
@@ -517,43 +450,50 @@ def connections_view(request):
 def chat_list_view(request):
     user = request.user
     
-    # Get all active connections
-    accepted_sent = MatchRequest.objects.filter(sender=user, status='accepted')
-    accepted_received = MatchRequest.objects.filter(receiver=user, status='accepted')
+    # Get all active connections with pre-fetched profiles
+    accepted_sent = MatchRequest.objects.filter(sender=user, status='accepted').select_related('receiver__profile')
+    accepted_received = MatchRequest.objects.filter(receiver=user, status='accepted').select_related('sender__profile')
     
-    # Get blocked user IDs to filter out
     blocked_ids = set(BlockedUser.objects.filter(blocker=user).values_list('blocked_id', flat=True)) | \
                   set(BlockedUser.objects.filter(blocked=user).values_list('blocker_id', flat=True))
     
-    connected_users = []
+    partners = []
     for req in accepted_sent:
-        if req.receiver.id not in blocked_ids:
-            connected_users.append(req.receiver)
+        if req.receiver_id not in blocked_ids: partners.append(req.receiver)
     for req in accepted_received:
-        if req.sender.id not in blocked_ids:
-            connected_users.append(req.sender)
-        
+        if req.sender_id not in blocked_ids: partners.append(req.sender)
+    
+    if not partners:
+        return render(request, 'chat_list.html', {'chats': []})
+
+    # Fetch all recent messages involving these partners in one query
+    all_msgs = Message.objects.filter(
+        (Q(sender=user, receiver__in=partners, sender_deleted=False)) |
+        (Q(sender__in=partners, receiver=user, receiver_deleted=False))
+    ).order_by('receiver_id', 'sender_id', '-timestamp').select_related('sender')
+
+    # Group latest messages and unread counts in memory
+    latest_msg_map = {}
+    unread_map = {}
+    for msg in all_msgs:
+        partner_id = msg.sender_id if msg.receiver_id == user.id else msg.receiver_id
+        if partner_id not in latest_msg_map:
+            latest_msg_map[partner_id] = msg
+        if msg.receiver_id == user.id and not msg.is_read and not msg.receiver_deleted:
+            unread_map[partner_id] = unread_map.get(partner_id, 0) + 1
+
     chats = []
-    for partner in connected_users:
-        latest_msg = Message.objects.filter(
-            (Q(sender=user, receiver=partner, sender_deleted=False)) |
-            (Q(sender=partner, receiver=user, receiver_deleted=False))
-        ).order_by('-timestamp').first()
-        
-        # Only show chat in Inbox if there is at least one visible message
-        if latest_msg:
-            unread_count = Message.objects.filter(sender=partner, receiver=user, is_read=False, receiver_deleted=False).count()
-            
+    for partner in partners:
+        latest = latest_msg_map.get(partner.id)
+        if latest:
             chats.append({
                 'partner': partner,
-                'latest_message': latest_msg,
-                'unread_count': unread_count,
-                'timestamp': latest_msg.timestamp
+                'latest_message': latest,
+                'unread_count': unread_map.get(partner.id, 0),
+                'timestamp': latest.timestamp
             })
-        
-    # Sort so that chats with the most recent messages appear first
-    chats.sort(key=lambda x: x['timestamp'].timestamp() if x.get('timestamp') else 0, reverse=True)
     
+    chats.sort(key=lambda x: x['timestamp'].timestamp() if x.get('timestamp') else 0, reverse=True)
     return render(request, 'chat_list.html', {'chats': chats})
 
 
@@ -593,6 +533,19 @@ def chat_view(request, partner_id):
                 reply_to_msg = Message.objects.filter(id=parent_id).first()
                 
             msg = Message.objects.create(sender=request.user, receiver=partner, text=text, reply_to=reply_to_msg)
+            # Broadcast to Pusher
+            broadcast_event(f'chat_{partner.id}', 'new_message', {
+                'id': msg.id,
+                'text': msg.text,
+                'sender_id': msg.sender_id,
+                'timestamp': msg.timestamp.strftime("%H:%M"),
+                'reply_to': {
+                    'id': msg.reply_to.id,
+                    'text': msg.reply_to.text,
+                    'sender_name': msg.reply_to.sender.profile.name if hasattr(msg.reply_to.sender, 'profile') else msg.reply_to.sender.username
+                } if msg.reply_to else None
+            })
+
             if is_ajax:
                 return JsonResponse({
                     'success': True,
@@ -615,7 +568,7 @@ def chat_view(request, partner_id):
             
     chat_messages = Message.objects.filter(
         (Q(sender=request.user, receiver=partner, sender_deleted=False)) |
-        (Q(sender=partner, receiver=user, receiver_deleted=False))
+        (Q(sender=partner, receiver=request.user, receiver_deleted=False))
     ).exclude(text__startswith='__SPIN__:') .order_by('timestamp')
     
     # Mark messages as read
@@ -627,8 +580,16 @@ def chat_view(request, partner_id):
     return render(request, "chat.html", {
         "partner": partner,
         "chat_messages": chat_messages,
-        "has_sparked": has_sparked
+        "has_sparked": has_sparked,
+        'PUSHER_KEY': settings.PUSHER_KEY,
+        'PUSHER_CLUSTER': settings.PUSHER_CLUSTER
     })
+
+@csrf_exempt
+@login_required
+def chat_typing(request, partner_id):
+    broadcast_event(f'chat_{request.user.id}', 'typing', {'user_id': request.user.id})
+    return JsonResponse({'success': True})
 
 
 @login_required
@@ -870,24 +831,65 @@ def run_migrations(request):
 # ---------------- ANONYMOUS WALL ----------------
 
 def wall_view(request):
-    return render(request, 'wall.html')
+    return render(request, 'wall.html', {
+        'PUSHER_KEY': settings.PUSHER_KEY,
+        'PUSHER_CLUSTER': settings.PUSHER_CLUSTER
+    })
 
+
+from .pusher_utils import broadcast_event
 
 @csrf_exempt
 def wall_api(request):
     if request.method == 'GET':
-        strokes = WallStroke.objects.all().values('id', 'points', 'color', 'brush_size')
-        return JsonResponse({'strokes': list(strokes)})
+        strokes = list(WallStroke.objects.all().values('id', 'points', 'color', 'brush_size'))
+        images = list(WallImage.objects.all().values('id', 'image_url', 'x', 'y', 'width', 'height'))
+        return JsonResponse({'strokes': strokes, 'images': images})
 
     elif request.method == 'POST':
         try:
             data = json.loads(request.body)
-            stroke = WallStroke.objects.create(
-                points=data['points'],
-                color=data['color'],
-                brush_size=data['brush_size']
-            )
-            return JsonResponse({'success': True, 'id': stroke.id})
+            
+            if 'image_url' in data:
+                # Handle image upload (Admin only check in frontend, but could add here too)
+                if not request.user.is_superuser and request.user.email != 'arunmohankml@gmail.com':
+                    return JsonResponse({'error': 'Unauthorized'}, status=403)
+                    
+                obj = WallImage.objects.create(
+                    image_url=data['image_url'],
+                    x=data['x'],
+                    y=data['y'],
+                    width=data['width'],
+                    height=data['height']
+                )
+                event_type = 'new_image'
+                payload = {
+                    'id': obj.id,
+                    'image_url': obj.image_url,
+                    'x': obj.x,
+                    'y': obj.y,
+                    'width': obj.width,
+                    'height': obj.height
+                }
+            else:
+                # Handle stroke
+                obj = WallStroke.objects.create(
+                    points=data['points'],
+                    color=data['color'],
+                    brush_size=data['brush_size']
+                )
+                event_type = 'new_stroke'
+                payload = {
+                    'id': obj.id,
+                    'points': obj.points,
+                    'color': obj.color,
+                    'brush_size': obj.brush_size
+                }
+
+            # Broadcast to Pusher
+            from .pusher_utils import broadcast_event
+            broadcast_event('wall', event_type, payload)
+            return JsonResponse({'success': True, 'id': obj.id})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
 
@@ -900,7 +902,7 @@ def confessions_feed(request):
     
     is_admin = request.user.is_authenticated and request.user.email == 'arunmohankml@gmail.com'
     
-    confessions = Confession.objects.all()
+    confessions = Confession.objects.all().select_related('user__profile')
     
     if not is_admin:
         # For normal users, hide heavily flagged posts if you want, or just show everything
@@ -967,6 +969,8 @@ def delete_confession(request, confession_id):
     
     if confession.user == request.user or is_admin:
         confession.delete()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True})
         messages.success(request, "Confession deleted.")
         return redirect('confessions_feed')
     
@@ -1065,10 +1069,120 @@ def like_confession(request, confession_id):
     return JsonResponse({'success': False, 'error': 'Invalid request'})
 
 
+# ---------------- ANSWER QUESTION ----------------
+@login_required
+def answer_question(request, question_id):
+    question = get_object_or_404(Question, id=question_id)
+    if request.method == "POST":
+        option_id = request.POST.get("option")
+        if option_id:
+            option = get_object_or_404(Option, id=option_id)
+            UserAnswer.objects.update_or_create(
+                user=request.user,
+                question=question,
+                defaults={"option": option},
+            )
+        return redirect('home')
+    return redirect('home')
+
+
+# ---------------- FAST QUIZ API ----------------
+
+@login_required
+def get_quiz_batch(request):
+    """Returns 10 unanswered questions for the Fast Fire quiz."""
+    answered_ids = UserAnswer.objects.filter(user=request.user).values_list('question_id', flat=True)
+    questions = Question.objects.exclude(id__in=answered_ids)[:10]
+    
+    data = []
+    for q in questions:
+        options = []
+        for opt in q.options.all():
+            options.append({'id': opt.id, 'text': opt.text})
+        data.append({
+            'id': q.id,
+            'text': q.text,
+            'options': options
+        })
+    
+    return JsonResponse({'questions': data})
+
+@csrf_exempt
+@login_required
+def save_quiz_batch(request):
+    """Saves a batch of answers and triggers match recalculation."""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            answers = data.get('answers', [])
+            
+            for ans in answers:
+                question_id = ans.get('question_id')
+                option_id = ans.get('option_id')
+                if question_id and option_id:
+                    question = get_object_or_404(Question, id=question_id)
+                    option = get_object_or_404(Option, id=option_id)
+                    UserAnswer.objects.get_or_create(
+                        user=request.user,
+                        question=question,
+                        defaults={'option': option}
+                    )
+            
+            # Reset rounds_shown to trigger 'check_match' redirect on next home load
+            ans_count = UserAnswer.objects.filter(user=request.user).count()
+            request.session['rounds_shown'] = (ans_count // 10) - 1
+            
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=405)
+
+
 # ---------------- ADMIN MENU ----------------
 
 def is_admin_check(user):
     return user.is_authenticated and user.email == 'arunmohankml@gmail.com'
+
+@login_required
+def admin_view_user(request, user_id):
+    if not is_admin_check(request.user):
+        return HttpResponse("Not authorized", status=403)
+
+    target_user = get_object_or_404(User, id=user_id)
+    profile = get_object_or_404(Profile, user=target_user)
+
+    # All related data
+    gallery_images = ProfileImage.objects.filter(profile=profile)
+    match_requests_sent = MatchRequest.objects.filter(sender=target_user).select_related('receiver__profile')
+    match_requests_received = MatchRequest.objects.filter(receiver=target_user).select_related('sender__profile')
+    messages_sent = Message.objects.filter(sender=target_user).order_by('-timestamp')[:50]
+    messages_received = Message.objects.filter(receiver=target_user).order_by('-timestamp')[:50]
+    confessions = Confession.objects.filter(user=target_user).order_by('-created_at')
+    reports_made = UserReport.objects.filter(reporter=target_user).select_related('reported_user')
+    reports_received = UserReport.objects.filter(reported_user=target_user).select_related('reporter')
+    answers = UserAnswer.objects.filter(user=target_user).select_related('question', 'option')
+    fav_movies = FavoriteMovie.objects.filter(user=target_user)
+    fav_songs = FavoriteSong.objects.filter(user=target_user)
+    connections = MatchRequest.objects.filter(
+        Q(sender=target_user, status='accepted') | Q(receiver=target_user, status='accepted')
+    ).select_related('sender__profile', 'receiver__profile')
+
+    return render(request, 'admin_user_view.html', {
+        'u': target_user,
+        'p': profile,
+        'gallery': gallery_images,
+        'sent_requests': match_requests_sent,
+        'received_requests': match_requests_received,
+        'messages_sent': messages_sent,
+        'messages_received': messages_received,
+        'confessions': confessions,
+        'reports_made': reports_made,
+        'reports_received': reports_received,
+        'answers': answers,
+        'fav_movies': fav_movies,
+        'fav_songs': fav_songs,
+        'connections': connections,
+    })
 
 @login_required
 def admin_dashboard(request):
@@ -1077,8 +1191,8 @@ def admin_dashboard(request):
     
     reported_confessions = Confession.objects.filter(is_flagged=True).order_by('-created_at')
     user_reports = UserReport.objects.all().order_by('-created_at')
-    all_users = Profile.objects.all().order_by('-created_at')
-    face_reviews = UserVerification.objects.filter(status='manual_review').order_by('-updated_at')
+    all_users = Profile.objects.all().select_related('user').order_by('-created_at')
+    face_reviews = Profile.objects.filter(verification_status='manual_review').select_related('user').order_by('-updated_at')
     
     return render(request, 'admin_dashboard.html', {
         'reported_confessions': reported_confessions,
@@ -1114,25 +1228,21 @@ def admin_action(request):
             profile.is_banned = False
             profile.save()
             
+        elif action == 'delete_user':
+            profile = get_object_or_404(Profile, id=target_id)
+            user = profile.user
+            user.delete()  # Cascades to profile and related data
+            
         elif action == 'approve_face':
-            uv = get_object_or_404(UserVerification, id=target_id)
-            uv.status = 'verified'
-            uv.is_verified = True
-            uv.save()
-            if hasattr(uv.user, 'profile'):
-                uv.user.profile.is_face_verified = True
-                uv.user.profile.verification_status = 'verified'
-                uv.user.profile.save()
+            profile = get_object_or_404(Profile, id=target_id)
+            profile.verification_status = 'verified'
+            profile.is_face_verified = True
+            profile.save()
         elif action == 'reject_face':
-            uv = get_object_or_404(UserVerification, id=target_id)
-            uv.status = 'rejected'
-            uv.is_verified = False
-            uv.save()
-            if hasattr(uv.user, 'profile'):
-                uv.user.profile.is_face_verified = False
-                uv.user.profile.verification_status = 'rejected'
-                # Do not delete profile pic, just mark as rejected
-                uv.user.profile.save()
+            profile = get_object_or_404(Profile, id=target_id)
+            profile.verification_status = 'rejected'
+            profile.is_face_verified = False
+            profile.save()
             
         return redirect('admin_dashboard')
     

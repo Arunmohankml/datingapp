@@ -1,13 +1,12 @@
-// Basic Service Worker for PWA
-const CACHE_NAME = 'srm-match-cache-v1';
+// Service Worker for SRM Match PWA - v2 (Cache cleared)
+const CACHE_NAME = 'srm-match-cache-v2';
 const urlsToCache = [];
 
 self.addEventListener('install', event => {
+  // Take control immediately - don't wait for old SW to die
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
 });
 
@@ -15,36 +14,26 @@ self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);
 
   // CRITICAL: Never intercept POST requests or API calls.
-  // POST bodies are consumed after first read — re-fetching causes ERR_FAILED.
   if (event.request.method !== 'GET' || url.pathname.startsWith('/api/')) {
-    return; // Let browser handle it natively
+    return;
   }
 
-  // CRITICAL: Let browser natively handle cross-origin requests (e.g. CDNs for AI models)
+  // CRITICAL: Let browser natively handle cross-origin requests (CDNs for AI models)
   if (url.origin !== location.origin) {
     return;
   }
 
+  // Network first - don't serve cached redirects
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Return cached response or fetch from network
-        return response || fetch(event.request);
-      })
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
 
 self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
+  // Delete ALL old caches immediately
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then(cacheNames =>
+      Promise.all(cacheNames.map(name => caches.delete(name)))
+    ).then(() => self.clients.claim()) // Take control of all open pages
   );
 });

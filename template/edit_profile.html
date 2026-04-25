@@ -504,6 +504,35 @@
         padding-top: 24px; /* Align with numbers */
     }
 
+    /* Floating Save Button */
+    .save-btn-fixed {
+        position: fixed;
+        bottom: 85px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        z-index: 1001;
+        padding: 0;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .save-btn-fixed:hover {
+        transform: scale(1.1) translateY(-5px);
+        background: var(--primary-hover);
+        box-shadow: 0 12px 30px rgba(99, 102, 241, 0.5);
+    }
+    .save-btn-fixed i {
+        font-size: 24px;
+        margin: 0;
+    }
+    .save-btn-text {
+        display: none; /* Hide text for small FAB style */
+    }
+
 
 </style>
 {% endblock %}
@@ -765,8 +794,9 @@
             </div>
         </div>
 
-        <button type="submit" class="btn btn-primary save-btn-fixed" id="save-btn">
-            <i class="fas fa-save"></i> Save All Changes
+        <button type="submit" class="btn btn-primary save-btn-fixed" id="save-btn" title="Save All Changes">
+            <i class="fas fa-save"></i>
+            <span class="save-btn-text">Save All Changes</span>
         </button>
     </form>
 
@@ -875,8 +905,14 @@
 
     let nsfwModel = null;
     async function loadNSFWModel() {
-        if (!nsfwModel) nsfwModel = await nsfwjs.load();
-        return nsfwModel;
+        if (nsfwModel) return nsfwModel;
+        try {
+            nsfwModel = await nsfwjs.load();
+            return nsfwModel;
+        } catch (err) {
+            console.error("NSFW model failed to load:", err);
+            return null;
+        }
     }
 
     function hideOverlay() {
@@ -1205,21 +1241,7 @@
     const pfpFaceStatus = document.getElementById('pfp-face-status');
     let modelsLoaded = false;
 
-    async function loadFaceModels() {
-        if (modelsLoaded) return;
-        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-        try {
-            await Promise.all([
-                faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-                faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-                faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-                faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL)
-            ]);
-            modelsLoaded = true;
-        } catch (err) {
-            console.error("AI Models failed to load:", err);
-        }
-    }
+    // AI Models are now loaded via global loadFaceModelsOnce() in base.html
 
     if (pfpInstantInput) {
         pfpInstantInput.addEventListener('change', async function() {
@@ -1227,7 +1249,7 @@
             const file = this.files[0];
 
             showOverlay("Verifying identity...");
-            await loadFaceModels();
+            await loadFaceModelsOnce();
 
             try {
                 // 1. Get descriptor from verification image (original scan) - Robust Fetch Method
@@ -1257,7 +1279,7 @@
                 
                 // Fallback to TinyFaceDetector if SSD fails
                 if (!verifyDetection) {
-                    console.log("SSD failed on verification image, trying TinyFaceDetector...");
+                    // SSD failed
                     verifyDetection = await faceapi.detectSingleFace(verifyImg, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.1 })).withFaceLandmarks().withFaceDescriptor();
                 }
 
@@ -1285,7 +1307,7 @@
 
                 // 3. Compare
                 const distance = faceapi.euclideanDistance(verifyDetection.descriptor, pfpDetection.descriptor);
-                console.log("Edit PFP Comparison Distance:", distance);
+                // distance check
 
                 if (distance < 0.6) {
                     pfpFaceStatus.style.display = "none";

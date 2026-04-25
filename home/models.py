@@ -201,6 +201,19 @@ class WallStroke(models.Model):
         return f"Stroke {self.id} ({self.color}) at {self.created_at}"
 
 
+class WallImage(models.Model):
+    """Admin-uploaded images on the wall."""
+    image_url = models.URLField(max_length=1000)
+    x = models.FloatField()
+    y = models.FloatField()
+    width = models.FloatField()
+    height = models.FloatField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"WallImage {self.id} at ({self.x}, {self.y})"
+
+
 class Confession(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     content = models.TextField()

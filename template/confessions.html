@@ -143,6 +143,19 @@
         margin-bottom: 12px;
         word-break: break-word;
     }
+    .c-delete {
+        color: #ef4444;
+        padding: 8px;
+        margin: -8px;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 14px;
+        opacity: 0.6;
+    }
+    .c-delete:hover {
+        opacity: 1;
+        transform: scale(1.2);
+    }
     .c-image {
         width: 100%;
         max-height: 300px;
@@ -294,6 +307,11 @@
                     {% if c.campus %}
                     <div class="c-campus">{{ c.campus }}</div>
                     {% endif %}
+                    {% if is_admin %}
+                    <div class="c-delete" onclick="deleteConfession(event, {{ c.id }}, this)" title="Delete Confession">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                    {% endif %}
                 </div>
                 
                 <div class="c-content">{{ c.content|truncatechars:200|linebreaksbr }}</div>
@@ -378,6 +396,33 @@ async function likeConfession(e, id, btn) {
             btn.querySelector('.like-count').textContent = data.likes_count;
         }
     } catch(err) {}
+}
+
+async function deleteConfession(e, id, btn) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!confirm('Are you sure you want to delete this confession permanently?')) return;
+    
+    try {
+        const res = await fetch(`/confessions/${id}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        const data = await res.json();
+        if (data.success) {
+            const card = btn.closest('.c-card');
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.95)';
+            setTimeout(() => card.remove(), 300);
+        }
+    } catch(err) {
+        // Fallback for non-AJAX redirect if needed
+        location.reload();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

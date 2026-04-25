@@ -162,17 +162,42 @@
     <div class="toolbar">
         <div class="color-dot active" data-color="#0f172a" style="background:#0f172a;"></div>
         <div class="color-dot" data-color="#ef4444" style="background:#ef4444;"></div>
-        <div class="color-dot" data-color="#f97316" style="background:#f97316;"></div>
-        <div class="color-dot" data-color="#eab308" style="background:#eab308;"></div>
         <div class="color-dot" data-color="#22c55e" style="background:#22c55e;"></div>
         <div class="color-dot" data-color="#3b82f6" style="background:#3b82f6;"></div>
-        <div class="color-dot" data-color="#6366f1" style="background:#6366f1;"></div>
         <div class="color-dot" data-color="#ec4899" style="background:#ec4899;"></div>
-        <div class="color-dot" data-color="#06b6d4" style="background:#06b6d4;"></div>
+        
+        <input type="color" id="customColor" style="width: 24px; height: 24px; border: none; border-radius: 50%; padding: 0; cursor: pointer; background: none;" title="Custom Color">
+
         <div class="sep"></div>
         <div class="size-btn active" data-size="1.5">S</div>
-        <div class="size-btn" data-size="3">M</div>
-        <div class="size-btn" data-size="5">L</div>
+        <div class="size-btn" data-size="3.5">M</div>
+        <div class="size-btn" data-size="8">L</div>
+
+        {% if request.user.email == 'arunmohankml@gmail.com' %}
+        <div class="sep"></div>
+        <button class="size-btn" style="width: auto; padding: 0 8px;" onclick="document.getElementById('adminImageInput').click()" title="Admin: Upload Image">
+            <i class="fas fa-image"></i>
+        </button>
+        <button class="size-btn" id="eraserBtn" onclick="toggleEraser()" title="Admin: Eraser">
+            <i class="fas fa-eraser"></i>
+        </button>
+        <div class="sep"></div>
+        <div class="size-btn admin-size" data-size="25">25</div>
+        <div class="size-btn admin-size" data-size="60">60</div>
+        <div class="size-btn admin-size" data-size="120">120</div>
+        <div class="size-btn admin-size" data-size="400">400</div>
+        <input type="file" id="adminImageInput" accept="image/*" style="display: none;" onchange="handleAdminImageUpload(this)">
+        {% endif %}
+    </div>
+
+    <div id="placementToolbar" class="toolbar" style="display: none; top: auto; bottom: 80px; background: rgba(15, 23, 42, 0.9); color: white; border: none; padding: 12px 20px; gap: 15px; flex-direction: row; flex-wrap: wrap; justify-content: center;">
+        <div style="width: 100%; text-align: center; font-size: 11px; font-weight: 700; color: var(--primary); margin-bottom: -5px;">DRAG MOUSE TO MOVE • USE SLIDER TO RESIZE</div>
+        <span style="font-size: 13px; font-weight: 700;">Placement Mode</span>
+        <div class="sep" style="background: rgba(255,255,255,0.2);"></div>
+        <label style="font-size: 11px; font-weight: 700;">SIZE</label>
+        <input type="range" id="imageSizeSlider" min="50" max="5000" value="400" style="width: 100px; accent-color: var(--primary);">
+        <button onclick="cancelPlacement()" style="background: none; border: none; color: #f87171; font-weight: 800; cursor: pointer; font-size: 12px;">CANCEL</button>
+        <button onclick="finalizePlacement()" style="background: var(--primary); border: none; color: white; padding: 6px 14px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 12px;">PLACE</button>
     </div>
 
     <div class="zoom-indicator" id="zoomLabel">100%</div>
@@ -193,7 +218,35 @@
         <div id="gwm-actions" style="display: flex; gap: 12px;"></div>
     </div>
 
+<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 <script>
+// Pusher Setup
+const pusherKey = "{{ PUSHER_KEY|default:'' }}";
+const pusherCluster = "{{ PUSHER_CLUSTER|default:'ap2' }}";
+
+if (pusherKey) {
+    const pusher = new Pusher(pusherKey, { cluster: pusherCluster });
+    const channel = pusher.subscribe('wall');
+    channel.bind('new_stroke', (data) => {
+        // Only draw if it's not our own stroke (though we check ID just in case)
+        if (!allStrokes.some(s => s.id === data.id)) {
+            allStrokes.push(data);
+            redraw();
+        }
+    });
+    channel.bind('new_image', (data) => {
+        if (!allImages.some(img => img.id === data.id)) {
+            const imgObj = new Image();
+            imgObj.src = data.image_url;
+            imgObj.onload = () => {
+                data.imgElement = imgObj;
+                allImages.push(data);
+                redraw();
+            };
+        }
+    });
+}
+
 function showWarningModal(id, title, contentHTML, buttonsOptions) {
     const overlay = document.getElementById('global-warning-overlay');
     const modal = document.getElementById('global-warning-modal');
@@ -258,10 +311,16 @@ let offsetX = 0, offsetY = 0;
 let drawing = false, panning = false;
 let currentColor = '#0f172a';
 let brushSize = 1.5;
+let isEraser = false;
 let currentStroke = [];
 let allStrokes = [];
+let allImages = []; // Stores {id, image_url, x, y, width, height, imgElement}
 let panStart = { x: 0, y: 0 };
 let spaceDown = false;
+
+// Placement Mode State
+let pendingImage = null; // { imgElement, url, width, height, x, y }
+let mouseWorldPos = { x: 0, y: 0 };
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -312,8 +371,45 @@ function redraw() {
     ctx.fillStyle = '#f1f5f9';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawGrid();
+    
+    // Draw Images first
+    for (const imgData of allImages) {
+        if (imgData.imgElement) {
+            ctx.drawImage(
+                imgData.imgElement,
+                imgData.x * scale + offsetX,
+                imgData.y * scale + offsetY,
+                imgData.width * scale,
+                imgData.height * scale
+            );
+        }
+    }
+
     for (const s of allStrokes) drawStroke(s);
     if (currentStroke.length > 1) drawStroke({ points: currentStroke, color: currentColor, brush_size: brushSize });
+
+    // Draw Pending Image in Placement Mode
+    if (pendingImage) {
+        ctx.globalAlpha = 0.6;
+        ctx.drawImage(
+            pendingImage.imgElement,
+            mouseWorldPos.x * scale + offsetX - (pendingImage.width * scale / 2),
+            mouseWorldPos.y * scale + offsetY - (pendingImage.height * scale / 2),
+            pendingImage.width * scale,
+            pendingImage.height * scale
+        );
+        ctx.globalAlpha = 1.0;
+        // Draw a border around it
+        ctx.strokeStyle = 'var(--primary)';
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(
+            mouseWorldPos.x * scale + offsetX - (pendingImage.width * scale / 2),
+            mouseWorldPos.y * scale + offsetY - (pendingImage.height * scale / 2),
+            pendingImage.width * scale,
+            pendingImage.height * scale
+        );
+        ctx.setLineDash([]);
+    }
 }
 
 // Drawing
@@ -323,6 +419,8 @@ canvas.addEventListener('pointerdown', e => {
     currentStroke = [screenToWorld(e.clientX, e.clientY)];
 });
 canvas.addEventListener('pointermove', e => {
+    mouseWorldPos = screenToWorld(e.clientX, e.clientY);
+    if (pendingImage) { redraw(); return; }
     if (panning) { offsetX = e.clientX - panStart.x; offsetY = e.clientY - panStart.y; redraw(); return; }
     if (!drawing) return;
     currentStroke.push(screenToWorld(e.clientX, e.clientY));
@@ -340,7 +438,10 @@ canvas.addEventListener('pointerup', e => {
     currentStroke = [];
 });
 canvas.addEventListener('contextmenu', e => e.preventDefault());
-window.addEventListener('keydown', e => { if (e.code === 'Space') { spaceDown = true; canvas.style.cursor = 'grab'; e.preventDefault(); } });
+window.addEventListener('keydown', e => { 
+    if (e.code === 'Space') { spaceDown = true; canvas.style.cursor = 'grab'; e.preventDefault(); } 
+    if (e.code === 'Enter' && pendingImage) { finalizePlacement(); }
+});
 window.addEventListener('keyup', e => { if (e.code === 'Space') { spaceDown = false; canvas.style.cursor = 'crosshair'; } });
 
 // Zoom
@@ -381,26 +482,178 @@ canvas.addEventListener('touchmove', e => {
 }, {passive:false});
 
 // Toolbar
-document.querySelectorAll('.color-dot').forEach(d => d.onclick = () => {
+document.querySelectorAll('.color-dot').forEach(d => {
+    d.addEventListener('click', () => {
+        document.querySelectorAll('.color-dot').forEach(x => x.classList.remove('active'));
+        d.classList.add('active'); currentColor = d.dataset.color;
+        document.getElementById('customColor').value = currentColor;
+    });
+});
+
+document.querySelectorAll('.size-btn').forEach(b => {
+    b.addEventListener('click', () => {
+        if (b.onclick && b.onclick.toString().includes('adminImageInput')) return; 
+        if (b.id === 'eraserBtn') return; 
+        
+        document.querySelectorAll('.size-btn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active'); 
+        brushSize = parseFloat(b.dataset.size);
+        
+        // If they chose a size, turn off eraser (unless it's the eraser btn itself)
+        if (isEraser) toggleEraser(false);
+    });
+});
+
+function toggleEraser(force) {
+    isEraser = (force !== undefined) ? force : !isEraser;
+    const btn = document.getElementById('eraserBtn');
+    if (isEraser) {
+        btn.classList.add('active');
+        currentColor = '#f1f5f9'; // Canvas BG
+        document.querySelectorAll('.color-dot').forEach(x => x.classList.remove('active'));
+    } else {
+        btn.classList.remove('active');
+        // Restore previous color or default to black
+        const firstColor = document.querySelector('.color-dot');
+        if (firstColor) firstColor.click();
+    }
+}
+
+document.getElementById('customColor').oninput = (e) => {
+    currentColor = e.target.value;
     document.querySelectorAll('.color-dot').forEach(x => x.classList.remove('active'));
-    d.classList.add('active'); currentColor = d.dataset.color;
-});
-document.querySelectorAll('.size-btn').forEach(b => b.onclick = () => {
-    document.querySelectorAll('.size-btn').forEach(x => x.classList.remove('active'));
-    b.classList.add('active'); brushSize = parseFloat(b.dataset.size);
-});
+};
+
+async function handleAdminImageUpload(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    
+    // Show loading state or something?
+    try {
+        const compressedBase64 = await compressImage(file);
+        const res = await fetch('/api/upload/base64/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: compressedBase64, path: 'wall_images', bucket: 'images' })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            const img = new Image();
+            img.src = data.url;
+            img.onload = () => {
+                pendingImage = {
+                    imgElement: img,
+                    url: data.url,
+                    width: 400,
+                    height: 400 * (img.height / img.width)
+                };
+                document.getElementById('placementToolbar').style.display = 'flex';
+                redraw();
+            };
+        } else {
+            alert("Upload error: " + data.message);
+        }
+    } catch(e) {
+        alert("Upload failed: " + e.message);
+    }
+}
+
+document.getElementById('imageSizeSlider').oninput = (e) => {
+    if (pendingImage) {
+        const ratio = pendingImage.imgElement.height / pendingImage.imgElement.width;
+        pendingImage.width = parseFloat(e.target.value);
+        pendingImage.height = pendingImage.width * ratio;
+        redraw();
+    }
+};
+
+function cancelPlacement() {
+    pendingImage = null;
+    document.getElementById('placementToolbar').style.display = 'none';
+    redraw();
+}
+
+async function finalizePlacement() {
+    if (!pendingImage) return;
+    
+    const wallImageData = {
+        image_url: pendingImage.url,
+        x: mouseWorldPos.x - (pendingImage.width / 2),
+        y: mouseWorldPos.y - (pendingImage.height / 2),
+        width: pendingImage.width,
+        height: pendingImage.height
+    };
+    
+    try {
+        const res = await fetch('/api/wall/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify(wallImageData)
+        });
+        const data = await res.json();
+        if (data.success) {
+            // It will be added via Pusher naturally
+            pendingImage = null;
+            document.getElementById('placementToolbar').style.display = 'none';
+            redraw();
+        }
+    } catch(e) {
+        alert("Failed to place image: " + e.message);
+    }
+}
+
+function compressImage(file) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (e) => {
+            const img = new Image();
+            img.src = e.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const MAX_SIZE = 800;
+                let width = img.width, height = img.height;
+                
+                if (width > height) {
+                    if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                } else {
+                    if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                }
+                
+                canvas.width = width; canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', 0.7)); // 70% quality
+            };
+        };
+    });
+}
 
 // Persistence
 async function saveStroke(s) {
-    try { await fetch('/api/wall/', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(s) }); } catch(e) {}
+    try { await fetch('/api/wall/', { method:'POST', headers:{'Content-Type':'application/json', 'X-CSRFToken': '{{ csrf_token }}'}, body:JSON.stringify(s) }); } catch(e) {}
 }
 async function loadStrokes() {
-    try { const r = await fetch('/api/wall/'); const d = await r.json(); allStrokes = d.strokes||[]; redraw(); } catch(e) {}
+    try { 
+        const r = await fetch('/api/wall/'); 
+        const d = await r.json(); 
+        allStrokes = d.strokes||[]; 
+        
+        // Load images
+        for (const imgData of (d.images || [])) {
+            const imgObj = new Image();
+            imgObj.src = imgData.image_url;
+            imgObj.onload = () => {
+                imgData.imgElement = imgObj;
+                allImages.push(imgData);
+                redraw();
+            };
+        }
+        redraw(); 
+    } catch(e) {}
     document.getElementById('loadingOverlay').classList.add('hidden');
 }
-setInterval(async()=>{
-    try { const r=await fetch('/api/wall/'); const d=await r.json(); if(d.strokes&&d.strokes.length!==allStrokes.length){allStrokes=d.strokes;redraw();} } catch(e){}
-}, 5000);
 loadStrokes();
 </script>
 </body>

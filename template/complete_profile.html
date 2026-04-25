@@ -1291,40 +1291,45 @@
     let camera = null;
     let modelsLoaded = false;
 
-    async function loadAllModels() {
-        if (modelsLoaded) return;
-        const status = document.getElementById('verify-status');
-        status.innerText = 'Loading AI Models...';
-        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-        try {
-            await Promise.all([
-                faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-                faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-                faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-                faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
-                faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL)
-            ]);
-            modelsLoaded = true;
-            status.innerText = 'AI Models Loaded.';
-        } catch (err) {
-            console.error("Model load error:", err);
-            status.innerText = 'AI Load Failed. Check internet.';
-        }
-    }
+    // AI Models are now loaded via global loadFaceModelsOnce() in base.html
 
     async function startVerification() {
+        // 1. Check for Secure Context (Required by browsers for Camera)
+        if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            alert("🔒 Camera blocked: Browsers only allow camera access over HTTPS or localhost. Please use a secure connection.");
+            return;
+        }
+
         const video = document.getElementById('verify-video');
-        const container = document.getElementById('verify-camera-ui');
-        container.style.display = 'block';
-        document.getElementById('verify-initial-ui').style.display = 'none';
-        
-        await loadAllModels();
+        const status = document.getElementById('verify-status');
+        const cameraUI = document.getElementById('verify-camera-ui');
+        const initialUI = document.getElementById('verify-initial-ui');
+
+        status.innerText = 'Requesting camera access...';
         
         try {
-            verifyStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 } });
+            // Trigger permission prompt immediately
+            verifyStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } 
+            });
             video.srcObject = verifyStream;
+            
+            // If prompt accepted, show UI and load models
+            cameraUI.style.display = 'block';
+            initialUI.style.display = 'none';
+            status.innerText = 'Loading AI models...';
+            
+            await loadFaceModelsOnce();
+            status.innerText = 'AI Models Loaded.';
         } catch (err) {
-            alert("Could not access camera.");
+            console.error("Camera Error:", err);
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                alert("🚫 Camera Access Denied: Please click the camera icon in your browser's address bar and select 'Always allow' to verify your identity.");
+            } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                alert("❌ No camera found on this device.");
+            } else {
+                alert("❌ Camera Error: " + err.message);
+            }
             return;
         }
 
@@ -1402,7 +1407,7 @@
             body: JSON.stringify({ image: verificationBase64, path: 'verification' })
         }).then(r => r.json()).then(d => { 
             if (d.success) {
-                console.log("Verification image uploaded to Supabase:", d.url);
+                // upload success
                 document.getElementById('verification-image-url').value = d.url;
             }
         });
@@ -1425,7 +1430,7 @@
             }
 
             const distance = faceapi.euclideanDistance(verificationDescriptor, pfpDetection.descriptor);
-            console.log("Face Distance:", distance);
+            // Log removed for production
             
             const isMatch = distance < 0.6; // Strict threshold from test project
             if (isMatch) {
@@ -1478,7 +1483,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
                     body: JSON.stringify({ image: e.target.result, path: 'profile_pics' })
-                }).then(r => r.json()).then(d => { if (d.success) console.log("PFP uploaded to Supabase:", d.url); });
+                }).then(r => r.json()).then(d => { if (d.success) { /* upload success */ } });
             };
             reader.readAsDataURL(input.files[0]);
         }

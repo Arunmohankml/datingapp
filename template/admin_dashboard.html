@@ -75,6 +75,65 @@
         font-weight: 700;
         cursor: pointer;
     }
+
+    /* ── User Accordion ── */
+    .user-accordion {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+        transition: box-shadow 0.2s;
+    }
+    .user-accordion:hover { box-shadow: var(--shadow-sm); }
+    .ua-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        cursor: pointer;
+        user-select: none;
+    }
+    .ua-avatar {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--border);
+        flex-shrink: 0;
+    }
+    .ua-avatar-fallback {
+        background: linear-gradient(135deg, #6366f1, #f43f5e);
+        display: flex; align-items: center; justify-content: center;
+    }
+    .ua-avatar-fallback i { color: white; font-size: 13px; }
+    .ua-info { flex: 1; min-width: 0; }
+    .ua-name { display: block; font-size: 13px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ua-email { display: block; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .badge-banned { background: #fee2e2; color: #ef4444; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 99px; margin-left: 4px; text-transform: uppercase; }
+    .badge-verified { background: #d1fae5; color: #16a34a; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 99px; margin-left: 4px; }
+    .ua-chevron { color: var(--text-muted); font-size: 11px; flex-shrink: 0; transition: transform 0.25s ease; }
+    .ua-chevron.open { transform: rotate(180deg); }
+
+    /* Action panel */
+    .ua-panel {
+        display: none;
+        padding: 10px 14px 12px;
+        border-top: 1px solid var(--border);
+        background: #f8fafc;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .ua-panel.open { display: flex; }
+    .ua-btn {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 7px 14px; border-radius: 10px; border: none;
+        font-size: 12px; font-weight: 700; cursor: pointer;
+        text-decoration: none; transition: opacity 0.15s;
+    }
+    .ua-btn:hover { opacity: 0.85; }
+    .ua-btn-view  { background: #f1f5f9; color: #475569; border: 1px solid var(--border); }
+    .ua-btn-ban   { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; }
+    .ua-btn-unban { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .ua-btn-delete{ background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
 </style>
 {% endblock %}
 
@@ -245,28 +304,129 @@
 
     <!-- User Management -->
     <div class="admin-card">
-        <h3><i class="fas fa-users"></i> User Management</h3>
-        <div class="item-list">
+        <h3><i class="fas fa-users"></i> User Management <span style="font-size:13px; font-weight:500; color:var(--text-muted);">({{ all_users.count }} users)</span></h3>
+        <div style="display:flex; flex-direction:column; gap:6px;">
             {% for p in all_users %}
-            <div class="item-row">
-                <div class="item-info">
-                    <div class="item-title">{{ p.name }}</div>
-                    <div class="item-meta">{{ p.user.email }} {% if p.is_banned %}<span style="color:#ef4444;">(BANNED)</span>{% endif %}</div>
-                </div>
-                <form action="{% url 'admin_action' %}" method="POST">
-                    {% csrf_token %}
-                    <input type="hidden" name="target_id" value="{{ p.id }}">
-                    {% if p.is_banned %}
-                        <input type="hidden" name="action" value="unban_user">
-                        <button type="submit" class="btn-secondary">Unban</button>
+            <div class="user-accordion" id="ua-{{ p.id }}">
+                <!-- Clickable header row -->
+                <div class="ua-header" onclick="toggleUser('{{ p.id }}')">
+                    {% if p.profile_pic %}
+                    <img src="{{ p.profile_pic }}" class="ua-avatar">
                     {% else %}
-                        <input type="hidden" name="action" value="ban_user">
-                        <button type="submit" class="btn-danger">Ban</button>
+                    <div class="ua-avatar ua-avatar-fallback"><i class="fas fa-user"></i></div>
                     {% endif %}
-                </form>
+                    <div class="ua-info">
+                        <span class="ua-name">{{ p.name|default:p.user.email }}</span>
+                        <span class="ua-email">
+                            {{ p.user.email|truncatechars:28 }}
+                            {% if p.is_banned %}<span class="badge-banned">BANNED</span>{% endif %}
+                            {% if p.verification_status == 'verified' %}<span class="badge-verified">✓</span>{% endif %}
+                        </span>
+                    </div>
+                    <i class="fas fa-chevron-down ua-chevron" id="chev-{{ p.id }}"></i>
+                </div>
+                <!-- Collapsible action panel -->
+                <div class="ua-panel" id="panel-{{ p.id }}">
+                    <a href="{% url 'admin_view_user' p.user.id %}" target="_blank" class="ua-btn ua-btn-view">
+                        <i class="fas fa-eye"></i> View Profile
+                    </a>
+                    {% if p.is_banned %}
+                    <form action="{% url 'admin_action' %}" method="POST" style="display:contents;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="unban_user">
+                        <input type="hidden" name="target_id" value="{{ p.id }}">
+                        <button type="submit" class="ua-btn ua-btn-unban">
+                            <i class="fas fa-unlock"></i> Unban
+                        </button>
+                    </form>
+                    {% else %}
+                    <button class="ua-btn ua-btn-ban"
+                        onclick="confirmAdminAction('ban_user','{{ p.id }}','Ban {{ p.name|default:p.user.email|escapejs }}?','This will block them from using the app. You can unban later.')">
+                        <i class="fas fa-ban"></i> Ban
+                    </button>
+                    {% endif %}
+                    <button class="ua-btn ua-btn-delete"
+                        onclick="confirmAdminAction('delete_user','{{ p.id }}','Delete {{ p.name|default:p.user.email|escapejs }}?','⚠️ Permanent. All data, chats and posts will be gone forever.')">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>
+                </div>
             </div>
             {% endfor %}
         </div>
     </div>
 </div>
+
+<!-- Admin Confirmation Modal -->
+<div id="admin-confirm-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:24px; padding:32px; max-width:340px; width:90%; box-shadow:0 25px 60px rgba(0,0,0,0.3); text-align:center; animation: slideUp 0.3s ease;">
+        <div style="width:60px;height:60px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <i class="fas fa-exclamation-triangle" style="color:#ef4444;font-size:24px;"></i>
+        </div>
+        <h3 id="confirm-title" style="margin:0 0 8px; font-size:17px; color:#0f172a;"></h3>
+        <p id="confirm-desc" style="font-size:14px; color:#64748b; margin:0 0 24px;"></p>
+        <div style="display:flex; gap:10px;">
+            <button onclick="closeAdminConfirm()" style="flex:1;padding:12px;border-radius:12px;border:1px solid #e2e8f0;background:#f8fafc;font-weight:700;font-size:14px;cursor:pointer;color:#475569;">
+                Cancel
+            </button>
+            <button id="confirm-btn" style="flex:1;padding:12px;border-radius:12px;border:none;background:#ef4444;color:white;font-weight:700;font-size:14px;cursor:pointer;">
+                Confirm
+            </button>
+        </div>
+    </div>
+</div>
+
+<form id="admin-confirm-form" action="{% url 'admin_action' %}" method="POST" style="display:none;">
+    {% csrf_token %}
+    <input type="hidden" id="confirm-action" name="action">
+    <input type="hidden" id="confirm-target" name="target_id">
+</form>
+
+<style>
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<script>
+function toggleUser(id) {
+    const panel = document.getElementById('panel-' + id);
+    const chev  = document.getElementById('chev-' + id);
+    const isOpen = panel.classList.contains('open');
+    // Close all others
+    document.querySelectorAll('.ua-panel').forEach(p => p.classList.remove('open'));
+    document.querySelectorAll('.ua-chevron').forEach(c => c.classList.remove('open'));
+    // Toggle clicked one
+    if (!isOpen) {
+        panel.classList.add('open');
+        chev.classList.add('open');
+    }
+}
+
+function confirmAdminAction(action, targetId, title, desc) {
+    document.getElementById('confirm-title').innerText = title;
+    document.getElementById('confirm-desc').innerText = desc;
+    document.getElementById('confirm-action').value = action;
+    document.getElementById('confirm-target').value = targetId;
+    
+    const overlay = document.getElementById('admin-confirm-overlay');
+    overlay.style.display = 'flex';
+    
+    const isDanger = action === 'delete_user';
+    document.getElementById('confirm-btn').style.background = isDanger ? '#7f1d1d' : '#ef4444';
+    document.getElementById('confirm-btn').innerText = isDanger ? 'Delete Forever' : 'Yes, Ban User';
+    document.getElementById('confirm-btn').onclick = function() {
+        document.getElementById('admin-confirm-form').submit();
+    };
+}
+
+function closeAdminConfirm() {
+    document.getElementById('admin-confirm-overlay').style.display = 'none';
+}
+
+// Close on overlay click
+document.getElementById('admin-confirm-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeAdminConfirm();
+});
+</script>
 {% endblock %}

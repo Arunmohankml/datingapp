@@ -552,7 +552,27 @@
         30% { background: rgba(99, 102, 241, 0.2); }
         100% { background: rgba(99, 102, 241, 0); }
     }
+    /* Typing Indicator */
+    .typing-indicator {
+        display: none;
+        padding: 4px 16px;
+        font-size: 11px;
+        color: var(--primary);
+        font-weight: 700;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(4px);
+        width: 100%;
+        box-sizing: border-box;
+        border-top: 1px solid transparent;
+        animation: slideUp 0.2s ease-out;
+    }
+    .typing-indicator.active { display: flex; align-items: center; gap: 4px; }
+    .dot { width: 3px; height: 3px; background: var(--primary); border-radius: 50%; animation: blink 1.4s infinite both; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink { 0% { opacity: 0.2; } 20% { opacity: 1; } 100% { opacity: 0.2; } }
 </style>
+<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 {% endblock %}
 
 {% block body %}
@@ -566,10 +586,10 @@
         <a href="{% url 'view_profile' partner.id %}">
             <img src="{{ partner.profile.get_profile_pic_url }}" alt="Avatar" class="chat-partner-pic">
         </a>
-        <div class="chat-header-info" onclick="openProfileModal()" style="cursor:pointer;">
+        <a href="{% url 'view_profile' partner.id %}" class="chat-header-info" style="text-decoration: none; color: inherit; flex: 1;">
             <h3>{{ partner.profile.name|default:partner.username }}</h3>
-            <p>{{ partner.profile.campus_display }} • Online</p>
-        </div>
+            <p>{{ partner.profile.campus_display }}</p>
+        </a>
         <div style="margin-left: auto; display: flex; gap: 8px; align-items: center;">
             <button onclick="toggleSpark({{ partner.id }})" id="chatSparkBtn" style="background: none; border: none; color: #f59e0b; font-size: 20px; cursor: pointer; padding: 4px;">
                 <i class="{% if has_sparked %}fas{% else %}far{% endif %} fa-bolt" id="chatSparkIcon"></i>
@@ -606,6 +626,11 @@
     </div>
 
     <div class="chat-input-area">
+        <!-- Typing Indicator pinned above input -->
+        <div class="typing-indicator" id="typingIndicator">
+            {{ partner.profile.name|default:partner.username }} is typing
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
         <div class="reply-preview-container" id="replyPreview">
             <div class="reply-preview-info" id="replyName">Replying to ...</div>
             <div class="reply-preview-text" id="replyTextSnippet">...</div>
@@ -701,52 +726,6 @@
     </div>
 </div>
 
-<!-- Profile Modal -->
-<div id="profile-modal" class="profile-modal-overlay">
-    <div class="profile-modal">
-        <img src="{{ partner.profile.get_profile_pic_url }}" alt="Profile">
-        <h2>{{ partner.profile.name|default:partner.username }}</h2>
-        <p style="font-size: 13px; color: var(--text-muted); margin: 0;">{{ partner.profile.campus_display }} • {{ partner.profile.age }} yrs</p>
-        
-        <div class="profile-bio">{{ partner.profile.bio|default:"No bio yet." }}</div>
-        
-        <div class="profile-tags">
-            {% for tag in partner.profile.interest_tags_list %}
-            <span>{{ tag }}</span>
-            {% endfor %}
-        </div>
-
-        {% if partner.favorite_movies.exists or partner.favorite_songs.exists %}
-        <div class="vibe-section">
-            <div class="vibe-label"><i class="fas fa-music"></i> My Vibe</div>
-            
-            {% if partner.favorite_movies.exists %}
-            <div class="vibe-label" style="font-size: 10px; margin-top: 10px; opacity: 0.8;">Movies</div>
-            <div class="vibe-grid">
-                {% for movie in partner.favorite_movies.all %}
-                <div class="vibe-item movie">
-                    <img src="{{ movie.poster_url }}" alt="{{ movie.title }}">
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-
-            {% if partner.favorite_songs.exists %}
-            <div class="vibe-label" style="font-size: 10px; margin-top: 10px; opacity: 0.8;">Songs</div>
-            <div class="vibe-grid">
-                {% for song in partner.favorite_songs.all %}
-                <div class="vibe-item">
-                    <img src="{{ song.artwork_url }}" alt="{{ song.title }}">
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        <button class="close-modal" onclick="closeProfileModal()">Close</button>
-    </div>
-</div>
 
 
 <style>
@@ -783,8 +762,66 @@ const partnerId = "{{ partner.id }}";
 const currentUserId = "{{ request.user.id }}";
 const renderedIds = new Set();
 
-// Reply State
-let selectedMessageForReply = null;
+// Pusher Setup
+const pusherKey = "{{ PUSHER_KEY|default:'' }}";
+const pusherCluster = "{{ PUSHER_CLUSTER|default:'ap2' }}";
+
+if (pusherKey) {
+    const pusher = new Pusher(pusherKey, { cluster: pusherCluster });
+    
+    // Listen for messages TO ME on my own channel
+    const myChannel = pusher.subscribe(`chat_${currentUserId}`);
+    myChannel.bind('new_message', (data) => {
+        // If message is from the person I'm currently chatting with
+        if (data.sender_id.toString() === partnerId.toString()) {
+            if (!renderedIds.has(data.id)) {
+                appendMessage(data);
+                hideTyping();
+            }
+        }
+    });
+
+    // Listen for typing events on the PARTNER's channel (where they broadcast)
+    const partnerChannel = pusher.subscribe(`chat_${partnerId}`);
+    partnerChannel.bind('typing', (data) => {
+        if (data.user_id.toString() !== currentUserId.toString()) {
+            showTyping();
+        }
+    });
+}
+
+let typingTimeout;
+function showTyping() {
+    const indicator = document.getElementById('typingIndicator');
+    indicator.classList.add('active');
+    scrollToBottom();
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(hideTyping, 3000);
+}
+
+function hideTyping() {
+    document.getElementById('typingIndicator').classList.remove('active');
+}
+
+// Send Typing Signal
+let lastTypingSent = 0;
+messageInput.addEventListener('input', () => {
+    const now = Date.now();
+    if (now - lastTypingSent > 2000) {
+        lastTypingSent = now;
+        fetch(`/chat/typing/${partnerId}/`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
+    }
+});
+
+function openReplyPreview(parentId, msgText, senderName) {
+    document.getElementById('replyParentId').value = parentId;
+    document.getElementById('replyName').innerText = `Replying to ${senderName}`;
+    document.getElementById('replyTextSnippet').innerText = msgText;
+    document.getElementById('replyPreview').classList.add('active');
+    
+    document.getElementById('messageMenu').classList.remove('active');
+    messageInput.focus();
+}
 
 function initiateReply() {
     if (!selectedMessageForReply) return;
@@ -794,13 +831,7 @@ function initiateReply() {
     const isSent = selectedMessageForReply.classList.contains('sent');
     const senderName = isSent ? 'You' : '{{ partner.profile.name|default:partner.username }}';
     
-    document.getElementById('replyParentId').value = parentId;
-    document.getElementById('replyName').innerText = `Replying to ${senderName}`;
-    document.getElementById('replyTextSnippet').innerText = msgText;
-    document.getElementById('replyPreview').classList.add('active');
-    
-    document.getElementById('messageMenu').classList.remove('active');
-    document.querySelector('.chat-form input[name="text"]').focus();
+    openReplyPreview(parentId, msgText, senderName);
 }
 
 function cancelReply() {
@@ -1092,16 +1123,6 @@ spinBtn.onclick = async () => {
     }
     setInterval(fetchNewMessages, 2000);
 
-    // Profile Modal
-    function openProfileModal() {
-        document.getElementById('profile-modal').classList.add('active');
-    }
-    function closeProfileModal() {
-        document.getElementById('profile-modal').classList.remove('active');
-    }
-    document.getElementById('profile-modal').addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) closeProfileModal();
-    });
 async function toggleSpark(userId) {
     const icon = document.getElementById('chatSparkIcon');
     try {

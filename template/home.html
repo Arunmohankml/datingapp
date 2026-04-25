@@ -324,7 +324,9 @@ async function toggleDiscoverability() {
                     window.location.reload();
                 }
             } catch (e) {
-                console.error(e);
+                console.error("Quiz Batch Error:", e);
+                // If API fails, try to reload once to see if it clears
+                setTimeout(() => window.location.reload(), 3000);
             }
         }
 

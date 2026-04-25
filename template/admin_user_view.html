@@ -1,0 +1,292 @@
+{% extends 'base.html' %}
+{% block head %}
+<style>
+.av-wrap { padding: 20px 0; }
+.av-hero { background: linear-gradient(135deg,#6366f1,#f43f5e); border-radius: 20px; padding: 28px; color: white; display:flex; align-items:center; gap:20px; margin-bottom:20px; }
+.av-hero img { width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid rgba(255,255,255,0.4); }
+.av-hero-fallback { width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:32px; }
+.av-hero h2 { margin:0 0 4px; font-size:22px; }
+.av-hero .sub { opacity:.8; font-size:13px; }
+.av-badge { display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:700;margin-top:6px; }
+.badge-ok { background:rgba(255,255,255,0.2);color:white; }
+.badge-ban { background:#7f1d1d;color:#fca5a5; }
+
+.av-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+@media(max-width:640px){ .av-grid { grid-template-columns:1fr; } }
+
+.av-card { background:white; border:1px solid var(--border); border-radius:16px; padding:18px; }
+.av-card h4 { margin:0 0 12px; font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; color:var(--primary); display:flex; align-items:center; gap:7px; }
+.av-row { display:flex; justify-content:space-between; align-items:flex-start; padding:7px 0; border-bottom:1px solid #f1f5f9; font-size:13px; gap:8px; }
+.av-row:last-child { border-bottom:none; }
+.av-label { color:#64748b; flex-shrink:0; }
+.av-val { font-weight:600; color:#0f172a; text-align:right; word-break:break-word; }
+
+.gallery-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.gallery-grid img { width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px; border:1px solid var(--border); }
+
+.msg-item { padding:8px 10px; border-radius:10px; margin-bottom:6px; font-size:12px; }
+.msg-sent { background:#ede9fe; }
+.msg-recv { background:#f1f5f9; }
+.msg-meta { font-size:10px; color:#94a3b8; margin-top:2px; }
+
+.tag-pill { display:inline-block; background:#f1f5f9; border-radius:99px; padding:3px 10px; font-size:11px; font-weight:600; margin:2px; color:#475569; }
+
+.qa-item { padding:8px 0; border-bottom:1px solid #f1f5f9; font-size:12px; }
+.qa-item:last-child { border-bottom:none; }
+.qa-q { color:#475569; margin-bottom:2px; }
+.qa-a { font-weight:700; color:#6366f1; }
+
+.match-chip { display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:10px; background:#f8fafc; border:1px solid var(--border); margin-bottom:6px; font-size:12px; }
+.match-chip img { width:28px;height:28px;border-radius:50%;object-fit:cover; }
+.status-pill { font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px; }
+.s-accepted { background:#d1fae5;color:#16a34a; }
+.s-pending  { background:#fef3c7;color:#b45309; }
+.s-rejected { background:#fee2e2;color:#ef4444; }
+.s-skipped  { background:#f1f5f9;color:#64748b; }
+
+.back-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:10px; background:#f1f5f9; border:1px solid var(--border); font-size:13px; font-weight:700; color:#475569; text-decoration:none; margin-bottom:16px; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="av-wrap">
+    <a href="{% url 'admin_dashboard' %}" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+
+    <!-- Hero -->
+    <div class="av-hero">
+        {% if p.profile_pic %}
+        <img src="{{ p.profile_pic }}">
+        {% else %}
+        <div class="av-hero-fallback">{{ p.name|first|upper }}</div>
+        {% endif %}
+        <div>
+            <h2>{{ p.name|default:"No Name" }}</h2>
+            <div class="sub">{{ u.email }} · ID #{{ u.id }}</div>
+            <div class="sub">Joined {{ u.date_joined|date:"M d, Y" }}</div>
+            <span class="av-badge {% if p.is_banned %}badge-ban{% else %}badge-ok{% endif %}">
+                {% if p.is_banned %}🚫 BANNED{% else %}✓ Active{% endif %}
+            </span>
+            <span class="av-badge badge-ok">
+                {% if p.is_face_verified %}✓ Face Verified{% else %}Face: {{ p.verification_status }}{% endif %}
+            </span>
+            {% if p.is_discoverable %}<span class="av-badge badge-ok">Discoverable</span>{% endif %}
+        </div>
+    </div>
+
+    <!-- Basic Info + Account -->
+    <div class="av-grid">
+        <div class="av-card">
+            <h4><i class="fas fa-user"></i> Profile Info</h4>
+            <div class="av-row"><span class="av-label">Name</span><span class="av-val">{{ p.name|default:"—" }}</span></div>
+            <div class="av-row"><span class="av-label">Gender</span><span class="av-val">{{ p.gender|default:"—" }}</span></div>
+            <div class="av-row"><span class="av-label">Age</span><span class="av-val">{{ p.age|default:"—" }}</span></div>
+            <div class="av-row"><span class="av-label">Campus</span><span class="av-val">{{ p.campus|default:"—" }}</span></div>
+            <div class="av-row"><span class="av-label">Course</span><span class="av-val">{{ p.course|default:"—" }}</span></div>
+            <div class="av-row"><span class="av-label">Year</span><span class="av-val">{{ p.clg_year|default:"—" }}</span></div>
+            <div class="av-row"><span class="av-label">Living</span><span class="av-val">{{ p.living_place|default:"—" }}</span></div>
+            <div class="av-row"><span class="av-label">Native</span><span class="av-val">{{ p.native_place|default:"—" }}</span></div>
+            <div class="av-row"><span class="av-label">Looking for</span><span class="av-val">{{ p.looking_for|default:"—" }}</span></div>
+        </div>
+        <div class="av-card">
+            <h4><i class="fas fa-cog"></i> Account & Preferences</h4>
+            <div class="av-row"><span class="av-label">Username</span><span class="av-val">{{ u.username }}</span></div>
+            <div class="av-row"><span class="av-label">Email</span><span class="av-val">{{ u.email }}</span></div>
+            <div class="av-row"><span class="av-label">Last Login</span><span class="av-val">{{ u.last_login|date:"M d, Y g:i A"|default:"Never" }}</span></div>
+            <div class="av-row"><span class="av-label">Pref Gender</span><span class="av-val">{{ p.pref_gender }}</span></div>
+            <div class="av-row"><span class="av-label">Pref Age</span><span class="av-val">{{ p.pref_age_min }}–{{ p.pref_age_max }}</span></div>
+            <div class="av-row"><span class="av-label">Pref Campus</span><span class="av-val">{{ p.pref_campus|default:"Any" }}</span></div>
+            <div class="av-row"><span class="av-label">Created</span><span class="av-val">{{ p.created_at|date:"M d, Y g:i A" }}</span></div>
+            <div class="av-row"><span class="av-label">Updated</span><span class="av-val">{{ p.updated_at|date:"M d, Y g:i A" }}</span></div>
+        </div>
+    </div>
+
+    <!-- Bio + Tags -->
+    <div class="av-card" style="margin-bottom:16px;">
+        <h4><i class="fas fa-align-left"></i> Bio</h4>
+        <p style="font-size:13px;color:#334155;margin:0;">{{ p.bio|default:"No bio." }}</p>
+    </div>
+
+    <div class="av-grid">
+        <div class="av-card">
+            <h4><i class="fas fa-tags"></i> Interests</h4>
+            {% for t in p.interest_tags_list %}<span class="tag-pill">{{ t }}</span>{% empty %}<span style="font-size:12px;color:#94a3b8;">None</span>{% endfor %}
+        </div>
+        <div class="av-card">
+            <h4><i class="fas fa-language"></i> Languages</h4>
+            {% for l in p.languages_list %}<span class="tag-pill">{{ l }}</span>{% empty %}<span style="font-size:12px;color:#94a3b8;">None</span>{% endfor %}
+            <div style="margin-top:8px;font-size:11px;color:#94a3b8;font-weight:700;">Mother tongue</div>
+            {% for l in p.mother_tongues_list %}<span class="tag-pill">{{ l }}</span>{% empty %}<span style="font-size:12px;color:#94a3b8;">None</span>{% endfor %}
+        </div>
+    </div>
+
+    <!-- Gallery -->
+    {% if gallery %}
+    <div class="av-card" style="margin-top:16px;">
+        <h4><i class="fas fa-images"></i> Gallery ({{ gallery.count }})</h4>
+        <div class="gallery-grid">
+            {% for img in gallery %}<img src="{{ img.image }}" loading="lazy">{% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Face Verification Image -->
+    {% if p.verification_image %}
+    <div class="av-card" style="margin-top:16px;">
+        <h4><i class="fas fa-camera"></i> Verification Image</h4>
+        <img src="{{ p.verification_image }}" style="max-width:200px;border-radius:12px;border:2px solid var(--border);">
+    </div>
+    {% endif %}
+
+    <!-- Connections -->
+    <div class="av-card" style="margin-top:16px;">
+        <h4><i class="fas fa-heart"></i> Connections ({{ connections.count }})</h4>
+        {% for mr in connections %}
+        {% if mr.sender == u %}
+        <div class="match-chip">
+            {% with other=mr.receiver.profile %}
+            <img src="{{ other.get_profile_pic_url }}">
+            <span style="font-weight:600;">{{ other.name }}</span>
+            <span style="color:#94a3b8;flex:1;">→ matched</span>
+            {% endwith %}
+        </div>
+        {% else %}
+        <div class="match-chip">
+            {% with other=mr.sender.profile %}
+            <img src="{{ other.get_profile_pic_url }}">
+            <span style="font-weight:600;">{{ other.name }}</span>
+            <span style="color:#94a3b8;flex:1;">← matched</span>
+            {% endwith %}
+        </div>
+        {% endif %}
+        {% empty %}<p style="font-size:13px;color:#94a3b8;margin:0;">No connections.</p>{% endfor %}
+    </div>
+
+    <!-- Match Requests Sent -->
+    <div class="av-card" style="margin-top:16px;">
+        <h4><i class="fas fa-paper-plane"></i> Requests Sent ({{ sent_requests.count }})</h4>
+        {% for mr in sent_requests %}
+        <div class="match-chip">
+            <img src="{{ mr.receiver.profile.get_profile_pic_url }}">
+            <span style="font-weight:600;">{{ mr.receiver.profile.name|default:mr.receiver.email }}</span>
+            <span class="status-pill s-{{ mr.status }}">{{ mr.status }}</span>
+            <span style="color:#94a3b8;font-size:10px;">{{ mr.created_at|date:"M d" }}</span>
+        </div>
+        {% empty %}<p style="font-size:13px;color:#94a3b8;margin:0;">None.</p>{% endfor %}
+    </div>
+
+    <!-- Match Requests Received -->
+    <div class="av-card" style="margin-top:16px;">
+        <h4><i class="fas fa-inbox"></i> Requests Received ({{ received_requests.count }})</h4>
+        {% for mr in received_requests %}
+        <div class="match-chip">
+            <img src="{{ mr.sender.profile.get_profile_pic_url }}">
+            <span style="font-weight:600;">{{ mr.sender.profile.name|default:mr.sender.email }}</span>
+            <span class="status-pill s-{{ mr.status }}">{{ mr.status }}</span>
+            <span style="color:#94a3b8;font-size:10px;">{{ mr.created_at|date:"M d" }}</span>
+        </div>
+        {% empty %}<p style="font-size:13px;color:#94a3b8;margin:0;">None.</p>{% endfor %}
+    </div>
+
+    <!-- Favorites -->
+    <div class="av-grid" style="margin-top:16px;">
+        <div class="av-card">
+            <h4><i class="fas fa-film"></i> Fav Movies ({{ fav_movies.count }})</h4>
+            {% for m in fav_movies %}
+            <div class="av-row">
+                {% if m.poster_url %}<img src="{{ m.poster_url }}" style="width:28px;border-radius:4px;">{% endif %}
+                <span class="av-val" style="flex:1;text-align:left;padding-left:6px;">{{ m.title }}</span>
+                <span style="font-size:11px;color:#94a3b8;">{{ m.release_year }}</span>
+            </div>
+            {% empty %}<p style="font-size:13px;color:#94a3b8;margin:0;">None.</p>{% endfor %}
+        </div>
+        <div class="av-card">
+            <h4><i class="fas fa-music"></i> Fav Songs ({{ fav_songs.count }})</h4>
+            {% for s in fav_songs %}
+            <div class="av-row">
+                {% if s.artwork_url %}<img src="{{ s.artwork_url }}" style="width:28px;border-radius:4px;">{% endif %}
+                <div style="flex:1;padding-left:6px;">
+                    <div style="font-size:12px;font-weight:600;">{{ s.title }}</div>
+                    <div style="font-size:11px;color:#94a3b8;">{{ s.artist }}</div>
+                </div>
+            </div>
+            {% empty %}<p style="font-size:13px;color:#94a3b8;margin:0;">None.</p>{% endfor %}
+        </div>
+    </div>
+
+    <!-- Confessions -->
+    <div class="av-card" style="margin-top:16px;">
+        <h4><i class="fas fa-comment-dots"></i> Confessions ({{ confessions.count }})</h4>
+        {% for c in confessions %}
+        <div style="padding:8px;background:#fdf4ff;border-radius:10px;margin-bottom:6px;font-size:12px;">
+            <div>{{ c.content|truncatechars:120 }}</div>
+            <div style="color:#94a3b8;margin-top:3px;">{{ c.created_at|date:"M d, Y g:i A" }} · {% if c.is_anonymous %}Anonymous{% else %}Public{% endif %} · {{ c.likes_count }} likes</div>
+        </div>
+        {% empty %}<p style="font-size:13px;color:#94a3b8;margin:0;">None.</p>{% endfor %}
+    </div>
+
+    <!-- Reports -->
+    <div class="av-grid" style="margin-top:16px;">
+        <div class="av-card">
+            <h4><i class="fas fa-flag"></i> Reports Made ({{ reports_made.count }})</h4>
+            {% for r in reports_made %}
+            <div class="av-row">
+                <span class="av-label">Reported</span>
+                <span class="av-val">{{ r.reported_user.username }}</span>
+            </div>
+            {% empty %}<p style="font-size:13px;color:#94a3b8;margin:0;">None.</p>{% endfor %}
+        </div>
+        <div class="av-card">
+            <h4><i class="fas fa-exclamation-circle"></i> Reported By ({{ reports_received.count }})</h4>
+            {% for r in reports_received %}
+            <div class="av-row">
+                <span class="av-label">By</span>
+                <span class="av-val">{{ r.reporter.username }}</span>
+            </div>
+            {% empty %}<p style="font-size:13px;color:#94a3b8;margin:0;">None.</p>{% endfor %}
+        </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="av-card" style="margin-top:16px;">
+        <h4><i class="fas fa-envelope"></i> Recent Messages (last 50 sent + 50 received)</h4>
+        <details>
+            <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--primary);padding:4px 0;">View Sent Messages ({{ messages_sent.count }})</summary>
+            <div style="max-height:300px;overflow-y:auto;margin-top:8px;">
+                {% for m in messages_sent %}
+                <div class="msg-item msg-sent">
+                    <span style="font-weight:700;">To {{ m.receiver.profile.name|default:m.receiver.email }}:</span> {{ m.text|truncatechars:100 }}
+                    <div class="msg-meta">{{ m.timestamp|date:"M d, g:i A" }}</div>
+                </div>
+                {% empty %}<p style="font-size:13px;color:#94a3b8;">None.</p>{% endfor %}
+            </div>
+        </details>
+        <details style="margin-top:10px;">
+            <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--primary);padding:4px 0;">View Received Messages ({{ messages_received.count }})</summary>
+            <div style="max-height:300px;overflow-y:auto;margin-top:8px;">
+                {% for m in messages_received %}
+                <div class="msg-item msg-recv">
+                    <span style="font-weight:700;">From {{ m.sender.profile.name|default:m.sender.email }}:</span> {{ m.text|truncatechars:100 }}
+                    <div class="msg-meta">{{ m.timestamp|date:"M d, g:i A" }}</div>
+                </div>
+                {% empty %}<p style="font-size:13px;color:#94a3b8;">None.</p>{% endfor %}
+            </div>
+        </details>
+    </div>
+
+    <!-- Quiz Answers -->
+    <div class="av-card" style="margin-top:16px; margin-bottom:30px;">
+        <h4><i class="fas fa-question-circle"></i> Quiz Answers ({{ answers.count }})</h4>
+        <details>
+            <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--primary);padding:4px 0;">View All Answers</summary>
+            <div style="max-height:350px;overflow-y:auto;margin-top:8px;">
+                {% for a in answers %}
+                <div class="qa-item">
+                    <div class="qa-q">{{ a.question.text }}</div>
+                    <div class="qa-a">→ {{ a.option.text }}</div>
+                </div>
+                {% empty %}<p style="font-size:13px;color:#94a3b8;">No answers.</p>{% endfor %}
+            </div>
+        </details>
+    </div>
+</div>
+{% endblock %}

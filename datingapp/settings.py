@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import dj_database_url
 if not os.environ.get('VERCEL'):
     try:
@@ -28,12 +30,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-216tlt-jzkigd^5*g2g+(nd1qli0dsqq8de^7@)z6#+k7i2(jn')
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY and not os.environ.get('VERCEL'):
+    SECRET_KEY = 'django-insecure-local-dev-only'
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
+# Split allowed hosts from environment variable
 ALLOWED_HOSTS = ['*']
+
+
 
 # Detailed Traceback Logging for Vercel
 LOGGING = {
@@ -226,3 +232,9 @@ CLARIFAI_PAT = os.environ.get('CLARIFAI_PAT')
 # Payload limits for image uploads
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB
+
+# Pusher Configuration
+PUSHER_APP_ID = os.environ.get('PUSHER_APP_ID')
+PUSHER_KEY = os.environ.get('PUSHER_KEY')
+PUSHER_SECRET = os.environ.get('PUSHER_SECRET')
+PUSHER_CLUSTER = os.environ.get('PUSHER_CLUSTER', 'ap2')
