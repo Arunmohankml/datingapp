@@ -163,7 +163,7 @@ class ProfileEditForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = [
-            'name', 'bio', 'languages', 'mother_tongues', 'interest_tags', 
+            'name', 'bio', 'age', 'languages', 'mother_tongues', 'interest_tags', 
             'living_place', 'native_place',
             'clg_year', 'campus', 'course', 'branch',
             'pref_age_min', 'pref_age_max', 'pref_gender', 'pref_languages',

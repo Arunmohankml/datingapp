@@ -245,6 +245,120 @@
     .toggle-switch input:checked + label:before {
         transform: translate(24px, -50%);
     }
+
+    /* Custom Searchable Dropdown Styles */
+    .searchable-dropdown {
+        position: relative;
+        width: 100%;
+    }
+    .dropdown-selected-container {
+        min-height: 46px;
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #f8fafc;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        cursor: text;
+        transition: 0.2s;
+    }
+    .dropdown-selected-container:focus-within {
+        border-color: var(--primary);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    }
+    .dropdown-search {
+        border: none !important;
+        background: transparent !important;
+        padding: 4px 0 !important;
+        margin: 0 !important;
+        width: auto !important;
+        flex: 1;
+        min-width: 60px;
+        box-shadow: none !important;
+    }
+    .dropdown-list {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        margin-top: 4px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: var(--shadow-lg);
+        display: none;
+    }
+    .dropdown-item {
+        padding: 10px 14px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .dropdown-item:hover {
+        background: #f1f5f9;
+        color: var(--primary);
+    }
+    .chip {
+        background: var(--primary);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .chip i {
+        cursor: pointer;
+        font-size: 10px;
+    }
+
+    /* Range Slider Overhaul */
+    .premium-slider-container {
+        padding: 10px 0 20px;
+    }
+    .slider-track-wrap {
+        position: relative;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        margin: 20px 0;
+    }
+    .slider-track-highlight {
+        position: absolute;
+        height: 100%;
+        background: var(--primary);
+        border-radius: 3px;
+    }
+    .range-input-wrap {
+        position: relative;
+        height: 0;
+    }
+    .range-input-wrap input {
+        position: absolute;
+        width: 100%;
+        top: -23px;
+        background: none;
+        pointer-events: none;
+        -webkit-appearance: none;
+    }
+    .range-input-wrap input::-webkit-slider-thumb {
+        height: 20px;
+        width: 20px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid var(--primary);
+        cursor: pointer;
+        pointer-events: auto;
+        -webkit-appearance: none;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
 </style>
 {% endblock %}
 
@@ -294,12 +408,11 @@
                 <div class="form-group">
                     <label for="id_gender">Gender *</label>
                     {{ form.gender }}
-                    {{ form.gender.errors }}
                 </div>
                 <div class="form-group">
-                    <label for="id_age">Age *</label>
-                    {{ form.age }}
-                    {{ form.age.errors }}
+                    <label>Age: <span id="age-label" style="color: var(--primary); font-weight: 700;">{{ form.age.value|default:18 }}</span></label>
+                    <input type="range" min="18" max="30" value="{{ form.age.value|default:18 }}" class="slider-input" id="age-slider" style="margin-top: 10px; width: 100%;">
+                    <input type="hidden" name="age" id="id_age" value="{{ form.age.value|default:18 }}">
                 </div>
             </div>
             <div class="btn-nav">
@@ -310,14 +423,26 @@
         <!-- STEP 2: Origins -->
         <div class="form-step" id="step2">
             <div class="step-title">🌍 Where are you from?</div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="id_living_place">Current Living Place *</label>
-                    <input type="text" name="living_place" id="id_living_place" class="form-control" list="indian-cities" placeholder="e.g. Chennai" value="{{ form.living_place.value|default_if_none:'' }}" required>
+            <div class="form-group">
+                <label>Current Living Place *</label>
+                <div class="searchable-dropdown" id="drop-living">
+                    <div class="dropdown-selected-container">
+                        <div class="selected-items"></div>
+                        <input type="text" class="dropdown-search" placeholder="Search city...">
+                    </div>
+                    <div class="dropdown-list"></div>
+                    <input type="hidden" name="living_place" id="id_living_place" value="{{ form.living_place.value|default:'' }}">
                 </div>
-                <div class="form-group">
-                    <label for="id_native_place">Native Place *</label>
-                    <input type="text" name="native_place" id="id_native_place" class="form-control" list="indian-cities" placeholder="e.g. Delhi" value="{{ form.native_place.value|default_if_none:'' }}" required>
+            </div>
+            <div class="form-group">
+                <label>Native Place *</label>
+                <div class="searchable-dropdown" id="drop-native">
+                    <div class="dropdown-selected-container">
+                        <div class="selected-items"></div>
+                        <input type="text" class="dropdown-search" placeholder="Search city...">
+                    </div>
+                    <div class="dropdown-list"></div>
+                    <input type="hidden" name="native_place" id="id_native_place" value="{{ form.native_place.value|default:'' }}">
                 </div>
             </div>
             <div class="btn-nav">
@@ -330,21 +455,25 @@
         <div class="form-step" id="step3">
             <div class="step-title">🗣️ Languages</div>
             <div class="form-group">
-                <label>Languages You Speak</label>
-                <div class="tag-input-wrapper" data-field="languages" data-choices="English,Tamil,Telugu,Malayalam,Hindi,Assamese,Bengali,Bodo,Dogri,Gujarati,Kannada,Kashmiri,Konkani,Maithili,Manipuri,Marathi,Nepali,Odia,Punjabi,Sanskrit,Santali,Sindhi,Urdu">
-                    <div class="tag-container"></div>
-                    <input type="text" class="tag-search" placeholder="Type or select languages...">
-                    <div class="choices-list"></div>
-                    <input type="hidden" name="languages" id="id_languages" value="{{ form.languages.value|join:',' }}">
+                <label>Languages You Speak *</label>
+                <div class="searchable-dropdown" id="drop-languages">
+                    <div class="dropdown-selected-container">
+                        <div class="selected-items"></div>
+                        <input type="text" class="dropdown-search" placeholder="Select languages...">
+                    </div>
+                    <div class="dropdown-list"></div>
+                    <input type="hidden" name="languages" id="id_languages" value="{{ form.languages.value|default:'' }}">
                 </div>
             </div>
             <div class="form-group">
-                <label>Mother Tongue (Optional)</label>
-                <div class="tag-input-wrapper" data-field="mother_tongues" data-choices="English,Tamil,Telugu,Malayalam,Hindi,Assamese,Bengali,Bodo,Dogri,Gujarati,Kannada,Kashmiri,Konkani,Maithili,Manipuri,Marathi,Nepali,Odia,Punjabi,Sanskrit,Santali,Sindhi,Urdu">
-                    <div class="tag-container"></div>
-                    <input type="text" class="tag-search" placeholder="Type or select mother tongue...">
-                    <div class="choices-list"></div>
-                    <input type="hidden" name="mother_tongues" id="id_mother_tongues" value="{{ form.mother_tongues.value|join:',' }}">
+                <label>Mother Tongue *</label>
+                <div class="searchable-dropdown" id="drop-mothertongue">
+                    <div class="dropdown-selected-container">
+                        <div class="selected-items"></div>
+                        <input type="text" class="dropdown-search" placeholder="Select mother tongue...">
+                    </div>
+                    <div class="dropdown-list"></div>
+                    <input type="hidden" name="mother_tongues" id="id_mother_tongues" value="{{ form.mother_tongues.value|default:'' }}">
                 </div>
             </div>
             <div class="btn-nav">
@@ -361,12 +490,14 @@
                 {{ form.bio }}
             </div>
             <div class="form-group">
-                <label>Interests / Hobbies</label>
-                <div class="tag-input-wrapper" data-field="interest_tags" data-choices="Photography,Traveling,Gaming,Music,Coding,Reading,Cooking,Fitness,Yoga,Art,Dancing,Movies,Anime,Fashion,Sports,Football,Cricket,Basketball,Startups,Crypto,Web3,Tech,Design,Writing,Gardening,Pets,Hiking,Board Games,Stand-up Comedy,Podcasts,Volunteering,Coffee,Tea,Foodie,Meditation,Shopping,Social Media,Netflix,Marvel,DC">
-                    <div class="tag-container"></div>
-                    <input type="text" class="tag-search" placeholder="Select your interests...">
-                    <div class="choices-list"></div>
-                    <input type="hidden" name="interest_tags" id="id_interest_tags" value="{{ form.interest_tags.value|join:',' }}">
+                <label>Interests / Hobbies *</label>
+                <div class="searchable-dropdown" id="drop-interests">
+                    <div class="dropdown-selected-container">
+                        <div class="selected-items"></div>
+                        <input type="text" class="dropdown-search" placeholder="Select interests...">
+                    </div>
+                    <div class="dropdown-list"></div>
+                    <input type="hidden" name="interest_tags" id="id_interest_tags" value="{{ form.interest_tags.value|default:'' }}">
                 </div>
             </div>
             <div class="btn-nav">
@@ -418,22 +549,28 @@
                 </div>
                 <div class="form-group">
                     <label>Preferred Language(s) *</label>
-                    <div class="tag-input-wrapper" data-field="pref_languages" data-choices="English,Tamil,Telugu,Malayalam,Hindi,Assamese,Bengali,Bodo,Dogri,Gujarati,Kannada,Kashmiri,Konkani,Maithili,Manipuri,Marathi,Nepali,Odia,Punjabi,Sanskrit,Santali,Sindhi,Urdu">
-                        <div class="tag-container"></div>
-                        <input type="text" class="tag-search" placeholder="Select languages...">
-                        <div class="choices-list"></div>
-                        <input type="hidden" name="pref_languages" id="id_pref_languages" value="{{ form.pref_languages.value|join:',' }}">
+                    <div class="searchable-dropdown" id="drop-pref-languages">
+                        <div class="dropdown-selected-container">
+                            <div class="selected-items"></div>
+                            <input type="text" class="dropdown-search" placeholder="Select languages...">
+                        </div>
+                        <div class="dropdown-list"></div>
+                        <input type="hidden" name="pref_languages" id="id_pref_languages" value="{{ form.pref_languages.value|default:'' }}">
                     </div>
                 </div>
             </div>
 
-            <!-- Range Slider -->
+            <!-- Discovery Range Slider -->
             <div class="form-group">
-                <label>Discovery Age Range: <span id="age-range-label" style="color: var(--primary); font-weight: 700;">18 - 25</span></label>
-                <div class="range-slider-container">
-                    <div class="slider-track"></div>
-                    <input type="range" min="17" max="30" value="18" id="slider-min" class="slider-input">
-                    <input type="range" min="17" max="30" value="25" id="slider-max" class="slider-input">
+                <label>Discovery Age Range: <span id="range-label" style="color: var(--primary); font-weight: 700;">18 - 25</span></label>
+                <div class="premium-slider-container">
+                    <div class="slider-track-wrap">
+                        <div id="range-track" class="slider-track-highlight"></div>
+                    </div>
+                    <div class="range-input-wrap">
+                        <input type="range" min="18" max="30" value="{{ form.pref_age_min.value|default:18 }}" id="range-min">
+                        <input type="range" min="18" max="30" value="{{ form.pref_age_max.value|default:25 }}" id="range-max">
+                    </div>
                 </div>
                 <div style="display:none">
                     {{ form.pref_age_min }}
@@ -828,104 +965,136 @@
     updateStepUI();
 
 
-    // ───── TAG INPUT LOGIC ─────
-    document.querySelectorAll('.tag-input-wrapper').forEach(wrapper => {
-        const fieldName = wrapper.dataset.field;
-        const allChoices = wrapper.dataset.choices.split(',');
-        const container = wrapper.querySelector('.tag-container');
-        const searchInput = wrapper.querySelector('.tag-search');
-        const choiceList = wrapper.querySelector('.choices-list');
-        const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+    // ───── SEARCHABLE DROPDOWN LOGIC ─────
+    const dropdownOptions = {
+        location: ["Mumbai, Maharashtra", "Delhi, NCR", "Bangalore, Karnataka", "Hyderabad, Telangana", "Ahmedabad, Gujarat", "Chennai, Tamil Nadu", "Kolkata, West Bengal", "Surat, Gujarat", "Pune, Maharashtra", "Jaipur, Rajasthan", "Lucknow, Uttar Pradesh", "Kanpur, Uttar Pradesh", "Nagpur, Maharashtra", "Indore, Madhya Pradesh", "Thane, Maharashtra", "Bhopal, Madhya Pradesh", "Visakhapatnam, Andhra Pradesh", "Pimpri-Chinchwad, Maharashtra", "Patna, Bihar", "Vadodara, Gujarat", "Ghaziabad, Uttar Pradesh", "Ludhiana, Punjab", "Coimbatore, Tamil Nadu", "Agra, Uttar Pradesh", "Madurai, Tamil Nadu", "Nashik, Maharashtra", "Faridabad, Haryana", "Meerut, Uttar Pradesh", "Rajkot, Gujarat", "Varanasi, Uttar Pradesh", "Srinagar, Jammu and Kashmir", "Aurangabad, Maharashtra", "Dhanbad, Jharkhand", "Amritsar, Punjab", "Navi Mumbai, Maharashtra", "Allahabad, Uttar Pradesh", "Ranchi, Jharkhand", "Howrah, West Bengal", "Jabalpur, Madhya Pradesh", "Gwalior, Madhya Pradesh", "Vijayawada, Andhra Pradesh", "Jodhpur, Rajasthan", "Raipur, Chhattisgarh", "Kota, Rajasthan", "Guwahati, Assam", "Chandigarh, UT", "Solapur, Maharashtra", "Hubli-Dharwad, Karnataka", "Bareilly, Uttar Pradesh", "Moradabad, Uttar Pradesh", "Mysore, Karnataka", "Gurgaon, Haryana", "Aligarh, Uttar Pradesh", "Jalandhar, Punjab", "Tiruchirappalli, Tamil Nadu", "Bhubaneswar, Odisha", "Salem, Tamil Nadu", "Warangal, Telangana", "Guntur, Andhra Pradesh", "Bhiwandi, Maharashtra", "Saharanpur, Uttar Pradesh"],
+        interests: ["Photography", "Traveling", "Gaming", "Music", "Coding", "Reading", "Cooking", "Fitness", "Yoga", "Art", "Dancing", "Movies", "Anime", "Fashion", "Sports", "Football", "Cricket", "Basketball", "Startups", "Crypto", "Web3", "Tech", "Design", "Writing", "Gardening", "Pets", "Hiking", "Board Games", "Stand-up Comedy", "Podcasts", "Volunteering", "Coffee", "Tea", "Foodie", "Meditation", "Shopping", "Social Media", "Netflix", "Marvel", "DC"],
+        languages: ["English", "Hindi", "Tamil", "Malayalam", "Telugu", "Kannada", "Marathi", "Bengali", "Punjabi", "Gujarati", "Assamese", "Bodo", "Dogri", "Kashmiri", "Konkani", "Maithili", "Manipuri", "Nepali", "Odia", "Sanskrit", "Santali", "Sindhi", "Urdu"],
+        mother_tongue: ["Tamil", "Malayalam", "Hindi", "Telugu", "Kannada", "English", "Marathi", "Bengali", "Gujarati", "Punjabi", "Urdu"]
+    };
+
+    function initSearchableDropdown(containerId, optionsKey, hiddenInputId, multi = true) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const options = dropdownOptions[optionsKey];
+        const hiddenInput = document.getElementById(hiddenInputId);
+        const searchInput = container.querySelector('.dropdown-search');
+        const list = container.querySelector('.dropdown-list');
+        const selectedContainer = container.querySelector('.selected-items');
         
-        let rawValue = hiddenInput.value || "";
-        if (rawValue.startsWith('[') && rawValue.endsWith(']')) {
-            rawValue = rawValue.slice(1, -1).replace(/'/g, "").replace(/"/g, "");
+        let initialValue = hiddenInput.value || "";
+        if (initialValue.startsWith('[') && initialValue.endsWith(']')) {
+            initialValue = initialValue.slice(1, -1).replace(/'/g, "").replace(/"/g, "");
         }
-        let tags = rawValue ? rawValue.split(',').map(t => t.trim()).filter(t => t) : [];
+        let selected = initialValue ? initialValue.split(',').map(s => s.trim()).filter(s => s) : [];
 
-        const renderTags = () => {
-            container.innerHTML = '';
-            tags.forEach(tag => {
-                const tagEl = document.createElement('span');
-                tagEl.className = 'tag';
-                tagEl.innerHTML = `${tag} <i class="fas fa-times"></i>`;
-                tagEl.querySelector('i').onclick = () => {
-                    tags = tags.filter(t => t !== tag);
-                    renderTags();
+        function renderSelected() {
+            selectedContainer.innerHTML = '';
+            selected.forEach(val => {
+                const chip = document.createElement('div');
+                chip.className = 'chip';
+                chip.innerHTML = `${val} <i class="fas fa-times"></i>`;
+                chip.querySelector('i').onclick = (e) => {
+                    e.stopPropagation();
+                    selected = selected.filter(v => v !== val);
+                    renderSelected();
+                    updateHiddenInput();
                 };
-                container.appendChild(tagEl);
+                selectedContainer.appendChild(chip);
             });
-            hiddenInput.value = tags.join(',');
-        };
+            updateHiddenInput();
+        }
 
-        searchInput.onfocus = () => {
-            showChoices(searchInput.value);
-        };
+        function updateHiddenInput() {
+            hiddenInput.value = selected.join(',');
+        }
 
-        searchInput.oninput = () => {
-            showChoices(searchInput.value);
-        };
-
-        function showChoices(query) {
-            choiceList.innerHTML = '';
-            const filtered = allChoices.filter(c => 
-                c.toLowerCase().includes(query.toLowerCase()) && !tags.includes(c)
+        function filterOptions(query) {
+            list.innerHTML = '';
+            const filtered = options.filter(o => 
+                o.toLowerCase().includes(query.toLowerCase()) && !selected.includes(o)
             );
             
             if (filtered.length > 0) {
-                choiceList.style.display = 'block';
-                filtered.forEach(choice => {
-                    const div = document.createElement('div');
-                    div.textContent = choice;
-                    div.onclick = () => {
-                        tags.push(choice);
-                        renderTags();
+                list.style.display = 'block';
+                filtered.forEach(o => {
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item';
+                    item.innerText = o;
+                    item.onclick = () => {
+                        if (multi) {
+                            selected.push(o);
+                        } else {
+                            selected = [o];
+                        }
+                        renderSelected();
                         searchInput.value = '';
-                        choiceList.style.display = 'none';
+                        list.style.display = 'none';
                     };
-                    choiceList.appendChild(div);
+                    list.appendChild(item);
                 });
             } else {
-                choiceList.style.display = 'none';
+                list.style.display = 'none';
             }
         }
 
+        searchInput.onfocus = () => filterOptions(searchInput.value);
+        searchInput.oninput = (e) => filterOptions(e.target.value);
+        selectedContainer.onclick = () => searchInput.focus();
+        
         document.addEventListener('click', (e) => {
-            if (!wrapper.contains(e.target)) choiceList.style.display = 'none';
+            if (!container.contains(e.target)) list.style.display = 'none';
         });
 
-        renderTags();
-    });
-
-    // ───── SLIDER LOGIC ─────
-    const sliderMin = document.getElementById('slider-min');
-    const sliderMax = document.getElementById('slider-max');
-    const track = document.querySelector('.slider-track');
-    const label = document.getElementById('age-range-label');
-    const inputMin = document.getElementById('id_pref_age_min');
-    const inputMax = document.getElementById('id_pref_age_max');
-
-    function updateSlider() {
-        let minVal = parseInt(sliderMin.value);
-        let maxVal = parseInt(sliderMax.value);
-        if (minVal > maxVal) { [minVal, maxVal] = [maxVal, minVal]; }
-        const minPercent = ((minVal - 17) / (30 - 17)) * 100;
-        const maxPercent = ((maxVal - 17) / (30 - 17)) * 100;
-        track.style.left = minPercent + "%";
-        track.style.width = (maxPercent - minPercent) + "%";
-        label.textContent = `${minVal} - ${maxVal}`;
-        inputMin.value = minVal;
-        inputMax.value = maxVal;
+        renderSelected();
     }
 
-    sliderMin.oninput = updateSlider;
-    sliderMax.oninput = updateSlider;
+    // ───── SLIDER LOGIC ─────
+    function initAgeSlider() {
+        const slider = document.getElementById('age-slider');
+        const label = document.getElementById('age-label');
+        const hidden = document.getElementById('id_age');
+        if(!slider) return;
+        slider.oninput = () => {
+            label.innerText = slider.value;
+            hidden.value = slider.value;
+        };
+    }
 
-    window.onload = () => {
-        if (inputMin && inputMin.value) sliderMin.value = inputMin.value;
-        if (inputMax && inputMax.value) sliderMax.value = inputMax.value;
-        updateSlider();
-    };
+    function initRangeSlider() {
+        const rMin = document.getElementById('range-min');
+        const rMax = document.getElementById('range-max');
+        const track = document.getElementById('range-track');
+        const label = document.getElementById('range-label');
+        const hMin = document.getElementById('id_pref_age_min');
+        const hMax = document.getElementById('id_pref_age_max');
+        if(!rMin || !rMax) return;
+
+        function update() {
+            let v1 = parseInt(rMin.value);
+            let v2 = parseInt(rMax.value);
+            if (v1 > v2) { let tmp = v1; v1 = v2; v2 = tmp; }
+            const p1 = ((v1 - 18) / (30 - 18)) * 100;
+            const p2 = ((v2 - 18) / (30 - 18)) * 100;
+            track.style.left = p1 + "%";
+            track.style.width = (p2 - p1) + "%";
+            label.innerText = `${v1} - ${v2}`;
+            hMin.value = v1;
+            hMax.value = v2;
+        }
+        rMin.oninput = update;
+        rMax.oninput = update;
+        update();
+    }
+
+    initAgeSlider();
+    initRangeSlider();
+    initSearchableDropdown('drop-living', 'location', 'id_living_place', false);
+    initSearchableDropdown('drop-native', 'location', 'id_native_place', false);
+    initSearchableDropdown('drop-mothertongue', 'mother_tongue', 'id_mother_tongues', false);
+    initSearchableDropdown('drop-interests', 'interests', 'id_interest_tags', true);
+    initSearchableDropdown('drop-languages', 'languages', 'id_languages', true);
+    initSearchableDropdown('drop-pref-languages', 'languages', 'id_pref_languages', true);
 
     // ───── IMAGE COMPRESSION UTILITY ─────
     function compressImage(file, quality = 0.7, maxWidth = 1080) {
