@@ -22,18 +22,20 @@
         box-sizing: border-box;
     }
 
-    /* Chat Layout */
+    /* Chat Layout - Aggressive takeover */
     .chat-wrapper {
         display: flex;
         flex-direction: column;
-        height: 100vh;
-        height: 100dvh;
-        height: -webkit-fill-available;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         width: 100%;
         max-width: 600px;
         margin: 0 auto;
         background: white;
-        position: relative;
+        z-index: 9999;
     }
 
     /* Header */
@@ -153,7 +155,7 @@
     /* Input Area — pinned to bottom */
     .chat-input-area {
         padding: 10px 16px;
-        padding-bottom: max(12px, env(safe-area-inset-bottom));
+        padding-bottom: max(25px, env(safe-area-inset-bottom));
         border-top: 1px solid var(--border);
         background: white;
         flex-shrink: 0;
