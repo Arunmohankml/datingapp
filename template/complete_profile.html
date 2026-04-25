@@ -682,15 +682,9 @@
                     {{ form.clg_year }}
                 </div>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="id_course">Course *</label>
-                    {{ form.course }}
-                </div>
-                <div class="form-group">
-                    <label for="id_branch">Branch *</label>
-                    {{ form.branch }}
-                </div>
+            <div class="form-group">
+                <label for="id_course">Course *</label>
+                {{ form.course }}
             </div>
             <div class="btn-nav">
                 <button type="button" class="btn-prev" onclick="prevStep(5)"><i class="fas fa-arrow-left"></i> Back</button>
@@ -1109,8 +1103,7 @@
             const campus = document.getElementById('id_campus').value;
             const year = document.getElementById('id_clg_year').value;
             const course = document.getElementById('id_course').value;
-            const branch = document.getElementById('id_branch').value;
-            if (!campus || !year || !course || !branch) { alert("All education details are mandatory."); return; }
+            if (!campus || !year || !course) { alert("All education details are mandatory."); return; }
         }
         else if (step === 6) {
             const looking = document.getElementById('id_looking_for').value;

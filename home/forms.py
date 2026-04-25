@@ -45,20 +45,7 @@ COURSE_CHOICES = [
     ('Ph.D', 'Ph.D'),
     ('Other', 'Other'),
 ]
-BRANCH_CHOICES = [
-    ('', 'Select Branch'),
-    ('CSE', 'Computer Science (CSE)'),
-    ('ECE', 'Electronics & Comm. (ECE)'),
-    ('EEE', 'Electrical & Electronics (EEE)'),
-    ('Mechanical', 'Mechanical Engineering'),
-    ('Civil', 'Civil Engineering'),
-    ('IT', 'Information Technology (IT)'),
-    ('Biotech', 'Biotechnology'),
-    ('AI/ML', 'AI & Machine Learning'),
-    ('Data Science', 'Data Science'),
-    ('Cyber Security', 'Cyber Security'),
-    ('Other', 'Other'),
-]
+
 
 class ProfileForm(forms.ModelForm):
     profile_pic_file = forms.ImageField(required=False, label="Upload Photo", widget=forms.FileInput(attrs={'class': 'form-control'}))
@@ -83,7 +70,7 @@ class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = [
-            'name', 'gender', 'age', 'clg_year', 'campus', 'course', 'branch',
+            'name', 'gender', 'age', 'clg_year', 'campus', 'course',
             'living_place', 'native_place',
             'languages', 'mother_tongues',
             'bio', 'liked_songs', 'liked_movies', 'fav_shows', 'interest_tags', 'looking_for',
@@ -96,7 +83,7 @@ class ProfileForm(forms.ModelForm):
             'clg_year': forms.Select(choices=YEAR_CHOICES, attrs={'class': 'form-control'}),
             'campus': forms.Select(choices=CAMPUS_CHOICES, attrs={'class': 'form-control'}),
             'course': forms.Select(choices=COURSE_CHOICES, attrs={'class': 'form-control'}),
-            'branch': forms.Select(choices=BRANCH_CHOICES, attrs={'class': 'form-control'}),
+
             'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Write a short bio...'}),
             'liked_songs': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'liked_movies': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
@@ -111,7 +98,7 @@ class ProfileForm(forms.ModelForm):
         # Make specific fields mandatory for completion
         mandatory_fields = [
             'living_place', 'native_place', 
-            'clg_year', 'campus', 'course', 'branch',
+            'clg_year', 'campus', 'course',
             'pref_age_min', 'pref_age_max', 'pref_gender', 'age'
         ]
         for field in mandatory_fields:
@@ -165,7 +152,7 @@ class ProfileEditForm(forms.ModelForm):
         fields = [
             'name', 'bio', 'age', 'languages', 'mother_tongues', 'interest_tags', 
             'living_place', 'native_place',
-            'clg_year', 'campus', 'course', 'branch',
+            'clg_year', 'campus', 'course',
             'pref_age_min', 'pref_age_max', 'pref_gender', 'pref_languages',
             'looking_for', 'is_discoverable'
         ]
@@ -178,7 +165,7 @@ class ProfileEditForm(forms.ModelForm):
             'clg_year': forms.Select(choices=YEAR_CHOICES, attrs={'class': 'form-control'}),
             'campus': forms.Select(choices=CAMPUS_CHOICES, attrs={'class': 'form-control', 'disabled': 'disabled'}),
             'course': forms.Select(choices=COURSE_CHOICES, attrs={'class': 'form-control'}),
-            'branch': forms.Select(choices=BRANCH_CHOICES, attrs={'class': 'form-control'}),
+
         }
 
     def clean_languages(self):

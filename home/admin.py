@@ -11,7 +11,7 @@ class OptionInline(admin.TabularInline):  # or admin.StackedInline
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ('name', 'user', 'age', 'gender', 'campus', 'clg_year')
-    search_fields = ('name', 'user__username', 'campus', 'branch')
+    search_fields = ('name', 'user__username', 'campus')
     list_filter = ('campus', 'gender', 'clg_year', 'looking_for')
 
 

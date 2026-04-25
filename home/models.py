@@ -12,7 +12,7 @@ class Profile(models.Model):
     clg_year = models.IntegerField(null=True, blank=True)
     campus = models.CharField(max_length=100, default='', blank=True)
     course = models.CharField(max_length=100, default='', blank=True)
-    branch = models.CharField(max_length=100, default='', blank=True)
+
 
     # Places
     living_place = models.CharField(max_length=100, default='', blank=True)
@@ -44,7 +44,7 @@ class Profile(models.Model):
     pref_gender = models.CharField(max_length=10, choices=[('male','Male'), ('female','Female'), ('any','Any')], default='any')
     pref_languages = models.TextField(default='', blank=True)
     pref_campus = models.CharField(max_length=100, blank=True)
-    pref_branch = models.CharField(max_length=100, blank=True)
+
 
     # Face Verification (Simplified)
     VERIFICATION_STATUS_CHOICES = [
