@@ -85,21 +85,10 @@
         if (deleteBtn) {
             deleteBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                showWarningModal(
-                    'delete_account_warning',
-                    '<span style="color: #dc2626;">Delete Account?</span>',
-                    '<div style="text-align:center;"><p>Are you sure you want to permanently delete your account? This action <b>cannot</b> be undone. All your matches, chats, and confessions will be lost.</p></div>',
-                    [
-                        { text: 'Cancel', isPrimary: false },
-                        { 
-                            text: 'Delete Permanently', 
-                            isPrimary: true, 
-                            onClick: () => {
-                                deleteForm.submit();
-                            }
-                        }
-                    ]
-                );
+                const confirmed = confirm("Delete Account?\n\nAre you sure you want to permanently delete your account? This action CANNOT be undone. All your matches, chats, and confessions will be lost.");
+                if (confirmed) {
+                    deleteForm.submit();
+                }
             });
         }
     });
