@@ -292,112 +292,95 @@
     }
     .dropdown-item:hover { background: #f8fafc; color: var(--primary); }
 
-    /* Age Slider */
-    .age-slider-wrap { padding: 6px 2px 2px; }
-    .age-slider-wrap input[type=range] {
+    /* ── Premium Sliders ── */
+    .label-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        font-weight: 700;
+        color: var(--text-main);
+        font-size: 14px;
+    }
+    .value-badge {
+        color: var(--primary);
+        background: #eef2ff;
+        padding: 3px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 800;
+        border: 1px solid #c7d2fe;
+    }
+
+    input[type="range"] {
         -webkit-appearance: none;
         appearance: none;
         width: 100%;
-        height: 5px;
-        border-radius: 3px;
+        height: 14px;
+        background: #e2e8f0;
+        border-radius: 10px;
         outline: none;
         cursor: pointer;
-        background: #e2e8f0;
     }
-    .age-slider-wrap input[type=range]::-webkit-slider-runnable-track {
-        height: 5px;
-        border-radius: 3px;
-    }
-    .age-slider-wrap input[type=range]::-webkit-slider-thumb {
+
+    input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none;
         appearance: none;
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
+        background: var(--primary);
+        border: 4px solid white;
         border-radius: 50%;
-        background: white;
-        border: 3px solid var(--primary);
-        box-shadow: 0 2px 8px rgba(99,102,241,0.35);
         cursor: pointer;
-        margin-top: -7.5px;
-        transition: box-shadow 0.2s;
+        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+        margin-top: 0;
+        z-index: 10;
     }
-    .age-slider-wrap input[type=range]:hover::-webkit-slider-thumb {
-        box-shadow: 0 2px 12px rgba(99,102,241,0.55);
-    }
-    .age-slider-wrap input[type=range]::-moz-range-thumb {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: white;
-        border: 3px solid var(--primary);
-        box-shadow: 0 2px 8px rgba(99,102,241,0.35);
-        cursor: pointer;
-    }
-    .age-display {
-        font-weight: 800;
-        color: var(--primary);
-        margin-bottom: 2px;
-    }
-    .age-display small { font-size: 13px; font-weight: 500; color: var(--text-muted); }
 
-    /* Discovery Range */
-    .disc-range-wrap {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 10px;
-    }
-    .disc-range-box {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 3px;
-    }
-    .disc-range-label {
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .disc-range-input {
-        width: 58px;
-        padding: 7px 6px;
-        border: 1.5px solid var(--border);
-        border-radius: 10px;
-        font-size: 16px;
-        font-weight: 700;
-        text-align: center;
-        color: var(--primary);
-        background: #f8fafc;
-        outline: none;
-        -moz-appearance: textfield;
-        transition: 0.2s;
-    }
-    .disc-range-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
-    .disc-range-input::-webkit-inner-spin-button,
-    .disc-range-input::-webkit-outer-spin-button { -webkit-appearance: none; }
-    .disc-range-bar {
-        flex: 1;
-        height: 5px;
-        background: #e2e8f0;
-        border-radius: 3px;
-        position: relative;
-    }
-    .disc-range-bar-fill {
-        position: absolute;
-        height: 100%;
+    input[type="range"]::-moz-range-thumb {
+        width: 22px;
+        height: 22px;
         background: var(--primary);
-        border-radius: 3px;
-    }
-    .disc-dot {
-        width: 12px;
-        height: 12px;
+        border: 4px solid white;
         border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Dual Range Slider */
+    .range-wrapper {
+        position: relative;
+        height: 14px;
+        background: #e2e8f0;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+    .range-wrapper input {
+        position: absolute;
+        width: 100%;
+        height: 14px;
+        top: 0;
+        left: 0;
+        background: none;
+        pointer-events: none;
+        margin: 0;
+    }
+    .range-wrapper input::-webkit-slider-thumb {
+        pointer-events: auto;
+        position: relative;
+        z-index: 2;
+    }
+    .range-wrapper input::-moz-range-thumb {
+        pointer-events: auto;
+        position: relative;
+        z-index: 2;
+    }
+    .slider-track {
+        position: absolute;
+        height: 14px;
         background: var(--primary);
-        border: 2px solid white;
-        box-shadow: 0 1px 4px rgba(99,102,241,0.4);
-        flex-shrink: 0;
+        border-radius: 10px;
+        z-index: 1;
     }
 </style>
 {% endblock %}
@@ -465,7 +448,10 @@
                     {{ form.bio }}
                 </div>
                 <div class="form-group">
-                    <label>Age: <span id="age-label-main" style="color:var(--primary);font-weight:700;">{{ profile.age }}</span> <small style="color:var(--text-muted);font-size:13px;">yrs</small></label>
+                    <div class="label-container">
+                        <span>Your Age *</span>
+                        <span class="value-badge"><span id="age-label-main">{{ profile.age }}</span> yrs</span>
+                    </div>
                     <div class="age-slider-wrap">
                         <input type="range" min="18" max="30" value="{{ profile.age }}" id="age-slider-main">
                     </div>
@@ -607,20 +593,17 @@
                     {{ form.pref_gender }}
                 </div>
                 <div class="form-group">
-                    <label>Age Range</label>
-                    <div class="disc-range-wrap">
-                        <div class="disc-range-box">
-                            <div class="disc-range-label">Min</div>
-                            <input type="number" class="disc-range-input" id="disc-min" min="18" max="30" value="{{ profile.pref_age_min }}">
-                        </div>
-                        <div class="disc-dot" id="disc-dot-left"></div>
-                        <div class="disc-range-bar"><div class="disc-range-bar-fill" id="disc-bar"></div></div>
-                        <div class="disc-dot" id="disc-dot-right"></div>
-                        <div class="disc-range-box">
-                            <div class="disc-range-label">Max</div>
-                            <input type="number" class="disc-range-input" id="disc-max" min="18" max="30" value="{{ profile.pref_age_max }}">
-                        </div>
+                    <div class="label-container">
+                        <span>Discovery Age Range</span>
+                        <span class="value-badge"><span id="range-label">{{ profile.pref_age_min }} - {{ profile.pref_age_max }}</span> yrs</span>
                     </div>
+
+                    <div class="range-wrapper">
+                        <div class="slider-track" id="disc-track"></div>
+                        <input type="range" min="18" max="30" value="{{ profile.pref_age_min }}" id="disc-min">
+                        <input type="range" min="18" max="30" value="{{ profile.pref_age_max }}" id="disc-max">
+                    </div>
+                    
                     <input type="hidden" name="pref_age_min" id="id_pref_age_min" value="{{ profile.pref_age_min }}">
                     <input type="hidden" name="pref_age_max" id="id_pref_age_max" value="{{ profile.pref_age_max }}">
                 </div>
@@ -838,13 +821,13 @@
 
     // ───── SLIDER LOGIC ─────
     function initAgeSlider() {
-        var slider = document.getElementById('age-slider-main');
-        var label = document.getElementById('age-label-main');
-        var hidden = document.getElementById('id_age');
+        const slider = document.getElementById('age-slider-main');
+        const label = document.getElementById('age-label-main');
+        const hidden = document.getElementById('id_age');
         if (!slider) return;
         function fill() {
             var pct = ((slider.value - 18) / (30 - 18)) * 100;
-            slider.style.background = 'linear-gradient(to right, var(--primary) 0%, var(--primary) ' + pct + '%, #e2e8f0 ' + pct + '%, #e2e8f0 100%)';
+            slider.style.background = `linear-gradient(to right, var(--primary) 0%, var(--primary) ${pct}%, #e2e8f0 ${pct}%, #e2e8f0 100%)`;
             label.innerText = slider.value;
             hidden.value = slider.value;
         }
@@ -853,28 +836,39 @@
     }
 
     function initDiscoveryRange() {
-        var minEl = document.getElementById('disc-min');
-        var maxEl = document.getElementById('disc-max');
-        var bar = document.getElementById('disc-bar');
-        var hMin = document.getElementById('id_pref_age_min');
-        var hMax = document.getElementById('id_pref_age_max');
-        if (!minEl || !maxEl || !bar) return;
-        function updateBar() {
-            var v1 = Math.max(18, Math.min(30, parseInt(minEl.value) || 18));
-            var v2 = Math.max(18, Math.min(30, parseInt(maxEl.value) || 25));
-            if (v1 > v2) v2 = v1;
-            var p1 = ((v1 - 18) / 12) * 100;
-            var p2 = ((v2 - 18) / 12) * 100;
-            bar.style.left = p1 + '%';
-            bar.style.width = (p2 - p1) + '%';
-            hMin.value = v1;
-            hMax.value = v2;
+        const minInput = document.getElementById('disc-min');
+        const maxInput = document.getElementById('disc-max');
+        const track = document.getElementById('disc-track');
+        const label = document.getElementById('range-label');
+        const hMin = document.getElementById('id_pref_age_min');
+        const hMax = document.getElementById('id_pref_age_max');
+        
+        if (!minInput || !maxInput || !track) return;
+
+        function updateRange() {
+            let min = parseInt(minInput.value);
+            let max = parseInt(maxInput.value);
+
+            if (min >= max) {
+                min = max - 1;
+                minInput.value = min;
+            }
+
+            const range = 30 - 18;
+            const minPercent = ((min - 18) / range) * 100;
+            const maxPercent = ((max - 18) / range) * 100;
+
+            track.style.left = minPercent + "%";
+            track.style.width = (maxPercent - minPercent) + "%";
+
+            label.textContent = `${min} - ${max}`;
+            hMin.value = min;
+            hMax.value = max;
         }
-        minEl.addEventListener('input', updateBar);
-        maxEl.addEventListener('input', updateBar);
-        minEl.addEventListener('change', updateBar);
-        maxEl.addEventListener('change', updateBar);
-        updateBar();
+
+        minInput.addEventListener('input', updateRange);
+        maxInput.addEventListener('input', updateRange);
+        updateRange();
     }
 
     document.addEventListener('DOMContentLoaded', function() {
