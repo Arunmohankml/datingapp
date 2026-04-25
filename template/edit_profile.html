@@ -355,33 +355,76 @@
         border-radius: 10px;
         margin-bottom: 20px;
     }
+
     .range-wrapper input {
+        -webkit-appearance: none;
+        appearance: none;
         position: absolute;
         width: 100%;
         height: 14px;
-        top: 0;
+        top: 50%;
         left: 0;
-        background: none;
+        transform: translateY(-50%);
+        background: transparent;
         pointer-events: none;
         margin: 0;
+        z-index: 2;
     }
+
+    .range-wrapper input#disc-min {
+        z-index: 3;
+    }
+
+    .range-wrapper input#disc-max {
+        z-index: 4;
+    }
+
+    .range-wrapper input::-webkit-slider-runnable-track {
+        height: 14px;
+        background: transparent;
+    }
+
     .range-wrapper input::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 22px;
+        height: 22px;
+        background: var(--primary);
+        border: 4px solid white;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
         pointer-events: auto;
+        margin-top: -4px; /* perfect center for 14px bar */
         position: relative;
-        z-index: 2;
+        z-index: 5;
     }
+
+    .range-wrapper input::-moz-range-track {
+        height: 14px;
+        background: transparent;
+    }
+
     .range-wrapper input::-moz-range-thumb {
+        width: 22px;
+        height: 22px;
+        background: var(--primary);
+        border: 4px solid white;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
         pointer-events: auto;
-        position: relative;
-        z-index: 2;
     }
+
     .slider-track {
         position: absolute;
         height: 14px;
         background: var(--primary);
         border-radius: 10px;
         z-index: 1;
+        top: 0;
     }
+
 </style>
 {% endblock %}
 
@@ -836,39 +879,52 @@
     }
 
     function initDiscoveryRange() {
-        const minInput = document.getElementById('disc-min');
-        const maxInput = document.getElementById('disc-max');
+        const minSlider = document.getElementById('disc-min');
+        const maxSlider = document.getElementById('disc-max');
         const track = document.getElementById('disc-track');
         const label = document.getElementById('range-label');
-        const hMin = document.getElementById('id_pref_age_min');
-        const hMax = document.getElementById('id_pref_age_max');
+        const hiddenMin = document.getElementById('id_pref_age_min');
+        const hiddenMax = document.getElementById('id_pref_age_max');
         
-        if (!minInput || !maxInput || !track) return;
+        if (!minSlider || !maxSlider || !track) return;
 
-        function updateRange() {
-            let min = parseInt(minInput.value);
-            let max = parseInt(maxInput.value);
+        const min = parseInt(minSlider.min, 10);
+        const max = parseInt(maxSlider.max, 10);
 
-            if (min >= max) {
-                min = max - 1;
-                minInput.value = min;
-            }
+        function updateTrack() {
+            const minVal = parseInt(minSlider.value, 10);
+            const maxVal = parseInt(maxSlider.value, 10);
+            const range = max - min;
+            const leftPercent = ((minVal - min) / range) * 100;
+            const rightPercent = ((max - maxVal) / range) * 100;
 
-            const range = 30 - 18;
-            const minPercent = ((min - 18) / range) * 100;
-            const maxPercent = ((max - 18) / range) * 100;
-
-            track.style.left = minPercent + "%";
-            track.style.width = (maxPercent - minPercent) + "%";
-
-            label.textContent = `${min} - ${max}`;
-            hMin.value = min;
-            hMax.value = max;
+            track.style.left = leftPercent + "%";
+            track.style.width = (100 - rightPercent - leftPercent) + "%";
+            label.textContent = `${minVal} - ${maxVal}`;
+            hiddenMin.value = minVal;
+            hiddenMax.value = maxVal;
         }
 
-        minInput.addEventListener('input', updateRange);
-        maxInput.addEventListener('input', updateRange);
-        updateRange();
+        function syncValues(event) {
+            let minVal = parseInt(minSlider.value, 10);
+            let maxVal = parseInt(maxSlider.value, 10);
+
+            if (minVal >= maxVal) {
+                if (event.target === minSlider) {
+                    minVal = maxVal - 1;
+                    minSlider.value = minVal;
+                } else {
+                    maxVal = minVal + 1;
+                    maxSlider.value = maxVal;
+                }
+            }
+
+            updateTrack();
+        }
+
+        minSlider.addEventListener("input", syncValues);
+        maxSlider.addEventListener("input", syncValues);
+        updateTrack();
     }
 
     document.addEventListener('DOMContentLoaded', function() {
