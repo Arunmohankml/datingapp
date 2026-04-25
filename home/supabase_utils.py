@@ -12,13 +12,18 @@ def get_supabase_client():
     if _supabase_client is not None:
         return _supabase_client
         
-    url = os.environ.get('SUPABASE_URL', '').strip()
-    key = os.environ.get('SUPABASE_KEY', '').strip()
+    url = os.environ.get('SUPABASE_URL', '').strip().strip('"').strip("'")
+    key = os.environ.get('SUPABASE_KEY', '').strip().strip('"').strip("'")
     
     if not url or not key:
         raise ValueError("SUPABASE_URL or SUPABASE_KEY missing in environment variables.")
         
-    _supabase_client = create_client(url, key)
+    try:
+        _supabase_client = create_client(url, key)
+    except Exception as e:
+        key_preview = key[:15] + "..." if len(key) > 15 else key
+        raise ValueError(f"{str(e)} | Key inside Vercel starts with: '{key_preview}'")
+        
     return _supabase_client
 
 def compress_image(file_obj, max_width=1000, quality=70):
