@@ -347,82 +347,114 @@
         box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
     }
 
-    /* Dual Range Slider */
-    .range-wrapper {
-        position: relative;
-        height: 14px;
-        background: #e2e8f0;
-        border-radius: 10px;
-        margin-bottom: 20px;
+    /* ── Premium Steppers ── */
+    .stepper-group {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        border: 1.5px solid var(--border);
+        border-radius: 20px;
+        padding: 16px;
+        gap: 24px;
+        transition: 0.2s;
     }
-
-    .range-wrapper input {
-        -webkit-appearance: none;
-        appearance: none;
-        position: absolute;
-        width: 100%;
-        height: 14px;
-        top: 50%;
-        left: 0;
-        transform: translateY(-50%);
-        background: transparent;
-        pointer-events: none;
-        margin: 0;
-        z-index: 2;
+    .stepper-group:hover, .dual-stepper-container:hover {
+        border-color: #cbd5e1;
     }
-
-    .range-wrapper input#disc-min {
-        z-index: 3;
-    }
-
-    .range-wrapper input#disc-max {
-        z-index: 4;
-    }
-
-    .range-wrapper input::-webkit-slider-runnable-track {
-        height: 14px;
-        background: transparent;
-    }
-
-    .range-wrapper input::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 22px;
-        height: 22px;
-        background: var(--primary);
-        border: 4px solid white;
+    .stepper-btn {
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
+        border: none;
+        background: white;
+        color: var(--primary);
+        font-size: 16px;
         cursor: pointer;
-        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
-        pointer-events: auto;
-        margin-top: -4px; /* perfect center for 14px bar */
-        position: relative;
-        z-index: 5;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.2s;
     }
-
-    .range-wrapper input::-moz-range-track {
-        height: 14px;
-        background: transparent;
-    }
-
-    .range-wrapper input::-moz-range-thumb {
-        width: 22px;
-        height: 22px;
+    .stepper-btn:hover {
         background: var(--primary);
-        border: 4px solid white;
-        border-radius: 50%;
-        cursor: pointer;
-        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
-        pointer-events: auto;
+        color: white;
+        transform: scale(1.05);
+        box-shadow: 0 6px 15px rgba(99,102,241,0.25);
+    }
+    .stepper-btn:active {
+        transform: scale(0.95);
+    }
+    .stepper-value-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 80px;
+    }
+    .stepper-value {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--primary);
+        line-height: 1;
+    }
+    .stepper-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 6px;
     }
 
-    .slider-track {
-        position: absolute;
-        height: 14px;
-        background: var(--primary);
-        z-index: 1;
-        top: 0;
-        /* Square ends perfectly hide under the circular thumbs */
+    /* Dual Stepper */
+    .dual-stepper-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #f8fafc;
+        border: 1.5px solid var(--border);
+        border-radius: 20px;
+        padding: 16px;
+        gap: 12px;
+        transition: 0.2s;
+    }
+    .stepper-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+    }
+    .stepper-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+    }
+    .stepper-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .stepper-btn.small {
+        width: 34px;
+        height: 34px;
+        font-size: 13px;
+    }
+    .stepper-value.small {
+        font-size: 22px;
+        min-width: 32px;
+        text-align: center;
+    }
+    .stepper-divider {
+        color: #cbd5e1;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-top: 24px; /* Align with numbers */
     }
 
 
@@ -492,12 +524,14 @@
                     {{ form.bio }}
                 </div>
                 <div class="form-group">
-                    <div class="label-container">
-                        <span>Your Age *</span>
-                        <span class="value-badge"><span id="age-label-main">{{ profile.age }}</span> yrs</span>
-                    </div>
-                    <div class="age-slider-wrap">
-                        <input type="range" min="18" max="30" value="{{ profile.age }}" id="age-slider-main">
+                    <label>Your Age *</label>
+                    <div class="stepper-group">
+                        <button type="button" class="stepper-btn minus" onclick="stepAge(-1)"><i class="fas fa-minus"></i></button>
+                        <div class="stepper-value-wrap">
+                            <span class="stepper-value" id="age-display">{{ profile.age }}</span>
+                            <span class="stepper-label">Years Old</span>
+                        </div>
+                        <button type="button" class="stepper-btn plus" onclick="stepAge(1)"><i class="fas fa-plus"></i></button>
                     </div>
                     <input type="hidden" name="age" id="id_age" value="{{ profile.age }}">
                 </div>
@@ -637,20 +671,30 @@
                     {{ form.pref_gender }}
                 </div>
                 <div class="form-group">
-                    <div class="label-container">
-                        <span>Discovery Age Range</span>
-                        <span class="value-badge"><span id="range-label">{{ profile.pref_age_min }} - {{ profile.pref_age_max }}</span> yrs</span>
+                    <label>Discovery Age Range</label>
+                    <div class="dual-stepper-container">
+                        <div class="stepper-box">
+                            <div class="stepper-title">Min Age</div>
+                            <div class="stepper-controls">
+                                <button type="button" class="stepper-btn small minus" onclick="stepRange('min', -1)"><i class="fas fa-minus"></i></button>
+                                <span class="stepper-value small" id="min-age-display">{{ profile.pref_age_min }}</span>
+                                <button type="button" class="stepper-btn small plus" onclick="stepRange('min', 1)"><i class="fas fa-plus"></i></button>
+                            </div>
+                        </div>
+                        <div class="stepper-divider"><i class="fas fa-arrow-right"></i></div>
+                        <div class="stepper-box">
+                            <div class="stepper-title">Max Age</div>
+                            <div class="stepper-controls">
+                                <button type="button" class="stepper-btn small minus" onclick="stepRange('max', -1)"><i class="fas fa-minus"></i></button>
+                                <span class="stepper-value small" id="max-age-display">{{ profile.pref_age_max }}</span>
+                                <button type="button" class="stepper-btn small plus" onclick="stepRange('max', 1)"><i class="fas fa-plus"></i></button>
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="range-wrapper">
-                        <div class="slider-track" id="disc-track"></div>
-                        <input type="range" min="18" max="30" value="{{ profile.pref_age_min }}" id="disc-min">
-                        <input type="range" min="18" max="30" value="{{ profile.pref_age_max }}" id="disc-max">
-                    </div>
-                    
                     <input type="hidden" name="pref_age_min" id="id_pref_age_min" value="{{ profile.pref_age_min }}">
                     <input type="hidden" name="pref_age_max" id="id_pref_age_max" value="{{ profile.pref_age_max }}">
                 </div>
+
                 <div class="form-group">
                     <label>Preferred Languages</label>
                     <div class="searchable-dropdown" id="drop-pref-languages">
@@ -863,97 +907,56 @@
         renderChips();
     }
 
-    // ───── SLIDER LOGIC ─────
-    function initAgeSlider() {
-        const slider = document.getElementById('age-slider-main');
-        const label = document.getElementById('age-label-main');
+    // ───── STEPPER LOGIC ─────
+    function initAgeStepper() {
+        const display = document.getElementById('age-display');
         const hidden = document.getElementById('id_age');
-        if (!slider) return;
-        function fill() {
-            const W = slider.clientWidth || slider.offsetWidth || 300;
-            const pct = (slider.value - 18) / (30 - 18);
-            // Thumb is 22px. Center travels from 11px to W - 11px
-            const centerPx = 11 + pct * (W - 22);
-            const centerPct = ((centerPx / W) * 100).toFixed(2);
-            
-            slider.style.background = `linear-gradient(to right, var(--primary) 0%, var(--primary) ${centerPct}%, #e2e8f0 ${centerPct}%, #e2e8f0 100%)`;
-            label.innerText = slider.value;
-            hidden.value = slider.value;
-        }
-        slider.addEventListener('input', fill);
-        window.addEventListener('resize', fill);
-        // Add a small delay to ensure clientWidth is accurate after layout
-        setTimeout(fill, 50);
-        fill();
+        if (!display || !hidden) return;
+
+        window.stepAge = function(change) {
+            let val = parseInt(hidden.value, 10) || 18;
+            val += change;
+            if (val < 18) val = 18;
+            if (val > 30) val = 30;
+            display.innerText = val;
+            hidden.value = val;
+        };
     }
 
     function initDiscoveryRange() {
-        const minSlider = document.getElementById('disc-min');
-        const maxSlider = document.getElementById('disc-max');
-        const track = document.getElementById('disc-track');
-        const label = document.getElementById('range-label');
+        const minDisplay = document.getElementById('min-age-display');
+        const maxDisplay = document.getElementById('max-age-display');
         const hiddenMin = document.getElementById('id_pref_age_min');
         const hiddenMax = document.getElementById('id_pref_age_max');
-        
-        if (!minSlider || !maxSlider || !track) return;
+        if (!minDisplay || !hiddenMin) return;
 
-        const min = parseInt(minSlider.min, 10);
-        const max = parseInt(maxSlider.max, 10);
+        window.stepRange = function(type, change) {
+            let min = parseInt(hiddenMin.value, 10) || 18;
+            let max = parseInt(hiddenMax.value, 10) || 25;
 
-        function updateTrack() {
-            const minVal = parseInt(minSlider.value, 10);
-            const maxVal = parseInt(maxSlider.value, 10);
-            const range = max - min;
-            
-            const pctMin = (minVal - min) / range;
-            const pctMax = (maxVal - min) / range;
-
-            const W = minSlider.clientWidth || minSlider.offsetWidth || 300;
-            
-            // Thumbs are 22px wide. Their centers travel from 11px to W - 11px.
-            const centerLeftPx = 11 + pctMin * (W - 22);
-            const centerRightPx = 11 + pctMax * (W - 22);
-
-            // Connect the centers exactly
-            const leftPct = ((centerLeftPx / W) * 100).toFixed(2);
-            const widthPct = (((centerRightPx - centerLeftPx) / W) * 100).toFixed(2);
-
-            track.style.left = leftPct + "%";
-            track.style.width = widthPct + "%";
-
-            label.textContent = `${minVal} - ${maxVal}`;
-            hiddenMin.value = minVal;
-            hiddenMax.value = maxVal;
-        }
-
-        function syncValues(event) {
-            let minVal = parseInt(minSlider.value, 10);
-            let maxVal = parseInt(maxSlider.value, 10);
-
-            if (minVal >= maxVal) {
-                if (event.target === minSlider) {
-                    minVal = maxVal - 1;
-                    minSlider.value = minVal;
-                } else {
-                    maxVal = minVal + 1;
-                    maxSlider.value = maxVal;
-                }
+            if (type === 'min') {
+                min += change;
+                if (min < 18) min = 18;
+                if (min > 30) min = 30;
+                if (min > max) max = min; // Push max up
+            } else {
+                max += change;
+                if (max < 18) max = 18;
+                if (max > 30) max = 30;
+                if (max < min) min = max; // Push min down
             }
 
-            updateTrack();
-        }
-
-        minSlider.addEventListener("input", syncValues);
-        maxSlider.addEventListener("input", syncValues);
-        window.addEventListener('resize', updateTrack);
-        // Delay to ensure clientWidth is available
-        setTimeout(updateTrack, 50);
-        updateTrack();
+            minDisplay.innerText = min;
+            maxDisplay.innerText = max;
+            hiddenMin.value = min;
+            hiddenMax.value = max;
+        };
     }
 
     document.addEventListener('DOMContentLoaded', function() {
-        initAgeSlider();
+        initAgeStepper();
         initDiscoveryRange();
+
         initDropdown('search-living',        'list-living',        'chips-living',        'id_living_place',   'location',     false);
         initDropdown('search-native',        'list-native',        'chips-native',        'id_native_place',   'location',     false);
         initDropdown('search-mothertongue',  'list-mothertongue',  'chips-mothertongue',  'id_mother_tongues', 'mother_tongue', false);
