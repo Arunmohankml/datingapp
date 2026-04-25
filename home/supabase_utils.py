@@ -5,19 +5,21 @@ from PIL import Image
 import io
 import uuid
 
-# Initialize Supabase Client
-SUPABASE_URL = os.environ.get('SUPABASE_URL', '').strip()
-SUPABASE_KEY = os.environ.get('SUPABASE_KEY', '').strip()
+_supabase_client: Client = None
 
-supabase: Client = None
-if SUPABASE_URL and SUPABASE_KEY:
-    try:
-        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-        print("DEBUG: Supabase Client Initialized.")
-    except Exception as e:
-        print(f"CRITICAL ERROR: Supabase Initialization Failed: {e}")
-else:
-    print("WARNING: Supabase URL or Key missing in environment.")
+def get_supabase_client():
+    global _supabase_client
+    if _supabase_client is not None:
+        return _supabase_client
+        
+    url = os.environ.get('SUPABASE_URL', '').strip()
+    key = os.environ.get('SUPABASE_KEY', '').strip()
+    
+    if not url or not key:
+        raise ValueError("SUPABASE_URL or SUPABASE_KEY missing in environment variables.")
+        
+    _supabase_client = create_client(url, key)
+    return _supabase_client
 
 def compress_image(file_obj, max_width=1000, quality=70):
     """
@@ -53,8 +55,10 @@ def upload_to_supabase(file_obj, bucket="images", path="dating_app/"):
     Uploads a file to Supabase Storage and returns the public URL.
     Returns the file URL if successful, else None.
     """
-    if not supabase:
-        print("DEBUG: Supabase client not initialized. Check SUPABASE_URL and SUPABASE_KEY.")
+    try:
+        supabase = get_supabase_client()
+    except Exception as e:
+        print(f"DEBUG: Supabase client initialization failed: {e}")
         return None
 
     try:
@@ -115,7 +119,11 @@ def upload_base64_to_supabase(base64_str, bucket="images", path="verification"):
     Decodes base64 string and uploads to Supabase Storage.
     Returns (public_url, error_message).
     """
-    if not supabase: return None, "Supabase client not initialized"
+    try:
+        supabase = get_supabase_client()
+    except Exception as e:
+        return None, f"Supabase Init Failed: {str(e)}"
+        
     try:
         import base64
         import uuid
