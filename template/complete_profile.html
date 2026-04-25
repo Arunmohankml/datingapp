@@ -788,6 +788,8 @@
                 <input type="hidden" name="verification_image_data" id="verification-image-data">
                 <input type="hidden" name="verification_image_url" id="verification-image-url">
                 <input type="hidden" name="verification_status" id="verification-status-input" value="pending">
+                <input type="hidden" name="profile_pic_url" id="profile-pic-url-input">
+                <input type="hidden" name="gallery_urls" id="gallery-urls-input">
             </div>
 
             <div class="form-group" id="pfp-group" style="opacity: 0.5; pointer-events: none; transition: 0.3s;">
@@ -1470,14 +1472,11 @@
 
     async function handlePfpSelect(input) {
         if (input.files && input.files[0]) {
+            const nextBtn = document.querySelector('button[onclick="nextStep(7)"]');
+            if (nextBtn) { nextBtn.disabled = true; nextBtn.innerText = "Uploading..."; }
             try {
                 // Compress the image before anything else
                 const compressedFile = await compressImage(input.files[0], 0.7, 800);
-                
-                // Replace the input's file with the compressed one
-                const dt = new DataTransfer();
-                dt.items.add(compressedFile);
-                input.files = dt.files;
 
                 const reader = new FileReader();
                 reader.onload = async function(e) {
@@ -1486,37 +1485,82 @@
                     preview.src = e.target.result;
                     preview.style.display = 'block';
                     placeholder.style.display = 'none';
-                    
-                    checkStep7Validity();
 
                     // Start local comparison
                     const tempImg = new Image();
                     tempImg.src = e.target.result;
                     tempImg.onload = () => compareLocally(tempImg);
 
-                    // Skip the redundant base64 API fetch here, as the form handles the file upload to Supabase.
+                    // Background Upload
+                    try {
+                        const res = await fetch('/api/upload/base64/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                            body: JSON.stringify({ image: e.target.result, path: 'profile_pics' })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            document.getElementById('profile-pic-url-input').value = data.url;
+                            input.value = ""; // Remove file so it doesn't submit natively
+                            checkStep7Validity();
+                        } else {
+                            alert("Upload failed. Please try again.");
+                        }
+                    } catch (fetchErr) {
+                        console.error("PFP upload error:", fetchErr);
+                        alert("Network error. Please try uploading again.");
+                    }
+                    if (nextBtn) { nextBtn.disabled = false; nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>'; }
                 };
                 reader.readAsDataURL(compressedFile);
             } catch (err) {
                 console.error("Compression failed:", err);
                 alert("Failed to process profile picture. Please try another image.");
+                if (nextBtn) { nextBtn.disabled = false; nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>'; }
             }
         }
     }
 
+    let uploadedGalleryUrls = [];
     async function handleGallerySelect(input) {
         if (input.files && input.files.length > 0) {
+            const submitBtn = document.querySelector('button[type="submit"]');
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = "Uploading Gallery..."; }
+            
             for (let i = 0; i < input.files.length; i++) {
                 if (galleryFiles.length < 5) {
                     try {
                         const compressedFile = await compressImage(input.files[i], 0.7, 800);
                         galleryFiles.push(compressedFile);
+                        
+                        // Immediate background upload
+                        const reader = new FileReader();
+                        reader.readAsDataURL(compressedFile);
+                        await new Promise((resolve) => {
+                            reader.onload = async (e) => {
+                                try {
+                                    const res = await fetch('/api/upload/base64/', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                                        body: JSON.stringify({ image: e.target.result, path: 'gallery' })
+                                    });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                        uploadedGalleryUrls.push(data.url);
+                                        document.getElementById('gallery-urls-input').value = uploadedGalleryUrls.join(',');
+                                    }
+                                } catch(e) { console.error("Gallery upload error", e); }
+                                resolve();
+                            };
+                        });
                     } catch (err) {
                         console.error("Failed to compress gallery image:", err);
                     }
                 }
             }
+            input.value = ""; // Remove files from input
             updateGalleryUI();
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = "Submit Profile"; }
         }
     }
 
@@ -1553,11 +1597,12 @@
     }
 
     document.getElementById('profileForm').addEventListener('submit', function(e) {
-        const galleryInput = document.getElementById('gallery-file-input');
-        if (galleryFiles.length > 0) {
-            const dt = new DataTransfer();
-            galleryFiles.forEach(file => dt.items.add(file));
-            galleryInput.files = dt.files;
+        // No longer injecting gallery files into the form native inputs!
+        // The background fetch process handles it, and the URLs are already in the hidden inputs.
+        const submitBtn = document.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Saving Profile...";
         }
     });
 

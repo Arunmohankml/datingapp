@@ -67,7 +67,10 @@ def complete_profile(request):
                     if verify_status == 'verified':
                         new_profile.is_face_verified = True
 
-            if 'profile_pic_file' in request.FILES:
+            pic_url = request.POST.get('profile_pic_url')
+            if pic_url:
+                new_profile.profile_pic = pic_url
+            elif 'profile_pic_file' in request.FILES:
                 img_url = upload_to_supabase(request.FILES['profile_pic_file'], bucket="images", path="profile_pics")
                 if img_url:
                     new_profile.profile_pic = img_url
@@ -77,10 +80,16 @@ def complete_profile(request):
             new_profile.save()
 
             # Gallery
-            gallery_files = request.FILES.getlist('gallery_images')
-            for gf in gallery_files:
-                img_url = upload_to_supabase(gf, bucket="images", path="gallery")
-                if img_url: ProfileImage.objects.create(profile=new_profile, image=img_url)
+            gallery_urls_raw = request.POST.get('gallery_urls')
+            if gallery_urls_raw:
+                urls = [u.strip() for u in gallery_urls_raw.split(',') if u.strip()]
+                for u in urls:
+                    ProfileImage.objects.create(profile=new_profile, image=u)
+            else:
+                gallery_files = request.FILES.getlist('gallery_images')
+                for gf in gallery_files:
+                    img_url = upload_to_supabase(gf, bucket="images", path="gallery")
+                    if img_url: ProfileImage.objects.create(profile=new_profile, image=img_url)
 
             messages.success(request, "Profile created!")
             return redirect('home')
