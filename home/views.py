@@ -1370,6 +1370,7 @@ def upload_base64_api(request):
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 
+@login_required
 def save_favorites(request):
     if request.method == 'POST':
         try:

@@ -9,6 +9,7 @@
         margin: 0 !important;
         height: 100vh;
         height: 100dvh;
+        height: -webkit-fill-available;
         overflow: hidden;
         display: block !important;
     }
@@ -27,10 +28,12 @@
         flex-direction: column;
         height: 100vh;
         height: 100dvh;
+        height: -webkit-fill-available;
         width: 100%;
         max-width: 600px;
         margin: 0 auto;
         background: white;
+        position: relative;
     }
 
     /* Header */
@@ -149,11 +152,12 @@
 
     /* Input Area — pinned to bottom */
     .chat-input-area {
-        padding: 8px 16px;
-        padding-bottom: max(8px, env(safe-area-inset-bottom));
+        padding: 10px 16px;
+        padding-bottom: max(12px, env(safe-area-inset-bottom));
         border-top: 1px solid var(--border);
         background: white;
         flex-shrink: 0;
+        z-index: 100;
     }
     .chat-form {
         display: flex;
