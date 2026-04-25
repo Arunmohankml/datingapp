@@ -1354,12 +1354,17 @@ def upload_base64_api(request):
             return JsonResponse({'success': False, 'message': 'Missing image data'}, status=400)
             
         from .supabase_utils import upload_base64_to_supabase
+        import os
+        
+        has_url = bool(os.environ.get('SUPABASE_URL'))
+        has_key = bool(os.environ.get('SUPABASE_KEY'))
+        
         url, error_msg = upload_base64_to_supabase(base64_str, bucket=bucket, path=path)
         
         if url:
             return JsonResponse({'success': True, 'url': url})
         else:
-            return JsonResponse({'success': False, 'message': f'Upload failed: {error_msg}'}, status=500)
+            return JsonResponse({'success': False, 'message': f'Upload failed: {error_msg}. Diagnostic: URL Set={has_url}, KEY Set={has_key}'}, status=500)
             
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
