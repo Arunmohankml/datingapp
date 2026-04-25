@@ -439,10 +439,11 @@
         position: absolute;
         height: 14px;
         background: var(--primary);
-        border-radius: 10px;
         z-index: 1;
         top: 0;
+        /* Square ends perfectly hide under the circular thumbs */
     }
+
 </style>
 {% endblock %}
 
@@ -1110,18 +1111,25 @@
 
     // ───── SLIDER LOGIC ─────
     function initAgeSlider() {
-        const slider = document.getElementById('age-slider');
-        const label = document.getElementById('age-label');
+        const slider = document.getElementById('age-slider-main');
+        const label = document.getElementById('age-label-main');
         const hidden = document.getElementById('id_age');
         if (!slider) return;
         function fill() {
-            const pct = ((slider.value - 18) / (30 - 18)) * 100;
-            const centerStr = `calc(${pct}% + ${11 - pct * 0.22}px)`;
-            slider.style.background = `linear-gradient(to right, var(--primary) 0%, var(--primary) ${centerStr}, #e2e8f0 ${centerStr}, #e2e8f0 100%)`;
+            const W = slider.clientWidth || slider.offsetWidth || 300;
+            const pct = (slider.value - 18) / (30 - 18);
+            // Thumb is 22px. Center travels from 11px to W - 11px
+            const centerPx = 11 + pct * (W - 22);
+            const centerPct = ((centerPx / W) * 100).toFixed(2);
+            
+            slider.style.background = `linear-gradient(to right, var(--primary) 0%, var(--primary) ${centerPct}%, #e2e8f0 ${centerPct}%, #e2e8f0 100%)`;
             label.innerText = slider.value;
             hidden.value = slider.value;
         }
         slider.addEventListener('input', fill);
+        window.addEventListener('resize', fill);
+        // Add a small delay to ensure clientWidth is accurate after layout
+        setTimeout(fill, 50);
         fill();
     }
 
@@ -1142,12 +1150,22 @@
             const minVal = parseInt(minSlider.value, 10);
             const maxVal = parseInt(maxSlider.value, 10);
             const range = max - min;
-            const leftPercent = ((minVal - min) / range) * 100;
-            const rightPercent = ((max - maxVal) / range) * 100;
+            
+            const pctMin = (minVal - min) / range;
+            const pctMax = (maxVal - min) / range;
 
-            track.style.left = `calc(${leftPercent}% + ${11 - (leftPercent * 0.22)}px)`;
-            track.style.right = `calc(${rightPercent}% + ${11 - (rightPercent * 0.22)}px)`;
-            track.style.width = 'auto';
+            const W = minSlider.clientWidth || minSlider.offsetWidth || 300;
+            
+            // Thumbs are 22px wide. Their centers travel from 11px to W - 11px.
+            const centerLeftPx = 11 + pctMin * (W - 22);
+            const centerRightPx = 11 + pctMax * (W - 22);
+
+            // Connect the centers exactly
+            const leftPct = ((centerLeftPx / W) * 100).toFixed(2);
+            const widthPct = (((centerRightPx - centerLeftPx) / W) * 100).toFixed(2);
+
+            track.style.left = leftPct + "%";
+            track.style.width = widthPct + "%";
 
             label.textContent = `${minVal} - ${maxVal}`;
             hiddenMin.value = minVal;
@@ -1173,6 +1191,9 @@
 
         minSlider.addEventListener("input", syncValues);
         maxSlider.addEventListener("input", syncValues);
+        window.addEventListener('resize', updateTrack);
+        // Delay to ensure clientWidth is available
+        setTimeout(updateTrack, 50);
         updateTrack();
     }
 
