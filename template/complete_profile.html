@@ -426,6 +426,53 @@
         margin-top: 6px;
     }
 
+    /* Inline Stepper for Age */
+    .inline-stepper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: white;
+        border: 1px solid #cbd5e1;
+        border-radius: 14px;
+        padding: 6px;
+        height: 52px;
+        box-sizing: border-box;
+        transition: 0.2s;
+    }
+    .inline-stepper:focus-within, .inline-stepper:hover {
+        border-color: var(--primary);
+    }
+    .inline-stepper .stepper-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+        box-shadow: none;
+        background: #f1f5f9;
+        color: var(--text-main);
+    }
+    .inline-stepper .stepper-btn:hover {
+        background: var(--primary);
+        color: white;
+    }
+    .inline-stepper .stepper-value-wrap {
+        flex-direction: row;
+        gap: 6px;
+        min-width: auto;
+    }
+    .inline-stepper .stepper-value {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-main);
+    }
+    .inline-stepper .stepper-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-muted);
+        margin-top: 0;
+        text-transform: none;
+        letter-spacing: 0;
+    }
+
     /* Dual Stepper */
     .dual-stepper-container {
         display: flex;
@@ -529,11 +576,11 @@
                 </div>
                 <div class="form-group">
                     <label>Your Age *</label>
-                    <div class="stepper-group">
+                    <div class="inline-stepper">
                         <button type="button" class="stepper-btn minus" onclick="stepAge(-1)"><i class="fas fa-minus"></i></button>
                         <div class="stepper-value-wrap">
                             <span class="stepper-value" id="age-display">{{ form.age.value|default:18 }}</span>
-                            <span class="stepper-label">Years Old</span>
+                            <span class="stepper-label">yrs</span>
                         </div>
                         <button type="button" class="stepper-btn plus" onclick="stepAge(1)"><i class="fas fa-plus"></i></button>
                     </div>
@@ -677,6 +724,7 @@
             <!-- Discovery Age Range - Premium Dual Slider -->
             <div class="form-group">
                 <label>Discovery Age Range</label>
+                <div class="hint" style="margin-bottom: 12px; font-size: 12px;">This is the minimum and maximum age of people you will get matched with.</div>
                 <div class="dual-stepper-container">
                     <div class="stepper-box">
                         <div class="stepper-title">Min Age</div>
