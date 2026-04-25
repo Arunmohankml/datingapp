@@ -869,8 +869,9 @@
         const hidden = document.getElementById('id_age');
         if (!slider) return;
         function fill() {
-            var pct = ((slider.value - 18) / (30 - 18)) * 100;
-            slider.style.background = `linear-gradient(to right, var(--primary) 0%, var(--primary) ${pct}%, #e2e8f0 ${pct}%, #e2e8f0 100%)`;
+            const pct = ((slider.value - 18) / (30 - 18)) * 100;
+            const centerStr = `calc(${pct}% + ${11 - pct * 0.22}px)`;
+            slider.style.background = `linear-gradient(to right, var(--primary) 0%, var(--primary) ${centerStr}, #e2e8f0 ${centerStr}, #e2e8f0 100%)`;
             label.innerText = slider.value;
             hidden.value = slider.value;
         }
@@ -898,8 +899,10 @@
             const leftPercent = ((minVal - min) / range) * 100;
             const rightPercent = ((max - maxVal) / range) * 100;
 
-            track.style.left = leftPercent + "%";
-            track.style.width = (100 - rightPercent - leftPercent) + "%";
+            track.style.left = `calc(${leftPercent}% + ${11 - (leftPercent * 0.22)}px)`;
+            track.style.right = `calc(${rightPercent}% + ${11 - (rightPercent * 0.22)}px)`;
+            track.style.width = 'auto';
+
             label.textContent = `${minVal} - ${maxVal}`;
             hiddenMin.value = minVal;
             hiddenMax.value = maxVal;
