@@ -229,28 +229,29 @@
         box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
     }
 
-    /* Searchable Dropdown - Vertical chip layout */
+    /* Searchable Dropdown - chip layout */
     .searchable-dropdown { position: relative; width: 100%; }
     .selected-chips-list {
         display: flex;
-        flex-direction: column;
-        gap: 6px;
+        flex-wrap: wrap;
+        flex-direction: row;
+        gap: 5px;
         margin-bottom: 8px;
     }
     .chip {
         background: #eef2ff;
         color: var(--primary);
         border: 1px solid #c7d2fe;
-        padding: 7px 12px;
-        border-radius: 10px;
-        font-size: 13px;
+        padding: 3px 9px;
+        border-radius: 20px;
+        font-size: 11px;
         font-weight: 600;
-        display: flex;
+        display: inline-flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 8px;
+        gap: 5px;
+        line-height: 1.4;
     }
-    .chip i { cursor: pointer; font-size: 11px; opacity: 0.6; }
+    .chip i { cursor: pointer; font-size: 9px; opacity: 0.55; transition: 0.15s; }
     .chip i:hover { opacity: 1; color: #ef4444; }
     .dropdown-search-box {
         width: 100%;
@@ -292,67 +293,93 @@
     .dropdown-item:hover { background: #f8fafc; color: var(--primary); }
 
     /* Age Slider */
-    .age-slider-wrap {
-        padding: 8px 0 4px;
-    }
+    .age-slider-wrap { padding: 6px 2px 2px; }
     .age-slider-wrap input[type=range] {
-        width: 100%;
         -webkit-appearance: none;
-        height: 6px;
+        appearance: none;
+        width: 100%;
+        height: 5px;
         border-radius: 3px;
         outline: none;
         cursor: pointer;
+        background: #e2e8f0;
+    }
+    .age-slider-wrap input[type=range]::-webkit-slider-runnable-track {
+        height: 5px;
+        border-radius: 3px;
     }
     .age-slider-wrap input[type=range]::-webkit-slider-thumb {
         -webkit-appearance: none;
-        width: 22px;
-        height: 22px;
+        appearance: none;
+        width: 20px;
+        height: 20px;
         border-radius: 50%;
-        background: var(--primary);
-        border: 3px solid white;
-        box-shadow: 0 2px 8px rgba(99,102,241,0.4);
+        background: white;
+        border: 3px solid var(--primary);
+        box-shadow: 0 2px 8px rgba(99,102,241,0.35);
+        cursor: pointer;
+        margin-top: -7.5px;
+        transition: box-shadow 0.2s;
+    }
+    .age-slider-wrap input[type=range]:hover::-webkit-slider-thumb {
+        box-shadow: 0 2px 12px rgba(99,102,241,0.55);
+    }
+    .age-slider-wrap input[type=range]::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: white;
+        border: 3px solid var(--primary);
+        box-shadow: 0 2px 8px rgba(99,102,241,0.35);
         cursor: pointer;
     }
     .age-display {
-        text-align: center;
-        font-size: 28px;
         font-weight: 800;
         color: var(--primary);
-        margin-bottom: 4px;
+        margin-bottom: 2px;
     }
     .age-display small { font-size: 13px; font-weight: 500; color: var(--text-muted); }
 
-    /* Simple Discovery Range */
+    /* Discovery Range */
     .disc-range-wrap {
         display: flex;
         align-items: center;
-        gap: 12px;
-        margin-top: 8px;
+        gap: 10px;
+        margin-top: 10px;
+    }
+    .disc-range-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
     }
     .disc-range-label {
-        font-size: 12px;
+        font-size: 11px;
+        font-weight: 600;
         color: var(--text-muted);
-        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
     .disc-range-input {
-        width: 65px;
-        padding: 8px 10px;
+        width: 58px;
+        padding: 7px 6px;
         border: 1.5px solid var(--border);
         border-radius: 10px;
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 700;
         text-align: center;
         color: var(--primary);
         background: #f8fafc;
         outline: none;
         -moz-appearance: textfield;
+        transition: 0.2s;
     }
-    .disc-range-input:focus { border-color: var(--primary); background: white; }
+    .disc-range-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
     .disc-range-input::-webkit-inner-spin-button,
     .disc-range-input::-webkit-outer-spin-button { -webkit-appearance: none; }
     .disc-range-bar {
         flex: 1;
-        height: 6px;
+        height: 5px;
         background: #e2e8f0;
         border-radius: 3px;
         position: relative;
@@ -362,6 +389,15 @@
         height: 100%;
         background: var(--primary);
         border-radius: 3px;
+    }
+    .disc-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--primary);
+        border: 2px solid white;
+        box-shadow: 0 1px 4px rgba(99,102,241,0.4);
+        flex-shrink: 0;
     }
 </style>
 {% endblock %}
@@ -573,12 +609,14 @@
                 <div class="form-group">
                     <label>Age Range</label>
                     <div class="disc-range-wrap">
-                        <div>
+                        <div class="disc-range-box">
                             <div class="disc-range-label">Min</div>
                             <input type="number" class="disc-range-input" id="disc-min" min="18" max="30" value="{{ profile.pref_age_min }}">
                         </div>
+                        <div class="disc-dot" id="disc-dot-left"></div>
                         <div class="disc-range-bar"><div class="disc-range-bar-fill" id="disc-bar"></div></div>
-                        <div>
+                        <div class="disc-dot" id="disc-dot-right"></div>
+                        <div class="disc-range-box">
                             <div class="disc-range-label">Max</div>
                             <input type="number" class="disc-range-input" id="disc-max" min="18" max="30" value="{{ profile.pref_age_max }}">
                         </div>
