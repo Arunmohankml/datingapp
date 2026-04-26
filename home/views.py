@@ -401,13 +401,15 @@ def send_match_request(request, receiver_id):
         if receiver != request.user:
             req, created = MatchRequest.objects.get_or_create(sender=request.user, receiver=receiver)
             if created:
+                messages.success(request, "Connection request sent!")
                 broadcast_event(f'chat_{receiver.id}', 'new_connection', {
                     'sender_id': request.user.id,
                     'sender_name': request.user.profile.name if hasattr(request.user, 'profile') else request.user.username
                 })
+            else:
+                messages.info(request, "Connection request already sent.")
         
         # Reset last_match_count so they can continue answering
-        # request.session['last_match_count'] it was already set in home
     
     return redirect('home')
     

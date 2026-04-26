@@ -140,7 +140,11 @@
         <div class="nav-inner">
             <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
                 <i class="fas fa-fire"></i><span>Match</span>
-                <span id="match-badge" class="badge-dot" style="{% if global_unread_count == 0 and pending_connections_count == 0 %}display: none;{% endif %}"></span>
+                <span id="match-badge" class="badge-dot" style="{% if pending_connections_count == 0 %}display: none;{% endif %}"></span>
+            </a>
+            <a href="{% url 'chat_list' %}" class="nav-link {% if request.resolver_match.url_name == 'chat_list' or 'chat_view' in request.resolver_match.url_name %}active{% endif %}">
+                <i class="fas fa-comment-dots"></i><span>Chat</span>
+                <span id="chat-badge" class="badge-dot" style="{% if global_unread_count == 0 %}display: none;{% endif %}; background: #ef4444;"></span>
             </a>
             <a href="{% url 'wall' %}" class="nav-link {% if request.resolver_match.url_name == 'wall' %}active{% endif %}">
                 <i class="fas fa-paint-brush"></i><span>Wall</span>
@@ -196,10 +200,10 @@
             const userChannel = pusher.subscribe(`chat_${USER_ID}`);
             
             userChannel.bind('new_message', (data) => {
-                // If not in the specific chat, show global indicator and toast
+                // If not in the specific chat, show chat indicator and toast
                 if (!window.location.pathname.includes(`/chat/${data.sender_id}/`)) {
-                    const matchBadge = document.getElementById('match-badge');
-                    if (matchBadge) matchBadge.style.display = 'block';
+                    const chatBadge = document.getElementById('chat-badge');
+                    if (chatBadge) chatBadge.style.display = 'block';
                     
                     showGlobalToast(`New message from ${data.sender_name || 'someone'}`);
                 }
