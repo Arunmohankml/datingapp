@@ -3,7 +3,8 @@
 
 {% block head %}
 <style>
-    /* ── Full Screen Lock ── */
+    /* ── Full Screen Takeover (Chat Style) ── */
+    nav { display: none !important; }
     html, body { 
         height: 100%; 
         height: 100dvh; 
@@ -11,49 +12,65 @@
         position: fixed; 
         width: 100%; 
         background: var(--bg-color);
+        padding: 0 !important;
+        margin: 0 !important;
     }
     
     .container {
+        max-width: 100% !important;
         padding: 0 !important;
-        margin: 0 auto !important;
+        margin: 0 !important;
         height: 100%;
+        box-sizing: border-box;
+    }
+
+    .conn-wrapper {
         display: flex;
         flex-direction: column;
-        max-width: 500px;
-        position: relative;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        background: var(--surface);
+        z-index: 9999;
     }
-    nav { display: none !important; }
 
     /* ── Header ── */
     .conn-header {
         flex-shrink: 0;
-        padding: 16px 16px 8px;
+        padding: 12px 16px;
         background: var(--surface);
         border-bottom: 1px solid var(--border);
-        z-index: 100;
-    }
-    .conn-header a {
-        text-decoration: none;
-        color: var(--primary);
-        font-size: 13px;
-        display: inline-flex;
+        display: flex;
         align-items: center;
-        gap: 6px;
-        margin-bottom: 12px;
-        font-weight: 600;
+        gap: 12px;
+        z-index: 10;
     }
-    .conn-header h2 {
-        font-size: 20px;
+    .conn-back {
+        text-decoration: none;
+        color: var(--text-muted);
+        font-size: 18px;
+        width: 36px; height: 36px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 50%;
+        transition: 0.2s;
+    }
+    .conn-back:hover { background: rgba(0,0,0,0.05); color: var(--primary); }
+    
+    .conn-header-info h2 {
+        font-size: 17px;
         margin: 0;
-        color: var(--text-main);
         font-weight: 800;
+        color: var(--text-main);
     }
 
-    /* ── Tab Switcher (Segmented Control) ── */
+    /* ── Tab Switcher ── */
     .tabs-container {
         padding: 12px 16px;
         background: var(--surface);
         border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
     }
     .tabs-wrapper {
         display: flex;
@@ -96,8 +113,8 @@
         flex: 1;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        padding: 16px 12px 100px;
-        background: var(--bg-gradient);
+        padding: 16px 16px 40px;
+        background: #f8fafc;
     }
 
     .conn-tab-content {
@@ -113,7 +130,7 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── User Row ── */
+    /* ── Row ── */
     .user-row {
         display: flex;
         align-items: center;
@@ -134,8 +151,7 @@
         flex: 1;
     }
     .user-info img {
-        width: 46px;
-        height: 46px;
+        width: 44px; height: 44px;
         border-radius: 50%;
         object-fit: cover;
         border: 2px solid var(--border);
@@ -147,7 +163,7 @@
         color: var(--text-main);
     }
     .user-info span {
-        font-size: 12px;
+        font-size: 11px;
         color: var(--text-muted);
     }
 
@@ -158,144 +174,133 @@
     }
 
     .btn-icon {
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 34px; height: 34px;
+        display: flex; align-items: center; justify-content: center;
         border-radius: 50%;
         border: none;
         cursor: pointer;
         color: white;
-        font-size: 14px;
+        font-size: 13px;
         transition: 0.2s;
     }
     .btn-icon:active { transform: scale(0.9); }
-    .btn-accept { background: #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
-    .btn-reject { background: #ef4444; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
+    .btn-accept { background: #10b981; }
+    .btn-reject { background: #ef4444; }
 
     .btn-chat {
         background: var(--primary);
         text-decoration: none;
-        padding: 8px 16px;
+        padding: 8px 14px;
         border-radius: 12px;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 700;
         color: white !important;
         display: flex;
         align-items: center;
-        gap: 8px;
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        gap: 6px;
     }
 
     .empty-state {
         text-align: center;
-        padding: 40px 20px;
+        padding: 60px 20px;
         color: var(--text-muted);
-        font-size: 13px;
-        background: rgba(255,255,255,0.5);
-        border-radius: 20px;
-        border: 1.5px dashed var(--border);
     }
 </style>
 {% endblock %}
 
 {% block body %}
-<!-- Header -->
-<div class="conn-header">
-    <a href="{% url 'home' %}"><i class="fas fa-arrow-left"></i> Back to Match</a>
-    <h2>Your Connections</h2>
-</div>
+<div class="conn-wrapper">
+    <!-- Header -->
+    <div class="conn-header">
+        <a href="{% url 'home' %}" class="conn-back"><i class="fas fa-arrow-left"></i></a>
+        <div class="conn-header-info">
+            <h2>Your Connections</h2>
+        </div>
+    </div>
 
-<!-- Tab Switcher -->
-<div class="tabs-container">
-    <div class="tabs-wrapper">
-        <button class="tab-btn active" onclick="switchTab('requests')">
-            <i class="fas fa-bell"></i> Requests
-            {% if incoming_requests.count > 0 %}
-            <span class="tab-badge">{{ incoming_requests.count }}</span>
+    <!-- Tab Switcher -->
+    <div class="tabs-container">
+        <div class="tabs-wrapper">
+            <button class="tab-btn active" onclick="switchTab('requests')">
+                <i class="fas fa-bell"></i> Requests
+                {% if incoming_requests.count > 0 %}
+                <span class="tab-badge">{{ incoming_requests.count }}</span>
+                {% endif %}
+            </button>
+            <button class="tab-btn" onclick="switchTab('matches')">
+                <i class="fas fa-heart"></i> Matches
+                <span class="tab-badge">{{ connections.count }}</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Scrollable Body -->
+    <div class="conn-body">
+        <!-- Requests Tab -->
+        <div id="tab-requests" class="conn-tab-content active">
+            {% if incoming_requests %}
+                {% for req in incoming_requests %}
+                <div class="user-row">
+                    <div class="user-info">
+                        <img src="{{ req.sender.profile.get_profile_pic_url }}" alt="Avatar">
+                        <div>
+                            <h4>{{ req.sender.profile.name|default:req.sender.username }}</h4>
+                            <span>Wants to connect</span>
+                        </div>
+                    </div>
+                    <div class="row-actions">
+                        <form method="POST" action="{% url 'accept_match' req.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-icon btn-accept"><i class="fas fa-check"></i></button>
+                        </form>
+                        <form method="POST" action="{% url 'reject_match' req.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-icon btn-reject"><i class="fas fa-times"></i></button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox" style="font-size: 40px; margin-bottom: 16px; opacity: 0.2;"></i>
+                    <p>No pending requests.</p>
+                </div>
             {% endif %}
-        </button>
-        <button class="tab-btn" onclick="switchTab('matches')">
-            <i class="fas fa-heart"></i> Matches
-            <span class="tab-badge">{{ connections.count }}</span>
-        </button>
-    </div>
-</div>
+        </div>
 
-<!-- Scrollable Content -->
-<div class="conn-body">
-
-    <!-- Requests Tab -->
-    <div id="tab-requests" class="conn-tab-content active">
-        {% if incoming_requests %}
-            {% for req in incoming_requests %}
-            <div class="user-row">
-                <div class="user-info">
-                    <img src="{{ req.sender.profile.get_profile_pic_url }}" alt="Avatar">
-                    <div>
-                        <h4>{{ req.sender.profile.name|default:req.sender.username }}</h4>
-                        <span>Wants to connect</span>
+        <!-- Matches Tab -->
+        <div id="tab-matches" class="conn-tab-content">
+            {% if connections %}
+                {% for conn in connections %}
+                <div class="user-row">
+                    <div class="user-info">
+                        <img src="{{ conn.profile.get_profile_pic_url }}" alt="Avatar">
+                        <div>
+                            <h4>{{ conn.profile.name|default:conn.username }}</h4>
+                            <span>You matched!</span>
+                        </div>
                     </div>
+                    <a href="{% url 'chat_view' conn.id %}" class="btn-chat">
+                        <i class="fas fa-comment"></i> Chat
+                    </a>
                 </div>
-                <div class="row-actions">
-                    <form method="POST" action="{% url 'accept_match' req.id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn-icon btn-accept"><i class="fas fa-check"></i></button>
-                    </form>
-                    <form method="POST" action="{% url 'reject_match' req.id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn-icon btn-reject"><i class="fas fa-times"></i></button>
-                    </form>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-heart-broken" style="font-size: 40px; margin-bottom: 16px; opacity: 0.2;"></i>
+                    <p>No matches yet.</p>
                 </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div class="empty-state">
-                <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 12px; opacity: 0.3;"></i>
-                <p>No pending requests right now.</p>
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
     </div>
-
-    <!-- Matches Tab -->
-    <div id="tab-matches" class="conn-tab-content">
-        {% if connections %}
-            {% for conn in connections %}
-            <div class="user-row">
-                <div class="user-info">
-                    <img src="{{ conn.profile.get_profile_pic_url }}" alt="Avatar">
-                    <div>
-                        <h4>{{ conn.profile.name|default:conn.username }}</h4>
-                        <span>You are matched!</span>
-                    </div>
-                </div>
-                <a href="{% url 'chat_view' conn.id %}" class="btn-chat">
-                    <i class="fas fa-comment"></i> Chat
-                </a>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div class="empty-state">
-                <i class="fas fa-heart-broken" style="font-size: 32px; margin-bottom: 12px; opacity: 0.3;"></i>
-                <p>No matches yet. Keep answering questions!</p>
-            </div>
-        {% endif %}
-    </div>
-
 </div>
 
 <script>
     function switchTab(tab) {
-        // Update Buttons
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         event.currentTarget.classList.add('active');
-
-        // Update Content
         document.querySelectorAll('.conn-tab-content').forEach(content => content.classList.remove('active'));
         document.getElementById('tab-' + tab).classList.add('active');
-
-        // Reset scroll position
         document.querySelector('.conn-body').scrollTop = 0;
     }
 </script>
