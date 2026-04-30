@@ -86,7 +86,9 @@
         border: 1px solid var(--border);
         border-radius: 24px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        margin-bottom: 20px;
+        margin-bottom: 24px;
+        display: flex;
+        flex-direction: column;
     }
 
     .profile-mini {
@@ -106,11 +108,11 @@
     .profile-mini p { margin: 0; font-size: 13px; color: var(--text-muted); }
 
     .progress-track {
-        height: 4px;
+        height: 6px;
         background: var(--border);
-        border-radius: 2px;
+        border-radius: 3px;
         overflow: hidden;
-        margin-bottom: 16px;
+        margin-bottom: 20px;
     }
     .progress-fill {
         height: 100%;
@@ -120,30 +122,35 @@
 
     .question-box h2 {
         font-size: 18px;
-        margin-bottom: 12px;
+        margin-bottom: 16px;
         color: var(--text-main);
-        line-height: 1.3;
+        line-height: 1.4;
+        font-weight: 700;
     }
     .options-list {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 12px;
     }
     .option-btn {
         display: block;
         width: 100%;
         text-align: left;
-        padding: 14px 16px;
+        padding: 16px 20px;
         border: 1px solid var(--border);
         border-radius: 16px;
         background: var(--surface);
         font-size: 15px;
-        font-weight: 500;
+        font-weight: 600;
         color: var(--text-main);
-        text-decoration: none;
-        transition: 0.2s;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .option-btn:active { background: #f1f5f9; border-color: var(--primary); }
+    .option-btn:active { 
+        background: #f1f5f9; 
+        border-color: var(--primary);
+        transform: scale(0.98);
+    }
 
     /* Match Cards */
     .match-card {
@@ -235,13 +242,15 @@
 
                     <div class="question-box">
                         <h2>{{ question.text }}</h2>
-                        <div class="options-list">
+                        <form id="quiz-form" method="POST" action="{% url 'answer_question' question.id %}" class="options-list">
+                            {% csrf_token %}
+                            <input type="hidden" name="option" id="selected-option-id">
                             {% for option in question.options.all %}
-                            <a href="{% url 'answer_question' question.id %}?option_id={{ option.id }}" class="option-btn">
+                            <button type="button" onclick="submitQuizOption({{ option.id }})" class="option-btn">
                                 {{ option.text }}
-                            </a>
+                            </button>
                             {% endfor %}
-                        </div>
+                        </form>
                     </div>
                 </div>
             {% endif %}
@@ -271,4 +280,18 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+function submitQuizOption(optionId) {
+    // Disable all buttons to prevent double-click
+    const buttons = document.querySelectorAll('.option-btn');
+    buttons.forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = '0.5';
+    });
+    
+    document.getElementById('selected-option-id').value = optionId;
+    document.getElementById('quiz-form').submit();
+}
+</script>
 {% endblock %}
