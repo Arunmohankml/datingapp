@@ -383,9 +383,16 @@
                 window.deferredPrompt = null;
                 return outcome;
             } else if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
-                customAlert("To install: Tap the 'Share' icon in Safari, then select 'Add to Home Screen'.", "Install Guide");
+                customAlert("To install on iOS: Tap the 'Share' icon in Safari (at the bottom), then scroll down and select 'Add to Home Screen'.", "Install Guide");
             } else {
-                customAlert("Installation is not supported in this browser or the app is already installed.", "Notice");
+                const isUAInApp = /FBAN|FBAV|Instagram|LinkedIn|Twitter|MicroMessenger/.test(navigator.userAgent);
+                if (isUAInApp) {
+                    customAlert("You are using an in-app browser. Please tap the three dots (⋮) and select 'Open in Chrome' or 'Open in Browser' to install.", "In-App Browser Detected");
+                } else if (isAppInstalled()) {
+                    customAlert("SRM Match is already installed and ready on your home screen!", "Already Installed");
+                } else {
+                    customAlert("To install: Use Google Chrome or Edge. If you're already in Chrome, wait a few seconds and try again.", "Manual Install");
+                }
             }
         }
     </script>
