@@ -11,7 +11,7 @@ import json
 import os
 import requests
 import firebase_admin
-from firebase_admin import auth as firebase_auth, credentials
+from firebase_admin import auth as firebase_auth, credentials, messaging
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from django.core.files.base import ContentFile
@@ -423,6 +423,81 @@ def api_verify_token(request):
     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
 
 
+@csrf_exempt
+@login_required
+def api_save_fcm_token(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            token = data.get('token')
+            device_type = data.get('device_type', 'web')
+            
+            if not token:
+                return JsonResponse({'success': False, 'error': 'Token missing'}, status=400)
+            
+            # Save or update the token
+            FCMToken.objects.update_or_create(
+                user=request.user,
+                token=token,
+                defaults={'device_type': device_type}
+            )
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+
+
+def send_push_to_user(user, title, body, url='/'):
+    tokens = FCMToken.objects.filter(user=user).values_list('token', flat=True)
+    if not tokens:
+        return
+    
+    # Lazy init check
+    if not firebase_admin._apps:
+        try:
+            cert_path = os.path.join(settings.BASE_DIR, 'serviceAccountKey.json')
+            if os.path.exists(cert_path):
+                cred = credentials.Certificate(cert_path)
+                firebase_admin.initialize_app(cred)
+            else:
+                firebase_config = os.environ.get('FIREBASE_SERVICE_ACCOUNT', '').strip()
+                if firebase_config:
+                    if (firebase_config.startswith('"') and firebase_config.endswith('"')):
+                        firebase_config = firebase_config[1:-1]
+                    safe_config = firebase_config.replace('\n', '\\n').replace('\r', '')
+                    try:
+                        cred_dict = json.loads(safe_config, strict=False)
+                    except:
+                        cred_dict = json.loads(firebase_config, strict=False)
+                    if 'private_key' in cred_dict:
+                        pk = cred_dict['private_key']
+                        if isinstance(pk, str):
+                            cred_dict['private_key'] = pk.replace('\\n', '\n').replace('\\\\n', '\n')
+                    cred = credentials.Certificate(cred_dict)
+                    firebase_admin.initialize_app(cred)
+        except Exception as e:
+            print(f"Push Init Error: {e}")
+            return
+
+    message = messaging.MulticastMessage(
+        notification=messaging.Notification(
+            title=title,
+            body=body,
+        ),
+        data={
+            'url': url,
+            'title': title,
+            'body': body
+        },
+        tokens=list(tokens),
+    )
+    try:
+        response = messaging.send_multicast(message)
+        print(f"Successfully sent {response.success_count} messages")
+    except Exception as e:
+        print(f"Error sending push: {e}")
+
+
 # ---------------- SOCIAL & CONNECTIONS ----------------
 @login_required
 def send_match_request(request, receiver_id):
@@ -587,6 +662,18 @@ def chat_view(request, partner_id):
                     'sender_name': msg.reply_to.sender.profile.name if hasattr(msg.reply_to.sender, 'profile') else msg.reply_to.sender.username
                 } if msg.reply_to else None
             })
+
+            # Send Push Notification
+            try:
+                sender_name = request.user.profile.name if hasattr(request.user, 'profile') else request.user.username
+                send_push_to_user(
+                    partner, 
+                    title=f"New message from {sender_name}", 
+                    body=text[:100] + ("..." if len(text) > 100 else ""),
+                    url=f"/chat/{request.user.id}/"
+                )
+            except Exception as e:
+                print(f"Push Error: {e}")
 
             if is_ajax:
                 return JsonResponse({

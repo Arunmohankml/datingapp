@@ -5,6 +5,7 @@ urlpatterns = [
     path("login/", views.login_view, name="login"),
     path("logout/", auth_views.LogoutView.as_view(next_page='login'), name="logout"),
     path("api/verify-token/", views.api_verify_token, name="api_verify_token"),
+    path("api/save-fcm-token/", views.api_save_fcm_token, name="api_save_fcm_token"),
     path("", views.home, name="home"),
     path("complete_profile/", views.complete_profile, name="complete_profile"),
     path("check_match/", views.check_match, name="check_match"),
