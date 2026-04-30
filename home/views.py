@@ -445,9 +445,9 @@ def api_save_fcm_token(request):
 
 
 def send_push_to_user(user, title, body, url='/'):
-    tokens = FCMToken.objects.filter(user=user).values_list('token', flat=True)
+    tokens = list(FCMToken.objects.filter(user=user).values_list('token', flat=True))
     if not tokens:
-        return
+        raise Exception("No push tokens found for this user. Make sure you granted notification permission.")
     
     # Lazy init check
     if not firebase_admin._apps:
@@ -472,9 +472,10 @@ def send_push_to_user(user, title, body, url='/'):
                             cred_dict['private_key'] = pk.replace('\\n', '\n').replace('\\\\n', '\n')
                     cred = credentials.Certificate(cred_dict)
                     firebase_admin.initialize_app(cred)
+                else:
+                    raise Exception("FIREBASE_SERVICE_ACCOUNT environment variable is not set.")
         except Exception as e:
-            print(f"Push Init Error: {e}")
-            return
+            raise Exception(f"Firebase Initialization Error: {str(e)}")
 
     message = messaging.MulticastMessage(
         notification=messaging.Notification(
@@ -486,7 +487,7 @@ def send_push_to_user(user, title, body, url='/'):
             'title': title,
             'body': body
         },
-        tokens=list(tokens),
+        tokens=tokens,
         webpush=messaging.WebpushConfig(
             headers={'Urgency': 'high'},
             notification=messaging.WebpushNotification(
@@ -502,9 +503,12 @@ def send_push_to_user(user, title, body, url='/'):
     )
     try:
         response = messaging.send_multicast(message)
-        print(f"Successfully sent {response.success_count} messages")
+        if response.failure_count > 0:
+            # log or handle invalid tokens here
+            pass
+        return response
     except Exception as e:
-        print(f"Error sending push: {e}")
+        raise Exception(f"FCM Send Error: {str(e)}")
 
 
 # ---------------- SOCIAL & CONNECTIONS ----------------
