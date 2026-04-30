@@ -51,6 +51,22 @@
         </div>
     </div>
 
+    <!-- Notifications -->
+    <div class="card" style="padding: 20px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; background: rgba(34, 197, 94, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #22c55e; font-size: 18px;">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 16px;">Push Notifications</h4>
+                    <p id="notif-status" style="margin: 4px 0 0; font-size: 13px; color: var(--text-muted);">Checking status...</p>
+                </div>
+            </div>
+            <button onclick="testPush()" class="install-btn" style="background: var(--primary); color: white;">Test</button>
+        </div>
+    </div>
+
     <!-- Updates -->
     <div class="card" style="padding: 20px; margin-bottom: 16px;">
         <a href="{% url 'announcements' %}" style="display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: var(--text-main);">
@@ -111,7 +127,44 @@
         if (confirmed) document.getElementById('logout-form').submit();
     }
 
+    async function testPush() {
+        const btn = event.currentTarget;
+        const originalText = btn.innerText;
+        btn.disabled = true;
+        btn.innerText = "Sending...";
+        
+        try {
+            const response = await fetch('/api/test-push/', { method: 'POST' });
+            const data = await response.json();
+            if (data.success) {
+                customAlert("Test push sent! Check your notification center. If you don't see it, ensure your browser/system permits notifications.", "Notification Sent");
+            } else {
+                throw new Error("Failed to send test push");
+            }
+        } catch (err) {
+            customAlert("Error: " + err.message, "Push Failed");
+        } finally {
+            btn.disabled = false;
+            btn.innerText = originalText;
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+        const statusEl = document.getElementById('notif-status');
+        if ('Notification' in window) {
+            if (Notification.permission === 'granted') {
+                statusEl.innerText = "Enabled";
+                statusEl.style.color = "#22c55e";
+            } else if (Notification.permission === 'denied') {
+                statusEl.innerText = "Blocked in settings";
+                statusEl.style.color = "#ef4444";
+            } else {
+                statusEl.innerText = "Not yet granted";
+            }
+        } else {
+            statusEl.innerText = "Not supported in this browser";
+        }
+
         const deleteBtn = document.getElementById('delete-account-btn');
         const deleteForm = document.getElementById('delete-account-form');
         

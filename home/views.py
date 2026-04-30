@@ -487,6 +487,18 @@ def send_push_to_user(user, title, body, url='/'):
             'body': body
         },
         tokens=list(tokens),
+        webpush=messaging.WebpushConfig(
+            headers={'Urgency': 'high'},
+            notification=messaging.WebpushNotification(
+                icon='/icon-192x192.png',
+                badge='/icon-192x192.png',
+                tag='chat-msg',
+                renotify=True
+            ),
+            fcm_options=messaging.WebpushFCMOptions(
+                link=url
+            )
+        )
     )
     try:
         response = messaging.send_multicast(message)
@@ -1393,6 +1405,19 @@ def announcements_view(request):
 @login_required
 def settings_view(request):
     return render(request, 'settings.html')
+
+@csrf_exempt
+@login_required
+def test_push(request):
+    if request.method == 'POST':
+        send_push_to_user(
+            request.user, 
+            title="Test Notification ✅", 
+            body="If you see this, push notifications are working perfectly!",
+            url="/settings/"
+        )
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False}, status=405)
 
 @login_required
 def delete_account(request):

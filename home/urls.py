@@ -23,6 +23,7 @@ urlpatterns = [
     path("chat/typing/<int:partner_id>/", views.chat_typing, name="chat_typing"),
     path("profile/edit/", views.edit_profile, name="edit_profile"),
     path("settings/", views.settings_view, name="settings"),
+    path("api/test-push/", views.test_push, name="test_push"),
     path("settings/delete/", views.delete_account, name="delete_account"),
     path("profile/<int:user_id>/", views.view_profile, name="view_profile"),
     path("profile/spark/<int:user_id>/", views.toggle_spark, name="toggle_spark"),
