@@ -18,7 +18,7 @@ from django.core.files.base import ContentFile
 import base64
 import math
 
-from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong
+from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm
 from .supabase_utils import upload_to_supabase
 # AI imports moved inside functions to prevent Vercel crashes
