@@ -426,7 +426,7 @@ async function submitBatch() {
         }
     } catch (e) { 
         console.error("Save error:", e);
-        alert("Saving failed. Please refresh.");
+        customAlert("Saving failed. Please refresh.", "Error");
     }
 }
 

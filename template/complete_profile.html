@@ -759,7 +759,10 @@
                 <div id="verify-initial-ui">
                     <i class="fas fa-shield-alt" style="font-size: 32px; color: var(--primary); margin-bottom: 12px; display: block;"></i>
                     <h4 style="margin: 0 0 8px; font-size: 16px;">Identity Verification</h4>
-                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Quickly verify your identity to get a "Verified" badge and 2x more matches!</p>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Quickly verify your identity to get a "Verified" badge and 2x more matches!</p>
+                    <p style="font-size: 11px; color: var(--primary); font-weight: 600; margin-bottom: 16px; background: rgba(99,102,241,0.05); padding: 8px; border-radius: 10px;">
+                        <i class="fas fa-user-shield"></i> This verification photo isn't stored anywhere and won't appear in your profile.
+                    </p>
                     <button type="button" onclick="startVerification()" class="btn" style="background: var(--primary); color: white; border-radius: 12px; padding: 10px 20px; font-weight: 700; border: none; cursor: pointer;">
                         Verify Identity
                     </button>
@@ -1100,24 +1103,28 @@
         if (step === 1) {
             const name = document.getElementById('id_name').value.trim();
             const age = document.getElementById('id_age').value.trim();
-            if (!name || !age) { alert("Please fill out your Name and Age to continue."); return; }
+            if (!name || !age) { customAlert("Please fill out your Name and Age to continue.", "Missing Info"); return; }
         }
         else if (step === 2) {
             const living = document.getElementById('id_living_place').value.trim();
             const native = document.getElementById('id_native_place').value.trim();
-            if (!living || !native) { alert("Current and Native places are required."); return; }
+            if (!living || !native) { customAlert("Current and Native places are required.", "Missing Info"); return; }
+        }
+        else if (step === 4) {
+            const interests = document.getElementById('id_interest_tags').value.trim();
+            if (!interests) { customAlert("Please select at least one interest to help us find matches!", "Interests Required"); return; }
         }
         else if (step === 5) {
             const campus = document.getElementById('id_campus').value;
             const year = document.getElementById('id_clg_year').value;
             const course = document.getElementById('id_course').value;
-            if (!campus || !year || !course) { alert("All education details are mandatory."); return; }
+            if (!campus || !year || !course) { customAlert("All education details are mandatory.", "Missing Info"); return; }
         }
         else if (step === 6) {
             const looking = document.getElementById('id_looking_for').value;
             const pGender = document.getElementById('id_pref_gender').value;
             const pLang = document.getElementById('id_pref_languages').value.trim();
-            if (!looking || !pGender || !pLang) { alert("All preferences are mandatory."); return; }
+            if (!looking || !pGender || !pLang) { customAlert("All preferences are mandatory.", "Missing Info"); return; }
         }
 
         if (currentStep < totalSteps) {
@@ -1304,7 +1311,7 @@
     async function startVerification() {
         // 1. Check for Secure Context (Required by browsers for Camera)
         if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            alert("🔒 Camera blocked: Browsers only allow camera access over HTTPS or localhost. Please use a secure connection.");
+            customAlert("Camera blocked: Browsers only allow camera access over HTTPS or localhost. Please use a secure connection.", "Security Error");
             return;
         }
 
@@ -1332,11 +1339,11 @@
         } catch (err) {
             console.error("Camera Error:", err);
             if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                alert("🚫 Camera Access Denied: Please click the camera icon in your browser's address bar and select 'Always allow' to verify your identity.");
+                customAlert("Camera Access Denied: Please click the camera icon in your browser's address bar and select 'Always allow' to verify your identity.", "Permission Denied");
             } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-                alert("❌ No camera found on this device.");
+                customAlert("No camera found on this device.", "Device Error");
             } else {
-                alert("❌ Camera Error: " + err.message);
+                customAlert("Camera Error: " + err.message, "Error");
             }
             return;
         }
@@ -1467,7 +1474,7 @@
                 statusText.innerHTML = '<i class="fas fa-times-circle"></i> No face detected in PFP!';
                 statusText.style.color = '#ef4444';
                 clearPfp();
-                alert("Verification Failed: No face detected in your profile picture. Please upload a clear photo of yourself.");
+                customAlert("No face detected in your profile picture. Please upload a clear photo of yourself.", "Verification Failed");
                 return;
             }
 
@@ -1484,7 +1491,7 @@
                 statusText.innerHTML = '<i class="fas fa-times-circle"></i> Identity mismatch! (Rejected)';
                 statusText.style.color = '#ef4444';
                 clearPfp();
-                alert("Rejected: Profile picture does not match verification photo. Please upload a clear photo of yourself.");
+                customAlert("Profile picture does not match verification photo. Please upload a clear photo of yourself.", "Rejected");
             }
         } catch (err) {
             console.error(err);
@@ -1527,18 +1534,18 @@
                             input.value = ""; // Remove file so it doesn't submit natively
                             checkStep7Validity();
                         } else {
-                            alert("Upload failed. Please try again.");
+                            customAlert("Upload failed. Please try again.", "Error");
                         }
                     } catch (fetchErr) {
                         console.error("PFP upload error:", fetchErr);
-                        alert("Network error. Please try uploading again.");
+                        customAlert("Network error. Please try uploading again.", "Error");
                     }
                     if (nextBtn) { nextBtn.disabled = false; nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>'; }
                 };
                 reader.readAsDataURL(compressedFile);
             } catch (err) {
                 console.error("Compression failed:", err);
-                alert("Failed to process profile picture. Please try another image.");
+                customAlert("Failed to process profile picture. Please try another image.", "Error");
                 if (nextBtn) { nextBtn.disabled = false; nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>'; }
             }
         }

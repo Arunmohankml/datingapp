@@ -832,7 +832,7 @@
                 {% for img in gallery %}
                 <div class="gallery-item">
                     <img src="{{ img.get_image_url }}" alt="Gallery">
-                    <a href="{% url 'delete_profile_image' img.id %}" class="gallery-delete" onclick="return confirm('Delete photo?')">
+                    <a href="{% url 'delete_profile_image' img.id %}" class="gallery-delete" onclick="handleDeletePhoto(event, this.href)">
                         <i class="fas fa-times"></i>
                     </a>
                 </div>
@@ -1233,7 +1233,7 @@
 
     function addMovie(m) {
         if(selectedMovies.length >= 3) {
-            alert("You can select only 3 movies max.");
+            customAlert("You can select only 3 movies max.", "Limit Reached");
             return;
         }
         if(!selectedMovies.find(x => x.id == m.id)) {
@@ -1245,7 +1245,7 @@
 
     function addSong(s) {
         if(selectedSongs.length >= 3) {
-            alert("You can select only 3 songs max.");
+            customAlert("You can select only 3 songs max.", "Limit Reached");
             return;
         }
         if(!selectedSongs.find(x => x.id == s.id)) {
@@ -1389,16 +1389,22 @@
                     pfpFaceStatus.innerText = "Identity mismatch! (Rejected)";
                     pfpFaceStatus.style.display = "block";
                     this.value = ''; 
-                    alert("Rejected: This photo doesn't match your original verification scan.");
+                    customAlert("This photo doesn't match your original verification scan.", "Rejected");
                 }
 
             } catch (err) {
                 console.error("Verification error:", err);
                 hideOverlay();
-                alert(err.message || "Verification failed. Please try again.");
+                customAlert(err.message || "Verification failed. Please try again.", "Error");
                 this.value = '';
             }
         });
+    }
+
+    async function handleDeletePhoto(e, url) {
+        e.preventDefault();
+        const confirmed = await customConfirm("Are you sure you want to delete this photo?", "Delete Photo", "Delete", "Cancel");
+        if (confirmed) window.location.href = url;
     }
 </script>
 

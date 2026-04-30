@@ -99,7 +99,7 @@ class ProfileForm(forms.ModelForm):
         mandatory_fields = [
             'living_place', 'native_place', 
             'clg_year', 'campus', 'course',
-            'pref_age_min', 'pref_age_max', 'pref_gender', 'age'
+            'pref_age_min', 'pref_age_max', 'pref_gender', 'age', 'interest_tags'
         ]
         for field in mandatory_fields:
             if field in self.fields:

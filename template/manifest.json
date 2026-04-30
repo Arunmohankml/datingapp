@@ -1,7 +1,7 @@
 {
   "name": "SRM Match",
   "short_name": "Match",
-  "description": "University Dating & Connection Platform",
+  "description": "University Connection & Match Platform",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1a1a1a",

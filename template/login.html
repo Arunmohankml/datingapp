@@ -1,228 +1,306 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
 <style>
+    :root {
+        --primary: #6366f1;
+        --primary-glow: rgba(99, 102, 241, 0.4);
+        --glass: rgba(255, 255, 255, 0.08);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --text-main: #ffffff;
+        --text-muted: rgba(255, 255, 255, 0.6);
+    }
+
     body {
-        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        background: #05070a; /* Ultra dark deep space */
+        font-family: 'Outfit', sans-serif;
         min-height: 100vh;
+        overflow-x: hidden;
+        margin: 0;
+        color: var(--text-main);
+    }
+
+    /* ── Animated CSS Background ── */
+    .bg-mesh {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background: radial-gradient(circle at 50% 50%, #0a0c14 0%, #05070a 100%);
+    }
+    .aurora-blob {
+        position: absolute;
+        width: 80vw;
+        height: 80vh;
+        background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+        filter: blur(100px);
+        opacity: 0.3;
+        animation: auroraFloat 20s infinite alternate ease-in-out;
+    }
+    .blob-1 { top: -20%; left: -20%; background: radial-gradient(circle, #6366f1 0%, transparent 70%); }
+    .blob-2 { bottom: -20%; right: -20%; background: radial-gradient(circle, #818cf8 0%, transparent 70%); animation-delay: -10s; }
+
+    @keyframes auroraFloat {
+        0% { transform: translate(0,0) rotate(0deg); }
+        100% { transform: translate(100px, 50px) rotate(30deg); }
     }
 
     .landing-container {
-        max-width: 800px;
+        max-width: 1100px;
         margin: 0 auto;
-        padding: 40px 20px;
+        padding: 100px 20px;
         text-align: center;
-        animation: fadeIn 0.8s ease-out;
     }
 
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
+    /* ── Hero Section ── */
     .hero-section {
-        margin-bottom: 60px;
+        margin-bottom: 100px;
+        perspective: 1000px;
     }
 
     .logo-badge {
-        display: inline-block;
-        padding: 8px 16px;
-        background: rgba(99, 102, 241, 0.1);
-        color: var(--primary);
-        border-radius: 30px;
-        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 18px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #818cf8;
+        border-radius: 100px;
+        font-size: 12px;
         font-weight: 700;
-        letter-spacing: 0.05em;
-        margin-bottom: 24px;
-        border: 1px solid rgba(99, 102, 241, 0.2);
+        letter-spacing: 0.15em;
+        margin-bottom: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        text-transform: uppercase;
     }
 
-    .hero-title {
-        font-size: 42px;
+    .tagline-container {
+        margin-bottom: 24px;
+        font-family: 'Outfit', sans-serif;
         font-weight: 800;
-        color: var(--text-main);
-        line-height: 1.1;
-        margin-bottom: 20px;
-        letter-spacing: -0.02em;
+        letter-spacing: 0.1em;
+        font-size: 14px;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .tagline-s { color: #6366f1; text-shadow: 0 0 10px rgba(99, 102, 241, 0.5); }
+    .tagline-word { 
+        color: white; 
+        opacity: 0;
+        animation: taglineReveal 0.6s forwards;
+    }
+
+    @keyframes taglineReveal {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .tagline-1 { animation-delay: 0.2s; }
+    .tagline-2 { animation-delay: 0.4s; }
+    .tagline-3 { animation-delay: 0.6s; }
+
+    .hero-title {
+        font-size: clamp(36px, 8vw, 60px);
+        font-weight: 800;
+        line-height: 1.0;
+        margin-bottom: 24px;
+        letter-spacing: -0.04em;
     }
 
     .hero-title span {
-        color: var(--primary);
-        background: linear-gradient(90deg, var(--primary), #818cf8);
+        background: linear-gradient(to right, #ffffff, #6366f1);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 
     .hero-subtitle {
-        font-size: 18px;
+        font-size: 19px;
         color: var(--text-muted);
-        max-width: 500px;
-        margin: 0 auto 40px;
+        max-width: 540px;
+        margin: 0 auto;
         line-height: 1.6;
     }
 
+    /* ── 3D Reveal Cards ── */
     .feature-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-        gap: 20px;
-        margin-bottom: 60px;
-        text-align: left;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 30px;
+        margin-bottom: 120px;
     }
 
     .feature-card {
-        background: white;
-        padding: 24px;
-        border-radius: 20px;
-        border: 1px solid var(--border);
-        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-        transition: 0.3s;
+        background: var(--glass);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        padding: 40px 30px;
+        border-radius: 32px;
+        border: 1px solid var(--glass-border);
+        text-align: left;
+        transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), background 0.3s;
+        opacity: 0;
+        transform: translateY(50px) rotateX(15deg);
+    }
+
+    .feature-card.revealed {
+        opacity: 1;
+        transform: translateY(0) rotateX(0deg);
     }
 
     .feature-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 12px 20px rgba(0,0,0,0.05);
+        background: rgba(255, 255, 255, 0.12);
+        border-color: rgba(255, 255, 255, 0.2);
     }
 
     .feature-icon {
-        width: 44px;
-        height: 44px;
-        background: #f1f5f9;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        color: var(--primary);
-        margin-bottom: 16px;
+        width: 50px; height: 50px;
+        background: #6366f1;
+        border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 20px; color: white;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
     }
 
-    .feature-card h3 {
-        font-size: 16px;
-        margin-bottom: 8px;
-        color: var(--text-main);
-    }
+    .feature-card h3 { font-size: 20px; margin-bottom: 12px; font-weight: 700; }
+    .feature-card p { font-size: 15px; color: var(--text-muted); line-height: 1.6; }
 
-    .feature-card p {
-        font-size: 14px;
-        color: var(--text-muted);
-        line-height: 1.5;
-    }
-
+    /* ── Premium Login Box ── */
     .login-box {
-        background: white;
-        padding: 40px;
-        border-radius: 24px;
-        border: 1px solid var(--border);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.05);
-        max-width: 450px;
+        background: #ffffff;
+        padding: 50px;
+        border-radius: 40px;
+        max-width: 440px;
         margin: 0 auto;
+        color: #0f172a;
+        box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+        transform: translateY(50px);
+        opacity: 0;
+        transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
     }
+    .login-box.revealed { opacity: 1; transform: translateY(0); }
 
     .btn-google {
         width: 100%;
-        background: #ffffff;
-        color: #374151;
-        border: 2px solid #e5e7eb;
-        padding: 14px;
+        background: #0f172a;
+        color: white;
+        border: none;
+        padding: 18px;
         font-size: 16px;
-        font-weight: 600;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        font-weight: 700;
+        border-radius: 18px;
+        display: flex; align-items: center; justify-content: center;
         gap: 12px;
         cursor: pointer;
-        transition: 0.2s;
+        transition: transform 0.2s, background 0.2s;
     }
 
     .btn-google:hover {
-        background: #f9fafb;
-        border-color: #d1d5db;
-        transform: translateY(-1px);
+        background: #1e293b;
+        transform: scale(1.02);
     }
 
-    .btn-google svg {
-        width: 20px;
-        height: 20px;
-    }
+    .btn-google:active { transform: scale(0.98); }
 
     .trust-note {
-        margin-top: 20px;
+        margin-top: 30px;
         font-size: 12px;
-        color: var(--text-muted);
+        color: #64748b;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
     }
 
-    .error-banner {
-        background-color: #fef2f2;
-        color: #b91c1c;
-        padding: 14px;
-        border-radius: 12px;
-        font-size: 13px;
-        margin-bottom: 24px;
-        display: none;
-        border: 1px solid #fecaca;
-        font-weight: 500;
-    }
-
+    /* ── Responsive ── */
     @media (max-width: 600px) {
-        .hero-title { font-size: 32px; }
-        .hero-subtitle { font-size: 16px; }
-        .login-box { padding: 30px 20px; }
+        .landing-container { padding: 60px 16px; }
+        .hero-title { font-size: 36px; }
+        .login-box { padding: 40px 24px; border-radius: 30px; }
     }
 </style>
 {% endblock %}
 
 {% block body %}
+<div class="bg-mesh">
+    <div class="aurora-blob blob-1"></div>
+    <div class="aurora-blob blob-2"></div>
+</div>
+
 <div class="landing-container">
     <div class="hero-section">
-        <div class="logo-badge">EXCLUSIVELY FOR SRMIST</div>
-        <h1 class="hero-title">Find Your Perfect <span>SRM Match</span></h1>
-        <p class="hero-subtitle">The AI-powered dating and networking platform designed specifically for the SRM community. Connect with real students, guaranteed.</p>
+        <div class="logo-badge">Exclusive Connection Hub</div>
+        <div class="tagline-container">
+            <span class="tagline-s">SRM:</span>
+            <span class="tagline-word tagline-1">Swipe,</span>
+            <span class="tagline-word tagline-2">Relate,</span>
+            <span class="tagline-word tagline-3">Match</span>
+        </div>
+        <h1 class="hero-title">Connect with<br><span>Your SRM Peer</span></h1>
+        <p class="hero-subtitle">The advanced student-exclusive connecting platform.</p>
     </div>
 
     <div class="feature-grid">
-        <div class="feature-card">
-            <div class="feature-icon"><i class="fas fa-robot"></i></div>
-            <h3>AI Human Verify</h3>
-            <p>Advanced AI ensures every profile is a real person. No bots, no fakes—just real SRM students.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon"><i class="fas fa-mask"></i></div>
-            <h3>Campus Confessions</h3>
-            <p>Share your secrets, crushes, and thoughts anonymously. React and connect with the rawest side of campus life.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon"><i class="fas fa-bolt"></i></div>
-            <h3>Fast-Fire Quiz</h3>
-            <p>Answer questions fast and get matched based on your personality, vibe, and interests.</p>
-        </div>
-        <div class="feature-card">
+        <div class="feature-card reveal">
             <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
-            <h3>Safe & Secure</h3>
-            <p>End-to-end moderated community with strict rules against spam and inappropriate content.</p>
+            <h3>Military Grade Verification</h3>
+            <p>Our biometric AI ensures every connection is authentic. Guaranteed 0% bots or fake profiles.</p>
+        </div>
+        <div class="feature-card reveal">
+            <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+            <h3>Instant Vibe Match</h3>
+            <p>Real-time personality analysis through our unique fast-fire quiz system. Skip the small talk.</p>
+        </div>
+        <div class="feature-card reveal">
+            <div class="feature-icon"><i class="fas fa-eye-slash"></i></div>
+            <h3>Anonymous Hub</h3>
+            <p>Share your truest thoughts and campus confessions in a secure, anonymous environment.</p>
         </div>
     </div>
 
-    <div class="login-box">
-        <div id="error-message" class="error-banner"></div>
+    <div class="login-box reveal">
+        <div id="error-message" class="error-banner" style="display:none; color:red; margin-bottom:20px; font-weight:600;"></div>
         
-        <h2 style="font-size: 20px; margin-bottom: 12px; color: var(--text-main);">Ready to jump in?</h2>
-        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 32px;">Join thousands of students finding their vibe on campus.</p>
+        <h2 style="font-size: 26px; margin-bottom: 8px; font-weight: 800;">Join the Hub</h2>
+        <p style="font-size: 15px; color: #64748b; margin-bottom: 40px;">Use your credentials to get started.</p>
 
         <button class="btn-google" id="google-login-btn">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-            Continue with SRM Google
+            <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            Sign in with Google
         </button>
 
-        <p class="trust-note">
-            <i class="fas fa-lock" style="margin-right: 4px;"></i> Use your <strong>@srmist.edu.in</strong> account
-        </p>
+        <div id="login-install-card" style="display: none; padding: 24px; background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 24px; margin-top: 24px; text-align: center;">
+            <div style="font-size: 24px; margin-bottom: 8px; color: #6366f1;"><i class="fas fa-mobile-android"></i></div>
+            <p style="margin: 0 0 16px; font-size: 14px; font-weight: 600; color: #1e293b;">Install SRM Match for a faster, full-screen experience.</p>
+            <button id="login-install-btn" style="width: 100%; padding: 14px; background: #6366f1; color: white; border: none; border-radius: 16px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.3s; box-shadow: 0 8px 16px rgba(99, 102, 241, 0.2);">Install App</button>
+            <p id="ios-install-hint" style="display: none; margin-top: 12px; font-size: 11px; color: #64748b;">On iOS: Tap <i class="far fa-share-square"></i> then "Add to Home Screen"</p>
+        </div>
+
+        <p class="trust-note"><i class="fas fa-lock"></i> Secured with SRM Auth</p>
     </div>
     
-    <p style="margin-top: 40px; color: var(--text-muted); font-size: 13px;">
-        © 2026 SRM Match. Built for the community.
+    <p style="margin-top: 80px; color: rgba(255, 255, 255, 0.2); font-size: 13px;">
+        © 2026 SRM Match. All rights reserved.
     </p>
 </div>
+
+<!-- Scroll Reveal Script -->
+<script>
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: "0px 0px -50px 0px"
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
@@ -241,9 +319,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-        prompt: 'select_account'
-    });
+    provider.setCustomParameters({ prompt: 'select_account' });
 
     const errorEl = document.getElementById('error-message');
 
@@ -254,12 +330,17 @@
         
         try {
             loginBtn.disabled = true;
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
 
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
-            const idToken = await user.getIdToken();
             
+            if (!user.email.endsWith('@srmist.edu.in') && !user.email.endsWith('arunmohankml@gmail.com')) {
+                await auth.signOut();
+                throw new Error("Only @srmist.edu.in emails allowed.");
+            }
+
+            const idToken = await user.getIdToken();
             const response = await fetch('/api/verify-token/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -286,23 +367,42 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        showWarningModal(
-            'entry_gate',
-            'Welcome to the SRM Social Hub',
-            `<div style="text-align:left;">
-                <p>This is a verified space for SRM students to connect, confess, and create. By entering, you agree to play fair.</p>
-                <p style="font-weight:bold; margin-top:16px;">The "Rules of Engagement":</p>
-                <ul style="margin-top:8px; padding-left:20px; display:flex; flex-direction:column; gap:8px;">
-                    <li><b>No Fake IDs:</b> Use your authentic identity. We have a zero-tolerance policy for impersonation.</li>
-                    <li><b>No "Burner" Spam:</b> Meaningful interaction only. Repeatedly posting gibberish or ads will result in an immediate ban.</li>
-                    <li><b>Respect the Privacy:</b> What happens in the Hub stays in the Hub. Do not screenshot confessions for external bullying.</li>
-                    <li><b>The "Human" Rule:</b> Treat every profile like a person you have to sit next to in class tomorrow.</li>
-                </ul>
-            </div>`,
-            [
-                { text: 'I am an SRM Student & I Agree', isPrimary: true }
-            ]
-        );
+        const installCard = document.getElementById('login-install-card');
+        const installBtn = document.getElementById('login-install-btn');
+        const iosHint = document.getElementById('ios-install-hint');
+        
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+        if (!isStandalone) {
+            // Show card if we have the prompt OR if it's iOS (manual install)
+            if (isIOS) {
+                if (installCard) installCard.style.display = 'block';
+                if (installBtn) installBtn.style.display = 'none'; // iOS can't use the btn
+                if (iosHint) iosHint.style.display = 'block';
+            } else {
+                const check = setInterval(() => {
+                    if (window.deferredPrompt) {
+                        if (installCard) installCard.style.display = 'block';
+                        clearInterval(check);
+                    }
+                }, 500);
+                setTimeout(() => clearInterval(check), 8000);
+            }
+        }
+
+        if (installBtn) {
+            installBtn.onclick = async () => {
+                if (window.deferredPrompt) {
+                    window.deferredPrompt.prompt();
+                    const { outcome } = await window.deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        if (installCard) installCard.style.display = 'none';
+                    }
+                    window.deferredPrompt = null;
+                }
+            };
+        }
     });
 </script>
 {% endblock %}

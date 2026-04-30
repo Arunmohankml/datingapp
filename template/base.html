@@ -180,7 +180,7 @@
     <!-- PWA Prompt -->
     <div id="pwa-install-prompt" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:white; padding:20px; border-radius:24px; box-shadow:0 15px 40px rgba(0,0,0,0.15); width:92%; max-width:400px; z-index:10001; border:1px solid rgba(0,0,0,0.05); animation: qFadeIn 0.5s ease;">
         <div style="display:flex; align-items:center; gap:15px; margin-bottom:15px;">
-            <img src="/static/icon-192x192.png" width="54" height="54" style="border-radius:14px; box-shadow: 0 4px 10px rgba(99,102,241,0.2);">
+            <img src="/static/images/icon-192x192.png" width="54" height="54" style="border-radius:14px; box-shadow: 0 4px 10px rgba(99,102,241,0.2);">
             <div>
                 <h3 style="margin:0; font-size:16px;">Install SRM Match</h3>
                 <p style="margin:0; font-size:12px; color:#64748b;">Get the best experience on your home screen!</p>
@@ -297,16 +297,49 @@
 
         function customAlert(msg, title = "Notice") {
             const modal = document.createElement('div');
-            modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:11000; backdrop-filter:blur(5px);";
+            modal.className = "custom-alert-wrapper";
+            modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:11000; backdrop-filter:blur(8px); animation: fadeIn 0.3s ease;";
             modal.innerHTML = `
-                <div style="background:white; padding:32px; border-radius:24px; max-width:350px; width:85%; box-shadow:0 20px 40px rgba(0,0,0,0.2); text-align:center;">
-                    <h3 style="margin-bottom:12px;">${title}</h3>
-                    <p style="margin-bottom:24px; color:#64748b;">${msg}</p>
-                    <button onclick="this.closest('div').parentElement.remove()" style="width:100%; padding:12px; background:#6366f1; color:white; border:none; border-radius:12px; font-weight:600; cursor:pointer;">OK</button>
+                <div style="background:white; padding:32px; border-radius:28px; max-width:350px; width:88%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); text-align:center; transform: scale(1); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                    <div style="width:50px; height:50px; background:rgba(99,102,241,0.1); color:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 16px; font-size:24px;">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <h3 style="margin:0 0 10px; font-size:20px; font-weight:800;">${title}</h3>
+                    <p style="margin:0 0 24px; color:#64748b; font-size:15px; line-height:1.5;">${msg}</p>
+                    <button onclick="this.closest('.custom-alert-wrapper').remove()" style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:14px; font-weight:700; cursor:pointer; font-size:15px; transition:0.2s;">Got it</button>
                 </div>
             `;
             document.body.appendChild(modal);
         }
+
+        function customConfirm(msg, title = "Are you sure?", confirmBtnText = "Confirm", cancelBtnText = "Cancel") {
+            return new Promise((resolve) => {
+                const modal = document.createElement('div');
+                modal.className = "custom-alert-wrapper";
+                modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:11000; backdrop-filter:blur(8px); animation: fadeIn 0.3s ease;";
+                modal.innerHTML = `
+                    <div style="background:white; padding:32px; border-radius:28px; max-width:360px; width:90%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); text-align:center; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                        <div style="width:50px; height:50px; background:rgba(244,63,94,0.1); color:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 16px; font-size:24px;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3 style="margin:0 0 10px; font-size:20px; font-weight:800;">${title}</h3>
+                        <p style="margin:0 0 24px; color:#64748b; font-size:15px; line-height:1.5;">${msg}</p>
+                        <div style="display:flex; gap:12px;">
+                            <button id="confirm-cancel" style="flex:1; padding:14px; background:#f1f5f9; color:#475569; border:none; border-radius:14px; font-weight:700; cursor:pointer; font-size:15px;">${cancelBtnText}</button>
+                            <button id="confirm-yes" style="flex:1.5; padding:14px; background:var(--primary); color:white; border:none; border-radius:14px; font-weight:700; cursor:pointer; font-size:15px;">${confirmBtnText}</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                modal.querySelector('#confirm-cancel').onclick = () => { modal.remove(); resolve(false); };
+                modal.querySelector('#confirm-yes').onclick = () => { modal.remove(); resolve(true); };
+            });
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
 
         // Register Service Worker
         if ('serviceWorker' in navigator) {

@@ -11,6 +11,18 @@
     .card:active {
         transform: scale(0.98);
     }
+    .install-btn {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .install-btn:active { transform: scale(0.95); }
 </style>
 {% endblock %}
 
@@ -22,6 +34,22 @@
     </a>
 
     <h2 style="font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 32px;">Settings</h2>
+
+    <!-- Install App Card -->
+    <div id="install-app-card" class="card" style="padding: 20px; margin-bottom: 16px; display: none; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+        <div style="display: flex; align-items: center; justify-content: space-between; color: white;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; background: rgba(255, 255, 255, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 16px; color: white;">Install SRM Match</h4>
+                    <p style="margin: 4px 0 0; font-size: 12px; opacity: 0.8;">Get the full app experience</p>
+                </div>
+            </div>
+            <button id="manual-install-btn" class="install-btn" style="background: white; color: var(--primary);">Install</button>
+        </div>
+    </div>
 
     <!-- Updates -->
     <div class="card" style="padding: 20px; margin-bottom: 16px;">
@@ -41,9 +69,9 @@
 
     <!-- Logout Form -->
     <div class="card" style="padding: 20px; margin-bottom: 16px;">
-        <form method="POST" action="{% url 'logout' %}">
+        <form id="logout-form" method="POST" action="{% url 'logout' %}">
             {% csrf_token %}
-            <button type="submit" style="width: 100%; background: none; border: none; padding: 0; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: var(--text-main);">
+            <button type="button" onclick="handleLogout()" style="width: 100%; background: none; border: none; padding: 0; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: var(--text-main);">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <div style="width: 40px; height: 40px; background: #f1f5f9; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 18px;">
                         <i class="fas fa-sign-out-alt"></i>
@@ -78,18 +106,56 @@
 </div>
 
 <script>
+    async function handleLogout() {
+        const confirmed = await customConfirm("Are you sure you want to logout?", "Logout", "Logout", "Stay");
+        if (confirmed) document.getElementById('logout-form').submit();
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         const deleteBtn = document.getElementById('delete-account-btn');
         const deleteForm = document.getElementById('delete-account-form');
         
         if (deleteBtn) {
-            deleteBtn.addEventListener('click', (e) => {
+            deleteBtn.addEventListener('click', async (e) => {
                 e.preventDefault();
-                const confirmed = confirm("Delete Account?\n\nAre you sure you want to permanently delete your account? This action CANNOT be undone. All your matches, chats, and confessions will be lost.");
-                if (confirmed) {
-                    deleteForm.submit();
-                }
+                const confirmed = await customConfirm(
+                    "This action CANNOT be undone. All your matches, chats, and confessions will be lost forever.",
+                    "Delete Account?",
+                    "Permanently Delete",
+                    "Keep Account"
+                );
+                if (confirmed) deleteForm.submit();
             });
+        }
+
+        // PWA Manual Install Button Logic
+        const installCard = document.getElementById('install-app-card');
+        const installBtn = document.getElementById('manual-install-btn');
+        
+        // Check if already installed
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        if (!isStandalone) {
+            // Wait for deferredPrompt to be available from base.html
+            const checkPrompt = setInterval(() => {
+                if (window.deferredPrompt) {
+                    installCard.style.display = 'block';
+                    clearInterval(checkPrompt);
+                }
+            }, 500);
+            
+            // Timeout after 5 seconds if not available
+            setTimeout(() => clearInterval(checkPrompt), 5000);
+        }
+
+        if (installBtn) {
+            installBtn.onclick = async () => {
+                if (window.deferredPrompt) {
+                    window.deferredPrompt.prompt();
+                    const { outcome } = await window.deferredPrompt.userChoice;
+                    if (outcome === 'accepted') installCard.style.display = 'none';
+                    window.deferredPrompt = null;
+                }
+            };
         }
     });
 </script>
