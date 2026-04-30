@@ -419,6 +419,7 @@
                 if (permission === 'granted') {
                     // Note: In production, you'll need to add your VAPID key from Firebase Console
                     const token = await getToken(messaging, {
+                        vapidKey: 'BJYK8Wi09iSDWAKuFRUzHzPBF-r3aLqqYuDTyB1h6ATz3fNqvCnlB2oGmjRU61kcdxo4OM7Sj6PkiCzq3YJl80U',
                         serviceWorkerRegistration: await navigator.serviceWorker.ready
                     });
                     
