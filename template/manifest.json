@@ -3,8 +3,9 @@
   "short_name": "Match",
   "description": "University Connection & Match Platform",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#1a1a1a",
+  "background_color": "#0f172a",
   "theme_color": "#6366f1",
   "icons": [
     {
