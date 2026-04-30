@@ -33,5 +33,5 @@ urlpatterns = [
     path('sw.js', TemplateView.as_view(template_name='sw.js', content_type='application/javascript')),
     path('icon-192x192.png', lambda r: serve_template_file(r, 'icon-192x192.png', 'image/png')),
     path('icon-512x512.png', lambda r: serve_template_file(r, 'icon-512x512.png', 'image/png')),
-    path('favicon.ico', lambda r: serve_template_file(r, 'favicon.ico', 'image/x-icon')),
+    path('favicon.png', lambda r: serve_template_file(r, 'favicon.png', 'image/png')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
