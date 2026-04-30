@@ -86,6 +86,7 @@
         border: 1px solid var(--border);
         border-radius: 24px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        margin-bottom: 20px;
     }
 
     .profile-mini {
@@ -128,29 +129,65 @@
         flex-direction: column;
         gap: 8px;
     }
-    .option-label {
-        display: flex;
-        align-items: center;
+    .option-btn {
+        display: block;
+        width: 100%;
+        text-align: left;
         padding: 14px 16px;
         border: 1px solid var(--border);
         border-radius: 16px;
-        cursor: pointer;
-        transition: all 0.2s;
         background: var(--surface);
+        font-size: 15px;
+        font-weight: 500;
+        color: var(--text-main);
+        text-decoration: none;
+        transition: 0.2s;
     }
-    .option-label:active { background: #f1f5f9; }
-    .option-label input { display: none; }
-    .option-label span { font-size: 15px; font-weight: 500; }
+    .option-btn:active { background: #f1f5f9; border-color: var(--primary); }
 
-    /* Transitions */
-    @keyframes qFadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+    /* Match Cards */
+    .match-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
-    .q-fade { animation: qFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+    .match-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .match-avatar {
+        width: 50px; height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--primary);
+    }
+    .match-score {
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--primary);
+        font-size: 11px;
+        font-weight: 800;
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
 
-    .all-done { text-align: center; padding: 60px 20px; }
-    .all-done .icon { font-size: 50px; color: var(--primary); margin-bottom: 20px; }
+    .btn-view {
+        background: var(--primary);
+        color: white !important;
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .all-done { text-align: center; padding: 40px 20px; }
+    .all-done .icon { font-size: 40px; color: var(--primary); margin-bottom: 16px; }
 </style>
 {% endblock %}
 
@@ -175,16 +212,20 @@
                 <div class="icon"><i class="fas fa-eye-slash"></i></div>
                 <h2 style="font-size: 22px; margin-bottom: 12px;">Discovery Hidden</h2>
                 <p style="color: var(--text-muted); margin-bottom: 30px;">Turn on discoverability to start matching!</p>
-                <button onclick="toggleDiscoverability()" class="btn btn-primary" style="width: 100%;">Enable Discovery</button>
+                <form method="POST" action="{% url 'toggle_discoverable' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Enable Discovery</button>
+                </form>
             </div>
         {% else %}
-            <div class="quiz-card">
-                {% if question %}
+            
+            {% if question %}
+                <div class="quiz-card">
                     <div class="profile-mini">
                         <img src="{{ request.user.profile.get_profile_pic_url }}" alt="User">
                         <div>
                             <h3>Discovery Module</h3>
-                            <p>Answer naturally to improve matches</p>
+                            <p>Answer to find your best matches</p>
                         </div>
                     </div>
 
@@ -192,86 +233,42 @@
                         <div class="progress-fill" style="width: {{ progress|default:20 }}%;"></div>
                     </div>
 
-                    <div id="quiz-container" class="question-box">
-                        <div id="quiz-loading" style="text-align: center; padding: 20px;">
-                            <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--primary);"></i>
-                        </div>
-                        <div id="quiz-active" style="display: none;">
-                            <h2 id="q-text"></h2>
-                            <div class="options-list" id="options-container"></div>
+                    <div class="question-box">
+                        <h2>{{ question.text }}</h2>
+                        <div class="options-list">
+                            {% for option in question.options.all %}
+                            <a href="{% url 'answer_question' question.id %}?option_id={{ option.id }}" class="option-btn">
+                                {{ option.text }}
+                            </a>
+                            {% endfor %}
                         </div>
                     </div>
-                {% else %}
-                    <div class="all-done">
-                        <div class="icon"><i class="fas fa-sparkles"></i></div>
-                        <h2>No more profiles left!</h2>
-                        <p style="color: var(--text-muted);">Come back later for more potential matches.</p>
+                </div>
+            {% endif %}
+
+            {% if matches %}
+                <h3 style="font-size: 14px; text-transform: uppercase; color: var(--text-muted); margin: 20px 4px 12px; font-weight: 800; letter-spacing: 0.05em;">Recommended Matches</h3>
+                {% for m in matches %}
+                <div class="match-card">
+                    <div class="match-info">
+                        <img src="{{ m.profile.get_profile_pic_url }}" class="match-avatar" alt="Avatar">
+                        <div>
+                            <h4 style="margin:0; font-size: 15px;">{{ m.profile.name|default:m.profile.user.username }}</h4>
+                            <div class="match-score">{{ m.score }}% Match</div>
+                        </div>
                     </div>
-                {% endif %}
-            </div>
+                    <a href="{% url 'view_profile' m.profile.user.id %}" class="btn-view">View</a>
+                </div>
+                {% endfor %}
+            {% elif not question %}
+                <div class="all-done">
+                    <div class="icon"><i class="fas fa-sparkles"></i></div>
+                    <h2>All caught up!</h2>
+                    <p style="color: var(--text-muted);">Check back later for new profiles.</p>
+                </div>
+            {% endif %}
+
         {% endif %}
     </div>
 </div>
-
-<script>
-async function toggleDiscoverability() {
-    try {
-        const res = await fetch("{% url 'toggle_discoverable' %}", {
-            method: 'POST',
-            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
-        });
-        const data = await res.json();
-        if (data.success) window.location.reload();
-    } catch (e) { console.error(e); }
-}
-
-// Quiz Logic (Simplified for brevity, assuming standard AJAX fetch)
-const quizActive = document.getElementById('quiz-active');
-const quizLoading = document.getElementById('quiz-loading');
-const qText = document.getElementById('q-text');
-const optionsContainer = document.getElementById('options-container');
-
-async function loadQuestion() {
-    try {
-        const res = await fetch("{% url 'get_question' %}");
-        const data = await res.json();
-        
-        if (data.question) {
-            qText.innerText = data.question.text;
-            optionsContainer.innerHTML = data.question.options.map(opt => `
-                <label class="option-label" onclick="submitAnswer(${data.question.id}, ${opt.id})">
-                    <span>${opt.text}</span>
-                </label>
-            `).join('');
-            quizLoading.style.display = 'none';
-            quizActive.style.display = 'block';
-            quizActive.classList.add('q-fade');
-        } else {
-            window.location.reload();
-        }
-    } catch (e) { console.error(e); }
-}
-
-async function submitAnswer(qId, optId) {
-    optionsContainer.style.pointerEvents = 'none';
-    optionsContainer.style.opacity = '0.7';
-    try {
-        const res = await fetch("{% url 'submit_answer' %}", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-            body: JSON.stringify({ question_id: qId, option_id: optId })
-        });
-        const data = await res.json();
-        if (data.success) {
-            quizActive.classList.remove('q-fade');
-            void quizActive.offsetWidth; // Trigger reflow
-            loadQuestion();
-        }
-    } catch (e) { console.error(e); }
-}
-
-if (document.getElementById('quiz-container')) {
-    loadQuestion();
-}
-</script>
 {% endblock %}
