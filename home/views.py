@@ -1410,14 +1410,17 @@ def settings_view(request):
 @login_required
 def test_push(request):
     if request.method == 'POST':
-        send_push_to_user(
-            request.user, 
-            title="Test Notification ✅", 
-            body="If you see this, push notifications are working perfectly!",
-            url="/settings/"
-        )
-        return JsonResponse({'success': True})
-    return JsonResponse({'success': False}, status=405)
+        try:
+            send_push_to_user(
+                request.user, 
+                title="Test Notification ✅", 
+                body="If you see this, push notifications are working perfectly!",
+                url="/settings/"
+            )
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
 
 @login_required
 def delete_account(request):

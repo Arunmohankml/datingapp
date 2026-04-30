@@ -139,7 +139,7 @@
             if (data.success) {
                 customAlert("Test push sent! Check your notification center. If you don't see it, ensure your browser/system permits notifications.", "Notification Sent");
             } else {
-                throw new Error("Failed to send test push");
+                throw new Error(data.error || "Failed to send test push");
             }
         } catch (err) {
             customAlert("Error: " + err.message, "Push Failed");
