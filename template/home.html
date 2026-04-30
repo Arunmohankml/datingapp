@@ -269,9 +269,9 @@ async function toggleDiscoverability() {
                         {% csrf_token %}
                         <button type="submit" class="btn" style="padding: 10px 16px; font-size: 14px; background: #f3f4f6; color: var(--text-main); border: 1px solid var(--border);">Pass</button>
                     </form>
-                    <form method="POST" action="{% url 'send_match_request' m.profile.user.id %}">
+                    <form method="POST" action="{% url 'send_match_request' m.profile.user.id %}" class="connect-form" onsubmit="handleConnect(event, this)">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px;">Like</button>
+                        <button type="submit" class="btn btn-primary" style="padding: 10px 16px; font-size: 14px;">Connect</button>
                     </form>
                 </div>
             </div>
@@ -279,7 +279,7 @@ async function toggleDiscoverability() {
             <div class="all-done">
                 <div class="icon"><i class="fas fa-check-circle"></i></div>
                 <h2>All Caught Up</h2>
-                <p>No new matches available right now. Invite more friends to find more matches!</p>
+                <p>No more profiles left come back later .</p>
             </div>
             {% endfor %}
         </div>
@@ -428,5 +428,42 @@ async function toggleDiscoverability() {
         }
 
         // Add auto-slide for better discovery experience? No, let user control it.
+
+        async function handleConnect(event, form) {
+            event.preventDefault(); // Prevent standard form submission
+            const formData = new FormData(form);
+            const url = form.action;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok) {
+                    showGlobalToast("Connection request sent");
+                    // Optionally fade out or remove the card
+                    const card = form.closest('.card');
+                    if (card) {
+                        card.style.opacity = '0.5';
+                        card.style.pointerEvents = 'none';
+                        // Change button text to 'Sent'
+                        const btn = form.querySelector('button');
+                        if (btn) {
+                            btn.innerText = 'Sent';
+                            btn.classList.remove('btn-primary');
+                            btn.style.background = '#e2e8f0';
+                            btn.style.color = '#64748b';
+                            btn.style.border = 'none';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error("Error sending connection request:", error);
+            }
+        }
     </script>
 {% endblock %}
