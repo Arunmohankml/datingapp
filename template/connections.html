@@ -1,25 +1,36 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block head %}
 <style>
-    /* Override base container — we take full control */
-    body { overflow: hidden; }
+    /* ── Full Screen Lock ── */
+    html, body { 
+        height: 100%; 
+        height: 100dvh; 
+        overflow: hidden; 
+        position: fixed; 
+        width: 100%; 
+        background: var(--bg-color);
+    }
+    
     .container {
         padding: 0 !important;
-        margin-top: 0 !important;
-        height: 100vh;
+        margin: 0 auto !important;
+        height: 100%;
         display: flex;
         flex-direction: column;
         max-width: 500px;
+        position: relative;
     }
-    nav { display: none !important; } /* hide bottom nav on this page if desired — remove if you want it */
+    nav { display: none !important; }
 
-    /* ── Fixed Header ── */
+    /* ── Header ── */
     .conn-header {
         flex-shrink: 0;
-        padding: 16px 16px 12px;
+        padding: 16px 16px 8px;
+        background: var(--surface);
         border-bottom: 1px solid var(--border);
-        background: var(--bg-gradient);
+        z-index: 100;
     }
     .conn-header a {
         text-decoration: none;
@@ -28,113 +39,127 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        margin-bottom: 8px;
+        margin-bottom: 12px;
+        font-weight: 600;
     }
     .conn-header h2 {
         font-size: 20px;
         margin: 0;
         color: var(--text-main);
-    }
-
-    /* ── Two‑panel layout ── */
-    .conn-body {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        padding: 0 12px 80px; /* 80px leaves room for bottom nav */
-    }
-
-    /* ── Section block: fixed label + scrollable list ── */
-    .conn-section {
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-height: 0; /* required for flex children to shrink */
-        overflow: hidden;
-    }
-
-    .section-title {
-        flex-shrink: 0;
-        font-size: 11px;
-        text-transform: uppercase;
-        color: var(--text-muted);
-        letter-spacing: 0.08em;
         font-weight: 800;
-        padding: 14px 0 8px;
-        border-bottom: 1px solid var(--border);
-        margin-bottom: 8px;
     }
 
-    /* The actual scrollable list */
-    .section-list {
+    /* ── Tab Switcher (Segmented Control) ── */
+    .tabs-container {
+        padding: 12px 16px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+    }
+    .tabs-wrapper {
+        display: flex;
+        background: #f1f5f9;
+        padding: 4px;
+        border-radius: 14px;
+        gap: 4px;
+    }
+    .tab-btn {
+        flex: 1;
+        border: none;
+        background: none;
+        padding: 10px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+    .tab-btn.active {
+        background: white;
+        color: var(--primary);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .tab-badge {
+        background: var(--primary);
+        color: white;
+        font-size: 10px;
+        padding: 2px 6px;
+        border-radius: 10px;
+    }
+
+    /* ── Scrollable Body ── */
+    .conn-body {
         flex: 1;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        padding-right: 2px;
-    }
-    /* Hide scrollbar visually but keep it functional */
-    .section-list::-webkit-scrollbar { width: 3px; }
-    .section-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-    /* Divider between sections */
-    .section-divider {
-        flex-shrink: 0;
-        height: 1px;
-        background: var(--border);
-        margin: 4px 0;
+        padding: 16px 12px 100px;
+        background: var(--bg-gradient);
     }
 
-    /* ── Row ── */
+    .conn-tab-content {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+    .conn-tab-content.active {
+        display: block;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── User Row ── */
     .user-row {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 10px 12px;
+        padding: 12px;
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 14px;
-        margin-bottom: 8px;
-        box-sizing: border-box;
-        gap: 8px;
+        border-radius: 18px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
     }
 
     .user-info {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
         min-width: 0;
         flex: 1;
     }
     .user-info img {
-        width: 40px;
-        height: 40px;
+        width: 46px;
+        height: 46px;
         border-radius: 50%;
         object-fit: cover;
-        flex-shrink: 0;
         border: 2px solid var(--border);
     }
     .user-info h4 {
         margin: 0;
-        font-size: 14px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text-main);
     }
     .user-info span {
-        font-size: 11px;
+        font-size: 12px;
         color: var(--text-muted);
     }
 
     .row-actions {
         display: flex;
-        gap: 6px;
+        gap: 8px;
         flex-shrink: 0;
     }
 
     .btn-icon {
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -142,115 +167,136 @@
         border: none;
         cursor: pointer;
         color: white;
-        font-size: 13px;
+        font-size: 14px;
         transition: 0.2s;
     }
-    .btn-icon:hover { transform: scale(1.1); }
-    .btn-accept { background: #10b981; }
-    .btn-reject { background: #ef4444; }
+    .btn-icon:active { transform: scale(0.9); }
+    .btn-accept { background: #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+    .btn-reject { background: #ef4444; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
 
     .btn-chat {
         background: var(--primary);
         text-decoration: none;
-        padding: 7px 13px;
-        border-radius: 10px;
-        font-size: 12px;
+        padding: 8px 16px;
+        border-radius: 12px;
+        font-size: 13px;
         font-weight: 700;
         color: white !important;
         display: flex;
         align-items: center;
-        gap: 6px;
-        white-space: nowrap;
-        flex-shrink: 0;
-        transition: 0.2s;
+        gap: 8px;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
     }
-    .btn-chat:hover { background: var(--primary-hover); }
 
     .empty-state {
         text-align: center;
-        padding: 20px;
+        padding: 40px 20px;
         color: var(--text-muted);
-        font-size: 12px;
-        background: #fafafa;
-        border-radius: 12px;
-        border: 1px dashed var(--border);
+        font-size: 13px;
+        background: rgba(255,255,255,0.5);
+        border-radius: 20px;
+        border: 1.5px dashed var(--border);
     }
 </style>
 {% endblock %}
 
 {% block body %}
-<!-- Fixed Header -->
+<!-- Header -->
 <div class="conn-header">
     <a href="{% url 'home' %}"><i class="fas fa-arrow-left"></i> Back to Match</a>
     <h2>Your Connections</h2>
 </div>
 
-<!-- Scrollable Body -->
+<!-- Tab Switcher -->
+<div class="tabs-container">
+    <div class="tabs-wrapper">
+        <button class="tab-btn active" onclick="switchTab('requests')">
+            <i class="fas fa-bell"></i> Requests
+            {% if incoming_requests.count > 0 %}
+            <span class="tab-badge">{{ incoming_requests.count }}</span>
+            {% endif %}
+        </button>
+        <button class="tab-btn" onclick="switchTab('matches')">
+            <i class="fas fa-heart"></i> Matches
+            <span class="tab-badge">{{ connections.count }}</span>
+        </button>
+    </div>
+</div>
+
+<!-- Scrollable Content -->
 <div class="conn-body">
 
-    <!-- Section 1: Incoming Requests -->
-    <div class="conn-section">
-        <div class="section-title">
-            <i class="fas fa-bell" style="color: var(--primary);"></i>
-            Incoming Requests ({{ incoming_requests.count }})
-        </div>
-        <div class="section-list">
-            {% if incoming_requests %}
-                {% for req in incoming_requests %}
-                <div class="user-row">
-                    <div class="user-info">
-                        <img src="{{ req.sender.profile.get_profile_pic_url }}" alt="Avatar">
-                        <div>
-                            <h4>{{ req.sender.profile.name|default:req.sender.username }}</h4>
-                            <span>Wants to connect</span>
-                        </div>
-                    </div>
-                    <div class="row-actions">
-                        <form method="POST" action="{% url 'accept_match' req.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn-icon btn-accept"><i class="fas fa-check"></i></button>
-                        </form>
-                        <form method="POST" action="{% url 'reject_match' req.id %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn-icon btn-reject"><i class="fas fa-times"></i></button>
-                        </form>
+    <!-- Requests Tab -->
+    <div id="tab-requests" class="conn-tab-content active">
+        {% if incoming_requests %}
+            {% for req in incoming_requests %}
+            <div class="user-row">
+                <div class="user-info">
+                    <img src="{{ req.sender.profile.get_profile_pic_url }}" alt="Avatar">
+                    <div>
+                        <h4>{{ req.sender.profile.name|default:req.sender.username }}</h4>
+                        <span>Wants to connect</span>
                     </div>
                 </div>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state">No pending requests right now.</div>
-            {% endif %}
-        </div>
+                <div class="row-actions">
+                    <form method="POST" action="{% url 'accept_match' req.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-icon btn-accept"><i class="fas fa-check"></i></button>
+                    </form>
+                    <form method="POST" action="{% url 'reject_match' req.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-icon btn-reject"><i class="fas fa-times"></i></button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox" style="font-size: 32px; margin-bottom: 12px; opacity: 0.3;"></i>
+                <p>No pending requests right now.</p>
+            </div>
+        {% endif %}
     </div>
 
-    <div class="section-divider"></div>
-
-    <!-- Section 2: Matches -->
-    <div class="conn-section">
-        <div class="section-title">
-            <i class="fas fa-heart" style="color: var(--primary);"></i>
-            Matches
-        </div>
-        <div class="section-list">
-            {% if connections %}
-                {% for conn in connections %}
-                <div class="user-row">
-                    <div class="user-info">
-                        <img src="{{ conn.profile.get_profile_pic_url }}" alt="Avatar">
-                        <div>
-                            <h4>{{ conn.profile.name|default:conn.username }}</h4>
-                        </div>
+    <!-- Matches Tab -->
+    <div id="tab-matches" class="conn-tab-content">
+        {% if connections %}
+            {% for conn in connections %}
+            <div class="user-row">
+                <div class="user-info">
+                    <img src="{{ conn.profile.get_profile_pic_url }}" alt="Avatar">
+                    <div>
+                        <h4>{{ conn.profile.name|default:conn.username }}</h4>
+                        <span>You are matched!</span>
                     </div>
-                    <a href="{% url 'chat_view' conn.id %}" class="btn-chat">
-                        <i class="fas fa-comment"></i> Chat
-                    </a>
                 </div>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state">No matches yet. Keep answering questions to find your vibe!</div>
-            {% endif %}
-        </div>
+                <a href="{% url 'chat_view' conn.id %}" class="btn-chat">
+                    <i class="fas fa-comment"></i> Chat
+                </a>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-heart-broken" style="font-size: 32px; margin-bottom: 12px; opacity: 0.3;"></i>
+                <p>No matches yet. Keep answering questions!</p>
+            </div>
+        {% endif %}
     </div>
 
 </div>
+
+<script>
+    function switchTab(tab) {
+        // Update Buttons
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        // Update Content
+        document.querySelectorAll('.conn-tab-content').forEach(content => content.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+
+        // Reset scroll position
+        document.querySelector('.conn-body').scrollTop = 0;
+    }
+</script>
 {% endblock %}
