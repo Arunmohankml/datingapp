@@ -3,7 +3,8 @@
   "builds": [
     {
       "src": "index.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "buildCommand": "python manage.py collectstatic --noinput"
     }
   ],
   "routes": [
