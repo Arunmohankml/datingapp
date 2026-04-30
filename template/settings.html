@@ -47,7 +47,7 @@
                     <p style="margin: 4px 0 0; font-size: 12px; opacity: 0.8;">Get the full app experience</p>
                 </div>
             </div>
-            <button id="manual-install-btn" class="install-btn" style="background: white; color: var(--primary);">Install</button>
+            <button onclick="triggerPwaInstall()" class="install-btn" style="background: white; color: var(--primary);">Install</button>
         </div>
     </div>
 
@@ -128,34 +128,10 @@
             });
         }
 
-        // PWA Manual Install Button Logic
+        // PWA Section Visibility
         const installCard = document.getElementById('install-app-card');
-        const installBtn = document.getElementById('manual-install-btn');
-        
-        // Check if already installed
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-        if (!isStandalone) {
-            // Wait for deferredPrompt to be available from base.html
-            const checkPrompt = setInterval(() => {
-                if (window.deferredPrompt) {
-                    installCard.style.display = 'block';
-                    clearInterval(checkPrompt);
-                }
-            }, 500);
-            
-            // Timeout after 5 seconds if not available
-            setTimeout(() => clearInterval(checkPrompt), 5000);
-        }
-
-        if (installBtn) {
-            installBtn.onclick = async () => {
-                if (window.deferredPrompt) {
-                    window.deferredPrompt.prompt();
-                    const { outcome } = await window.deferredPrompt.userChoice;
-                    if (outcome === 'accepted') installCard.style.display = 'none';
-                    window.deferredPrompt = null;
-                }
-            };
+        if (!isAppInstalled()) {
+            if (installCard) installCard.style.display = 'block';
         }
     });
 </script>

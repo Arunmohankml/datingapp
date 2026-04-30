@@ -269,10 +269,10 @@
             Sign in with Google
         </button>
 
-        <div id="login-install-card" style="display: none; padding: 24px; background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 24px; margin-top: 24px; text-align: center;">
+        <div id="login-install-card" style="display: block; padding: 24px; background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 24px; margin-top: 24px; text-align: center;">
             <div style="font-size: 24px; margin-bottom: 8px; color: #6366f1;"><i class="fas fa-mobile-android"></i></div>
-            <p style="margin: 0 0 16px; font-size: 14px; font-weight: 600; color: #1e293b;">Install SRM Match for a faster, full-screen experience.</p>
-            <button id="login-install-btn" style="width: 100%; padding: 14px; background: #6366f1; color: white; border: none; border-radius: 16px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.3s; box-shadow: 0 8px 16px rgba(99, 102, 241, 0.2);">Install App</button>
+            <p style="margin: 0 0 16px; font-size: 14px; font-weight: 600; color: #1e293b;">Install SRM Match for a faster experience.</p>
+            <button onclick="triggerPwaInstall()" style="width: 100%; padding: 14px; background: #6366f1; color: white; border: none; border-radius: 16px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.3s; box-shadow: 0 8px 16px rgba(99, 102, 241, 0.2);">Install App</button>
             <p id="ios-install-hint" style="display: none; margin-top: 12px; font-size: 11px; color: #64748b;">On iOS: Tap <i class="far fa-share-square"></i> then "Add to Home Screen"</p>
         </div>
 
@@ -368,40 +368,11 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         const installCard = document.getElementById('login-install-card');
-        const installBtn = document.getElementById('login-install-btn');
-        const iosHint = document.getElementById('ios-install-hint');
         
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-        if (!isStandalone) {
-            // Show card if we have the prompt OR if it's iOS (manual install)
-            if (isIOS) {
-                if (installCard) installCard.style.display = 'block';
-                if (installBtn) installBtn.style.display = 'none'; // iOS can't use the btn
-                if (iosHint) iosHint.style.display = 'block';
-            } else {
-                const check = setInterval(() => {
-                    if (window.deferredPrompt) {
-                        if (installCard) installCard.style.display = 'block';
-                        clearInterval(check);
-                    }
-                }, 500);
-                setTimeout(() => clearInterval(check), 8000);
-            }
-        }
-
-        if (installBtn) {
-            installBtn.onclick = async () => {
-                if (window.deferredPrompt) {
-                    window.deferredPrompt.prompt();
-                    const { outcome } = await window.deferredPrompt.userChoice;
-                    if (outcome === 'accepted') {
-                        if (installCard) installCard.style.display = 'none';
-                    }
-                    window.deferredPrompt = null;
-                }
-            };
+        if (!isAppInstalled()) {
+            // Show the card. If it's PC/Android, the button calls triggerPwaInstall.
+            // If it's iOS, triggerPwaInstall shows the manual guide.
+            if (installCard) installCard.style.display = 'block';
         }
     });
 </script>
