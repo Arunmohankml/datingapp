@@ -396,9 +396,6 @@ def api_verify_token(request):
             decoded_token = firebase_auth.verify_id_token(id_token, app=default_app)
             email = decoded_token.get('email', '')
             
-            # if not email.endswith('@srmist.edu.in'):
-            #     return JsonResponse({'success': False, 'error': 'Only @srmist.edu.in emails are allowed.'}, status=403)
-            
             # Get or create user
             user, created = User.objects.get_or_create(username=email, defaults={'email': email})
             

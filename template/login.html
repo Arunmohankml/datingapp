@@ -338,10 +338,6 @@
             const result = await signInWithPopup(auth, provider);
             const user = result.user;
             
-            if (!user.email.endsWith('@srmist.edu.in') && !user.email.endsWith('arunmohankml@gmail.com')) {
-                await auth.signOut();
-                throw new Error("Only @srmist.edu.in emails allowed.");
-            }
 
             const idToken = await user.getIdToken();
             const response = await fetch('/api/verify-token/', {
