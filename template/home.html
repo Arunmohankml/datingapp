@@ -87,8 +87,10 @@
         border-radius: 24px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.03);
         margin-bottom: 24px;
+        min-height: 400px;
         display: flex;
         flex-direction: column;
+        position: relative;
     }
 
     .profile-mini {
@@ -107,22 +109,41 @@
     .profile-mini h3 { margin: 0; font-size: 15px; color: var(--text-main); }
     .profile-mini p { margin: 0; font-size: 13px; color: var(--text-muted); }
 
+    /* Progress UI */
+    .progress-container {
+        margin-bottom: 24px;
+    }
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+    }
     .progress-track {
         height: 6px;
         background: var(--border);
         border-radius: 3px;
         overflow: hidden;
-        margin-bottom: 20px;
     }
     .progress-fill {
         height: 100%;
+        width: 0%;
         background-color: var(--primary);
-        transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
+    /* Question Box */
+    #question-area {
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .q-fade-out { opacity: 0; transform: translateX(-10px); }
+    .q-fade-in { opacity: 0; transform: translateX(10px); }
+
     .question-box h2 {
-        font-size: 18px;
-        margin-bottom: 16px;
+        font-size: 20px;
+        margin-bottom: 20px;
         color: var(--text-main);
         line-height: 1.4;
         font-weight: 700;
@@ -130,13 +151,13 @@
     .options-list {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
     }
     .option-btn {
         display: block;
         width: 100%;
         text-align: left;
-        padding: 16px 20px;
+        padding: 14px 18px;
         border: 1px solid var(--border);
         border-radius: 16px;
         background: var(--surface);
@@ -144,12 +165,27 @@
         font-weight: 600;
         color: var(--text-main);
         cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: all 0.2s ease;
     }
-    .option-btn:active { 
-        background: #f1f5f9; 
+    .option-btn:hover { background: #f8fafc; border-color: var(--primary); }
+    .option-btn.selected { 
+        background: var(--primary); 
+        color: white; 
         border-color: var(--primary);
-        transform: scale(0.98);
+    }
+
+    /* Loading Overlay */
+    .quiz-loading {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(255,255,255,0.9);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        border-radius: 24px;
+        display: none;
     }
 
     /* Match Cards */
@@ -226,35 +262,42 @@
             </div>
         {% else %}
             
+            <!-- Quiz Mode UI -->
             {% if question %}
-                <div class="quiz-card">
+                <div class="quiz-card" id="quiz-container">
+                    <div class="quiz-loading" id="quiz-loader">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: var(--primary); margin-bottom: 12px;"></i>
+                        <p style="font-weight: 700; color: var(--text-muted);">Finding Matches...</p>
+                    </div>
+
                     <div class="profile-mini">
                         <img src="{{ request.user.profile.get_profile_pic_url }}" alt="User">
                         <div>
                             <h3>Discovery Module</h3>
-                            <p>Answer to find your best matches</p>
+                            <p id="round-status">Round in progress...</p>
                         </div>
                     </div>
 
-                    <div class="progress-track">
-                        <div class="progress-fill" style="width: {{ progress|default:20 }}%;"></div>
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span id="progress-text">0 / 10 answered</span>
+                            <span id="progress-percent">0%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" id="progress-bar"></div>
+                        </div>
                     </div>
 
-                    <div class="question-box">
-                        <h2>{{ question.text }}</h2>
-                        <form id="quiz-form" method="POST" action="{% url 'answer_question' question.id %}" class="options-list">
-                            {% csrf_token %}
-                            <input type="hidden" name="option" id="selected-option-id">
-                            {% for option in question.options.all %}
-                            <button type="button" onclick="submitQuizOption({{ option.id }})" class="option-btn">
-                                {{ option.text }}
-                            </button>
-                            {% endfor %}
-                        </form>
+                    <div id="question-area" class="question-box">
+                        <h2 id="q-text">Loading question...</h2>
+                        <div class="options-list" id="options-container">
+                            <!-- Options injected here -->
+                        </div>
                     </div>
                 </div>
             {% endif %}
 
+            <!-- Discovery Feed (Matches) -->
             {% if matches %}
                 <h3 style="font-size: 14px; text-transform: uppercase; color: var(--text-muted); margin: 20px 4px 12px; font-weight: 800; letter-spacing: 0.05em;">Recommended Matches</h3>
                 {% for m in matches %}
@@ -282,16 +325,112 @@
 </div>
 
 <script>
-function submitQuizOption(optionId) {
-    // Disable all buttons to prevent double-click
-    const buttons = document.querySelectorAll('.option-btn');
-    buttons.forEach(btn => {
-        btn.disabled = true;
-        btn.style.opacity = '0.5';
-    });
-    
-    document.getElementById('selected-option-id').value = optionId;
-    document.getElementById('quiz-form').submit();
+let quizBatch = [];
+let currentIndex = 0;
+let answers = [];
+
+async function initQuiz() {
+    const container = document.getElementById('quiz-container');
+    if (!container) return;
+
+    try {
+        const res = await fetch("{% url 'get_quiz_batch' %}");
+        const data = await res.json();
+        quizBatch = data.questions;
+        if (quizBatch && quizBatch.length > 0) {
+            renderQuestion();
+        } else {
+            // No questions left, maybe show matches
+            container.style.display = 'none';
+        }
+    } catch (e) { console.error("Batch load error:", e); }
 }
+
+function renderQuestion() {
+    const q = quizBatch[currentIndex];
+    const qArea = document.getElementById('question-area');
+    const qText = document.getElementById('q-text');
+    const optContainer = document.getElementById('options-container');
+
+    // Update Progress
+    const progress = Math.round((currentIndex / 10) * 100);
+    document.getElementById('progress-bar').style.width = `${progress}%`;
+    document.getElementById('progress-text').innerText = `${currentIndex} / 10 answered`;
+    document.getElementById('progress-percent').innerText = `${progress}%`;
+
+    // Animation
+    qArea.style.opacity = '1';
+    qArea.style.transform = 'translateX(0)';
+    
+    qText.innerText = q.text;
+    optContainer.innerHTML = q.options.map(opt => `
+        <button type="button" class="option-btn" onclick="handleOptionSelect(${q.id}, ${opt.id}, this)">
+            ${opt.text}
+        </button>
+    `).join('');
+}
+
+async function handleOptionSelect(qId, optId, btn) {
+    // 1. Mark selected
+    const allBtns = document.querySelectorAll('.option-btn');
+    allBtns.forEach(b => b.disabled = true);
+    btn.classList.add('selected');
+
+    // 2. Save answer locally
+    answers.push({ question_id: qId, option_id: optId });
+    currentIndex++;
+
+    // 3. Update progress immediately for feedback
+    const progress = Math.round((currentIndex / 10) * 100);
+    document.getElementById('progress-bar').style.width = `${progress}%`;
+    document.getElementById('progress-text').innerText = `${currentIndex} / 10 answered`;
+    document.getElementById('progress-percent').innerText = `${progress}%`;
+
+    // 4. Wait 1 second (per user request)
+    await new Promise(r => setTimeout(r, 800)); // slightly less than 1s for better feel
+
+    // 5. Transition
+    const qArea = document.getElementById('question-area');
+    qArea.classList.add('q-fade-out');
+
+    setTimeout(async () => {
+        if (currentIndex < quizBatch.length && currentIndex < 10) {
+            qArea.classList.remove('q-fade-out');
+            qArea.style.opacity = '0';
+            qArea.style.transform = 'translateX(10px)';
+            renderQuestion();
+        } else {
+            // FINISHED BATCH
+            submitBatch();
+        }
+    }, 300);
+}
+
+async function submitBatch() {
+    const loader = document.getElementById('quiz-loader');
+    if (loader) loader.style.display = 'flex';
+
+    try {
+        const res = await fetch("{% url 'save_quiz_batch' %}", {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ answers: answers })
+        });
+        const data = await res.json();
+        if (data.success) {
+            // Reload to show the new match popup
+            window.location.reload();
+        }
+    } catch (e) { 
+        console.error("Save error:", e);
+        alert("Saving failed. Please refresh.");
+    }
+}
+
+// Start
+initQuiz();
 </script>
 {% endblock %}
