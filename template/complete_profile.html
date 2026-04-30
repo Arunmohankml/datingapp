@@ -1438,6 +1438,24 @@
         }
     }
 
+    function clearPfp() {
+        const pfpInput = document.getElementById('id_profile_pic_file');
+        const preview = document.getElementById('pfp-preview');
+        const placeholder = document.getElementById('pfp-placeholder');
+        const urlInput = document.getElementById('id_profile_pic');
+        
+        if (pfpInput) pfpInput.value = ''; // Clear file input
+        if (urlInput) urlInput.value = ''; // Clear hidden URL input
+        if (preview) {
+            preview.src = ''; 
+            preview.style.display = 'none';
+        }
+        if (placeholder) placeholder.style.display = 'block';
+        
+        if (typeof checkStep7Validity === 'function') checkStep7Validity(); // Disable submit button
+        document.getElementById('verification-status-input').value = 'rejected';
+    }
+
     async function compareLocally(pfpImgElement) {
         if (!verificationDescriptor) return;
         const statusText = document.getElementById('verify-success-ui').querySelector('p');
@@ -1448,6 +1466,8 @@
             if (!pfpDetection) {
                 statusText.innerHTML = '<i class="fas fa-times-circle"></i> No face detected in PFP!';
                 statusText.style.color = '#ef4444';
+                clearPfp();
+                alert("Verification Failed: No face detected in your profile picture. Please upload a clear photo of yourself.");
                 return;
             }
 
@@ -1462,25 +1482,13 @@
             } else {
                 statusText.innerHTML = '<i class="fas fa-times-circle"></i> Identity mismatch! (Rejected)';
                 statusText.style.color = '#ef4444';
-                document.getElementById('verification-status-input').value = 'rejected';
-                
-                // Clear PFP as requested by user
-                const pfpInput = document.getElementById('id_profile_pic_file');
-                const preview = document.getElementById('pfp-preview');
-                const placeholder = document.getElementById('pfp-placeholder');
-                
-                pfpInput.value = ''; // Clear file input
-                preview.src = ''; // Clear preview
-                preview.style.display = 'none';
-                placeholder.style.display = 'block';
-                
-                checkStep7Validity(); // Disable submit button
-                
+                clearPfp();
                 alert("Rejected: Profile picture does not match verification photo. Please upload a clear photo of yourself.");
             }
         } catch (err) {
             console.error(err);
             statusText.innerText = 'Analysis failed. Try again.';
+            clearPfp();
         }
     }
 
