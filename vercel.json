@@ -1,10 +1,10 @@
 {
   "version": 2,
+  "buildCommand": "python manage.py collectstatic --noinput",
   "builds": [
     {
       "src": "index.py",
-      "use": "@vercel/python",
-      "buildCommand": "python manage.py collectstatic --noinput"
+      "use": "@vercel/python"
     }
   ],
   "routes": [
