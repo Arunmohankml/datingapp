@@ -771,7 +771,7 @@
                         <canvas id="verify-canvas" style="display: none;"></canvas>
                         <div id="face-guide" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 60%; border: 2px dashed rgba(255,255,255,0.5); border-radius: 50% 50% 45% 45%; pointer-events: none;"></div>
                         <div id="gesture-hint" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
-                            <i class="fas fa-hand-paper"></i> Show Thumbs Up to Capture
+                            <i class="fas fa-hand-paper"></i> Raise Hand to Capture
                         </div>
                     </div>
                     <p id="verify-status" style="margin-top: 16px; font-size: 13px; font-weight: 700; color: var(--primary);"></p>
@@ -1353,20 +1353,17 @@
             width: 640, height: 480
         });
         camera.start();
-        document.getElementById('verify-status').innerText = 'System Ready. Show Thumbs Up 👍';
+        document.getElementById('verify-status').innerText = 'System Ready. Raise Hand ✋';
     }
 
     async function onVerificationResults(results) {
         if (verificationCaptured) return;
         if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-            const landmarks = results.multiHandLandmarks[0];
-            const isThumbUp = landmarks[4].y < landmarks[3].y && landmarks[4].y < landmarks[2].y && landmarks[8].y > landmarks[6].y && landmarks[12].y > landmarks[10].y;
-            if (isThumbUp) {
-                const now = Date.now();
-                if (now - lastGestureTime > 2000) {
-                    lastGestureTime = now;
-                    captureVerification();
-                }
+            // Hand detected! Any gesture is accepted.
+            const now = Date.now();
+            if (now - lastGestureTime > 2000) {
+                lastGestureTime = now;
+                captureVerification();
             }
         }
     }
