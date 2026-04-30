@@ -32,5 +32,5 @@ urlpatterns = [
     path('manifest.json', TemplateView.as_view(template_name='manifest.json', content_type='application/json')),
     path('sw.js', TemplateView.as_view(template_name='sw.js', content_type='application/javascript')),
     path('pwa-icons/<str:filename>', serve_pwa_icon),
-    path('favicon.ico', RedirectView.as_view(url='/static/images/icon-192x192.png')),
+    path('favicon.ico', RedirectView.as_view(url='/static/images/favicon.ico')),
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
