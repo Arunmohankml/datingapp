@@ -1479,6 +1479,7 @@
                 statusText.innerHTML = '<i class="fas fa-check-circle"></i> Profiles Match! (Accepted)';
                 statusText.style.color = '#16a34a';
                 document.getElementById('verification-status-input').value = 'verified';
+                checkStep7Validity();
             } else {
                 statusText.innerHTML = '<i class="fas fa-times-circle"></i> Identity mismatch! (Rejected)';
                 statusText.style.color = '#ef4444';
@@ -1610,12 +1611,20 @@
     function removeGalleryItem(index) { galleryFiles.splice(index, 1); updateGalleryUI(); }
 
     function checkStep7Validity() {
-        const pfpInput = document.getElementById('id_profile_pic_file');
         const submitBtn = document.getElementById('submit-btn');
-        const hasPfp = pfpInput.files.length > 0 || (document.getElementById('pfp-preview').src && !document.getElementById('pfp-preview').src.endsWith('/'));
+        const verificationStatus = document.getElementById('verification-status-input').value;
+        const pfpPreview = document.getElementById('pfp-preview');
+        
+        const hasPfp = pfpPreview.src && !pfpPreview.src.endsWith('/') && pfpPreview.style.display !== 'none';
+        const isVerified = verificationStatus === 'verified';
         const hasGallery = galleryFiles.length >= 2;
-        submitBtn.disabled = !(hasPfp && hasGallery);
-        submitBtn.style.opacity = (hasPfp && hasGallery) ? '1' : '0.5';
+        
+        const isValid = hasPfp && isVerified && hasGallery;
+        
+        if (submitBtn) {
+            submitBtn.disabled = !isValid;
+            submitBtn.style.opacity = isValid ? '1' : '0.5';
+        }
     }
 
     document.getElementById('profileForm').addEventListener('submit', function(e) {
