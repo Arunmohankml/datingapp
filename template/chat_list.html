@@ -12,12 +12,22 @@
         padding: 16px 0;
     }
     
+    .chat-header-fixed {
+        position: sticky;
+        top: 0;
+        background: var(--bg-color);
+        z-index: 100;
+        padding-top: 16px;
+        padding-bottom: 12px;
+        margin-top: -16px;
+        margin-bottom: 16px;
+        border-bottom: 2px solid var(--border);
+    }
+    
     .page-title {
         color: var(--primary);
         font-size: 24px;
-        margin-bottom: 24px;
-        padding-bottom: 12px;
-        border-bottom: 2px solid var(--border);
+        margin-bottom: 0;
     }
     
     .chat-card {
@@ -122,10 +132,12 @@
 
 {% block body %}
 <div class="chats-container">
-    <a href="{% url 'home' %}" style="text-decoration: none; color: var(--text-muted); font-size: 16px; margin-bottom: 24px; display: inline-flex; align-items: center; gap: 8px;">
-        <i class="fas fa-arrow-left"></i> Back to Match
-    </a>
-    <h2 class="page-title"><i class="fas fa-comment-dots"></i> Recent Chats</h2>
+    <div class="chat-header-fixed">
+        <a href="{% url 'home' %}" style="text-decoration: none; color: var(--text-muted); font-size: 16px; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-arrow-left"></i> Back to Match
+        </a>
+        <h2 class="page-title"><i class="fas fa-comment-dots"></i> Recent Chats</h2>
+    </div>
     
     {% if chats %}
         {% for chat in chats %}
