@@ -388,10 +388,8 @@
                 const isUAInApp = /FBAN|FBAV|Instagram|LinkedIn|Twitter|MicroMessenger/.test(navigator.userAgent);
                 if (isUAInApp) {
                     customAlert("You are using an in-app browser. Please tap the three dots (⋮) and select 'Open in Chrome' or 'Open in Browser' to install.", "In-App Browser Detected");
-                } else if (isAppInstalled()) {
-                    customAlert("You are already using the installed version of SRM Match!", "Already Installed");
                 } else {
-                    customAlert("The install option isn't ready yet. Please wait a few seconds for the page to load completely, or check if you've already installed the app in your settings.", "Almost Ready");
+                    customAlert("To install: Use Google Chrome or Edge. If you're already in Chrome, wait a few seconds for the prompt to appear, or check your browser menu for 'Install App'.", "Manual Install");
                 }
             }
         }
