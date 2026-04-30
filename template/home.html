@@ -196,6 +196,16 @@ async function toggleDiscoverability() {
 </script>
 
 {% else %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2 style="margin: 0; font-size: 24px; color: var(--primary);"><i class="fas fa-fire"></i> Match</h2>
+    <a href="{% url 'connections' %}" style="background: white; padding: 10px 14px; border-radius: 12px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 8px; transition: 0.2s;">
+        <i class="fas fa-user-friends" style="color: var(--primary);"></i>
+        <span style="font-size: 14px; font-weight: 600;">Connections</span>
+        {% if pending_connections_count > 0 %}
+        <span style="background: #ef4444; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 10px;">{{ pending_connections_count }}</span>
+        {% endif %}
+    </a>
+</div>
 <div class="quiz-card">
     {% if question %}
     <div class="profile-mini">
