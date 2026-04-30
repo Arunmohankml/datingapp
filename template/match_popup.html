@@ -198,14 +198,16 @@
 
     /* Favorite Cards */
     .vibe-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
         margin-top: 10px;
     }
     .vibe-item {
         position: relative;
         text-align: center;
+        width: 85px;
+        flex-shrink: 0;
         animation: scaleIn 0.4s ease-out both;
     }
     .vibe-item img {

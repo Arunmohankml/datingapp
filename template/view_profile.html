@@ -179,14 +179,16 @@
 
     /* Favorite Cards (Vibe) */
     .vibe-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        display: flex;
+        flex-wrap: wrap;
         gap: 12px;
         margin-top: 8px;
     }
     .vibe-item {
         position: relative;
         text-align: center;
+        width: 90px;
+        flex-shrink: 0;
         transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     .vibe-item:hover { transform: translateY(-4px); }
