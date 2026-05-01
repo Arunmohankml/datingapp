@@ -268,16 +268,6 @@
     <div class="hero-section">
         <div class="logo-badge">Exclusive Connection Hub</div>
 
-        <!-- Big Prominent Confessions Button at Top -->
-        <a href="{% url 'confessions_feed' %}" class="big-promo-btn reveal">
-            <div class="promo-icon"><i class="fas fa-mask"></i></div>
-            <div class="promo-text">
-                <span class="promo-title">Anonymous Confessions</span>
-                <span class="promo-subtitle">See what's happening on campus anonymously</span>
-            </div>
-            <i class="fas fa-chevron-right promo-arrow"></i>
-        </a>
-
         <div class="tagline-container">
             <span class="tagline-s">SRM:</span>
             <span class="tagline-word tagline-1">Swipe,</span>
@@ -286,6 +276,16 @@
         </div>
         <h1 class="hero-title">Connect with<br><span>Your SRM Peer</span></h1>
         <p class="hero-subtitle">The advanced student-exclusive connecting platform.</p>
+
+        <!-- Big Prominent Confessions Button moved here -->
+        <a href="{% url 'confessions_feed' %}" class="big-promo-btn reveal">
+            <div class="promo-icon"><i class="fas fa-mask"></i></div>
+            <div class="promo-text">
+                <span class="promo-title">Anonymous Confessions</span>
+                <span class="promo-subtitle">See what's happening on campus anonymously</span>
+            </div>
+            <i class="fas fa-chevron-right promo-arrow"></i>
+        </a>
 
         <div class="login-box reveal" style="margin-bottom: 40px;">
             <div id="error-message" class="error-banner" style="display:none; color:red; margin-bottom:20px; font-weight:600;"></div>
