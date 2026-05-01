@@ -1130,6 +1130,9 @@
         if (currentStep < totalSteps) {
             currentStep++;
             updateStepUI();
+            if (currentStep === 7) {
+                checkStep7Validity();
+            }
         }
     }
 
@@ -1621,8 +1624,8 @@
         const submitBtn = document.getElementById('submit-btn');
         const verificationStatus = document.getElementById('verification-status-input').value;
         const pfpPreview = document.getElementById('pfp-preview');
-        
-        const hasPfp = pfpPreview.src && !pfpPreview.src.endsWith('/') && pfpPreview.style.display !== 'none';
+        const pfpUrl = document.getElementById('profile-pic-url-input').value;
+        const hasPfp = (pfpPreview.src && !pfpPreview.src.endsWith('/') && pfpPreview.style.display !== 'none') || (pfpUrl && pfpUrl.length > 0);
         const isVerified = verificationStatus === 'verified';
         const hasGallery = galleryFiles.length >= 2;
         

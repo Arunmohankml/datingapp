@@ -77,6 +77,10 @@ def complete_profile(request):
                 else:
                     messages.warning(request, "Photo upload failed.")
 
+            if not new_profile.profile_pic:
+                messages.error(request, "A profile picture is required to complete your profile.")
+                return render(request, 'complete_profile.html', {'form': form})
+
             new_profile.save()
 
             # Gallery
@@ -160,6 +164,11 @@ def home(request):
         if user_pref_ok and cand_pref_ok and user_age_ok and cand_age_ok:
             has_valid_candidates = True
             break
+        elif user_pref_ok and user_age_ok:
+            # At least one person matches the user's criteria, even if the other person's criteria isn't met.
+            # This allows the quiz to continue so the user can see potential matches even if they aren't perfect mutual matches.
+            has_valid_candidates = True
+            break
 
     if not has_valid_candidates:
         return render(request, "home.html", {
@@ -195,7 +204,7 @@ def home(request):
             user_pref_ok = (profile.pref_gender == 'any' or profile.pref_gender == c.gender)
             cand_pref_ok = (c.pref_gender == 'any' or c.pref_gender == profile.gender)
             
-            if user_pref_ok and cand_pref_ok:
+            if user_pref_ok: # Relaxed from (user_pref_ok and cand_pref_ok)
                 cand_dict = cand_ans_map.get(c.user_id, {})
                 score = calculate_match_score_optimized(user_dict, cand_dict)
                 matches_list.append({'profile': c, 'score': score})
@@ -307,7 +316,7 @@ def check_match(request):
         if c.age:
             cand_age_ok = (profile.pref_age_min <= c.age <= profile.pref_age_max)
 
-        if user_pref_ok and cand_pref_ok and user_age_ok and cand_age_ok:
+        if user_pref_ok and user_age_ok: # Relaxed from (user_pref_ok and cand_pref_ok and user_age_ok and cand_age_ok)
             preference_filtered.append(c)
 
     # ── Step 2: Rank by answer similarity ──

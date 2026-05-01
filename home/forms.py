@@ -66,6 +66,7 @@ class ProfileForm(forms.ModelForm):
         required=True,
         widget=forms.TextInput(attrs={'placeholder': 'English, Hindi'})
     )
+    profile_pic_url = forms.CharField(required=False, widget=forms.HiddenInput())
 
     class Meta:
         model = Profile
@@ -139,6 +140,16 @@ class ProfileForm(forms.ModelForm):
         if isinstance(data, list): return ",".join(data)
         tags = [x.strip() for x in data.split(',') if x.strip()]
         return ",".join(tags)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        pfp_url = cleaned_data.get('profile_pic_url')
+        pfp_file = cleaned_data.get('profile_pic_file')
+        
+        if not pfp_url and not pfp_file:
+            # We don't raise a field-specific error because we want to catch both
+            raise forms.ValidationError("Profile picture is required.")
+        return cleaned_data
 
 class ProfileEditForm(forms.ModelForm):
     profile_pic_file = forms.ImageField(required=False, label="Upload Photo", widget=forms.FileInput(attrs={'class': 'form-control'}))
