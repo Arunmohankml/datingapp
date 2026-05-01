@@ -13,7 +13,7 @@
         overflow: hidden; 
         position: fixed; 
         width: 100%; 
-        background: var(--bg-color);
+        background: #f0f7ff;
         padding: 0 !important;
         margin: 0 !important;
     }
@@ -35,33 +35,41 @@
         width: 100%;
         max-width: 600px;
         margin: 0 auto;
-        background: var(--surface);
+        background: #f0f7ff;
         z-index: 10;
     }
 
     /* ── Fixed Header ── */
     .chats-header {
         flex-shrink: 0;
-        padding: 16px;
-        background: var(--surface);
-        border-bottom: 1px solid var(--border);
+        padding: 16px 20px;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(37, 99, 235, 0.1);
         z-index: 20;
     }
     .chats-header a {
         text-decoration: none;
-        color: var(--text-muted);
-        font-size: 13px;
+        color: #64748b;
+        font-size: 14px;
         display: inline-flex;
         align-items: center;
         gap: 8px;
         margin-bottom: 12px;
-        font-weight: 600;
+        font-weight: 700;
+        transition: 0.2s;
     }
+    .chats-header a:hover { color: #2563eb; }
+    
     .chats-header h2 {
         margin: 0;
-        font-size: 24px;
-        color: var(--primary);
+        font-size: 26px;
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
         font-weight: 800;
+        letter-spacing: -0.5px;
     }
 
     /* ── Scrollable Body ── */
@@ -69,33 +77,40 @@
         flex: 1;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        padding: 12px 12px 40px;
-        background: #f8fafc;
+        padding: 12px 20px 40px;
+        background: transparent;
     }
 
     /* ── Chat Card ── */
     .chat-card {
         display: flex;
         align-items: center;
-        padding: 14px;
-        margin-bottom: 10px;
+        padding: 18px;
+        margin-bottom: 12px;
         background: white;
-        border: 1px solid var(--border);
-        border-radius: 20px;
+        border: 1px solid rgba(37, 99, 235, 0.05);
+        border-radius: 24px;
         text-decoration: none;
         color: inherit;
-        transition: 0.2s;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.04);
+        position: relative;
     }
-    .chat-card:active { transform: scale(0.98); background: #f1f5f9; }
+    .chat-card:active { transform: scale(0.97); }
+    .chat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.08);
+        border-color: rgba(37, 99, 235, 0.1);
+    }
 
     .chat-avatar {
-        width: 52px;
-        height: 52px;
-        border-radius: 50%;
+        width: 56px;
+        height: 56px;
+        border-radius: 18px;
         object-fit: cover;
-        margin-right: 14px;
-        border: 2px solid var(--border);
+        margin-right: 16px;
+        border: 2px solid #e0f2fe;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.1);
     }
     
     .chat-details {
@@ -111,9 +126,9 @@
     }
     
     .chat-name {
-        font-weight: 700;
-        font-size: 15px;
-        color: var(--text-main);
+        font-weight: 800;
+        font-size: 16px;
+        color: #1e3a8a;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -121,7 +136,8 @@
     
     .chat-time {
         font-size: 11px;
-        color: var(--text-muted);
+        color: #64748b;
+        font-weight: 600;
     }
     
     .chat-snippet-row {
@@ -133,39 +149,57 @@
 
     .chat-snippet {
         font-size: 13px;
-        color: var(--text-muted);
+        color: #64748b;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
         flex: 1;
+        font-weight: 500;
     }
     
     .unread-badge {
-        background: var(--primary);
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
         color: white;
-        min-width: 18px;
-        height: 18px;
-        border-radius: 50%;
+        min-width: 20px;
+        height: 20px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 10px;
+        font-size: 11px;
         font-weight: 800;
-        padding: 0 4px;
+        padding: 0 6px;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
     }
 
     .delete-btn {
         color: #94a3b8;
-        padding: 6px;
+        padding: 8px;
         font-size: 14px;
         transition: 0.2s;
+        opacity: 0.5;
     }
-    .delete-btn:hover { color: #ef4444; }
+    .delete-btn:hover { color: #ef4444; opacity: 1; transform: scale(1.1); }
 
     .empty-state {
         text-align: center;
-        padding: 80px 20px;
-        color: var(--text-muted);
+        padding: 80px 30px;
+        color: #64748b;
+    }
+    .empty-state i {
+        font-size: 64px;
+        background: linear-gradient(135deg, #2563eb, #60a5fa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        opacity: 0.5;
+        margin-bottom: 24px;
+        display: block;
+    }
+    .empty-state h3 {
+        font-size: 20px;
+        font-weight: 800;
+        color: #1e3a8a;
+        margin-bottom: 8px;
     }
 </style>
 {% endblock %}
@@ -189,7 +223,13 @@
                     <div class="chat-info-row">
                         <div class="chat-name">{{ chat.partner.profile.name|default:chat.partner.username }}</div>
                         <div style="display: flex; align-items: center; gap: 8px;">
-                            <span class="chat-time">{{ chat.timestamp|date:"M d" }}</span>
+                            <span class="chat-time">
+                                {% if chat.timestamp.date == today %}
+                                    {{ chat.timestamp|time:"h:i A" }}
+                                {% else %}
+                                    {{ chat.timestamp|date:"M d" }}
+                                {% endif %}
+                            </span>
                             <a href="{% url 'delete_chat' chat.partner.id %}" class="delete-btn" onclick="event.stopPropagation(); return confirm('Delete chat?')">
                                 <i class="fas fa-trash-alt"></i>
                             </a>
@@ -200,11 +240,11 @@
                         <div class="chat-snippet">
                             {% if chat.latest_message %}
                                 {% if chat.latest_message.sender == request.user %}
-                                    <span style="color: var(--primary); font-weight: 600;">You: </span>
+                                    <span style="color: #2563eb; font-weight: 700;">You: </span>
                                 {% endif %}
-                                {{ chat.latest_message.text }}
+                                {{ chat.latest_message.text|truncatechars:40 }}
                             {% else %}
-                                <span style="font-style: italic;">No messages yet.</span>
+                                <span style="font-style: italic; color: #94a3b8;">No messages yet</span>
                             {% endif %}
                         </div>
                         

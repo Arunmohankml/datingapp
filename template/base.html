@@ -52,22 +52,22 @@
     
     <style>
         :root {
-            --bg-color: #f8fafc;
-            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            --text-main: #0f172a;
+            --bg-color: #f0f7ff;
+            --bg-gradient: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%);
+            --text-main: #1e3a8a;
             --text-muted: #64748b;
-            --primary: #6366f1;
-            --primary-hover: #4f46e5;
-            --accent: #f43f5e;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --accent: #ef4444;
             --surface: #ffffff;
-            --glass-bg: rgba(255, 255, 255, 0.7);
-            --glass-border: rgba(255, 255, 255, 0.4);
-            --border: #e2e8f0;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --radius-md: 12px;
-            --radius-lg: 24px;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(37, 99, 235, 0.1);
+            --border: #e0f2fe;
+            --shadow-sm: 0 1px 2px 0 rgba(37, 99, 235, 0.05);
+            --shadow-md: 0 4px 12px -1px rgba(37, 99, 235, 0.08);
+            --shadow-lg: 0 10px 25px -3px rgba(37, 99, 235, 0.1);
+            --radius-md: 14px;
+            --radius-lg: 28px;
         }
 
         html { overflow-x: hidden; }
@@ -224,9 +224,14 @@
                 // If not in the specific chat, show chat indicator and toast
                 if (!window.location.pathname.includes(`/chat/${data.sender_id}/`)) {
                     const chatBadge = document.getElementById('chat-badge');
-                    if (chatBadge) chatBadge.style.display = 'block';
-                    
+                    if (chatBadge) {
+                        chatBadge.style.display = 'block';
+                    }
                     showGlobalToast(`New message from ${data.sender_name || 'someone'}`);
+                } else {
+                    // We are in the chat, so ensure the badge is hidden
+                    const chatBadge = document.getElementById('chat-badge');
+                    if (chatBadge) chatBadge.style.display = 'none';
                 }
             });
 

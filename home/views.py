@@ -12,6 +12,63 @@ import os
 import requests
 import firebase_admin
 from firebase_admin import auth as firebase_auth, credentials, messaging
+
+def get_firebase_app():
+    """Helper to initialize or get the Firebase app with robust config parsing."""
+    if not firebase_admin._apps:
+        try:
+            # Clear ghost apps
+            for app_name in list(firebase_admin._apps.keys()):
+                firebase_admin.delete_app(firebase_admin._apps[app_name])
+            
+            cert_path = os.path.join(settings.BASE_DIR, 'serviceAccountKey.json')
+            if os.path.exists(cert_path):
+                cred = credentials.Certificate(cert_path)
+                firebase_admin.initialize_app(cred)
+            else:
+                config_str = os.environ.get('FIREBASE_SERVICE_ACCOUNT', '').strip()
+                if not config_str:
+                    raise Exception("FIREBASE_SERVICE_ACCOUNT env var is missing.")
+                
+                # Clean wrapping quotes
+                if (config_str.startswith('"') and config_str.endswith('"')) or \
+                   (config_str.startswith("'") and config_str.endswith("'")):
+                    config_str = config_str[1:-1]
+                
+                cred_dict = None
+                
+                # Attempt 1: Direct parse
+                try:
+                    cred_dict = json.loads(config_str, strict=False)
+                except json.JSONDecodeError as e1:
+                    # Attempt 2: Escape literal newlines (common in some env loaders)
+                    try:
+                        cred_dict = json.loads(config_str.replace('\n', '\\n'), strict=False)
+                    except json.JSONDecodeError as e2:
+                        # Attempt 3: Aggressively handle backslashes
+                        try:
+                            # Doubling backslashes often fixes issues where the string is read "too raw"
+                            fixed = config_str.replace('\\', '\\\\')
+                            cred_dict = json.loads(fixed, strict=False)
+                        except json.JSONDecodeError as e3:
+                            print(f"DEBUG: Firebase JSON parsing failed. Error: {e1}")
+                            raise e1
+                
+                # Normalize private_key newlines (Crucial for PEM loading)
+                if cred_dict and 'private_key' in cred_dict:
+                    pk = cred_dict['private_key']
+                    if isinstance(pk, str):
+                        # Replace literal \n or \\n with actual newline characters
+                        import re
+                        cred_dict['private_key'] = re.sub(r'\\+n', '\n', pk).replace('\r', '')
+                
+                cred = credentials.Certificate(cred_dict)
+                firebase_admin.initialize_app(cred)
+            print("DEBUG: Firebase initialized successfully.")
+        except Exception as e:
+            print(f"Firebase Init Error: {e}")
+            raise e
+    return firebase_admin.get_app()
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q
 from django.core.files.base import ContentFile
@@ -384,42 +441,10 @@ def login_view(request):
 @csrf_exempt
 def api_verify_token(request):
     if request.method == 'POST':
-        # --- LAZY FIREBASE INITIALIZATION ---
-        if not firebase_admin._apps:
-            try:
-                # Clear any ghost apps to prevent "app already exists" or "app does not exist" confusion
-                for app_name in list(firebase_admin._apps.keys()):
-                    firebase_admin.delete_app(firebase_admin._apps[app_name])
-                
-                cert_path = os.path.join(settings.BASE_DIR, 'serviceAccountKey.json')
-                if os.path.exists(cert_path):
-                    cred = credentials.Certificate(cert_path)
-                    firebase_admin.initialize_app(cred)
-                else:
-                    firebase_config = os.environ.get('FIREBASE_SERVICE_ACCOUNT', '').strip()
-                    if firebase_config:
-                        # Clean wrapping quotes
-                        if (firebase_config.startswith('"') and firebase_config.endswith('"')):
-                            firebase_config = firebase_config[1:-1]
-                        
-                        # Ensure newlines are escaped for JSON
-                        safe_config = firebase_config.replace('\n', '\\n').replace('\r', '')
-                        try:
-                            cred_dict = json.loads(safe_config, strict=False)
-                        except:
-                            cred_dict = json.loads(firebase_config, strict=False)
-                        
-                        if 'private_key' in cred_dict:
-                            pk = cred_dict['private_key']
-                            if isinstance(pk, str):
-                                cred_dict['private_key'] = pk.replace('\\n', '\n').replace('\\\\n', '\n')
-                        
-                        cred = credentials.Certificate(cred_dict)
-                        firebase_admin.initialize_app(cred)
-                print("DEBUG: Firebase initialized successfully in view.")
-            except Exception as e:
-                print(f"Firebase Lazy Init Error: {e}")
-                return JsonResponse({'success': False, 'error': f'Firebase Init Failure: {str(e)}'}, status=500)
+        try:
+            default_app = get_firebase_app()
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': f'Firebase Init Failure: {str(e)}'}, status=500)
 
         try:
             data = json.loads(request.body)
@@ -484,32 +509,7 @@ def send_push_to_user(user, title, body, url='/'):
         raise Exception("No push tokens found for this user. Make sure you granted notification permission.")
     
     # Lazy init check
-    if not firebase_admin._apps:
-        try:
-            cert_path = os.path.join(settings.BASE_DIR, 'serviceAccountKey.json')
-            if os.path.exists(cert_path):
-                cred = credentials.Certificate(cert_path)
-                firebase_admin.initialize_app(cred)
-            else:
-                firebase_config = os.environ.get('FIREBASE_SERVICE_ACCOUNT', '').strip()
-                if firebase_config:
-                    if (firebase_config.startswith('"') and firebase_config.endswith('"')):
-                        firebase_config = firebase_config[1:-1]
-                    safe_config = firebase_config.replace('\n', '\\n').replace('\r', '')
-                    try:
-                        cred_dict = json.loads(safe_config, strict=False)
-                    except:
-                        cred_dict = json.loads(firebase_config, strict=False)
-                    if 'private_key' in cred_dict:
-                        pk = cred_dict['private_key']
-                        if isinstance(pk, str):
-                            cred_dict['private_key'] = pk.replace('\\n', '\n').replace('\\\\n', '\n')
-                    cred = credentials.Certificate(cred_dict)
-                    firebase_admin.initialize_app(cred)
-                else:
-                    raise Exception("FIREBASE_SERVICE_ACCOUNT environment variable is not set.")
-        except Exception as e:
-            raise Exception(f"Firebase Initialization Error: {str(e)}")
+    get_firebase_app()
 
     message = messaging.MulticastMessage(
         notification=messaging.Notification(
@@ -637,7 +637,7 @@ def chat_list_view(request):
     all_msgs = Message.objects.filter(
         (Q(sender=user, receiver__in=partners, sender_deleted=False)) |
         (Q(sender__in=partners, receiver=user, receiver_deleted=False))
-    ).order_by('-timestamp').select_related('sender')
+    ).exclude(text__startswith='__SPIN__:').order_by('-timestamp').select_related('sender')
 
     # Group latest messages and unread counts in memory
     latest_msg_map = {}
@@ -661,7 +661,10 @@ def chat_list_view(request):
             })
     
     chats.sort(key=lambda x: x['timestamp'].timestamp() if x.get('timestamp') else 0, reverse=True)
-    return render(request, 'chat_list.html', {'chats': chats})
+    return render(request, 'chat_list.html', {
+        'chats': chats,
+        'today': timezone.localtime(timezone.now()).date()
+    })
 
 
 # ---------------- CHAT ----------------
@@ -705,7 +708,7 @@ def chat_view(request, partner_id):
                 'id': msg.id,
                 'text': msg.text,
                 'sender_id': msg.sender_id,
-                'timestamp': timezone.localtime(msg.timestamp).strftime("%H:%M"),
+                'timestamp': timezone.localtime(msg.timestamp).strftime("%I:%M %p"),
                 'reply_to': {
                     'id': msg.reply_to.id,
                     'text': msg.reply_to.text,
@@ -732,7 +735,7 @@ def chat_view(request, partner_id):
                         'id': msg.id,
                         'text': msg.text,
                         'sender_id': msg.sender_id,
-                        'timestamp': timezone.localtime(msg.timestamp).strftime("%H:%M"),
+                        'timestamp': timezone.localtime(msg.timestamp).strftime("%I:%M %p"),
                         'reply_to': {
                             'id': msg.reply_to.id,
                             'text': msg.reply_to.text,
@@ -812,7 +815,7 @@ def chat_api_messages(request, partner_id):
             'id': msg.id,
             'text': msg.text,
             'sender_id': msg.sender_id,
-            'timestamp': timezone.localtime(msg.timestamp).strftime("%H:%M"),
+            'timestamp': timezone.localtime(msg.timestamp).strftime("%I:%M %p"),
             'reply_to': {
                 'id': msg.reply_to.id,
                 'text': msg.reply_to.text,
