@@ -168,3 +168,25 @@ def upload_base64_to_supabase(base64_str, bucket="images", path="verification"):
     except Exception as e:
         print(f"ERROR: Base64 upload failed: {e}")
         return None, str(e)
+
+def delete_from_supabase_by_url(url, bucket="images"):
+    """
+    Attempts to extract path from public URL and delete from Supabase storage.
+    """
+    if not url:
+        return False
+    try:
+        supabase = get_supabase_client()
+        # Extract path from public URL
+        # Format: https://[proj].supabase.co/storage/v1/object/public/[bucket]/[path]
+        search_str = f"/storage/v1/object/public/{bucket}/"
+        if search_str in url:
+            path = url.split(search_str)[1]
+            # Supabase API expects path relative to bucket
+            supabase.storage.from_(bucket).remove([path])
+            print(f"DEBUG: Successfully deleted from Supabase: {path}")
+            return True
+        return False
+    except Exception as e:
+        print(f"DEBUG: Supabase [DELETE ERROR]: {str(e)}")
+        return False

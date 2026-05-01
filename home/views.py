@@ -21,7 +21,7 @@ from django.utils import timezone
 
 from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm
-from .supabase_utils import upload_to_supabase
+from .supabase_utils import upload_to_supabase, delete_from_supabase_by_url
 # AI imports moved inside functions to prevent Vercel crashes
 
 # Safe print for Windows console encoding issues
@@ -1441,7 +1441,15 @@ def admin_action(request):
         elif action == 'delete_user_report':
             UserReport.objects.filter(id=target_id).delete()
         elif action == 'clear_wall':
+            # Delete physical images from Supabase first
+            wall_images = WallImage.objects.all()
+            for img in wall_images:
+                if img.image:
+                    delete_from_supabase_by_url(img.image, bucket="images")
+            
+            # Now clear DB
             WallStroke.objects.all().delete()
+            WallImage.objects.all().delete()
         elif action == 'ban_user':
             profile = get_object_or_404(Profile, id=target_id)
             profile.is_banned = True
