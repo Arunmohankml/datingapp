@@ -17,6 +17,7 @@ from django.db.models import Q
 from django.core.files.base import ContentFile
 import base64
 import math
+from django.utils import timezone
 
 from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm
@@ -701,7 +702,7 @@ def chat_view(request, partner_id):
                 'id': msg.id,
                 'text': msg.text,
                 'sender_id': msg.sender_id,
-                'timestamp': msg.timestamp.strftime("%H:%M"),
+                'timestamp': timezone.localtime(msg.timestamp).strftime("%H:%M"),
                 'reply_to': {
                     'id': msg.reply_to.id,
                     'text': msg.reply_to.text,
@@ -728,7 +729,7 @@ def chat_view(request, partner_id):
                         'id': msg.id,
                         'text': msg.text,
                         'sender_id': msg.sender_id,
-                        'timestamp': msg.timestamp.strftime("%H:%M"),
+                        'timestamp': timezone.localtime(msg.timestamp).strftime("%H:%M"),
                         'reply_to': {
                             'id': msg.reply_to.id,
                             'text': msg.reply_to.text,
@@ -800,7 +801,7 @@ def chat_api_messages(request, partner_id):
             'id': msg.id,
             'text': msg.text,
             'sender_id': msg.sender_id,
-            'timestamp': msg.timestamp.strftime("%H:%M"),
+            'timestamp': timezone.localtime(msg.timestamp).strftime("%H:%M"),
             'reply_to': {
                 'id': msg.reply_to.id,
                 'text': msg.reply_to.text,
