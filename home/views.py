@@ -610,6 +610,9 @@ def connections_view(request):
     })
 
 # ---------------- CHAT INBOX ----------------
+from django.views.decorators.cache import never_cache
+
+@never_cache
 @login_required
 def chat_list_view(request):
     user = request.user
@@ -634,7 +637,7 @@ def chat_list_view(request):
     all_msgs = Message.objects.filter(
         (Q(sender=user, receiver__in=partners, sender_deleted=False)) |
         (Q(sender__in=partners, receiver=user, receiver_deleted=False))
-    ).order_by('receiver_id', 'sender_id', '-timestamp').select_related('sender')
+    ).order_by('-timestamp').select_related('sender')
 
     # Group latest messages and unread counts in memory
     latest_msg_map = {}
@@ -766,6 +769,14 @@ def chat_view(request, partner_id):
 def chat_typing(request, partner_id):
     broadcast_event(f'chat_{request.user.id}', 'typing', {'user_id': request.user.id})
     return JsonResponse({'success': True})
+@csrf_exempt
+@login_required
+def mark_messages_read(request, partner_id):
+    if request.method == 'POST':
+        partner = get_object_or_404(User, id=partner_id)
+        Message.objects.filter(sender=partner, receiver=request.user, is_read=False).update(is_read=True)
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False}, status=405)
 
 
 @login_required

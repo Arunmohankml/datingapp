@@ -773,6 +773,9 @@ const pusherKey = "{{ PUSHER_KEY|default:'' }}";
 const pusherCluster = "{{ PUSHER_CLUSTER|default:'ap2' }}";
 
 if (pusherKey) {
+    // Mark initial messages as read
+    fetch(`/chat/read/${partnerId}/`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
+    
     const pusher = new Pusher(pusherKey, { cluster: pusherCluster });
     
     // Listen for messages TO ME on my own channel
@@ -783,6 +786,8 @@ if (pusherKey) {
             if (!renderedIds.has(data.id)) {
                 appendMessage(data);
                 hideTyping();
+                // Mark as read immediately if we are in the chat
+                fetch(`/chat/read/${partnerId}/`, { method: 'POST', headers: { 'X-CSRFToken': csrfToken } });
             }
         }
     });
