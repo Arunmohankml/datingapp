@@ -453,6 +453,8 @@
             // Optionally show a custom toast or update UI
         });
     </script>
+    {% endif %}
+
     {% if not user.is_authenticated %}
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
