@@ -207,7 +207,18 @@ def home(request):
             if user_pref_ok: # Relaxed from (user_pref_ok and cand_pref_ok)
                 cand_dict = cand_ans_map.get(c.user_id, {})
                 score = calculate_match_score_optimized(user_dict, cand_dict)
-                matches_list.append({'profile': c, 'score': score})
+                
+                # Bonus for matching 'looking_for'
+                if profile.looking_for == c.looking_for:
+                    score += 5
+                
+                # Bonus for matching languages
+                user_pref_langs = set(profile.pref_languages_list)
+                cand_langs = set(c.languages_list)
+                if user_pref_langs.intersection(cand_langs):
+                    score += 5
+                
+                matches_list.append({'profile': c, 'score': min(score, 100)})
         
         matches_list.sort(key=lambda x: x['score'], reverse=True)
         sparked_ids = list(Spark.objects.filter(sender=user).values_list('receiver_id', flat=True))
@@ -325,6 +336,19 @@ def check_match(request):
 
     for candidate in preference_filtered:
         score = calculate_match_score(user, candidate.user)
+        
+        # Bonus for matching 'looking_for' (Soft priority)
+        if profile.looking_for == candidate.looking_for:
+            score += 5
+        
+        # Bonus for matching preferred languages (Soft priority)
+        user_pref_langs = set(profile.pref_languages_list)
+        cand_langs = set(candidate.languages_list)
+        if user_pref_langs.intersection(cand_langs):
+            score += 5
+            
+        score = min(score, 100) # Cap at 100%
+        
         if score > best_score:
             best_score = score
             best_match = candidate
