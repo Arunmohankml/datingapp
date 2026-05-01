@@ -258,6 +258,53 @@
     input:checked + .slider { background-color: var(--primary); }
     input:checked + .slider:before { transform: translateX(20px); }
 
+    .c-back-btn {
+        width: 40px; height: 40px;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: var(--text-main);
+        text-decoration: none;
+        font-size: 16px;
+    }
+    .c-login-btn {
+        padding: 8px 16px;
+        background: var(--primary);
+        color: white;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 13px;
+    }
+    .login-banner {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 400px;
+        background: var(--primary);
+        padding: 16px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: white;
+        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+        z-index: 1000;
+    }
+    .login-banner p { margin: 0; font-size: 13px; font-weight: 600; }
+    .login-banner a {
+        background: white;
+        color: var(--primary);
+        padding: 8px 16px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 800;
+        font-size: 13px;
+    }
+
 </style>
 {% endblock %}
 
@@ -265,6 +312,18 @@
 <div class="confession-page">
 
     <div class="page-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            {% if not user.is_authenticated %}
+            <a href="{% url 'login_view' %}" class="c-back-btn" title="Back to Login"><i class="fas fa-arrow-left"></i></a>
+            {% else %}
+            <div></div>
+            {% endif %}
+            
+            {% if not user.is_authenticated %}
+            <a href="{% url 'login_view' %}" class="c-login-btn">Login</a>
+            {% endif %}
+        </div>
+
         <h2><i class="fas fa-mask" style="color:var(--primary);"></i> Confessions</h2>
         <p>Share your secrets, stay anonymous.</p>
         {% if is_admin %}
@@ -338,6 +397,13 @@
             </div>
         {% endif %}
     </div>
+
+    {% if not user.is_authenticated %}
+    <div class="login-banner">
+        <p>Login to unlock SrmMatch and more features!</p>
+        <a href="{% url 'login_view' %}">Login</a>
+    </div>
+    {% endif %}
 
 </div>
 

@@ -38,6 +38,43 @@
         margin: 0;
         font-size: 16px;
         font-weight: 700;
+        flex: 1;
+    }
+    .top-login-btn {
+        padding: 6px 12px;
+        background: var(--primary);
+        color: white;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 12px;
+    }
+    .login-banner {
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 400px;
+        background: var(--primary);
+        padding: 16px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: white;
+        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+        z-index: 1000;
+    }
+    .login-banner p { margin: 0; font-size: 12px; font-weight: 600; }
+    .login-banner a {
+        background: white;
+        color: var(--primary);
+        padding: 6px 12px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 800;
+        font-size: 12px;
     }
 
     /* Scrollable Content Area */
@@ -217,6 +254,9 @@
 <div class="top-bar">
     <a href="{% url 'confessions_feed' %}" class="back-btn"><i class="fas fa-arrow-left"></i></a>
     <h3>Confession</h3>
+    {% if not user.is_authenticated %}
+    <a href="{% url 'login_view' %}" class="top-login-btn">Login</a>
+    {% endif %}
 </div>
 
 <div class="detail-content">
@@ -277,6 +317,12 @@
     {% empty %}
     <p style="text-align:center; color:var(--text-muted); padding: 20px; font-size:14px;">No comments yet. Start the conversation!</p>
     {% endfor %}
+    {% if not user.is_authenticated %}
+    <div class="login-banner">
+        <p>Login to unlock SrmMatch features!</p>
+        <a href="{% url 'login_view' %}">Login</a>
+    </div>
+    {% endif %}
     
 </div>
 
