@@ -350,64 +350,15 @@
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 </script>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDNiJROEM1-oa2kidoUorjFPS4FvP_et0M",
-      authDomain: "datingapp-636fa.firebaseapp.com",
-      projectId: "datingapp-636fa",
-      storageBucket: "datingapp-636fa.firebasestorage.app",
-      messagingSenderId: "848138254029",
-      appId: "1:848138254029:web:db606ec479cc1220805b84",
-      measurementId: "G-VVG7199H45"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-
-    const errorEl = document.getElementById('error-message');
-
-    async function handleLogin() {
-        errorEl.style.display = 'none';
-        const loginBtn = document.getElementById('google-login-btn');
-        const originalBtnHTML = loginBtn.innerHTML;
-        
-        try {
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
-
-            const result = await signInWithPopup(auth, provider);
-            const user = result.user;
-            
-
-            const idToken = await user.getIdToken();
-            const response = await fetch('/api/verify-token/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idToken: idToken })
-            });
-            
-            const data = await response.json();
-            if (data.success) {
-                window.location.href = data.profile_complete ? '/' : '/complete_profile/';
+    <script>
+        document.getElementById('google-login-btn').addEventListener('click', () => {
+            if (typeof window.triggerGoogleLogin === 'function') {
+                window.triggerGoogleLogin();
             } else {
-                throw new Error(data.error || "Login failed.");
+                console.error("triggerGoogleLogin not found");
             }
-        } catch (error) {
-            console.error(error);
-            errorEl.innerText = error.message;
-            errorEl.style.display = "block";
-            loginBtn.disabled = false;
-            loginBtn.innerHTML = originalBtnHTML;
-        }
-    }
-
-    document.getElementById('google-login-btn').addEventListener('click', handleLogin);
-</script>
+        });
+    </script>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
