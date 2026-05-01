@@ -171,6 +171,14 @@
                             <input type="hidden" name="target_id" value="{{ c.id }}">
                             <button type="submit" class="btn-danger">Delete</button>
                         </form>
+                        {% if c.poster_fingerprint %}
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="ban_fingerprint">
+                            <input type="hidden" name="fingerprint" value="{{ c.poster_fingerprint }}">
+                            <button type="submit" class="btn-danger" style="background: #000; color: #fff; border-color: #000;" title="Ban device ID: {{ c.poster_fingerprint }}">Ban FP</button>
+                        </form>
+                        {% endif %}
                         <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="dismiss_confession">

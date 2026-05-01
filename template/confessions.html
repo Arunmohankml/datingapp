@@ -349,8 +349,9 @@
             <button class="close-modal" onclick="closeCreateModal()">&times;</button>
         </div>
         
-        <form method="POST" action="{% url 'create_confession' %}" enctype="multipart/form-data">
+        <form method="POST" action="{% url 'create_confession' %}" enctype="multipart/form-data" id="createConfessionForm">
             {% csrf_token %}
+            <input type="hidden" name="fingerprint" id="fingerprintInput">
             
             <textarea name="content" rows="4" placeholder="What's on your mind?..." required></textarea>
             
@@ -376,7 +377,10 @@
 </div>
 
 <script>
-function openCreateModal() { document.getElementById('createModal').classList.add('active'); }
+function openCreateModal() { 
+    document.getElementById('createModal').classList.add('active'); 
+    document.getElementById('fingerprintInput').value = getFingerprint();
+}
 function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
 
 async function likeConfession(e, id, btn) {

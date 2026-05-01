@@ -18,7 +18,7 @@ from django.core.files.base import ContentFile
 import base64
 import math
 
-from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken
+from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm
 from .supabase_utils import upload_to_supabase
 # AI imports moved inside functions to prevent Vercel crashes
@@ -1074,23 +1074,32 @@ def confessions_feed(request):
         'is_admin': is_admin
     })
 
-@login_required
 def create_confession(request):
     if request.method == 'POST':
         content = request.POST.get('content')
         is_anonymous = request.POST.get('is_anonymous') == 'true'
         campus = request.POST.get('campus', '')
-        
-        if request.user.profile.is_banned:
-            messages.error(request, "You are banned.")
+        fingerprint = request.POST.get('fingerprint', '')
+
+        # Check if fingerprint is banned
+        if fingerprint and BannedIdentifier.objects.filter(fingerprint=fingerprint).exists():
+            messages.error(request, "You are banned from posting.")
             return redirect('confessions_feed')
 
+        user = None
+        if request.user.is_authenticated:
+            if hasattr(request.user, 'profile') and request.user.profile.is_banned:
+                messages.error(request, "You are banned.")
+                return redirect('confessions_feed')
+            user = request.user
+
         Confession.objects.create(
-            user=request.user,
+            user=user,
             content=content,
             image='',
             campus=campus,
-            is_anonymous=is_anonymous
+            is_anonymous=is_anonymous,
+            poster_fingerprint=fingerprint
         )
         messages.success(request, 'Confession posted!')
         return redirect('confessions_feed')
@@ -1128,20 +1137,34 @@ def delete_confession(request, confession_id):
     messages.error(request, "Not authorized.")
     return redirect('confession_detail', confession_id=confession_id)
 
-@login_required
 def report_confession(request, confession_id):
     confession = get_object_or_404(Confession, id=confession_id)
     if request.method == 'POST':
         reasons = request.POST.getlist('reasons')
         other_reason = request.POST.get('other_reason', '')
-        ConfessionReport.objects.update_or_create(
-            confession=confession,
-            user=request.user,
-            defaults={
-                'reasons': reasons,
-                'other_reason': other_reason
-            }
-        )
+        fingerprint = request.POST.get('fingerprint', '')
+
+        # Use update_or_create logic based on user or fingerprint
+        if request.user.is_authenticated:
+            ConfessionReport.objects.update_or_create(
+                confession=confession,
+                user=request.user,
+                defaults={
+                    'reasons': reasons,
+                    'other_reason': other_reason,
+                    'reporter_fingerprint': fingerprint
+                }
+            )
+        else:
+            # For anonymous reports, we just create a new one each time or try to match fingerprint
+            # but fingerprint might not be unique enough for update_or_create without user.
+            ConfessionReport.objects.create(
+                confession=confession,
+                reporter_fingerprint=fingerprint,
+                reasons=reasons,
+                other_reason=other_reason
+            )
+
         confession.is_flagged = True
         confession.save()
         messages.success(request, "Report submitted.")
@@ -1182,19 +1205,32 @@ def confession_detail(request, confession_id):
     confession = get_object_or_404(Confession, id=confession_id)
     return render(request, 'confession_detail.html', {'confession': confession})
 
-@login_required
 def add_comment(request, confession_id):
     if request.method == 'POST':
         confession = get_object_or_404(Confession, id=confession_id)
         content = request.POST.get('content')
         is_anonymous = request.POST.get('is_anonymous') == 'true'
+        fingerprint = request.POST.get('fingerprint', '')
+
+        # Check if fingerprint is banned
+        if fingerprint and BannedIdentifier.objects.filter(fingerprint=fingerprint).exists():
+            messages.error(request, "You are banned from commenting.")
+            return redirect('confession_detail', confession_id=confession_id)
         
+        user = None
+        if request.user.is_authenticated:
+            if hasattr(request.user, 'profile') and request.user.profile.is_banned:
+                messages.error(request, "You are banned.")
+                return redirect('confession_detail', confession_id=confession_id)
+            user = request.user
+
         if content:
             ConfessionComment.objects.create(
                 confession=confession,
-                user=request.user,
+                user=user,
                 content=content,
-                is_anonymous=is_anonymous
+                is_anonymous=is_anonymous,
+                poster_fingerprint=fingerprint
             )
     return redirect('confession_detail', confession_id=confession_id)
 
@@ -1394,6 +1430,10 @@ def admin_action(request):
             profile.verification_status = 'rejected'
             profile.is_face_verified = False
             profile.save()
+        elif action == 'ban_fingerprint':
+            fingerprint = request.POST.get('fingerprint')
+            if fingerprint:
+                BannedIdentifier.objects.get_or_create(fingerprint=fingerprint)
             
         return redirect('admin_dashboard')
     

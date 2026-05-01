@@ -282,8 +282,9 @@
 
 <!-- Comment Input -->
 <div class="comment-box">
-    <form class="comment-form" method="POST" action="{% url 'add_comment' confession.id %}">
+    <form class="comment-form" method="POST" action="{% url 'add_comment' confession.id %}" id="commentForm">
         {% csrf_token %}
+        <input type="hidden" name="fingerprint" id="commentFingerprint">
         <div class="comment-input-row">
             <input type="text" name="content" class="comment-input" placeholder="Add a comment..." required autocomplete="off">
             <button type="submit" class="send-btn"><i class="fas fa-paper-plane"></i></button>
@@ -301,8 +302,9 @@
             <h3>Report Confession</h3>
             <button class="close-modal" onclick="closeReportModal()">&times;</button>
         </div>
-        <form method="POST" action="{% url 'report_confession' confession.id %}">
+        <form method="POST" action="{% url 'report_confession' confession.id %}" id="reportForm">
             {% csrf_token %}
+            <input type="hidden" name="fingerprint" id="reportFingerprint">
             <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 16px;">Why are you reporting this? Select all that apply:</p>
             
             <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px;">
@@ -355,8 +357,18 @@
 </style>
 
 <script>
-function openReportModal() { document.getElementById('reportModal').classList.add('active'); }
+function openReportModal() { 
+    document.getElementById('reportModal').classList.add('active'); 
+    document.getElementById('reportFingerprint').value = getFingerprint();
+}
 function closeReportModal() { document.getElementById('reportModal').classList.remove('active'); }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const commentFingerprint = document.getElementById('commentFingerprint');
+    if (commentFingerprint) {
+        commentFingerprint.value = getFingerprint();
+    }
+});
 
 async function likeDetail() {
     try {

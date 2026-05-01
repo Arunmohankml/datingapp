@@ -222,6 +222,7 @@ class Confession(models.Model):
     is_anonymous = models.BooleanField(default=True)
     likes_count = models.PositiveIntegerField(default=0)
     is_flagged = models.BooleanField(default=False)
+    poster_fingerprint = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -253,6 +254,7 @@ class ConfessionComment(models.Model):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     content = models.TextField()
     is_anonymous = models.BooleanField(default=True)
+    poster_fingerprint = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -285,13 +287,16 @@ class ConfessionLike(models.Model):
 
 class ConfessionReport(models.Model):
     confession = models.ForeignKey(Confession, on_delete=models.CASCADE, related_name='reports')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    reporter_fingerprint = models.CharField(max_length=100, blank=True, null=True)
     reasons = models.JSONField(default=list) # List of selected reasons
     other_reason = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('confession', 'user')
+        # unique_together removed to allow multiple reports from same fingerprint/user on different confessions
+        # or even multiple reports on same confession if needed, though usually restricted.
+        pass
 
 class UserReport(models.Model):
     reported_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_reports')
@@ -359,3 +364,11 @@ class FCMToken(models.Model):
 
     def __str__(self):
         return f"Token for {self.user.username} ({self.device_type})"
+
+class BannedIdentifier(models.Model):
+    fingerprint = models.CharField(max_length=100, unique=True)
+    reason = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Banned: {self.fingerprint}"

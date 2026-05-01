@@ -206,6 +206,16 @@
         const PUSHER_CLUSTER = "{{ PUSHER_CLUSTER }}";
         const USER_ID = "{{ request.user.id }}";
 
+        // Fingerprinting Logic for Anonymous Actions
+        function getFingerprint() {
+            let fp = localStorage.getItem('device_fingerprint');
+            if (!fp) {
+                fp = 'fp_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now().toString(36);
+                localStorage.setItem('device_fingerprint', fp);
+            }
+            return fp;
+        }
+
         if (PUSHER_KEY && USER_ID) {
             const pusher = new Pusher(PUSHER_KEY, { cluster: PUSHER_CLUSTER });
             const userChannel = pusher.subscribe(`chat_${USER_ID}`);
