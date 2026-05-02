@@ -202,7 +202,9 @@ def home(request):
         return redirect('check_match')
 
     # CHECK IF ANY MATCHES ARE LEFT BEFORE SHOWING QUIZ
-    interacted_user_ids = MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)
+    # Exclude users where a MatchRequest exists in EITHER direction (sent, received, accepted, skipped, etc)
+    interacted_user_ids = list(MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)) + \
+                          list(MatchRequest.objects.filter(receiver=user).values_list('sender_id', flat=True))
     blocked_user_ids = list(BlockedUser.objects.filter(blocker=user).values_list('blocked_id', flat=True)) + \
                        list(BlockedUser.objects.filter(blocked=user).values_list('blocker_id', flat=True))
     
@@ -240,7 +242,8 @@ def home(request):
 
     if not question:
         # DISCOVERY MODE: Fetch and Rank All Potential Matches
-        interacted_user_ids = MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)
+        interacted_user_ids = list(MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)) + \
+                              list(MatchRequest.objects.filter(receiver=user).values_list('sender_id', flat=True))
         blocked_user_ids = list(BlockedUser.objects.filter(blocker=user).values_list('blocked_id', flat=True)) + \
                            list(BlockedUser.objects.filter(blocked=user).values_list('blocker_id', flat=True))
         
@@ -352,8 +355,9 @@ def check_match(request):
     if profile is None:
         return redirect('home')
 
-    # Exclude ANY users we have already interacted with (liked, rejected, skipped, pending)
-    interacted_user_ids = MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)
+    # Exclude ANY users where a MatchRequest exists in EITHER direction (liked, rejected, skipped, pending, accepted)
+    interacted_user_ids = list(MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)) + \
+                          list(MatchRequest.objects.filter(receiver=user).values_list('sender_id', flat=True))
 
     # Check if we have a current match that hasn't been interacted with (prevents refresh bypass)
     current_match_id = request.session.get('current_match_id')

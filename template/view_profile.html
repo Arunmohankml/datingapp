@@ -2,240 +2,282 @@
 
 {% block head %}
 <style>
-    .profile-page {
-        padding-bottom: 40px;
+    /* ── Root Variables ── */
+    :root {
+        --primary-blue: #2563eb;
+        --secondary-blue: #3b82f6;
+        --soft-blue: #f0f7ff;
+        --glass-bg: rgba(255, 255, 255, 0.85);
+        --text-dark: #1e3a8a;
+        --text-muted: #64748b;
     }
 
-    /* Hero Section */
+    .profile-page {
+        min-height: 100vh;
+        background: #f0f7ff;
+        padding: 0 16px 80px;
+        position: relative;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* ── Modern Hero Section ── */
     .profile-hero {
         text-align: center;
-        padding: 30px 20px 20px;
+        padding: 50px 20px 30px;
+        position: relative;
+        overflow: hidden;
+        animation: heroFadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .profile-hero img {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
+    @keyframes heroFadeIn {
+        from { opacity: 0; transform: translateY(-30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .profile-hero .avatar-wrapper {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 20px;
+    }
+    .profile-hero img.profile-pic {
+        width: 140px;
+        height: 140px;
+        border-radius: 45px;
         object-fit: cover;
-        border: 2px solid white;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        border: 4px solid white;
+        box-shadow: 0 20px 40px rgba(37, 99, 235, 0.15);
+        transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
+    .profile-hero img.profile-pic:hover {
+        transform: scale(1.05) rotate(2deg);
+    }
+    
+    .spark-badge {
+        position: absolute;
+        bottom: -5px; right: -5px;
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 14px;
+        font-size: 13px;
+        font-weight: 800;
+        box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
+        border: 3px solid white;
+        display: flex; align-items: center; gap: 4px;
+        animation: sparkPulse 2s infinite;
+    }
+    @keyframes sparkPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
     .profile-hero h1 {
-        font-size: 22px;
-        margin: 16px 0 4px;
+        font-size: 28px;
+        font-weight: 900;
+        color: var(--text-dark);
+        letter-spacing: -1px;
+        margin: 0 0 4px;
     }
     .profile-hero .profile-meta {
         color: var(--text-muted);
-        font-size: 13px;
-        margin: 0;
-    }
-    .profile-hero .looking-badge {
-        display: inline-block;
-        margin-top: 12px;
-        padding: 6px 16px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 700;
-        background: rgba(99, 102, 241, 0.1);
-        color: var(--primary);
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
     }
 
-    /* Section Cards */
+    /* ── Action Buttons ── */
+    .profile-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 25px;
+    }
+    .spark-btn {
+        padding: 12px 28px;
+        border-radius: 20px;
+        font-size: 15px;
+        font-weight: 800;
+        border: none;
+        cursor: pointer;
+        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        display: flex; align-items: center; gap: 8px;
+    }
+    .spark-btn.active {
+        background: #fef3c7;
+        color: #d97706;
+        box-shadow: 0 10px 25px rgba(245, 158, 11, 0.2);
+    }
+    .spark-btn.inactive {
+        background: white;
+        color: var(--text-muted);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        border: 1px solid #f1f5f9;
+    }
+    .spark-btn:hover { transform: translateY(-4px); }
+
+    /* ── Section Cards ── */
     .profile-section {
         background: white;
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 20px;
-        margin-bottom: 16px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        border-radius: 32px;
+        padding: 24px;
+        margin-bottom: 20px;
+        box-shadow: 0 15px 40px rgba(37, 99, 235, 0.04);
+        animation: sectionEntry 0.6s cubic-bezier(0.23, 1, 0.32, 1) backwards;
     }
+    @keyframes sectionEntry {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
     .profile-section h3 {
-        font-size: 14px;
-        margin: 0 0 14px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: var(--text-main);
-    }
-    .profile-section h3 i {
-        color: var(--primary);
         font-size: 16px;
+        font-weight: 800;
+        color: var(--text-dark);
+        margin: 0 0 16px;
+        display: flex; align-items: center; gap: 10px;
     }
+    .profile-section h3 i { color: var(--primary-blue); font-size: 18px; }
 
-    /* Bio */
-    .bio-text {
-        font-size: 14px;
-        line-height: 1.7;
-        color: var(--text-muted);
-        margin: 0;
-    }
-
-    /* Tags Grid */
-    .tags-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    .tag-badge {
-        background: #f0f0ff;
-        color: var(--primary);
-        padding: 6px 16px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    /* Info Grid */
+    /* ── Info Grid ── */
     .info-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 12px;
+        gap: 14px;
     }
     .info-item {
-        background: #f8fafc;
-        padding: 12px;
-        border-radius: 14px;
-        text-align: center;
+        background: #f8fbff;
+        padding: 14px;
+        border-radius: 18px;
+        border: 1px solid rgba(37, 99, 235, 0.04);
+        transition: 0.3s;
     }
-    .info-item .info-label {
-        font-size: 10px;
-        font-weight: 700;
+    .info-item:hover { background: #f0f7ff; transform: translateY(-2px); }
+    .info-label {
+        font-size: 11px;
+        font-weight: 800;
         color: var(--text-muted);
         text-transform: uppercase;
-        letter-spacing: 0.5px;
         margin-bottom: 4px;
     }
-    .info-item .info-value {
+    .info-value {
         font-size: 14px;
-        font-weight: 600;
-        color: var(--text-main);
+        font-weight: 700;
+        color: var(--text-dark);
     }
 
-    /* Gallery */
+    /* ── Tags Grid ── */
+    .tags-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .tag-badge {
+        padding: 8px 18px;
+        border-radius: 16px;
+        font-size: 12px;
+        font-weight: 700;
+        background: #eff6ff;
+        color: var(--primary-blue);
+        border: 1px solid rgba(37, 99, 235, 0.05);
+        transition: 0.3s;
+    }
+    .tag-badge:hover { background: var(--primary-blue); color: white; transform: scale(1.05); }
+
+    /* ── Gallery ── */
     .gallery-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 8px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
     }
     .gallery-grid img {
         width: 100%;
         aspect-ratio: 1;
         object-fit: cover;
-        border-radius: 14px;
+        border-radius: 20px;
         cursor: pointer;
-        transition: 0.2s;
-        border: none !important;
-        outline: none !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
     }
-    .gallery-grid img:hover {
-        transform: scale(1.03);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-    }
-    .gallery-empty {
-        text-align: center;
-        padding: 20px;
-        color: var(--text-muted);
-        font-size: 13px;
-    }
+    .gallery-grid img:hover { transform: scale(1.08); box-shadow: 0 15px 30px rgba(0,0,0,0.12); }
 
-    /* Back button */
-    .back-bar {
-        display: flex;
-        align-items: center;
-        padding: 16px 0 8px;
-    }
-    .back-bar a {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        text-decoration: none;
-        color: var(--text-muted);
-        font-size: 14px;
-        font-weight: 600;
-        transition: 0.2s;
-    }
-    .back-bar a:hover {
-        color: var(--primary);
-    }
-
-    /* Image lightbox */
-    .lightbox {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.9);
-        z-index: 9999;
-        align-items: center;
-        justify-content: center;
-        padding: 20px;
-    }
-    .lightbox.active { display: flex; }
-    .lightbox img {
-        max-width: 90%;
-        max-height: 85vh;
-        border-radius: 16px;
-        object-fit: contain;
-    }
-
-    /* Favorite Cards (Vibe) */
+    /* ── Vibe Grid ── */
     .vibe-grid {
         display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 8px;
-        overflow: hidden;
+        gap: 15px;
+        overflow-x: auto;
+        padding: 10px 0;
+        scrollbar-width: none;
     }
+    .vibe-grid::-webkit-scrollbar { display: none; }
     .vibe-item {
-        position: relative;
-        text-align: center;
-        width: 80px;
+        width: 100px;
         flex-shrink: 0;
-        overflow: hidden;
-        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        text-align: center;
+        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .vibe-item:hover { transform: translateY(-4px); }
     .vibe-item img {
-        width: 80px;
-        height: 80px;
-        border-radius: 14px;
+        width: 100px; height: 100px;
+        border-radius: 24px;
         object-fit: cover;
-        display: block;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-        border: 1px solid var(--border);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        border: 2px solid white;
     }
-    .vibe-item.movie { width: 60px; }
-    .vibe-item.movie img {
-        width: 60px;
-        height: 90px;
-    }
-    .vibe-item .vibe-title {
-        font-size: 11px;
-        font-weight: 700;
-        margin-top: 6px;
-        color: var(--text-main);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        padding: 0 2px;
-    }
-    .vibe-item .vibe-subtitle {
-        font-size: 10px;
-        color: var(--text-muted);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .vibe-cat-label {
-        font-size: 11px;
+    .vibe-item.movie img { width: 90px; height: 135px; }
+    .vibe-item:hover { transform: translateY(-10px) rotate(3deg); }
+    .vibe-title {
+        font-size: 12px;
         font-weight: 800;
+        color: var(--text-dark);
+        margin-top: 10px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        padding: 0 5px;
+    }
+    .vibe-subtitle {
+        font-size: 10px;
+        font-weight: 600;
         color: var(--text-muted);
+        margin-top: 2px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        padding: 0 5px;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 12px;
+        letter-spacing: 0.3px;
+    }
+
+    /* Lightbox */
+    .lightbox {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(10px);
+        z-index: 10000;
+        display: none;
+        align-items: center; justify-content: center;
+        animation: fadeIn 0.3s ease;
+    }
+    .lightbox.active { display: flex; }
+    .lightbox img { max-width: 90%; max-height: 80vh; border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Back Button Bar */
+    .back-bar {
+        padding: 20px 0;
         display: flex;
         align-items: center;
-        gap: 6px;
     }
+    .back-btn {
+        width: 44px; height: 44px;
+        background: white;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        color: var(--text-muted);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.04);
+        transition: 0.3s;
+        text-decoration: none;
+    }
+    .back-btn:hover { color: var(--primary-blue); transform: translateX(-4px); }
+</style>
 </style>
 {% endblock %}
 
@@ -243,28 +285,27 @@
 <div class="profile-page">
 
     <div class="back-bar">
-        <a href="javascript:history.back()"><i class="fas fa-chevron-left"></i> Back</a>
+        <a href="javascript:history.back()" class="back-btn"><i class="fas fa-chevron-left"></i></a>
     </div>
 
     <!-- Hero -->
     <div class="profile-hero">
-        <div style="position: relative; display: inline-block;">
+        <div class="avatar-wrapper">
             <img src="{{ profile.get_profile_pic_url }}" alt="Profile" class="profile-pic">
             {% if spark_count > 0 %}
-            <div style="position: absolute; bottom: 0; right: 0; background: linear-gradient(45deg, #f59e0b, #fbbf24); color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4); border: 2px solid white; display: flex; align-items: center; gap: 4px;">
+            <div class="spark-badge">
                 <i class="fas fa-bolt"></i> {{ spark_count }}
             </div>
             {% endif %}
         </div>
         
-        <h1 class="profile-name">
-            {{ profile.name }}
-        </h1>
+        <h1 class="profile-name">{{ profile.name }}</h1>
         <p class="profile-meta">{{ profile.campus_display }} • {{ profile.age }} yrs</p>
         
         {% if user.id != profile.user.id %}
-        <div style="margin-top: 16px; display: flex; gap: 10px; justify-content: center;">
-            <button id="sparkBtn" onclick="toggleSpark({{ profile.user.id }})" style="background: {% if has_sparked %}#fef3c7{% else %}#f1f5f9{% endif %}; color: {% if has_sparked %}#d97706{% else %}#64748b{% endif %}; border: 1px solid {% if has_sparked %}#fcd34d{% else %}var(--border){% endif %}; padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s;">
+        <div class="profile-actions">
+            <button id="sparkBtn" onclick="toggleSpark({{ profile.user.id }})" 
+                    class="spark-btn {% if has_sparked %}active{% else %}inactive{% endif %}">
                 <i class="{% if has_sparked %}fas{% else %}far{% endif %} fa-bolt"></i>
                 <span id="sparkText">{% if has_sparked %}Sparked!{% else %}Give Spark{% endif %}</span>
             </button>
@@ -417,6 +458,14 @@
 </div>
 
 <script>
+document.addEventListener('DOMContentLoaded', () => {
+    // Staggered section animations
+    const sections = document.querySelectorAll('.profile-section');
+    sections.forEach((section, index) => {
+        section.style.animationDelay = `${(index + 1) * 0.15}s`;
+    });
+});
+
 function openLightbox(src) {
     document.getElementById('lightbox-img').src = src;
     document.getElementById('lightbox').classList.add('active');
@@ -437,19 +486,15 @@ async function toggleSpark(userId) {
         const data = await res.json();
         if (data.success) {
             if (data.action === 'added') {
-                btn.style.background = '#fef3c7';
-                btn.style.color = '#d97706';
-                btn.style.borderColor = '#fcd34d';
+                btn.className = 'spark-btn active';
                 text.innerText = 'Sparked!';
                 icon.className = 'fas fa-bolt';
             } else {
-                btn.style.background = '#f1f5f9';
-                btn.style.color = '#64748b';
-                btn.style.borderColor = 'var(--border)';
+                btn.className = 'spark-btn inactive';
                 text.innerText = 'Give Spark';
                 icon.className = 'far fa-bolt';
             }
-            // Optionally reload to update the badge count, or just update it via JS
+            // Update spark count in the badge if needed, or reload
             location.reload(); 
         }
     } catch (e) {

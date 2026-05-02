@@ -3,606 +3,325 @@
 
 {% block head %}
 <style>
+    /* ── Root Variables ── */
     :root {
-        --glass-bg: rgba(255, 255, 255, 0.7);
-        --glass-border: rgba(255, 255, 255, 0.3);
+        --primary-blue: #2563eb;
+        --secondary-blue: #3b82f6;
+        --soft-blue: #f8fbff;
+        --glass-white: rgba(255, 255, 255, 0.85);
+        --text-dark: #1e3a8a;
+        --text-muted: #64748b;
+        --border-glass: rgba(255, 255, 255, 0.5);
+    }
+
+    body {
+        background: #f0f7ff;
+        font-family: 'Inter', sans-serif;
+        color: var(--text-dark);
     }
 
     .edit-container {
-        max-width: 800px;
+        max-width: 700px;
         margin: 0 auto;
-        padding: 20px 16px 80px;
+        padding: 40px 20px 120px;
     }
 
-    /* Tabs */
-    .edit-tabs {
-        display: flex;
-        gap: 8px;
-        background: #f1f5f9;
-        padding: 4px;
-        border-radius: 16px;
-        margin-bottom: 24px;
-        position: sticky;
-        top: 10px;
-        z-index: 100;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-
-    .tab-btn {
-        flex: 1;
-        padding: 10px;
-        border: none;
-        background: none;
-        border-radius: 12px;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--text-muted);
-        cursor: pointer;
-        transition: 0.3s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-
-    .tab-btn.active {
-        background: white;
-        color: var(--primary);
-        box-shadow: var(--shadow-sm);
-    }
-
-    /* Sections */
-    .edit-section {
-        display: none;
-        animation: fadeIn 0.4s ease;
-    }
-
-    .edit-section.active {
-        display: block;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* PFP Section */
+    /* ── Premium PFP Header ── */
     .pfp-header {
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin-bottom: 32px;
-        position: relative;
+        margin-bottom: 40px;
+        text-align: center;
     }
 
     .pfp-main-wrap {
         position: relative;
-        width: 140px;
-        height: 140px;
+        width: 150px; height: 150px;
     }
 
     .pfp-main {
-        width: 140px;
-        height: 140px;
-        border-radius: 50%;
+        width: 150px; height: 150px;
+        border-radius: 40px; /* Modern squircle */
         object-fit: cover;
         border: 4px solid white;
-        box-shadow: 0 10px 25px rgba(99, 102, 241, 0.2);
+        box-shadow: 0 20px 40px rgba(37, 99, 235, 0.15);
+        transition: 0.4s;
     }
+    .pfp-main-wrap:hover .pfp-main { transform: scale(1.02) rotate(-2deg); }
 
     .pfp-edit-btn {
         position: absolute;
-        bottom: 5px;
-        right: 5px;
-        background: var(--primary);
+        bottom: -10px; right: -10px;
+        background: var(--primary-blue);
         color: white;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 48px; height: 48px;
+        border-radius: 18px;
+        display: flex; align-items: center; justify-content: center;
         cursor: pointer;
-        border: 3px solid white;
-        box-shadow: var(--shadow-md);
-        transition: 0.2s;
+        border: 4px solid white;
+        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+        transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .pfp-edit-btn:hover { transform: scale(1.15) rotate(15deg); background: var(--secondary-blue); }
+
+    .pfp-header h2 {
+        font-size: 28px; font-weight: 900; letter-spacing: -1px; margin: 20px 0 5px;
+    }
+    .pfp-header p {
+        font-size: 14px; font-weight: 700; color: var(--text-muted);
     }
 
-    .pfp-edit-btn:hover {
-        transform: scale(1.1);
-        background: var(--primary-hover);
-    }
-
-    /* Cards */
-    .glass-card {
-        background: var(--glass-bg);
-        backdrop-filter: blur(12px);
-        border: 1px solid var(--glass-border);
+    /* ── Tab Switcher ── */
+    .edit-tabs {
+        display: flex;
+        background: rgba(37, 99, 235, 0.05);
+        padding: 6px;
         border-radius: 24px;
-        padding: 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.03);
-        position: relative;
-        z-index: 1;
-        transition: z-index 0.2s;
+        margin-bottom: 30px;
+        position: sticky; top: 20px;
+        z-index: 1000;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        gap: 6px;
     }
-    .glass-card:focus-within {
-        z-index: 100;
+
+    .tab-btn {
+        flex: 1;
+        padding: 12px;
+        border: none; background: none;
+        border-radius: 18px;
+        font-size: 13px; font-weight: 800;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+
+    .tab-btn.active {
+        background: white;
+        color: var(--primary-blue);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1);
+        transform: scale(1.02);
+    }
+
+    /* ── Glass Cards ── */
+    .glass-card {
+        background: white;
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        border-radius: 32px;
+        padding: 30px;
+        margin-bottom: 25px;
+        box-shadow: 0 15px 40px rgba(37, 99, 235, 0.04);
+    }
+
+    /* ── Section Visibility ── */
+    .edit-section {
+        display: none;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.4s, transform 0.4s;
+    }
+
+    .edit-section.active {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
     }
 
     .glass-card h3 {
-        margin-bottom: 20px;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: var(--text-main);
+        font-size: 18px; font-weight: 900; color: var(--text-dark);
+        margin-bottom: 25px; display: flex; align-items: center; gap: 12px;
     }
+    .glass-card h3 i { color: var(--primary-blue); font-size: 20px; }
 
-    /* Gallery */
-    .gallery-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-    }
-
-    .gallery-item {
-        aspect-ratio: 1;
-        border-radius: 16px;
-        overflow: hidden;
-        position: relative;
-        border: 1px solid var(--border);
-    }
-
-    .gallery-item img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .gallery-delete {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        background: rgba(244, 63, 94, 0.9);
-        color: white;
-        width: 28px;
-        height: 28px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-        font-size: 0.8rem;
-        backdrop-filter: blur(4px);
-    }
-
-    .gallery-add {
-        aspect-ratio: 1;
-        border-radius: 16px;
-        border: 2px dashed var(--border);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        cursor: pointer;
-        color: var(--text-muted);
-        transition: 0.3s;
-    }
-
-    .gallery-add:hover {
-        border-color: var(--primary);
-        color: var(--primary);
-        background: rgba(99, 102, 241, 0.05);
-    }
-
-    /* Forms */
-    .form-group {
-        margin-bottom: 24px;
-        position: relative; /* Ensure dropdowns are relative to the group */
-    }
-
+    /* ── Form Controls ── */
+    .form-group { margin-bottom: 25px; }
     .form-group label {
-        display: block;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--text-main);
-        margin-bottom: 8px;
+        display: block; font-size: 13px; font-weight: 800;
+        color: var(--text-muted); text-transform: uppercase;
+        margin-bottom: 10px; letter-spacing: 0.5px;
     }
 
     .form-control {
-        width: 100%;
-        padding: 12px 16px;
-        border: 1.5px solid var(--border);
-        border-radius: 14px;
-        font-size: 15px;
-        transition: 0.3s;
+        width: 100%; padding: 16px 20px;
+        border: 1px solid rgba(37, 99, 235, 0.12);
+        border-radius: 18px;
         background: white;
+        font-size: 15px; font-weight: 600;
+        color: var(--text-dark);
+        transition: 0.4s;
         box-sizing: border-box;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.04);
     }
-
     .form-control:focus {
-        border-color: var(--primary);
+        border-color: var(--primary-blue);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.08);
+        transform: translateY(-2px);
         outline: none;
-        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
     }
 
-    /* Searchable Dropdown - chip layout */
-    .searchable-dropdown { position: relative; width: 100%; }
-    .selected-chips-list {
-        display: flex;
-        flex-wrap: wrap;
-        flex-direction: row;
-        gap: 5px;
-        margin-bottom: 8px;
-    }
+    /* ── Searchable Dropdown Chips ── */
+    .selected-chips-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
     .chip {
-        background: #eef2ff;
-        color: var(--primary);
-        border: 1px solid #c7d2fe;
-        padding: 3px 9px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        line-height: 1.4;
+        background: #eff6ff; color: var(--primary-blue);
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        padding: 6px 14px; border-radius: 14px;
+        font-size: 13px; font-weight: 700;
+        display: inline-flex; align-items: center; gap: 8px;
     }
-    .chip i { cursor: pointer; font-size: 9px; opacity: 0.55; transition: 0.15s; }
-    .chip i:hover { opacity: 1; color: #ef4444; }
-    .dropdown-search-box {
-        width: 100%;
-        padding: 11px 16px;
-        border: 1.5px solid var(--border);
-        border-radius: 14px;
-        font-size: 14px;
-        background: white;
-        box-sizing: border-box;
-        outline: none;
-        transition: 0.2s;
-        font-family: inherit;
-    }
-    .dropdown-search-box:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
-    }
-    .dropdown-list {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: white;
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        margin-top: 4px;
-        max-height: 200px;
-        overflow-y: auto;
-        z-index: 5000;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-        display: none;
-    }
-    .dropdown-item {
-        padding: 10px 16px;
-        font-size: 14px;
-        cursor: pointer;
-        transition: 0.2s;
-    }
-    .dropdown-item:hover { background: #f8fafc; color: var(--primary); }
+    .chip i { cursor: pointer; opacity: 0.6; transition: 0.2s; }
+    .chip i:hover { color: #ef4444; opacity: 1; }
 
-    /* ── Premium Sliders ── */
-    .label-container {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-        font-weight: 700;
-        color: var(--text-main);
-        font-size: 14px;
-    }
-    .value-badge {
-        color: var(--primary);
-        background: #eef2ff;
-        padding: 3px 12px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 800;
-        border: 1px solid #c7d2fe;
-    }
-
-    input[type="range"] {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 100%;
-        height: 14px;
-        background: #e2e8f0;
-        border-radius: 10px;
-        outline: none;
-        cursor: pointer;
-    }
-
-    input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 22px;
-        height: 22px;
-        background: var(--primary);
-        border: 4px solid white;
-        border-radius: 50%;
-        cursor: pointer;
-        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
-        margin-top: 0;
-        z-index: 10;
-    }
-
-    input[type="range"]::-moz-range-thumb {
-        width: 22px;
-        height: 22px;
-        background: var(--primary);
-        border: 4px solid white;
-        border-radius: 50%;
-        cursor: pointer;
-        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
-    }
-
-    /* ── Premium Steppers ── */
-    .stepper-group {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f8fafc;
-        border: 1.5px solid var(--border);
-        border-radius: 20px;
-        padding: 16px;
-        gap: 24px;
-        transition: 0.2s;
-    }
-    .stepper-group:hover, .dual-stepper-container:hover {
-        border-color: #cbd5e1;
+    /* ── Modern Steppers ── */
+    .inline-stepper {
+        display: flex; align-items: center; justify-content: space-between;
+        background: white; border-radius: 20px; padding: 8px;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.04);
+        border: 1px solid rgba(37, 99, 235, 0.1);
     }
     .stepper-btn {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        border: none;
-        background: white;
-        color: var(--primary);
-        font-size: 16px;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: 0.2s;
+        width: 44px; height: 44px; border-radius: 14px;
+        border: none; background: #f8fbff;
+        color: var(--primary-blue); font-size: 16px;
+        cursor: pointer; transition: 0.3s;
     }
-    .stepper-btn:hover {
-        background: var(--primary);
-        color: white;
-        transform: scale(1.05);
-        box-shadow: 0 6px 15px rgba(99,102,241,0.25);
-    }
-    .stepper-btn:active {
-        transform: scale(0.95);
-    }
-    .stepper-value-wrap {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        min-width: 80px;
-    }
-    .stepper-value {
-        font-size: 32px;
-        font-weight: 800;
-        color: var(--primary);
-        line-height: 1;
-    }
-    .stepper-label {
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-top: 6px;
-    }
+    .stepper-btn:hover { background: var(--primary-blue); color: white; transform: scale(1.1); }
+    
+    .stepper-value { font-size: 24px; font-weight: 900; color: var(--text-dark); }
+    .stepper-label { font-size: 14px; font-weight: 700; color: var(--text-muted); margin-left: 5px; }
 
-    /* Inline Stepper for Age */
-    .inline-stepper {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: white;
-        border: 1px solid #cbd5e1;
-        border-radius: 14px;
-        padding: 6px;
-        height: 52px;
-        box-sizing: border-box;
-        transition: 0.2s;
-    }
-    .inline-stepper:focus-within, .inline-stepper:hover {
-        border-color: var(--primary);
-    }
-    .inline-stepper .stepper-btn {
-        width: 36px;
-        height: 36px;
-        font-size: 14px;
-        box-shadow: none;
-        background: #f1f5f9;
-        color: var(--text-main);
-    }
-    .inline-stepper .stepper-btn:hover {
-        background: var(--primary);
-        color: white;
-    }
-    .inline-stepper .stepper-value-wrap {
-        flex-direction: row;
-        gap: 6px;
-        min-width: auto;
-    }
-    .inline-stepper .stepper-value {
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--text-main);
-    }
-    .inline-stepper .stepper-label {
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--text-muted);
-        margin-top: 0;
-        text-transform: none;
-        letter-spacing: 0;
-    }
-
-    /* Dual Stepper */
+    /* ── Dual Stepper for Range ── */
     .dual-stepper-container {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: #f8fafc;
-        border: 1.5px solid var(--border);
-        border-radius: 20px;
-        padding: 16px;
-        gap: 12px;
-        transition: 0.2s;
+        display: flex; align-items: center; justify-content: space-between;
+        background: white; border-radius: 24px; padding: 20px;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.04);
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        gap: 15px;
     }
-    .stepper-box {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        flex: 1;
-    }
-    .stepper-title {
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 12px;
-    }
-    .stepper-controls {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    .stepper-btn.small {
-        width: 34px;
-        height: 34px;
-        font-size: 13px;
-    }
-    .stepper-value.small {
-        font-size: 22px;
-        min-width: 32px;
-        text-align: center;
-    }
-    .stepper-divider {
-        color: #cbd5e1;
-        font-size: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding-top: 24px; /* Align with numbers */
-    }
+    .stepper-box { flex: 1; text-align: center; }
+    .stepper-title { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; }
+    .stepper-controls { display: flex; align-items: center; justify-content: center; gap: 15px; }
 
-    /* Floating Save Button */
+    /* ── Floating Save Button ── */
     .save-btn-fixed {
-        position: fixed;
-        bottom: 85px;
-        right: 20px;
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
-        z-index: 1001;
-        padding: 0;
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: fixed; bottom: 30px; right: 30px;
+        width: 64px; height: 64px;
+        border-radius: 22px;
+        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+        color: white; border: none;
+        box-shadow: 0 15px 35px rgba(37, 99, 235, 0.35);
+        z-index: 2000;
+        cursor: pointer;
+        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    .save-btn-fixed:hover {
-        transform: scale(1.1) translateY(-5px);
-        background: var(--primary-hover);
-        box-shadow: 0 12px 30px rgba(99, 102, 241, 0.5);
-    }
-    .save-btn-fixed i {
-        font-size: 24px;
-        margin: 0;
-    }
-    .save-btn-text {
-        display: none; /* Hide text for small FAB style */
+    .save-btn-fixed:hover { transform: translateY(-8px) scale(1.05); box-shadow: 0 20px 45px rgba(37, 99, 235, 0.45); }
+    .save-btn-fixed i { font-size: 26px; }
+
+    /* Gallery Grid & Items */
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
     }
 
-    /* Upload overlay */
-    .upload-overlay {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 9999;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 16px;
-        font-weight: 600;
-        gap: 16px;
+    .gallery-item {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+        background: #f1f5f9;
+        transition: 0.3s;
     }
-    .upload-overlay .loader {
-        width: 40px;
-        height: 40px;
-        border: 4px solid rgba(255,255,255,0.3);
-        border-top-color: white;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
+    .gallery-item:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
+    .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+
+    .gallery-delete {
+        position: absolute; top: 8px; right: 8px;
+        width: 28px; height: 28px;
+        background: rgba(239, 68, 68, 0.9); color: white;
+        border-radius: 10px; display: flex; align-items: center; justify-content: center;
+        font-size: 12px; backdrop-filter: blur(4px);
+        transition: 0.2s; text-decoration: none;
+    }
+    .gallery-delete:hover { transform: scale(1.1); background: #ef4444; }
+
+    .gallery-add {
+        aspect-ratio: 1; border-radius: 20px;
+        border: 3px dashed rgba(37, 99, 235, 0.1);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 8px; cursor: pointer; color: var(--text-muted); transition: 0.3s;
+        font-size: 12px; font-weight: 700;
+    }
+    .gallery-add:hover { border-color: var(--primary-blue); color: var(--primary-blue); background: #f0f7ff; }
+
+    /* Loader Overlay Fix */
+    .upload-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(30, 58, 138, 0.85); backdrop-filter: blur(15px);
+        z-index: 9999; flex-direction: column; align-items: center; justify-content: center;
+        color: white; gap: 20px;
+    }
+    .loader {
+        width: 48px; height: 48px; border: 5px solid rgba(255,255,255,0.2);
+        border-top-color: white; border-radius: 50%;
+        animation: spin 1s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+</style>
 
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="edit-container">
+    <div style="padding: 10px 20px;">
+        <a href="{% url 'view_profile' profile.id %}" class="chat-back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: white; border-radius: 14px; text-decoration: none; color: var(--text-muted); box-shadow: 0 8px 15px rgba(0,0,0,0.04);">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+    </div>
+
     <div class="pfp-header">
         <div class="pfp-main-wrap">
             <img src="{{ profile.get_profile_pic_url }}" alt="Me" class="pfp-main" id="preview-pfp">
             <label for="id_pfp_instant" class="pfp-edit-btn" id="pfp-edit-label">
                 <i class="fas fa-camera"></i>
             </label>
-            <!-- Face detection status for edit page -->
-            <div id="pfp-face-status" style="display:none; position:absolute; bottom:-40px; left:50%; transform:translateX(-50%); white-space:nowrap; background:#fef2f2; color:#dc2626; padding:6px 12px; border-radius:20px; font-size:11px; font-weight:700; box-shadow:0 4px 12px rgba(0,0,0,0.1);"></div>
             {% if spark_count > 0 %}
-            <div style="position: absolute; top: -5px; right: -5px; background: linear-gradient(45deg, #f59e0b, #fbbf24); color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4); border: 2px solid white; display: flex; align-items: center; gap: 4px;">
+            <div style="position: absolute; top: -10px; right: -10px; background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 900; box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3); border: 2px solid white; display: flex; align-items: center; gap: 6px;">
                 <i class="fas fa-bolt"></i> {{ spark_count }}
             </div>
             {% endif %}
         </div>
-        <h2 style="margin-top: 16px; margin-bottom: 4px;">{{ profile.name }}</h2>
-        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 12px;">{{ profile.campus_display }} • {{ profile.age }} years</p>
+        <h2>{{ profile.name }}</h2>
+        <p>{{ profile.campus_display }} • {{ profile.age }} yrs</p>
         
-        <a href="{% url 'settings' %}" style="text-decoration: none; background: #f1f5f9; color: var(--text-main); border: 1px solid var(--border); padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: 0.2s;">
-            <i class="fas fa-cog"></i> Settings
-        </a>
-
-
-        {% if not profile.profile_pic %}
-        <p style="color: var(--primary); font-size: 12px; margin-top: 12px;"><i class="fas fa-info-circle"></i> Tip: Upload a photo to complete your profile!</p>
-        {% endif %}
+        <div style="margin-top: 20px; display: flex; gap: 10px;">
+            <a href="{% url 'settings' %}" style="text-decoration: none; background: white; color: var(--text-dark); border: 1px solid rgba(0,0,0,0.05); padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.03); transition: 0.3s;">
+                <i class="fas fa-cog"></i> Settings
+            </a>
+            <a href="{% url 'view_profile' profile.id %}" style="text-decoration: none; background: var(--primary-blue); color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2); transition: 0.3s;">
+                <i class="fas fa-eye"></i> View Profile
+            </a>
+        </div>
     </div>
 
     <!-- Tabs Navigation -->
     <div class="edit-tabs">
         <button class="tab-btn active" onclick="switchTab('basic')">
-            <i class="fas fa-user-edit"></i> Basic
+            <i class="fas fa-user-circle"></i> Basic
         </button>
         <button class="tab-btn" onclick="switchTab('gallery')">
-            <i class="fas fa-images"></i> Gallery
+            <i class="fas fa-th-large"></i> Gallery
         </button>
         <button class="tab-btn" onclick="switchTab('edu')">
-            <i class="fas fa-graduation-cap"></i> Edu
+            <i class="fas fa-graduation-cap"></i> Academy
         </button>
         <button class="tab-btn" onclick="switchTab('prefs')">
-            <i class="fas fa-heart"></i> Prefs
+            <i class="fas fa-sliders-h"></i> Prefs
         </button>
     </div>
 
@@ -804,9 +523,9 @@
                 </div>
 
                 <div class="form-group">
-                    <div style="display: flex; align-items: flex-start; gap: 12px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="display: flex; align-items: flex-start; gap: 12px; background: white; padding: 16px; border-radius: 20px; border: 1px solid rgba(37, 99, 235, 0.1); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.03);">
                         <div style="flex: 1;">
-                            <label for="id_is_discoverable" style="margin-bottom: 4px; cursor: pointer;">Make my profile discoverable</label>
+                            <label for="id_is_discoverable" style="margin-bottom: 4px; cursor: pointer; text-transform: none; font-size: 14px; color: var(--text-dark);">Make my profile discoverable</label>
                             <p style="font-size: 11px; color: var(--text-muted); margin: 0;">When enabled, your profile will appear in the match feed and other users can discover you.</p>
                         </div>
                         <div class="toggle-switch">
@@ -820,7 +539,6 @@
 
         <button type="submit" class="btn btn-primary save-btn-fixed" id="save-btn" title="Save All Changes">
             <i class="fas fa-save"></i>
-            <span class="save-btn-text">Save All Changes</span>
         </button>
     </form>
 
@@ -890,11 +608,27 @@
 
 <script>
     function switchTab(tabId) {
+        // Auto-save progress in background
+        autoSaveProfile();
+
         document.querySelectorAll('.edit-section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         
         document.getElementById('section-' + tabId).classList.add('active');
         document.querySelector(`.tab-btn[onclick="switchTab('${tabId}')"]`).classList.add('active');
+    }
+
+    function autoSaveProfile() {
+        const form = document.getElementById('profile-edit-form');
+        if (!form) return;
+        const formData = new FormData(form);
+        fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(res => {
+            console.log("Progress auto-saved");
+        }).catch(err => console.warn("Auto-save failed", err));
     }
 
     function showOverlay(text) {
