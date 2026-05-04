@@ -2,78 +2,124 @@
 
 {% block head %}
 <style>
+    /* Hide bottom nav during verification */
     nav { display: none !important; }
-    .container { padding-bottom: 20px !important; }
+    .container { padding-bottom: 20px !important; background: #f0f6ff !important; min-height: 100vh; }
 
     .setup-wrap {
-        max-width: 500px;
+        max-width: 550px;
         margin: 0 auto;
-        padding: 40px 16px;
+        padding: 40px 18px;
     }
     .setup-card {
         background: white;
-        padding: 30px;
-        border-radius: 24px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.05);
-        border: 1px solid var(--border);
+        padding: 32px 24px;
+        border-radius: 30px;
+        box-shadow: 0 12px 40px rgba(37, 99, 235, 0.08);
+        border: 1px solid rgba(37, 99, 235, 0.1);
         text-align: center;
     }
     .setup-icon {
-        width: 70px; height: 70px;
+        width: 80px; height: 80px;
         background: #eef2ff;
-        color: var(--primary);
-        border-radius: 20px;
+        color: #2563eb;
+        border-radius: 24px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 30px; margin: 0 auto 20px;
+        font-size: 32px; margin: 0 auto 24px;
+        box-shadow: inset 0 2px 10px rgba(37, 99, 235, 0.05);
     }
-    h2 { font-size: 24px; font-weight: 800; color: #1e293b; margin-bottom: 10px; }
-    p { color: #64748b; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
-
-    .upload-area {
-        border: 2px dashed #cbd5e1;
-        border-radius: 20px;
-        padding: 24px;
-        background: #f8fafc;
-        margin-bottom: 20px;
-        cursor: pointer;
-        transition: 0.2s;
-        position: relative;
-    }
-    .upload-area:hover { border-color: var(--primary); background: #f0f4ff; }
-    .upload-preview {
-        width: 120px; height: 120px;
-        border-radius: 20px;
-        object-fit: cover;
-        margin: 0 auto 12px;
-        display: none;
-        border: 3px solid white;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    
-    .btn-submit {
-        width: 100%;
-        padding: 16px;
-        background: var(--primary);
-        color: white;
-        border: none;
-        border-radius: 16px;
-        font-size: 16px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: 0.2s;
-        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
-    }
-    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(99, 102, 241, 0.4); }
-    .btn-submit:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
+    h2 { font-size: 26px; font-weight: 900; color: #0f172a; margin-bottom: 12px; letter-spacing: -0.5px; }
+    .setup-desc { color: #64748b; font-size: 15px; line-height: 1.6; margin-bottom: 32px; padding: 0 10px; }
 
     /* Verification UI */
-    #verify-video { width: 100%; border-radius: 16px; background: black; }
-    #camera-container { position: relative; display: none; }
-    #gesture-hint {
-        position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
-        background: rgba(0,0,0,0.7); color: white; padding: 6px 12px;
-        border-radius: 20px; font-size: 12px; font-weight: 700; white-space: nowrap;
+    .verify-box {
+        background: #f8fafc;
+        border: 2px dashed #cbd5e1;
+        border-radius: 24px;
+        padding: 30px 20px;
+        margin-bottom: 24px;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
     }
+    .verify-box:hover { border-color: #2563eb; background: #f0f4ff; }
+    .verify-box.completed { border-color: #16a34a; background: #f0fdf4; border-style: solid; cursor: default; }
+
+    .camera-wrap {
+        position: relative;
+        width: 100%;
+        max-width: 320px;
+        aspect-ratio: 3/4;
+        margin: 0 auto;
+        border-radius: 24px;
+        overflow: hidden;
+        background: #000;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        display: none;
+    }
+    #verify-video { width: 100%; height: 100%; object-fit: cover; }
+    #face-guide {
+        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: 75%; height: 65%; border: 3px solid rgba(255,255,255,0.4);
+        border-radius: 50%; pointer-events: none;
+        box-shadow: 0 0 0 1000px rgba(0,0,0,0.4);
+    }
+    #gesture-hint {
+        position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+        background: rgba(255,255,255,0.9); color: #1e293b; padding: 8px 18px;
+        border-radius: 99px; font-size: 13px; font-weight: 800; white-space: nowrap;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        z-index: 10;
+    }
+
+    /* PFP Section */
+    .pfp-box {
+        opacity: 0.5; pointer-events: none; transition: 0.3s;
+        margin-bottom: 30px;
+    }
+    .pfp-box.active { opacity: 1; pointer-events: auto; }
+    
+    .pfp-upload {
+        width: 140px; height: 140px;
+        margin: 0 auto 20px;
+        position: relative;
+        cursor: pointer;
+    }
+    .pfp-preview {
+        width: 100%; height: 100%;
+        border-radius: 40px;
+        object-fit: cover;
+        border: 4px solid white;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        display: none;
+    }
+    .pfp-placeholder {
+        width: 100%; height: 100%;
+        background: #f1f5f9;
+        border: 2px dashed #cbd5e1;
+        border-radius: 40px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        color: #94a3b8; transition: 0.2s;
+    }
+    .pfp-upload:hover .pfp-placeholder { border-color: #2563eb; color: #2563eb; }
+
+    .btn-primary {
+        width: 100%;
+        padding: 18px;
+        background: #2563eb;
+        color: white;
+        border: none;
+        border-radius: 18px;
+        font-size: 17px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);
+    }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(37, 99, 235, 0.35); }
+    .btn-primary:active:not(:disabled) { transform: translateY(0); }
+    .btn-primary:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; opacity: 0.7; }
+
+    .status-text { margin-top: 15px; font-size: 14px; font-weight: 700; color: #64748b; min-height: 20px; }
 </style>
 <!-- Include face-api.js -->
 <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
@@ -83,180 +129,208 @@
 <div class="setup-wrap">
     <div class="setup-card">
         <div class="setup-icon"><i class="fas fa-user-shield"></i></div>
-        <h2>Re-Verification Required</h2>
-        <p>To keep our community safe, an admin has requested you to re-verify your identity and update your profile picture.</p>
+        <h2>Verification Required</h2>
+        <p class="setup-desc">An admin has requested you to re-verify your identity. Please complete these 2 steps to restore your profile feed access.</p>
 
         <form id="reverifyForm" method="POST">
             {% csrf_token %}
             
-            <!-- Step 1: Face Verification -->
-            <div id="verify-section">
-                <div class="upload-area" onclick="startVerification()" id="verify-trigger">
-                    <i class="fas fa-camera" style="font-size: 24px; margin-bottom: 8px; display: block; color: var(--primary);"></i>
-                    <span id="verify-label" style="font-weight: 700; font-size: 14px;">1. Start Face Verification</span>
-                    <p style="font-size: 11px; margin: 4px 0 0;">Follow the liveness challenge prompts</p>
+            <!-- 1. Face Scan -->
+            <div id="verify-box" class="verify-box" onclick="startVerification()">
+                <div id="verify-initial">
+                    <i class="fas fa-camera" style="font-size: 28px; margin-bottom: 10px; display: block; color: #2563eb;"></i>
+                    <div style="font-weight: 800; font-size: 16px; color: #1e293b;">1. Identity Face Scan</div>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Follow the liveness challenge</div>
                 </div>
-                <div id="camera-container">
+                
+                <div id="camera-container" class="camera-wrap">
                     <video id="verify-video" autoplay playsinline muted></video>
                     <canvas id="verify-canvas" style="display:none;"></canvas>
-                    <div id="gesture-hint">Initializing...</div>
+                    <div id="face-guide"></div>
+                    <div id="gesture-hint">Waiting for camera...</div>
                 </div>
-                <div id="verify-success" style="display:none; margin-bottom:20px; color:#16a34a; font-weight:700;">
-                    <i class="fas fa-check-circle"></i> Identity Verified!
+
+                <div id="verify-completed" style="display:none; color: #16a34a;">
+                    <i class="fas fa-check-circle" style="font-size: 32px; margin-bottom: 8px;"></i>
+                    <div style="font-weight: 800; font-size: 16px;">Face Scan Completed</div>
                 </div>
             </div>
 
-            <!-- Step 2: Profile Picture -->
-            <div id="pfp-section" style="opacity: 0.5; pointer-events: none;">
-                <label class="upload-area" for="pfp-input">
-                    <img id="pfp-preview" class="upload-preview" src="">
-                    <i class="fas fa-image" style="font-size: 24px; margin-bottom: 8px; display: block; color: var(--primary);"></i>
-                    <span style="font-weight: 700; font-size: 14px;">2. Upload New Profile Picture</span>
-                    <input type="file" id="pfp-input" accept="image/*" style="display:none;" onchange="handlePFP(this)">
-                </label>
+            <!-- 2. Profile Pic -->
+            <div id="pfp-box" class="pfp-box">
+                <div style="font-weight: 800; font-size: 14px; color: #475569; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px;">
+                    2. Upload New Profile Picture
+                </div>
+                <div class="pfp-upload" onclick="document.getElementById('pfp-input').click()">
+                    <img id="pfp-preview" class="pfp-preview" src="">
+                    <div id="pfp-placeholder" class="pfp-placeholder">
+                        <i class="fas fa-plus" style="font-size: 24px; margin-bottom: 8px;"></i>
+                        <span style="font-size: 12px; font-weight: 700;">Add Photo</span>
+                    </div>
+                </div>
+                <input type="file" id="pfp-input" accept="image/*" style="display:none;" onchange="handlePfpSelect(this)">
+                <div id="pfp-status" class="status-text"></div>
             </div>
 
             <input type="hidden" name="verification_image_url" id="verification-image-url">
             <input type="hidden" name="profile_pic_url" id="profile-pic-url">
             <input type="hidden" name="verification_status" id="verification-status" value="pending">
 
-            <button type="submit" class="btn-submit" id="submitBtn" disabled>Complete Verification</button>
+            <button type="submit" class="btn-primary" id="submitBtn" disabled>Complete Verification</button>
         </form>
     </div>
 </div>
 
 <script>
-    let livenessState = 'FRONT';
-    let isModelsLoaded = false;
     let isVerifying = false;
+    let livenessState = 'WAITING';
+    let verifyStream = null;
+    let verificationCaptured = false;
 
-    async function initModels() {
-        try {
-            const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-            await Promise.all([
-                faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-                faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
-            ]);
-            isModelsLoaded = true;
-            console.log("Models loaded");
-        } catch (e) {
-            console.error("Model load failed", e);
-        }
+    async function loadModels() {
+        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+        await Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+            faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
+        ]);
+        console.log("AI Models Loaded");
     }
 
     async function startVerification() {
-        if (!isModelsLoaded) await initModels();
-        document.getElementById('verify-trigger').style.display = 'none';
-        document.getElementById('camera-container').style.display = 'block';
+        if (verificationCaptured || isVerifying) return;
         
-        const video = document.getElementById('verify-video');
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-        video.srcObject = stream;
+        const initial = document.getElementById('verify-initial');
+        const camera = document.getElementById('camera-container');
+        const hint = document.getElementById('gesture-hint');
         
-        isVerifying = true;
-        processFrame();
+        initial.style.display = 'none';
+        camera.style.display = 'block';
+        hint.innerText = "Initializing AI...";
+        
+        try {
+            await loadModels();
+            verifyStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'user', width: 640, height: 480 } 
+            });
+            const video = document.getElementById('verify-video');
+            video.srcObject = verifyStream;
+            
+            isVerifying = true;
+            livenessState = 'FRONT';
+            processFrame();
+        } catch (err) {
+            console.error(err);
+            alert("Camera access failed. Please ensure you are on HTTPS and granted permissions.");
+            initial.style.display = 'block';
+            camera.style.display = 'none';
+        }
     }
 
     async function processFrame() {
-        if (!isVerifying) return;
+        if (!isVerifying || verificationCaptured) return;
         const video = document.getElementById('verify-video');
         const hint = document.getElementById('gesture-hint');
         
-        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
-        
-        if (detection) {
-            const landmarks = detection.landmarks;
-            const nose = landmarks.getNose()[0];
-            const leftEye = landmarks.getLeftEye()[0];
-            const rightEye = landmarks.getRightEye()[0];
+        if (video.readyState >= 2) {
+            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224 })).withFaceLandmarks();
             
-            // Basic head pose estimation
-            const eyeDist = rightEye.x - leftEye.x;
-            const nosePos = (nose.x - leftEye.x) / eyeDist;
+            if (detection) {
+                const nose = detection.landmarks.getNose()[3];
+                const leftCheek = detection.landmarks.getJawOutline()[0];
+                const rightCheek = detection.landmarks.getJawOutline()[16];
+                const ratio = (nose.x - leftCheek.x) / (rightCheek.x - nose.x);
 
-            if (livenessState === 'FRONT') {
-                hint.innerText = "Look STRAIGHT at the camera";
-                if (nosePos > 0.4 && nosePos < 0.6) {
-                    livenessState = 'LEFT';
-                    hint.style.background = "var(--primary)";
+                if (livenessState === 'FRONT') {
+                    hint.innerText = "Look STRAIGHT at the camera";
+                    if (ratio > 0.6 && ratio < 1.6) livenessState = 'LEFT';
+                } else if (livenessState === 'LEFT') {
+                    hint.innerText = "Turn your head LEFT ⬅️";
+                    hint.style.color = "#2563eb";
+                    if (ratio < 0.6) livenessState = 'RIGHT';
+                } else if (livenessState === 'RIGHT') {
+                    hint.innerText = "Turn your head RIGHT ➡️";
+                    if (ratio > 1.6) captureScan();
                 }
-            } else if (livenessState === 'LEFT') {
-                hint.innerText = "Turn your head LEFT ⬅️";
-                if (nosePos < 0.3) livenessState = 'RIGHT';
-            } else if (livenessState === 'RIGHT') {
-                hint.innerText = "Turn your head RIGHT ➡️";
-                if (nosePos > 0.7) captureAndVerify();
+            } else {
+                hint.innerText = "Position face in guide";
             }
-        } else {
-            hint.innerText = "Position your face in view";
         }
-        
         requestAnimationFrame(processFrame);
     }
 
-    async function captureAndVerify() {
+    async function captureScan() {
         isVerifying = false;
+        verificationCaptured = true;
+        
         const video = document.getElementById('verify-video');
         const canvas = document.getElementById('verify-canvas');
         const hint = document.getElementById('gesture-hint');
-
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-
-        hint.innerText = "Uploading...";
         
-        // Use the existing API to upload
+        hint.innerText = "Processing...";
+        
+        canvas.width = 400; canvas.height = 400;
+        canvas.getContext('2d').drawImage(video, 0, 0, 400, 400);
+        const base64 = canvas.toDataURL('image/jpeg', 0.8);
+        
+        if (verifyStream) verifyStream.getTracks().forEach(t => t.stop());
+
         try {
-            const res = await fetch("{% url 'upload_base64_api' %}", {
+            const res = await fetch('/api/upload/base64/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-                body: JSON.stringify({ image: dataUrl, bucket: 'images', path: 'verification' })
+                body: JSON.stringify({ image: base64, path: 'verification' })
             });
             const data = await res.json();
-            if (data.url) {
+            
+            if (data.success) {
                 document.getElementById('verification-image-url').value = data.url;
-                document.getElementById('verification-status').value = 'verified'; // Instant verified for this flow
-                
                 document.getElementById('camera-container').style.display = 'none';
-                document.getElementById('verify-success').style.display = 'block';
-                document.getElementById('pfp-section').style.opacity = '1';
-                document.getElementById('pfp-section').style.pointerEvents = 'auto';
+                document.getElementById('verify-completed').style.display = 'block';
+                document.getElementById('verify-box').classList.add('completed');
                 
-                // Stop stream
-                video.srcObject.getTracks().forEach(t => t.stop());
+                // Unlock PFP step
+                document.getElementById('pfp-box').classList.add('active');
             }
         } catch (e) {
-            hint.innerText = "Upload failed. Try again.";
-            isVerifying = true;
-            livenessState = 'FRONT';
+            alert("Scan failed. Refreshing...");
+            window.location.reload();
         }
     }
 
-    async function handlePFP(input) {
+    async function handlePfpSelect(input) {
         if (!input.files[0]) return;
+        const status = document.getElementById('pfp-status');
+        const preview = document.getElementById('pfp-preview');
+        const placeholder = document.getElementById('pfp-placeholder');
+        
+        status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+        
         const reader = new FileReader();
         reader.onload = async (e) => {
-            const preview = document.getElementById('pfp-preview');
             preview.src = e.target.result;
             preview.style.display = 'block';
+            placeholder.style.display = 'none';
             
-            // Upload PFP
-            const res = await fetch("{% url 'upload_base64_api' %}", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-                body: JSON.stringify({ image: e.target.result, bucket: 'images', path: 'profile_pics' })
-            });
-            const data = await res.json();
-            if (data.url) {
-                document.getElementById('profile-pic-url').value = data.url;
-                document.getElementById('submitBtn').disabled = false;
+            try {
+                const res = await fetch('/api/upload/base64/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: JSON.stringify({ image: e.target.result, path: 'profile_pics' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('profile-pic-url').value = data.url;
+                    document.getElementById('verification-status').value = 'verified';
+                    status.innerHTML = '<i class="fas fa-check-circle"></i> Uploaded successfully!';
+                    status.style.color = "#16a34a";
+                    document.getElementById('submitBtn').disabled = false;
+                }
+            } catch (e) {
+                status.innerText = "Upload failed. Try again.";
+                status.style.color = "#ef4444";
             }
         };
         reader.readAsDataURL(input.files[0]);
     }
-
-    initModels();
 </script>
 {% endblock %}
