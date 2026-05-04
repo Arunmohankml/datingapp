@@ -1123,6 +1123,9 @@ def wall_api(request):
             from .pusher_utils import broadcast_event
             broadcast_event('wall', event_type, payload)
             return JsonResponse({'success': True, 'id': obj.id})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+
     elif request.method == 'DELETE':
         if not request.user.is_superuser and request.user.email != 'arunmohankml@gmail.com':
             return JsonResponse({'error': 'Unauthorized'}, status=403)
@@ -1184,27 +1187,33 @@ def wall_api(request):
 
 # ---------------- CONFESSIONS ----------------
 
+from django.core.paginator import Paginator
+
 def confessions_feed(request):
     sort_by = request.GET.get('sort', 'latest')
     campus_filter = request.GET.get('campus', '')
+    page_number = request.GET.get('page', 1)
 
     is_admin = request.user.is_authenticated and request.user.email == 'arunmohankml@gmail.com'
 
     # Public feed: ONLY approved confessions for EVERYONE
-    confessions = Confession.objects.filter(
+    confessions_list = Confession.objects.filter(
         moderation_status='approved'
     ).select_related('user__profile')
 
     if campus_filter:
-        confessions = confessions.filter(campus__iexact=campus_filter)
+        confessions_list = confessions_list.filter(campus__iexact=campus_filter)
 
     if sort_by == 'top':
-        confessions = confessions.order_by('-likes_count', '-created_at')
+        confessions_list = confessions_list.order_by('-likes_count', '-created_at')
     else:
-        confessions = confessions.order_by('-created_at')
+        confessions_list = confessions_list.order_by('-created_at')
+
+    paginator = Paginator(confessions_list, 20) # Show 20 confessions per page
+    page_obj = paginator.get_page(page_number)
 
     return render(request, 'confessions.html', {
-        'confessions': confessions,
+        'confessions': page_obj,
         'current_sort': sort_by,
         'current_campus': campus_filter,
         'is_admin': is_admin
