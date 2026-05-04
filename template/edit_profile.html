@@ -424,6 +424,11 @@
         <button class="tab-btn" onclick="switchTab('prefs')">
             <i class="fas fa-sliders-h"></i> Prefs
         </button>
+        {% if is_admin_editing %}
+        <button class="tab-btn" onclick="switchTab('moderation')">
+            <i class="fas fa-user-shield"></i> Verify
+        </button>
+        {% endif %}
     </div>
 
     <!-- Main Edit Form -->
@@ -586,31 +591,49 @@
                 </div>
             </div>
 
-            {% if is_admin_editing %}
-            <div class="glass-card" style="margin-top: 20px; border: 1px solid #fde68a; background: #fffbeb;">
-                <h3 style="color: #92400e;"><i class="fas fa-user-check"></i> Admin: Verification</h3>
+        </div>
+
+        {% if is_admin_editing %}
+        <div id="section-moderation" class="edit-section">
+            <div class="glass-card" style="border: 1px solid #fde68a; background: #fffbeb;">
+                <h3 style="color: #92400e;"><i class="fas fa-user-shield"></i> Moderation Tools</h3>
+                
                 <div class="form-group">
-                    <label>Verification Image</label>
+                    <label>Force Update Verification Image</label>
                     {% if profile.verification_image_url %}
-                        <img src="{{ profile.verification_image_url }}" style="width: 100%; border-radius: 12px; margin-bottom: 10px;">
+                        <div style="position: relative; margin-bottom: 12px;">
+                            <img src="{{ profile.verification_image_url }}" style="width: 100%; border-radius: 16px; border: 2px solid #fcd34d;">
+                            <div style="position: absolute; top: 10px; right: 10px; background: #92400e; color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800;">CURRENT</div>
+                        </div>
                     {% else %}
-                        <p style="font-size: 12px; color: #92400e; margin-bottom: 10px;">No verification image found.</p>
+                        <div style="padding: 20px; background: rgba(0,0,0,0.05); border-radius: 16px; text-align: center; margin-bottom: 12px;">
+                            <i class="fas fa-image" style="font-size: 24px; color: #94a3b8; margin-bottom: 8px; display: block;"></i>
+                            <span style="font-size: 12px; color: #64748b;">No verification image on record</span>
+                        </div>
                     {% endif %}
-                    <input type="file" name="verification_image_file" class="form-control" style="font-size: 11px;">
+                    
+                    <div style="position: relative; background: white; border-radius: 12px; border: 1px dashed #f59e0b; padding: 12px;">
+                        <input type="file" name="verification_image_file" style="font-size: 12px; width: 100%;">
+                        <p style="font-size: 10px; color: #92400e; margin-top: 6px;"><i class="fas fa-info-circle"></i> Uploading a new image will overwrite the current one.</p>
+                    </div>
                 </div>
+
                 <div class="form-group">
-                    <label>Status</label>
-                    <select name="verification_status" class="form-control">
-                        <option value="pending" {% if profile.verification_status == 'pending' %}selected{% endif %}>Pending</option>
-                        <option value="verified" {% if profile.verification_status == 'verified' %}selected{% endif %}>Verified</option>
-                        <option value="rejected" {% if profile.verification_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                    <label>Identity Verification Status</label>
+                    <select name="verification_status" class="form-control" style="border-color: #fcd34d;">
+                        <option value="pending" {% if profile.verification_status == 'pending' %}selected{% endif %}>Pending (Redirection Active)</option>
+                        <option value="verified" {% if profile.verification_status == 'verified' %}selected{% endif %}>Verified (Access Granted)</option>
+                        <option value="rejected" {% if profile.verification_status == 'rejected' %}selected{% endif %}>Rejected (Blocked)</option>
                         <option value="manual_review" {% if profile.verification_status == 'manual_review' %}selected{% endif %}>Manual Review</option>
                     </select>
                 </div>
-            </div>
-            {% endif %}
-        </div>
 
+                <div style="margin-top: 20px; padding: 15px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; font-size: 11px; color: #92400e; line-height: 1.5;">
+                    <i class="fas fa-exclamation-triangle"></i> <strong>Admin Note:</strong> Changing status to 'Pending' or 'Rejected' will force the user into the re-verification pipeline on their next visit.
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Preferences Section -->
         <div id="section-prefs" class="edit-section">
