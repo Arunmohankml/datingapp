@@ -265,7 +265,9 @@
                     statusEl.style.color = '#10b981';
                     if (ratio > 0.5 && ratio < 1.8) {
                         livenessState = LIVENESS_STATE.CAPTURE_WAIT;
-                        if (!verificationCaptured) captureVerification();
+                        setTimeout(() => {
+                            if (!verificationCaptured) captureVerification();
+                        }, 200);
                     }
                 }
             }
@@ -285,23 +287,16 @@
         const video = document.getElementById('verify-video');
         const canvas = document.getElementById('verify-canvas');
         const status = document.getElementById('verify-status');
-        status.innerText = 'Capturing & Analyzing...';
-
-        const fullDetection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
         
-        if (!fullDetection) {
-            status.innerText = 'Face not clear. Restarting...';
-            livenessState = LIVENESS_STATE.WAITING_FACE;
-            processLivenessFrame(video, status);
-            return;
-        }
-
-
-        verificationCaptured = true;
-        verificationDescriptor = fullDetection.descriptor;
+        // INSTANT PIXEL CAPTURE
         canvas.width = 400; canvas.height = 400;
         canvas.getContext('2d').drawImage(video, 0, 0, 400, 400);
         verificationBase64 = canvas.toDataURL('image/jpeg', 0.8);
+        
+        status.innerText = 'Capturing & Analyzing...';
+
+        // Now run the AI analysis on the captured frame (or video stream)
+        const fullDetection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
 
         if (verifyStream) verifyStream.getTracks().forEach(t => t.stop());
         document.getElementById('verify-camera-ui').style.display = 'none';
