@@ -12,6 +12,14 @@ import os
 import requests
 import firebase_admin
 from firebase_admin import auth as firebase_auth, credentials, messaging
+import pusher
+from .pusher_utils import broadcast_event
+from .cloudinary_utils import upload_to_cloudinary, upload_base64_to_cloudinary
+from .moderation import (
+    check_bad_words, check_duplicate, check_name_mention,
+    check_rate_limit, record_rate_limit, check_shadow_ban
+)
+from django.core.paginator import Paginator
 
 def get_firebase_app():
     """Helper to initialize or get the Firebase app with robust config parsing."""
@@ -1069,9 +1077,6 @@ def wall_view(request):
         'PUSHER_CLUSTER': settings.PUSHER_CLUSTER
     })
 
-
-from .pusher_utils import broadcast_event
-
 @csrf_exempt
 def wall_api(request):
     if request.method == 'GET':
@@ -1120,7 +1125,6 @@ def wall_api(request):
                 }
 
             # Broadcast to Pusher
-            from .pusher_utils import broadcast_event
             broadcast_event('wall', event_type, payload)
             return JsonResponse({'success': True, 'id': obj.id})
         except Exception as e:
@@ -1187,8 +1191,6 @@ def wall_api(request):
 
 # ---------------- CONFESSIONS ----------------
 
-from django.core.paginator import Paginator
-
 def confessions_feed(request):
     sort_by = request.GET.get('sort', 'latest')
     campus_filter = request.GET.get('campus', '')
@@ -1222,11 +1224,6 @@ def confessions_feed(request):
 def create_confession(request):
     if request.method != 'POST':
         return redirect('confessions_feed')
-
-    from .moderation import (
-        check_bad_words, check_duplicate, check_name_mention,
-        check_rate_limit, record_rate_limit, check_shadow_ban
-    )
 
     content    = request.POST.get('content', '').strip()
     is_anon    = request.POST.get('is_anonymous') == 'true'
@@ -1916,7 +1913,6 @@ def upload_base64_api(request):
         if not base64_str:
             return JsonResponse({'success': False, 'message': 'Missing image data'}, status=400)
             
-        from .cloudinary_utils import upload_base64_to_cloudinary
         url = upload_base64_to_cloudinary(base64_str, folder=f"srm_match/{path}")
         
         if url:
