@@ -186,12 +186,15 @@
     let livenessState = 'WAITING';
     let verifyStream = null;
     let verificationCaptured = false;
+    let verificationDescriptor = null;
 
     async function loadModels() {
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
         await Promise.all([
             faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-            faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
+            faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+            faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+            faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL)
         ]);
         console.log("AI Models Loaded");
     }
@@ -266,8 +269,18 @@
         const canvas = document.getElementById('verify-canvas');
         const hint = document.getElementById('gesture-hint');
         
-        hint.innerText = "Processing...";
+        hint.innerText = "Processing Scan...";
         
+        // High accuracy detection for verification image
+        const fullDetection = await faceapi.detectSingleFace(video, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceDescriptor();
+        
+        if (!fullDetection) {
+            alert("Face not clear. Please try again.");
+            window.location.reload();
+            return;
+        }
+
+        verificationDescriptor = fullDetection.descriptor;
         canvas.width = 400; canvas.height = 400;
         canvas.getContext('2d').drawImage(video, 0, 0, 400, 400);
         const base64 = canvas.toDataURL('image/jpeg', 0.8);
@@ -303,34 +316,59 @@
         const preview = document.getElementById('pfp-preview');
         const placeholder = document.getElementById('pfp-placeholder');
         
-        status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+        status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing Face...';
+        status.style.color = "#64748b";
         
         const reader = new FileReader();
         reader.onload = async (e) => {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
-            placeholder.style.display = 'none';
-            
-            try {
-                const res = await fetch('/api/upload/base64/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-                    body: JSON.stringify({ image: e.target.result, path: 'profile_pics' })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    document.getElementById('profile-pic-url').value = data.url;
-                    document.getElementById('verification-status').value = 'verified';
-                    status.innerHTML = '<i class="fas fa-check-circle"></i> Uploaded successfully!';
-                    status.style.color = "#16a34a";
-                    document.getElementById('submitBtn').disabled = false;
+            const tempImg = new Image();
+            tempImg.src = e.target.result;
+            tempImg.onload = async () => {
+                // Detect face in PFP
+                const pfpDetection = await faceapi.detectSingleFace(tempImg).withFaceLandmarks().withFaceDescriptor();
+                
+                if (!pfpDetection) {
+                    status.innerHTML = '<i class="fas fa-times-circle"></i> No face detected in photo!';
+                    status.style.color = "#ef4444";
+                    return;
                 }
-            } catch (e) {
-                status.innerText = "Upload failed. Try again.";
-                status.style.color = "#ef4444";
-            }
+
+                // Compare with verification scan
+                const distance = faceapi.euclideanDistance(verificationDescriptor, pfpDetection.descriptor);
+                if (distance > 0.6) {
+                    status.innerHTML = '<i class="fas fa-times-circle"></i> Face mismatch! Use your own photo.';
+                    status.style.color = "#ef4444";
+                    return;
+                }
+
+                // If match, upload
+                status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Matching verified! Uploading...';
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+
+                try {
+                    const res = await fetch('/api/upload/base64/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                        body: JSON.stringify({ image: e.target.result, path: 'profile_pics' })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        document.getElementById('profile-pic-url').value = data.url;
+                        document.getElementById('verification-status').value = 'verified';
+                        status.innerHTML = '<i class="fas fa-check-circle"></i> Identity verified & Uploaded!';
+                        status.style.color = "#16a34a";
+                        document.getElementById('submitBtn').disabled = false;
+                    }
+                } catch (e) {
+                    status.innerText = "Upload failed. Try again.";
+                    status.style.color = "#ef4444";
+                }
+            };
         };
         reader.readAsDataURL(input.files[0]);
     }
+</script>
 </script>
 {% endblock %}
