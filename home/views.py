@@ -1669,6 +1669,7 @@ def admin_action(request):
 @login_required
 def admin_edit_user_profile(request, user_id):
     """Admin-only view to edit ANY user's profile."""
+    from .forms import ProfileEditForm, ProfileImageForm
     if not is_admin_check(request.user):
         return HttpResponse("Not authorized", status=403)
         
@@ -1719,7 +1720,6 @@ def admin_edit_user_profile(request, user_id):
 
     # If GET, just redirect to a modified version of the edit page or handle it inline
     # For now, let's just reuse the edit_profile template but with the target profile
-    from .forms import ProfileEditForm, ProfileImageForm
     form = ProfileEditForm(instance=profile)
     image_form = ProfileImageForm()
     gallery = profile.images.all()
