@@ -180,8 +180,10 @@ def home(request):
         else:
             raise e
 
-    if not profile.name:
-        return redirect('complete_profile')
+    if not profile.name or not profile.is_face_verified:
+        # If the user is unverified or rejected, send them to complete_profile
+        if profile.verification_status in ['pending', 'rejected']:
+            return redirect('complete_profile')
 
     # If user is not discoverable, they can't see the feed
     if not profile.is_discoverable:
@@ -1616,12 +1618,7 @@ def admin_action(request):
             profile = get_object_or_404(Profile, id=target_id)
             profile.verification_status = 'pending'
             profile.is_face_verified = False
-            
-            # Optionally delete files from Supabase if you want to be thorough
-            # if profile.verification_image_url: ...
-            
-            profile.verification_image_url = ""
-            profile.verification_image_data = ""
+            profile.verification_image = "" # Correct field name is verification_image
             profile.profile_pic = ""
             profile.save()
             
