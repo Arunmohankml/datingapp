@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<style>
+    nav { display: none !important; }
+    .container { padding-bottom: 20px !important; }
+
+    .setup-wrap {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 40px 16px;
+    }
+    .setup-card {
+        background: white;
+        padding: 30px;
+        border-radius: 24px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+        border: 1px solid var(--border);
+        text-align: center;
+    }
+    .setup-icon {
+        width: 70px; height: 70px;
+        background: #eef2ff;
+        color: var(--primary);
+        border-radius: 20px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 30px; margin: 0 auto 20px;
+    }
+    h2 { font-size: 24px; font-weight: 800; color: #1e293b; margin-bottom: 10px; }
+    p { color: #64748b; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
+
+    .upload-area {
+        border: 2px dashed #cbd5e1;
+        border-radius: 20px;
+        padding: 24px;
+        background: #f8fafc;
+        margin-bottom: 20px;
+        cursor: pointer;
+        transition: 0.2s;
+        position: relative;
+    }
+    .upload-area:hover { border-color: var(--primary); background: #f0f4ff; }
+    .upload-preview {
+        width: 120px; height: 120px;
+        border-radius: 20px;
+        object-fit: cover;
+        margin: 0 auto 12px;
+        display: none;
+        border: 3px solid white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .btn-submit {
+        width: 100%;
+        padding: 16px;
+        background: var(--primary);
+        color: white;
+        border: none;
+        border-radius: 16px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    }
+    .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(99, 102, 241, 0.4); }
+    .btn-submit:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* Verification UI */
+    #verify-video { width: 100%; border-radius: 16px; background: black; }
+    #camera-container { position: relative; display: none; }
+    #gesture-hint {
+        position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%);
+        background: rgba(0,0,0,0.7); color: white; padding: 6px 12px;
+        border-radius: 20px; font-size: 12px; font-weight: 700; white-space: nowrap;
+    }
+</style>
+<!-- Include face-api.js -->
+<script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
+{% endblock %}
+
+{% block body %}
+<div class="setup-wrap">
+    <div class="setup-card">
+        <div class="setup-icon"><i class="fas fa-user-shield"></i></div>
+        <h2>Re-Verification Required</h2>
+        <p>To keep our community safe, an admin has requested you to re-verify your identity and update your profile picture.</p>
+
+        <form id="reverifyForm" method="POST">
+            {% csrf_token %}
+            
+            <!-- Step 1: Face Verification -->
+            <div id="verify-section">
+                <div class="upload-area" onclick="startVerification()" id="verify-trigger">
+                    <i class="fas fa-camera" style="font-size: 24px; margin-bottom: 8px; display: block; color: var(--primary);"></i>
+                    <span id="verify-label" style="font-weight: 700; font-size: 14px;">1. Start Face Verification</span>
+                    <p style="font-size: 11px; margin: 4px 0 0;">Follow the liveness challenge prompts</p>
+                </div>
+                <div id="camera-container">
+                    <video id="verify-video" autoplay playsinline muted></video>
+                    <canvas id="verify-canvas" style="display:none;"></canvas>
+                    <div id="gesture-hint">Initializing...</div>
+                </div>
+                <div id="verify-success" style="display:none; margin-bottom:20px; color:#16a34a; font-weight:700;">
+                    <i class="fas fa-check-circle"></i> Identity Verified!
+                </div>
+            </div>
+
+            <!-- Step 2: Profile Picture -->
+            <div id="pfp-section" style="opacity: 0.5; pointer-events: none;">
+                <label class="upload-area" for="pfp-input">
+                    <img id="pfp-preview" class="upload-preview" src="">
+                    <i class="fas fa-image" style="font-size: 24px; margin-bottom: 8px; display: block; color: var(--primary);"></i>
+                    <span style="font-weight: 700; font-size: 14px;">2. Upload New Profile Picture</span>
+                    <input type="file" id="pfp-input" accept="image/*" style="display:none;" onchange="handlePFP(this)">
+                </label>
+            </div>
+
+            <input type="hidden" name="verification_image_url" id="verification-image-url">
+            <input type="hidden" name="profile_pic_url" id="profile-pic-url">
+            <input type="hidden" name="verification_status" id="verification-status" value="pending">
+
+            <button type="submit" class="btn-submit" id="submitBtn" disabled>Complete Verification</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    let livenessState = 'FRONT';
+    let isModelsLoaded = false;
+    let isVerifying = false;
+
+    async function initModels() {
+        try {
+            const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+            await Promise.all([
+                faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+                faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
+            ]);
+            isModelsLoaded = true;
+            console.log("Models loaded");
+        } catch (e) {
+            console.error("Model load failed", e);
+        }
+    }
+
+    async function startVerification() {
+        if (!isModelsLoaded) await initModels();
+        document.getElementById('verify-trigger').style.display = 'none';
+        document.getElementById('camera-container').style.display = 'block';
+        
+        const video = document.getElementById('verify-video');
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        video.srcObject = stream;
+        
+        isVerifying = true;
+        processFrame();
+    }
+
+    async function processFrame() {
+        if (!isVerifying) return;
+        const video = document.getElementById('verify-video');
+        const hint = document.getElementById('gesture-hint');
+        
+        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
+        
+        if (detection) {
+            const landmarks = detection.landmarks;
+            const nose = landmarks.getNose()[0];
+            const leftEye = landmarks.getLeftEye()[0];
+            const rightEye = landmarks.getRightEye()[0];
+            
+            // Basic head pose estimation
+            const eyeDist = rightEye.x - leftEye.x;
+            const nosePos = (nose.x - leftEye.x) / eyeDist;
+
+            if (livenessState === 'FRONT') {
+                hint.innerText = "Look STRAIGHT at the camera";
+                if (nosePos > 0.4 && nosePos < 0.6) {
+                    livenessState = 'LEFT';
+                    hint.style.background = "var(--primary)";
+                }
+            } else if (livenessState === 'LEFT') {
+                hint.innerText = "Turn your head LEFT ⬅️";
+                if (nosePos < 0.3) livenessState = 'RIGHT';
+            } else if (livenessState === 'RIGHT') {
+                hint.innerText = "Turn your head RIGHT ➡️";
+                if (nosePos > 0.7) captureAndVerify();
+            }
+        } else {
+            hint.innerText = "Position your face in view";
+        }
+        
+        requestAnimationFrame(processFrame);
+    }
+
+    async function captureAndVerify() {
+        isVerifying = false;
+        const video = document.getElementById('verify-video');
+        const canvas = document.getElementById('verify-canvas');
+        const hint = document.getElementById('gesture-hint');
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+
+        hint.innerText = "Uploading...";
+        
+        // Use the existing API to upload
+        try {
+            const res = await fetch("{% url 'upload_base64_api' %}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ image: dataUrl, bucket: 'images', path: 'verification' })
+            });
+            const data = await res.json();
+            if (data.url) {
+                document.getElementById('verification-image-url').value = data.url;
+                document.getElementById('verification-status').value = 'verified'; // Instant verified for this flow
+                
+                document.getElementById('camera-container').style.display = 'none';
+                document.getElementById('verify-success').style.display = 'block';
+                document.getElementById('pfp-section').style.opacity = '1';
+                document.getElementById('pfp-section').style.pointerEvents = 'auto';
+                
+                // Stop stream
+                video.srcObject.getTracks().forEach(t => t.stop());
+            }
+        } catch (e) {
+            hint.innerText = "Upload failed. Try again.";
+            isVerifying = true;
+            livenessState = 'FRONT';
+        }
+    }
+
+    async function handlePFP(input) {
+        if (!input.files[0]) return;
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const preview = document.getElementById('pfp-preview');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            
+            // Upload PFP
+            const res = await fetch("{% url 'upload_base64_api' %}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ image: e.target.result, bucket: 'images', path: 'profile_pics' })
+            });
+            const data = await res.json();
+            if (data.url) {
+                document.getElementById('profile-pic-url').value = data.url;
+                document.getElementById('submitBtn').disabled = false;
+            }
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+
+    initModels();
+</script>
+{% endblock %}

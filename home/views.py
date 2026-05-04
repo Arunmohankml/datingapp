@@ -160,6 +160,40 @@ def complete_profile(request):
 
     return render(request, 'complete_profile.html', {'form': form})
 
+@login_required
+def reverify(request):
+    user = request.user
+    profile = get_object_or_404(Profile, user=user)
+
+    if profile.is_face_verified:
+        return redirect('home')
+
+    if request.method == 'POST':
+        # Handle verification image
+        verify_url = request.POST.get('verification_image_url')
+        verify_status = request.POST.get('verification_status', 'pending')
+        
+        if verify_url:
+            profile.verification_image = verify_url
+            profile.verification_status = verify_status
+            if verify_status == 'verified':
+                profile.is_face_verified = True
+            
+        # Handle profile pic
+        pfp_url = request.POST.get('profile_pic_url')
+        if pfp_url:
+            profile.profile_pic = pfp_url
+        
+        if profile.verification_image and profile.profile_pic:
+            profile.save()
+            messages.success(request, "Identity verification submitted!")
+            return redirect('home')
+        else:
+            messages.error(request, "Both verification and profile picture are required.")
+
+    return render(request, 'reverify.html', {'profile': profile})
+
+
 # ---------------- HOME / QUIZ ----------------
 @login_required
 def home(request):
@@ -180,10 +214,13 @@ def home(request):
         else:
             raise e
 
-    if not profile.name or not profile.is_face_verified:
-        # If the user is unverified or rejected, send them to complete_profile
+    if not profile.name:
+        return redirect('complete_profile')
+
+    if not profile.is_face_verified:
+        # If the user is unverified or rejected, send them to reverify
         if profile.verification_status in ['pending', 'rejected']:
-            return redirect('complete_profile')
+            return redirect('reverify')
 
     # If user is not discoverable, they can't see the feed
     if not profile.is_discoverable:
@@ -210,7 +247,7 @@ def home(request):
     blocked_user_ids = list(BlockedUser.objects.filter(blocker=user).values_list('blocked_id', flat=True)) + \
                        list(BlockedUser.objects.filter(blocked=user).values_list('blocker_id', flat=True))
     
-    candidates_qs = Profile.objects.filter(is_discoverable=True).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=blocked_user_ids)
+    candidates_qs = Profile.objects.filter(is_discoverable=True, is_face_verified=True).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=blocked_user_ids)
     
     has_valid_candidates = False
     for c in candidates_qs:
