@@ -1155,14 +1155,16 @@ def create_confession(request):
         user = request.user
 
     # ── 2. Rate limit ──
-    allowed, wait = check_rate_limit(fingerprint, ip)
-    if not allowed:
-        mins = max(1, wait // 60)
-        messages.warning(
-            request,
-            f"You\'re posting too fast. Please try again in about {mins} minute(s)."
-        )
-        return redirect('confessions_feed')
+    is_admin = user and user.email == 'arunmohankml@gmail.com'
+    if not is_admin:
+        allowed, wait = check_rate_limit(fingerprint, ip)
+        if not allowed:
+            mins = max(1, wait // 60)
+            messages.warning(
+                request,
+                f"You\'re posting too fast. Please try again in about {mins} minute(s)."
+            )
+            return redirect('confessions_feed')
 
     # ── 3. Shadow ban (silent — let them think it posted) ──
     is_shadow = check_shadow_ban(fingerprint)
