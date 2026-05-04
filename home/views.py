@@ -1096,14 +1096,10 @@ def confessions_feed(request):
 
     is_admin = request.user.is_authenticated and request.user.email == 'arunmohankml@gmail.com'
 
-    if is_admin:
-        # Admins see everything
-        confessions = Confession.objects.all().select_related('user__profile')
-    else:
-        # Public feed: only approved confessions
-        confessions = Confession.objects.filter(
-            moderation_status='approved'
-        ).select_related('user__profile')
+    # Public feed: ONLY approved confessions for EVERYONE
+    confessions = Confession.objects.filter(
+        moderation_status='approved'
+    ).select_related('user__profile')
 
     if campus_filter:
         confessions = confessions.filter(campus__iexact=campus_filter)
@@ -1546,9 +1542,8 @@ def admin_action(request):
             )
 
         elif action == 'reject_confession':
-            Confession.objects.filter(id=target_id).update(
-                moderation_status='rejected'
-            )
+            # Admin rejected a pending confession -> DELETE it
+            Confession.objects.filter(id=target_id).delete()
 
         elif action == 'dismiss_confession':
             Confession.objects.filter(id=target_id).update(is_flagged=False)
