@@ -1174,12 +1174,12 @@ def create_confession(request):
         Confession.objects.create(
             user=user, content=content, campus=campus,
             is_anonymous=is_anon, poster_fingerprint=fingerprint,
-            moderation_status='rejected',
+            moderation_status='pending_review',
             moderation_reason=f'bad_word:{word}'
         )
-        messages.error(
+        messages.info(
             request,
-            'Your confession was rejected because it violates community rules.'
+            'Your confession has been sent for admin approval because it contains sensitive words.'
         )
         return redirect('confessions_feed')
 
