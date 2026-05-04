@@ -427,7 +427,7 @@
     </div>
 
     <!-- Main Edit Form -->
-    <form method="POST" enctype="multipart/form-data" id="profile-edit-form">
+    <form method="POST" enctype="multipart/form-data" id="profile-edit-form" action="{% if is_admin_editing %}{% url 'admin_edit_user_profile' profile.user.id %}{% else %}{% url 'edit_profile' %}{% endif %}">
         {% csrf_token %}
         <input type="hidden" name="update_profile" value="1">
         
@@ -437,8 +437,17 @@
         <div id="section-basic" class="edit-section active">
             <div class="glass-card">
                 <h3><i class="fas fa-id-card"></i> Basic Info</h3>
-                <!-- Hidden: passes name validation without showing editable field -->
-                <input type="hidden" name="name" value="{{ profile.name }}">
+                
+                <div class="form-group">
+                    <label>Full Name {% if not is_admin_editing %}(Locked){% endif %}</label>
+                    {% if is_admin_editing %}
+                        <input type="text" name="name" value="{{ profile.name }}" class="form-control">
+                    {% else %}
+                        <input type="hidden" name="name" value="{{ profile.name }}">
+                        <div class="form-control" style="background: var(--surface2); color: var(--text-sub); border: 1px dashed var(--border);">{{ profile.name }}</div>
+                    {% endif %}
+                </div>
+
                 <div class="form-group">
                     <label>Bio</label>
                     {{ form.bio }}
@@ -474,8 +483,8 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Mother Tongue(s) {% if profile.mother_tongues %}(Locked){% endif %}</label>
-                    {% if profile.mother_tongues %}
+                    <label>Mother Tongue(s) {% if profile.mother_tongues and not is_admin_editing %}(Locked){% endif %}</label>
+                    {% if profile.mother_tongues and not is_admin_editing %}
                         <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
                             {% for lang in profile.mother_tongues_list %}
                             <span class="chip">{{ lang }}</span>
@@ -487,7 +496,7 @@
                             <div class="selected-chips-list" id="chips-mothertongue"></div>
                             <input type="text" class="dropdown-search-box" id="search-mothertongue" placeholder="Select mother tongue..." autocomplete="off">
                             <div class="dropdown-list" id="list-mothertongue"></div>
-                            <input type="hidden" name="mother_tongues" id="id_mother_tongues" value="">
+                            <input type="hidden" name="mother_tongues" id="id_mother_tongues" value="{{ profile.mother_tongues }}">
                         </div>
                     {% endif %}
                 </div>
@@ -558,9 +567,13 @@
             <div class="glass-card">
                 <h3><i class="fas fa-graduation-cap"></i> Education</h3>
                 <div class="form-group">
-                    <label>Campus (Locked)</label>
-                    {{ form.campus }}
-                    <input type="hidden" name="campus" value="{{ profile.campus }}">
+                    <label>Campus {% if not is_admin_editing %}(Locked){% endif %}</label>
+                    {% if is_admin_editing %}
+                        {{ form.campus }}
+                    {% else %}
+                        <div class="form-control" style="background: var(--surface2); color: var(--text-sub); border: 1px dashed var(--border);">{{ profile.campus_display }}</div>
+                        <input type="hidden" name="campus" value="{{ profile.campus }}">
+                    {% endif %}
                 </div>
                 <div class="form-group">
                     <label>Course</label>
@@ -572,6 +585,30 @@
                     {{ form.clg_year }}
                 </div>
             </div>
+
+            {% if is_admin_editing %}
+            <div class="glass-card" style="margin-top: 20px; border: 1px solid #fde68a; background: #fffbeb;">
+                <h3 style="color: #92400e;"><i class="fas fa-user-check"></i> Admin: Verification</h3>
+                <div class="form-group">
+                    <label>Verification Image</label>
+                    {% if profile.verification_image_url %}
+                        <img src="{{ profile.verification_image_url }}" style="width: 100%; border-radius: 12px; margin-bottom: 10px;">
+                    {% else %}
+                        <p style="font-size: 12px; color: #92400e; margin-bottom: 10px;">No verification image found.</p>
+                    {% endif %}
+                    <input type="file" name="verification_image_file" class="form-control" style="font-size: 11px;">
+                </div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="verification_status" class="form-control">
+                        <option value="pending" {% if profile.verification_status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="verified" {% if profile.verification_status == 'verified' %}selected{% endif %}>Verified</option>
+                        <option value="rejected" {% if profile.verification_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                        <option value="manual_review" {% if profile.verification_status == 'manual_review' %}selected{% endif %}>Manual Review</option>
+                    </select>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
 

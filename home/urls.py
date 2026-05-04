@@ -48,6 +48,7 @@ urlpatterns = [
     path("master/dashboard/", views.admin_dashboard, name="admin_dashboard"),
     path("master/action/", views.admin_action, name="admin_action"),
     path("master/user/<int:user_id>/", views.admin_view_user, name="admin_view_user"),
+    path("master/profile/edit/<int:user_id>/", views.admin_edit_user_profile, name="admin_edit_user_profile"),
     path("api/movies/search/", views.search_movies, name="search_movies"),
     path("api/favorites/save/", views.save_favorites, name="save_favorites"),
     path("api/upload/base64/", views.upload_base64_api, name="upload_base64_api"),

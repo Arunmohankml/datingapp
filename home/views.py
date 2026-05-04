@@ -1611,9 +1611,92 @@ def admin_action(request):
             if fingerprint:
                 BannedIdentifier.objects.filter(fingerprint=fingerprint).delete()
 
+        elif action == 'reset_verification':
+            # Reset verification status, delete verification image and profile pic
+            profile = get_object_or_404(Profile, id=target_id)
+            profile.verification_status = 'pending'
+            profile.is_face_verified = False
+            
+            # Optionally delete files from Supabase if you want to be thorough
+            # if profile.verification_image_url: ...
+            
+            profile.verification_image_url = ""
+            profile.verification_image_data = ""
+            profile.profile_pic = ""
+            profile.save()
+            
+            messages.warning(request, f"Verification reset for {profile.user.username}. They must verify again.")
+
         return redirect('admin_dashboard')
 
     return redirect('admin_dashboard')
+
+
+@login_required
+def admin_edit_user_profile(request, user_id):
+    """Admin-only view to edit ANY user's profile."""
+    if not is_admin_check(request.user):
+        return HttpResponse("Not authorized", status=403)
+        
+    target_user = get_object_or_404(User, id=user_id)
+    profile = get_object_or_404(Profile, user=target_user)
+    
+    if request.method == "POST":
+        # We reuse the logic from edit_profile but for the target_user
+        if 'update_profile' in request.POST:
+            form = ProfileEditForm(request.POST, request.FILES, instance=profile)
+            if form.is_valid():
+                updated_profile = form.save(commit=False)
+                
+                # Manual file handling for admin
+                if 'profile_pic_file' in request.FILES:
+                    img_url = upload_to_supabase(request.FILES['profile_pic_file'], bucket="images", path="profile_pics")
+                    if img_url: updated_profile.profile_pic = img_url
+                
+                if 'verification_image_file' in request.FILES:
+                    img_url = upload_to_supabase(request.FILES['verification_image_file'], bucket="images", path="verification")
+                    if img_url: updated_profile.verification_image_url = img_url
+
+                # Admin-only fields
+                if 'verification_status' in request.POST:
+                    updated_profile.verification_status = request.POST.get('verification_status')
+                    if updated_profile.verification_status == 'verified':
+                        updated_profile.is_face_verified = True
+
+                # Tags cleanup
+                for field in ['languages', 'mother_tongues', 'interest_tags', 'pref_languages']:
+                    if field in request.POST:
+                        val = request.POST.get(field, '').strip()
+                        if val.startswith('[') and val.endswith(']'):
+                            val = val[1:-1].replace("'", "").replace('"', "")
+                        setattr(updated_profile, field, val)
+
+                updated_profile.save()
+                messages.success(request, f"Profile for {target_user.username} updated by Admin.")
+                return redirect('view_profile', user_id=user_id)
+        
+        elif 'add_image' in request.POST:
+            if 'image_file' in request.FILES:
+                img_url = upload_to_supabase(request.FILES['image_file'], bucket="images", path="gallery")
+                if img_url:
+                    ProfileImage.objects.create(profile=profile, image=img_url)
+                    messages.success(request, "Gallery photo added by Admin.")
+            return redirect('view_profile', user_id=user_id)
+
+    # If GET, just redirect to a modified version of the edit page or handle it inline
+    # For now, let's just reuse the edit_profile template but with the target profile
+    from .forms import ProfileEditForm, ProfileImageForm
+    form = ProfileEditForm(instance=profile)
+    image_form = ProfileImageForm()
+    gallery = profile.images.all()
+    
+    return render(request, "edit_profile.html", {
+        "form": form,
+        "image_form": image_form,
+        "gallery": gallery,
+        "profile": profile,
+        "is_admin_editing": True
+    })
 @login_required
 def announcements_view(request):
     is_admin = is_admin_check(request.user)
