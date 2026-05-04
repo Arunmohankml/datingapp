@@ -1,18 +1,16 @@
 import os
-import sys
-import traceback
+from django.core.wsgi import get_wsgi_application
 
 # Ensure settings module is set
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'datingapp.settings')
 
+# Vercel's build-time scanner requires this to be a top-level assignment
+# to a variable named 'app' or 'application'.
 try:
-    from django.core.wsgi import get_wsgi_application
-    app = get_wsgi_application()
-    application = app
+    application = get_wsgi_application()
+    app = application
 except Exception as e:
+    import traceback
     print("!!! VERCEL STARTUP ERROR !!!")
-    print(f"Error Type: {type(e).__name__}")
-    print(f"Error Message: {str(e)}")
     traceback.print_exc()
-    # Still raise it so Vercel knows it failed, but now we'll see the logs
     raise e
