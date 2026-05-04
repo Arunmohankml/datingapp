@@ -957,79 +957,80 @@ def edit_profile(request):
     profile = get_object_or_404(Profile, user=request.user)
     
     if request.method == "POST":
-        # Handle Profile Info Update
-        if 'update_profile' in request.POST:
-            form = ProfileEditForm(request.POST, request.FILES, instance=profile)
-            if form.is_valid():
-                updated_profile = form.save(commit=False)
-                
-                # Handle Supabase Upload
+        try:
+            # Handle Profile Info Update
+            if 'update_profile' in request.POST:
+                form = ProfileEditForm(request.POST, request.FILES, instance=profile)
+                if form.is_valid():
+                    updated_profile = form.save(commit=False)
+                    
+                    # Handle Cloudinary Upload
+                    if 'profile_pic_file' in request.FILES:
+                        submitted_pfp = request.FILES['profile_pic_file']
+                        img_url = upload_to_cloudinary(submitted_pfp, folder="srm_match/profile_pics")
+                        if img_url:
+                            updated_profile.profile_pic = img_url
+                            messages.success(request, "Profile picture updated successfully!")
+                        else:
+                            messages.error(request, "Failed to upload profile picture to Cloudinary.")
+                    
+                    for field in ['languages', 'mother_tongues', 'interest_tags', 'pref_languages']:
+                        if field in request.POST:
+                            val = request.POST.get(field, '').strip()
+                            if val.startswith('[') and val.endswith(']'):
+                                val = val[1:-1].replace("'", "").replace('"', "")
+                            
+                            if field == 'mother_tongues':
+                                current_val = getattr(profile, 'mother_tongues', '')
+                                if not current_val:
+                                    setattr(updated_profile, field, val)
+                                else:
+                                    setattr(updated_profile, field, current_val)
+                            else:
+                                setattr(updated_profile, field, val)
+
+                    updated_profile.save()
+                    messages.success(request, "Profile updated successfully!")
+                    return redirect('edit_profile')
+                else:
+                    print(f"DEBUG: form.is_valid() is FALSE. Errors: {form.errors}")
+                    messages.error(request, f"Form validation failed: {form.errors.as_text()}")
+            
+            # Handle Instant PFP Upload
+            elif 'update_pfp_instant' in request.POST:
                 if 'profile_pic_file' in request.FILES:
-                    submitted_pfp = request.FILES['profile_pic_file']
-                    img_url = upload_to_supabase(submitted_pfp, bucket="images", path="profile_pics")
+                    img_url = upload_to_cloudinary(request.FILES['profile_pic_file'], folder="srm_match/profile_pics")
                     if img_url:
-                        updated_profile.profile_pic = img_url
+                        profile.profile_pic = img_url
+                        profile.save()
                         messages.success(request, "Profile picture updated successfully!")
                     else:
-                        messages.error(request, "Failed to upload profile picture to Supabase.")
-                
-                # The form already handles clg_year, course, branch, etc.
-                # but we explicitly save the tag fields to ensure they match our new JS dropdowns
-                # Specialized handling for tag-like fields to ensure clean data
-                for field in ['languages', 'mother_tongues', 'interest_tags', 'pref_languages']:
-                    if field in request.POST:
-                        val = request.POST.get(field, '').strip()
-                        
-                        # CLEANUP: Strip brackets and quotes if they exist
-                        if val.startswith('[') and val.endswith(']'):
-                            val = val[1:-1].replace("'", "").replace('"', "")
-                        
-                        # MOTHER TONGUE LOCK: Only allow saving if currently empty
-                        if field == 'mother_tongues':
-                            current_val = getattr(profile, 'mother_tongues', '')
-                            if not current_val:
-                                setattr(updated_profile, field, val)
-                            else:
-                                # Keep the old value
-                                setattr(updated_profile, field, current_val)
-                        else:
-                            setattr(updated_profile, field, val)
-
-                updated_profile.save()
-                messages.success(request, "Profile updated successfully!")
-                return redirect('edit_profile')
-            else:
-                print(f"DEBUG: form.is_valid() is FALSE. Errors: {form.errors}")
-                messages.error(request, f"Form validation failed: {form.errors.as_text()}")
-        
-        # Handle Instant PFP Upload
-        elif 'update_pfp_instant' in request.POST:
-            if 'profile_pic_file' in request.FILES:
-                img_url = upload_to_supabase(request.FILES['profile_pic_file'], bucket="images", path="profile_pics")
-                if img_url:
-                    profile.profile_pic = img_url
-                    profile.save()
-                    messages.success(request, "Profile picture updated successfully!")
-                else:
-                    messages.error(request, "Failed to upload profile picture.")
-            return redirect('edit_profile')
-        
-        # Handle Image Upload
-        elif 'add_image' in request.POST:
-            if profile.images.count() >= 5:
+                        messages.error(request, "Failed to upload profile picture.")
                 return redirect('edit_profile')
             
-            image_form = ProfileImageForm(request.POST, request.FILES)
-            if image_form.is_valid():
-                # Handle Supabase Upload for gallery
-                if 'image_file' in request.FILES:
-                    img_url = upload_to_supabase(request.FILES['image_file'], bucket="images", path="gallery")
-                    if img_url:
-                        ProfileImage.objects.create(profile=profile, image=img_url)
-                        messages.success(request, "Gallery photo added successfully!")
-                    else:
-                        messages.error(request, "Failed to upload gallery image. Please check your credentials.")
-                return redirect('edit_profile')
+            # Handle Image Upload
+            elif 'add_image' in request.POST:
+                if profile.images.count() >= 5:
+                    return redirect('edit_profile')
+                
+                image_form = ProfileImageForm(request.POST, request.FILES)
+                if image_form.is_valid():
+                    # Handle Cloudinary Upload for gallery
+                    if 'image_file' in request.FILES:
+                        img_url = upload_to_cloudinary(request.FILES['image_file'], folder="srm_match/gallery")
+                        if img_url:
+                            ProfileImage.objects.create(profile=profile, image=img_url)
+                            messages.success(request, "Gallery photo added successfully!")
+                        else:
+                            messages.error(request, "Failed to upload gallery image.")
+                    return redirect('edit_profile')
+
+        except Exception as e:
+            import traceback
+            print("!!! EDIT PROFILE POST ERROR !!!")
+            traceback.print_exc()
+            messages.error(request, f"An error occurred: {str(e)}")
+            return redirect('edit_profile')
 
     form = ProfileEditForm(instance=profile)
     image_form = ProfileImageForm()
