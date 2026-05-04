@@ -188,7 +188,8 @@
     }
     .chat-form input[type="text"] {
         flex: 1;
-        padding: 16px 24px;
+        height: 54px;
+        padding: 0 24px;
         border-radius: 24px;
         border: 2px solid transparent;
         background: white;
@@ -198,11 +199,11 @@
         box-shadow: 0 8px 20px rgba(37, 99, 235, 0.04);
         outline: none;
         transition: 0.4s;
+        box-sizing: border-box;
     }
     .chat-form input[type="text"]:focus {
         border-color: var(--primary-blue);
         box-shadow: 0 12px 30px rgba(37, 99, 235, 0.08);
-        transform: translateY(-2px);
     }
 
     .btn-send {
@@ -222,8 +223,8 @@
     /* ── Experimental Glass Actions ── */
     .chat-actions { position: relative; }
     .btn-action {
-        width: 48px; height: 48px;
-        border-radius: 16px;
+        width: 54px; height: 54px;
+        border-radius: 20px;
         border: 1px solid rgba(37, 99, 235, 0.05);
         background: white;
         color: var(--primary-blue);
