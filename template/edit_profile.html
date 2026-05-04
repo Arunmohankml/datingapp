@@ -1208,7 +1208,22 @@
             if (!this.files || !this.files[0]) return;
             const file = this.files[0];
 
-            showOverlay("Verifying identity...");
+            showOverlay("Processing Image...");
+
+            // Admin Bypass
+            const isAdminEdit = {{ is_admin_editing|yesno:"true,false" }};
+            if (isAdminEdit) {
+                console.log("Admin editing: Bypassing face verification.");
+                try {
+                    const compressed = await compressImage(file, 0.7, 800);
+                    const dt = new DataTransfer();
+                    dt.items.add(compressed);
+                    pfpInstantInput.files = dt.files;
+                } catch (e) { console.warn("Compression failed, using original"); }
+                pfpInstantForm.submit();
+                return;
+            }
+
             await loadFaceModelsOnce();
 
             try {

@@ -1690,7 +1690,7 @@ def admin_edit_user_profile(request, user_id):
                 
                 if 'verification_image_file' in request.FILES:
                     img_url = upload_to_supabase(request.FILES['verification_image_file'], bucket="images", path="verification")
-                    if img_url: updated_profile.verification_image_url = img_url
+                    if img_url: updated_profile.verification_image = img_url
 
                 # Admin-only fields
                 if 'verification_status' in request.POST:
@@ -1717,6 +1717,15 @@ def admin_edit_user_profile(request, user_id):
                     ProfileImage.objects.create(profile=profile, image=img_url)
                     messages.success(request, "Gallery photo added by Admin.")
             return redirect('view_profile', user_id=user_id)
+            
+        elif 'update_pfp_instant' in request.POST:
+            if 'profile_pic_file' in request.FILES:
+                img_url = upload_to_supabase(request.FILES['profile_pic_file'], bucket="images", path="profile_pics")
+                if img_url:
+                    profile.profile_pic = img_url
+                    profile.save()
+                    messages.success(request, "Profile picture updated by Admin.")
+            return redirect('admin_edit_user_profile', user_id=user_id)
 
     # If GET, just redirect to a modified version of the edit page or handle it inline
     # For now, let's just reuse the edit_profile template but with the target profile
