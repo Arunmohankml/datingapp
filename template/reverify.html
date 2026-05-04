@@ -287,7 +287,7 @@
         const status = document.getElementById('verify-status');
         status.innerText = 'Capturing & Analyzing...';
 
-        const fullDetection = await faceapi.detectSingleFace(video, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceDescriptor().withAgeAndGender();
+        const fullDetection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
         
         if (!fullDetection) {
             status.innerText = 'Face not clear. Restarting...';
@@ -296,13 +296,6 @@
             return;
         }
 
-        const profileGender = "{{ profile.gender }}";
-        if (profileGender !== 'other' && fullDetection.gender !== profileGender) {
-            status.innerText = "Gender mismatch! Restarting...";
-            livenessState = LIVENESS_STATE.WAITING_FACE;
-            processLivenessFrame(video, status);
-            return;
-        }
 
         verificationCaptured = true;
         verificationDescriptor = fullDetection.descriptor;
