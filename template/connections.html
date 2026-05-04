@@ -24,6 +24,15 @@
         margin: 0 !important;
         font-family: 'Inter', sans-serif;
     }
+
+    /* Reset global container for this page */
+    .container {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: none !important;
+        width: 100% !important;
+        height: 100dvh !important;
+    }
     
     .conn-wrapper {
         display: flex;
@@ -277,7 +286,9 @@
             </button>
             <button class="tab-btn" onclick="switchTab('matches')">
                 <i class="fas fa-heart"></i> Matches
+                {% if connections.count > 0 %}
                 <span class="tab-badge">{{ connections.count }}</span>
+                {% endif %}
             </button>
         </div>
     </div>
