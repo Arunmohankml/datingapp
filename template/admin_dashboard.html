@@ -76,6 +76,73 @@
         cursor: pointer;
     }
 
+    /* ── Confession Bubbles ── */
+    .confession-bubble {
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 14px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        margin-bottom: 8px;
+    }
+    .confession-bubble:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    }
+    .cb-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+    }
+    .cb-content {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+        color: #1e293b;
+        line-height: 1.4;
+    }
+    .cb-actions {
+        display: flex;
+        gap: 8px;
+    }
+    .action-icon-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 14px;
+    }
+    .btn-approve { background: #d1fae5; color: #059669; }
+    .btn-approve:hover { background: #10b981; color: white; }
+    .btn-reject { background: #fee2e2; color: #dc2626; }
+    .btn-reject:hover { background: #ef4444; color: white; }
+    
+    .cb-details {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 0;
+        padding-top: 0;
+        border-top: 1px solid transparent;
+    }
+    .confession-bubble.active .cb-details {
+        max-height: 200px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #f1f5f9;
+    }
+
     /* ── User Accordion ── */
     .user-accordion {
         border: 1px solid var(--border);
@@ -157,41 +224,43 @@
         <h3><i class="fas fa-clock"></i> Pending Confessions</h3>
         <div class="item-list">
             {% for c in pending_confessions %}
-            <div class="item-row" style="flex-direction: column; align-items: stretch; gap: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="item-info">
-                        <div class="item-title">{{ c.content|truncatechars:100 }}</div>
-                        <div class="item-meta">By {{ c.display_name }} • Campus: {{ c.campus|default:"N/A" }}</div>
-                        <div class="item-meta" style="color: #ea580c;">Reason: {{ c.moderation_reason }}</div>
-                    </div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+            <div class="confession-bubble" onclick="this.classList.toggle('active')">
+                <div class="cb-top">
+                    <div class="cb-content">{{ c.content }}</div>
+                    <div class="cb-actions">
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;" onclick="event.stopPropagation()">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="approve_confession">
                             <input type="hidden" name="target_id" value="{{ c.id }}">
-                            <button type="submit" class="btn-secondary" style="background: #d1fae5; color: #047857; border-color: #a7f3d0;">Approve</button>
+                            <button type="submit" class="action-icon-btn btn-approve" title="Approve"><i class="fas fa-check"></i></button>
                         </form>
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;" onclick="event.stopPropagation()">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="reject_confession">
                             <input type="hidden" name="target_id" value="{{ c.id }}">
-                            <button type="submit" class="btn-danger">Reject</button>
+                            <button type="submit" class="action-icon-btn btn-reject" title="Reject"><i class="fas fa-times"></i></button>
                         </form>
-                        {% if c.poster_fingerprint %}
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                    </div>
+                </div>
+                <div class="cb-details">
+                    <div style="margin-bottom: 4px;"><strong>By:</strong> {{ c.display_name }} • <strong>Campus:</strong> {{ c.campus|default:"N/A" }}</div>
+                    <div style="color: #ea580c;"><strong>Flagged Reason:</strong> {{ c.moderation_reason }}</div>
+                    {% if c.poster_fingerprint %}
+                    <div style="margin-top: 8px; display: flex; gap: 8px;">
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;" onclick="event.stopPropagation()">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="shadow_ban_fingerprint">
                             <input type="hidden" name="fingerprint" value="{{ c.poster_fingerprint }}">
-                            <button type="submit" class="btn-secondary" style="background: #fef08a; color: #854d0e; border-color: #fde047;" title="Shadow Ban Device">Shadow Ban FP</button>
+                            <button type="submit" class="btn-secondary" style="font-size: 10px; padding: 4px 8px;">Shadow Ban FP</button>
                         </form>
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;" onclick="event.stopPropagation()">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="ban_fingerprint">
                             <input type="hidden" name="fingerprint" value="{{ c.poster_fingerprint }}">
-                            <button type="submit" class="btn-danger" style="background: #000; color: #fff; border-color: #000;" title="Hard Ban Device">Hard Ban FP</button>
+                            <button type="submit" class="btn-danger" style="font-size: 10px; padding: 4px 8px;">Hard Ban FP</button>
                         </form>
-                        {% endif %}
                     </div>
+                    {% endif %}
                 </div>
             </div>
             {% empty %}
@@ -205,44 +274,34 @@
         <h3><i class="fas fa-flag"></i> Reported Confessions</h3>
         <div class="item-list">
             {% for c in reported_confessions %}
-            <div class="item-row" style="flex-direction: column; align-items: stretch; gap: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="item-info">
-                        <div class="item-title">{{ c.content|truncatechars:100 }}</div>
-                        <div class="item-meta">By {{ c.display_name }} • {{ c.reports.count }} reports</div>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <a href="{% url 'confession_detail' c.id %}" class="btn-secondary">View</a>
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="delete_confession">
-                            <input type="hidden" name="target_id" value="{{ c.id }}">
-                            <button type="submit" class="btn-danger">Delete</button>
-                        </form>
-                        {% if c.poster_fingerprint %}
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="ban_fingerprint">
-                            <input type="hidden" name="fingerprint" value="{{ c.poster_fingerprint }}">
-                            <button type="submit" class="btn-danger" style="background: #000; color: #fff; border-color: #000;" title="Ban device ID: {{ c.poster_fingerprint }}">Ban FP</button>
-                        </form>
-                        {% endif %}
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+            <div class="confession-bubble" onclick="this.classList.toggle('active')">
+                <div class="cb-top">
+                    <div class="cb-content">{{ c.content }}</div>
+                    <div class="cb-actions">
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;" onclick="event.stopPropagation()">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="dismiss_confession">
                             <input type="hidden" name="target_id" value="{{ c.id }}">
-                            <button type="submit" class="btn-secondary">Dismiss</button>
+                            <button type="submit" class="action-icon-btn btn-approve" title="Keep/Dismiss"><i class="fas fa-check"></i></button>
+                        </form>
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;" onclick="event.stopPropagation()">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete_confession">
+                            <input type="hidden" name="target_id" value="{{ c.id }}">
+                            <button type="submit" class="action-icon-btn btn-reject" title="Delete Confession"><i class="fas fa-trash"></i></button>
                         </form>
                     </div>
                 </div>
-                <!-- Reasons List -->
-                <div style="padding: 10px; background: #fff1f2; border-radius: 8px; font-size: 12px; color: #be123c;">
-                    <strong>Reasons:</strong>
-                    {% for report in c.reports.all %}
-                        <div style="margin-top: 4px; border-top: 1px solid #fecaca; padding-top: 4px;">
-                            {{ report.reasons|join:", " }} {% if report.other_reason %}- {{ report.other_reason }}{% endif %}
-                        </div>
-                    {% endfor %}
+                <div class="cb-details">
+                    <div style="margin-bottom: 8px;"><strong>By:</strong> {{ c.display_name }} • <strong>{{ c.reports.count }} reports</strong></div>
+                    <div style="padding: 10px; background: #fff1f2; border-radius: 8px; font-size: 11px; color: #be123c;">
+                        <strong>Reasons:</strong>
+                        {% for report in c.reports.all %}
+                            <div style="margin-top: 4px; border-top: 1px solid #fecaca; padding-top: 4px;">
+                                {{ report.reasons|join:", " }} {% if report.other_reason %}- {{ report.other_reason }}{% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
             {% empty %}
