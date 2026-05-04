@@ -1371,8 +1371,8 @@
         if (livenessState === LIVENESS_STATE.DONE || verificationCaptured) return;
         
         if (video.readyState >= 2) {
-            // Use TinyFaceDetector for fast real-time tracking
-            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
+            // Use TinyFaceDetector with small input size for maximum speed
+            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224 })).withFaceLandmarks();
             
             if (!detection) {
                 if (livenessState !== LIVENESS_STATE.CAPTURE_WAIT) {
@@ -1392,7 +1392,7 @@
                 const ratio = distLeft / (distRight || 1);
                 
                 if (livenessState === LIVENESS_STATE.WAITING_FACE) {
-                    if (ratio > 0.7 && ratio < 1.3) {
+                    if (ratio > 0.5 && ratio < 1.8) {
                         livenessState = LIVENESS_STATE.LOOK_LEFT;
                     } else {
                         statusEl.innerText = 'Look STRAIGHT to start.';
@@ -1401,27 +1401,26 @@
                 }
                 
                 if (livenessState === LIVENESS_STATE.LOOK_LEFT) {
-                    statusEl.innerText = 'Good! Now turn your head slowly LEFT... ⬅️';
+                    statusEl.innerText = 'Good! Now turn your head LEFT ⬅️';
                     statusEl.style.color = '#3b82f6';
-                    if (ratio < 0.5) {
+                    if (ratio < 0.7) { // Very loose threshold for fast UX
                         livenessState = LIVENESS_STATE.LOOK_RIGHT;
                     }
                 }
                 else if (livenessState === LIVENESS_STATE.LOOK_RIGHT) {
-                    statusEl.innerText = 'Great! Now turn your head slowly RIGHT... ➡️';
+                    statusEl.innerText = 'Great! Now turn your head RIGHT ➡️';
                     statusEl.style.color = '#3b82f6';
-                    if (ratio > 2.0) {
+                    if (ratio > 1.4) { // Very loose threshold for fast UX
                         livenessState = LIVENESS_STATE.LOOK_FRONT;
                     }
                 }
                 else if (livenessState === LIVENESS_STATE.LOOK_FRONT) {
-                    statusEl.innerText = 'Excellent! Look FRONT. Hold still... 📷';
+                    statusEl.innerText = 'Excellent! Look FRONT to capture 📷';
                     statusEl.style.color = '#10b981';
-                    if (ratio > 0.7 && ratio < 1.3) {
+                    if (ratio > 0.5 && ratio < 1.8) {
                         livenessState = LIVENESS_STATE.CAPTURE_WAIT;
-                        setTimeout(() => {
-                            if (!verificationCaptured) captureVerification();
-                        }, 1000); // Capture after 1 second of looking front
+                        // Instant capture without delay
+                        if (!verificationCaptured) captureVerification();
                     }
                 }
             }
@@ -1430,7 +1429,7 @@
         if (!verificationCaptured && livenessState !== LIVENESS_STATE.DONE) {
             setTimeout(() => {
                 requestAnimationFrame(() => processLivenessFrame(video, statusEl));
-            }, 100); // 10 FPS is perfectly smooth for this
+            }, 50); // 20 FPS for much faster response
         }
     }
 
