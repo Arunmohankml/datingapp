@@ -83,6 +83,22 @@
         </a>
     </div>
 
+    <!-- Policy / Terms -->
+    <div class="card" style="padding: 20px; margin-bottom: 16px;">
+        <button type="button" onclick="openPolicyModal()" style="width: 100%; background: none; border: none; padding: 0; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: var(--text-main);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 18px;">
+                    <i class="fas fa-file-contract"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 16px;">Policy & Terms</h4>
+                    <p style="margin: 4px 0 0; font-size: 13px; color: var(--text-muted);">View community guidelines</p>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right" style="color: #cbd5e1;"></i>
+        </button>
+    </div>
+
     <!-- Logout Form -->
     <div class="card" style="padding: 20px; margin-bottom: 16px;">
         <form id="logout-form" method="POST" action="{% url 'logout' %}">
@@ -119,9 +135,53 @@
             {% csrf_token %}
         </form>
     </div>
+
+    <!-- Policy Modal -->
+    <div id="policy-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; padding: 20px; align-items: center; justify-content: center;">
+        <div class="card" style="width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto; padding: 24px; position: relative;">
+            <button onclick="closePolicyModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer;"><i class="fas fa-times"></i></button>
+            <h3 style="margin: 0 0 16px; font-size: 20px; font-weight: 800; color: var(--text-main);">SRM Match Policy</h3>
+            <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 10px;">
+                <li>You must be 18 years or older to use this app.</li>
+                <li>You must use your own SRM email/account. Fake accounts or impersonation are not allowed.</li>
+                <li>Your profile photo, bio, confessions, and messages must not contain abuse, hate, threats, or harassment.</li>
+                <li>Face verification is used to reduce fake profiles and keep the app safer.</li>
+                <li>Your face verification image will be stored privately and will not be shown publicly on your profile.</li>
+                <li>Face verification images may be reviewed by admins only for verification, safety, or moderation purposes.</li>
+                <li>Anonymous confessions are hidden from the public, but admins may review them if there is abuse, spam, or reports.</li>
+                <li>Do not post real names, phone numbers, hostel/room details, private chats, or personal information of others.</li>
+                <li>Confessions containing names, abusive words, repeated spam, or sensitive content may be sent for admin approval or removed.</li>
+                <li>Users can report profiles, confessions, or messages that feel unsafe or inappropriate.</li>
+                <li>We may ban accounts, devices, fingerprints, or IP addresses if users spam, harass others, create fake profiles, or break rules.</li>
+                <li>Your data is used only to run the app, verify users, improve safety, and prevent misuse.</li>
+                <li>We do not sell your personal data.</li>
+                <li>You can request account/data deletion by contacting the admin.</li>
+                <li>By using this app, you agree to follow these rules and use the platform respectfully.</li>
+            </ul>
+        </div>
+    </div>
 </div>
 
+
 <script>
+    function openPolicyModal() {
+        const modal = document.getElementById('policy-modal');
+        modal.style.display = 'flex';
+        modal.style.opacity = '0';
+        setTimeout(() => {
+            modal.style.transition = 'opacity 0.2s';
+            modal.style.opacity = '1';
+        }, 10);
+    }
+    
+    function closePolicyModal() {
+        const modal = document.getElementById('policy-modal');
+        modal.style.opacity = '0';
+        setTimeout(() => {
+            modal.style.display = 'none';
+        }, 200);
+    }
+
     async function handleLogout() {
         const confirmed = await customConfirm("Are you sure you want to logout?", "Logout", "Logout", "Stay");
         if (confirmed) document.getElementById('logout-form').submit();

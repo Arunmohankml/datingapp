@@ -523,6 +523,12 @@
         padding-top: 24px; /* Align with numbers */
     }
 
+    @media (max-width: 400px) {
+        .dual-stepper-container { flex-direction: column; gap: 12px; padding: 16px; }
+        .stepper-divider { transform: rotate(90deg); padding-top: 0; margin: 4px 0; }
+        .stepper-controls { gap: 16px; }
+    }
+
 
 </style>
 {% endblock %}
@@ -761,7 +767,7 @@
                     <h4 style="margin: 0 0 8px; font-size: 16px;">Identity Verification</h4>
                     <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Quickly verify your identity to get a "Verified" badge and 2x more matches!</p>
                     <p style="font-size: 11px; color: var(--primary); font-weight: 600; margin-bottom: 16px; background: rgba(99,102,241,0.05); padding: 8px; border-radius: 10px;">
-                        <i class="fas fa-user-shield"></i> This verification photo isn't stored anywhere and won't appear in your profile.
+                        <i class="fas fa-user-shield"></i> Your verification photo is private and will not appear on your profile.
                     </p>
                     <button type="button" onclick="startVerification()" class="btn" style="background: var(--primary); color: white; border-radius: 12px; padding: 10px 20px; font-weight: 700; border: none; cursor: pointer;">
                         Verify Identity
@@ -774,7 +780,7 @@
                         <canvas id="verify-canvas" style="display: none;"></canvas>
                         <div id="face-guide" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 60%; border: 2px dashed rgba(255,255,255,0.5); border-radius: 50% 50% 45% 45%; pointer-events: none;"></div>
                         <div id="gesture-hint" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
-                            <i class="fas fa-hand-paper"></i> Raise Hand to Capture
+                            <i class="fas fa-sync-alt fa-spin"></i> Follow the prompts below
                         </div>
                     </div>
                     <p id="verify-status" style="margin-top: 16px; font-size: 13px; font-weight: 700; color: var(--primary);"></p>
@@ -1304,15 +1310,22 @@
     let verificationBase64 = null;
     let verificationDescriptor = null;
     let galleryFiles = [];
-    let lastGestureTime = 0;
     let verifyStream = null;
-    let camera = null;
-    let modelsLoaded = false;
+    
+    // Liveness states
+    const LIVENESS_STATE = {
+        WAITING_FACE: 0,
+        LOOK_LEFT: 1,
+        LOOK_RIGHT: 2,
+        LOOK_FRONT: 3,
+        CAPTURE_WAIT: 4,
+        DONE: 5
+    };
+    let livenessState = LIVENESS_STATE.WAITING_FACE;
 
     // AI Models are now loaded via global loadFaceModelsOnce() in base.html
 
     async function startVerification() {
-        // 1. Check for Secure Context (Required by browsers for Camera)
         if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
             customAlert("Camera blocked: Browsers only allow camera access over HTTPS or localhost. Please use a secure connection.", "Security Error");
             return;
@@ -1326,19 +1339,21 @@
         status.innerText = 'Requesting camera access...';
         
         try {
-            // Trigger permission prompt immediately
             verifyStream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } 
             });
             video.srcObject = verifyStream;
             
-            // If prompt accepted, show UI and load models
             cameraUI.style.display = 'block';
             initialUI.style.display = 'none';
             status.innerText = 'Loading AI models...';
             
             await loadFaceModelsOnce();
-            status.innerText = 'AI Models Loaded.';
+            status.innerText = 'AI Models Loaded. Please look straight at the camera.';
+            
+            // Start our liveness check loop
+            livenessState = LIVENESS_STATE.WAITING_FACE;
+            requestAnimationFrame(() => processLivenessFrame(video, status));
         } catch (err) {
             console.error("Camera Error:", err);
             if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -1350,54 +1365,103 @@
             }
             return;
         }
-
-        const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
-        hands.setOptions({ maxNumHands: 1, modelComplexity: 1, minDetectionConfidence: 0.7, minTrackingConfidence: 0.7 });
-        hands.onResults(onVerificationResults);
-
-        camera = new Camera(video, {
-            onFrame: async () => {
-                if (verificationCaptured) return;
-                await hands.send({ image: video });
-            },
-            width: 640, height: 480
-        });
-        camera.start();
-        document.getElementById('verify-status').innerText = 'System Ready. Raise Hand ✋';
     }
 
-    async function onVerificationResults(results) {
-        if (verificationCaptured) return;
-        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-            // Hand detected! Any gesture is accepted.
-            const now = Date.now();
-            if (now - lastGestureTime > 2000) {
-                lastGestureTime = now;
-                captureVerification();
+    async function processLivenessFrame(video, statusEl) {
+        if (livenessState === LIVENESS_STATE.DONE || verificationCaptured) return;
+        
+        if (video.readyState >= 2) {
+            // Use TinyFaceDetector for fast real-time tracking
+            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
+            
+            if (!detection) {
+                if (livenessState !== LIVENESS_STATE.CAPTURE_WAIT) {
+                    statusEl.innerText = 'Please look straight at the camera.';
+                    statusEl.style.color = '#ef4444';
+                    livenessState = LIVENESS_STATE.WAITING_FACE;
+                }
+            } else {
+                const nose = detection.landmarks.getNose()[3];
+                const leftCheek = detection.landmarks.getJawOutline()[0];
+                const rightCheek = detection.landmarks.getJawOutline()[16];
+                
+                const distLeft = nose.x - leftCheek.x;
+                const distRight = rightCheek.x - nose.x;
+                
+                // Ratio tells us which way the head is turned
+                const ratio = distLeft / (distRight || 1);
+                
+                if (livenessState === LIVENESS_STATE.WAITING_FACE) {
+                    if (ratio > 0.7 && ratio < 1.3) {
+                        livenessState = LIVENESS_STATE.LOOK_LEFT;
+                    } else {
+                        statusEl.innerText = 'Look STRAIGHT to start.';
+                        statusEl.style.color = '#f59e0b';
+                    }
+                }
+                
+                if (livenessState === LIVENESS_STATE.LOOK_LEFT) {
+                    statusEl.innerText = 'Good! Now turn your head slowly LEFT... ⬅️';
+                    statusEl.style.color = '#3b82f6';
+                    if (ratio < 0.5) {
+                        livenessState = LIVENESS_STATE.LOOK_RIGHT;
+                    }
+                }
+                else if (livenessState === LIVENESS_STATE.LOOK_RIGHT) {
+                    statusEl.innerText = 'Great! Now turn your head slowly RIGHT... ➡️';
+                    statusEl.style.color = '#3b82f6';
+                    if (ratio > 2.0) {
+                        livenessState = LIVENESS_STATE.LOOK_FRONT;
+                    }
+                }
+                else if (livenessState === LIVENESS_STATE.LOOK_FRONT) {
+                    statusEl.innerText = 'Excellent! Look FRONT. Hold still... 📷';
+                    statusEl.style.color = '#10b981';
+                    if (ratio > 0.7 && ratio < 1.3) {
+                        livenessState = LIVENESS_STATE.CAPTURE_WAIT;
+                        setTimeout(() => {
+                            if (!verificationCaptured) captureVerification();
+                        }, 1000); // Capture after 1 second of looking front
+                    }
+                }
             }
+        }
+        
+        if (!verificationCaptured && livenessState !== LIVENESS_STATE.DONE) {
+            setTimeout(() => {
+                requestAnimationFrame(() => processLivenessFrame(video, statusEl));
+            }, 100); // 10 FPS is perfectly smooth for this
         }
     }
 
     async function captureVerification() {
+        if (verificationCaptured) return;
+        livenessState = LIVENESS_STATE.DONE;
+        
         const video = document.getElementById('verify-video');
         const canvas = document.getElementById('verify-canvas');
         const status = document.getElementById('verify-status');
         status.innerText = 'Capturing & Analyzing...';
+        status.style.color = '#10b981';
 
-        // High accuracy detection for verification image
+        // High accuracy detection for verification image using SSD Mobilenet
         const fullDetection = await faceapi.detectSingleFace(video, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceDescriptor().withAgeAndGender();
         
         if (!fullDetection) {
-            status.innerText = 'Face not detected! Please look at the camera.';
+            status.innerText = 'Face not clear. Let\'s try again.';
             status.style.color = '#ef4444';
+            livenessState = LIVENESS_STATE.WAITING_FACE;
+            processLivenessFrame(video, status);
             return;
         }
 
         const selectedGender = document.getElementById('id_gender').value;
         const detectedGender = fullDetection.gender;
         if (selectedGender !== 'other' && selectedGender !== detectedGender) {
-            status.innerText = `Gender mismatch! Form says ${selectedGender}, but camera sees ${detectedGender}.`;
+            status.innerText = `Gender mismatch! Form says ${selectedGender}, but camera sees ${detectedGender}. Restarting...`;
             status.style.color = '#ef4444';
+            livenessState = LIVENESS_STATE.WAITING_FACE;
+            processLivenessFrame(video, status);
             return;
         }
 
@@ -1408,7 +1472,6 @@
         verificationBase64 = canvas.toDataURL('image/jpeg', 0.8);
         document.getElementById('verification-image-data').value = verificationBase64;
 
-        if (camera) camera.stop();
         if (verifyStream) verifyStream.getTracks().forEach(t => t.stop());
 
         document.getElementById('verify-camera-ui').style.display = 'none';

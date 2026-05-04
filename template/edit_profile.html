@@ -3,308 +3,409 @@
 
 {% block head %}
 <style>
-    /* ── Root Variables ── */
-    :root {
-        --primary-blue: #2563eb;
-        --secondary-blue: #3b82f6;
-        --soft-blue: #f8fbff;
-        --glass-white: rgba(255, 255, 255, 0.85);
-        --text-dark: #1e3a8a;
-        --text-muted: #64748b;
-        --border-glass: rgba(255, 255, 255, 0.5);
-    }
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-    body {
-        background: #f0f7ff;
-        font-family: 'Inter', sans-serif;
-        color: var(--text-dark);
-    }
+  :root {
+    --bg:         #f0f6ff;
+    --surface:    #ffffff;
+    --surface2:   #eef4ff;
+    --accent:     #2563eb;
+    --accent2:    #3b82f6;
+    --pink:       #ec4899;
+    --success:    #16a34a;
+    --text:       #0f172a;
+    --text-sub:   #475569;
+    --text-muted: #94a3b8;
+    --border:     rgba(37, 99, 235, 0.1);
+    --radius-lg:  20px;
+    --radius-md:  14px;
+    --radius-sm:  10px;
+    --shadow:     0 4px 24px rgba(37, 99, 235, 0.08);
+    --shadow-sm:  0 2px 10px rgba(37, 99, 235, 0.06);
+  }
 
-    .edit-container {
-        max-width: 700px;
-        margin: 0 auto;
-        padding: 40px 20px 120px;
-    }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* ── Premium PFP Header ── */
-    .pfp-header {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-bottom: 40px;
-        text-align: center;
-    }
+  html, body {
+    height: 100dvh; width: 100vw;
+    overflow: hidden !important;
+    position: fixed; inset: 0;
+    background: var(--bg) !important;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
 
-    .pfp-main-wrap {
-        position: relative;
-        width: 150px; height: 150px;
-    }
+  .container {
+    height: 100dvh !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
 
-    .pfp-main {
-        width: 150px; height: 150px;
-        border-radius: 40px; /* Modern squircle */
-        object-fit: cover;
-        border: 4px solid white;
-        box-shadow: 0 20px 40px rgba(37, 99, 235, 0.15);
-        transition: 0.4s;
-    }
-    .pfp-main-wrap:hover .pfp-main { transform: scale(1.02) rotate(-2deg); }
+  .edit-container {
+    flex: 1;
+    overflow-y: auto; overflow-x: hidden;
+    width: 100%; max-width: 600px; margin: 0 auto;
+    padding: max(16px, env(safe-area-inset-top)) 18px max(110px, env(safe-area-inset-bottom)) 18px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .edit-container::-webkit-scrollbar { display: none; }
 
-    .pfp-edit-btn {
-        position: absolute;
-        bottom: -10px; right: -10px;
-        background: var(--primary-blue);
-        color: white;
-        width: 48px; height: 48px;
-        border-radius: 18px;
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer;
-        border: 4px solid white;
-        box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
-        transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .pfp-edit-btn:hover { transform: scale(1.15) rotate(15deg); background: var(--secondary-blue); }
+  /* Back Button */
+  .back-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--text-sub); text-decoration: none;
+    font-size: 14px; font-weight: 600;
+    padding: 10px 0; margin-bottom: 4px;
+    transition: color 0.2s;
+  }
+  .back-btn:hover { color: var(--text); }
 
-    .pfp-header h2 {
-        font-size: 28px; font-weight: 900; letter-spacing: -1px; margin: 20px 0 5px;
-    }
-    .pfp-header p {
-        font-size: 14px; font-weight: 700; color: var(--text-muted);
-    }
+  /* Profile Header */
+  .pfp-header {
+    display: flex; flex-direction: column;
+    align-items: center; text-align: center;
+    padding: 20px 0 28px; gap: 0;
+  }
 
-    /* ── Tab Switcher ── */
-    .edit-tabs {
-        display: flex;
-        background: rgba(37, 99, 235, 0.05);
-        padding: 6px;
-        border-radius: 24px;
-        margin-bottom: 30px;
-        position: sticky; top: 20px;
-        z-index: 1000;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        gap: 6px;
-    }
+  .pfp-main-wrap {
+    position: relative;
+    width: 104px; height: 104px;
+    margin-bottom: 16px;
+  }
 
-    .tab-btn {
-        flex: 1;
-        padding: 12px;
-        border: none; background: none;
-        border-radius: 18px;
-        font-size: 13px; font-weight: 800;
-        color: var(--text-muted);
-        cursor: pointer;
-        transition: 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-        display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
+  .pfp-ring {
+    position: absolute; inset: -3px;
+    border-radius: 36px;
+    background: linear-gradient(135deg, var(--pink), var(--accent), var(--accent2));
+    z-index: 0;
+    animation: ring-spin 4s linear infinite;
+  }
+  @keyframes ring-spin { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
 
-    .tab-btn.active {
-        background: white;
-        color: var(--primary-blue);
-        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1);
-        transform: scale(1.02);
-    }
+  .pfp-main {
+    position: relative; z-index: 1;
+    width: 100%; height: 100%;
+    border-radius: 33px; object-fit: cover;
+    border: 3px solid var(--bg); display: block;
+  }
 
-    /* ── Glass Cards ── */
-    .glass-card {
-        background: white;
-        border: 1px solid rgba(37, 99, 235, 0.1);
-        border-radius: 32px;
-        padding: 30px;
-        margin-bottom: 25px;
-        box-shadow: 0 15px 40px rgba(37, 99, 235, 0.04);
-    }
+  .pfp-edit-btn {
+    position: absolute; bottom: -6px; right: -6px; z-index: 2;
+    background: var(--accent); color: white;
+    width: 36px; height: 36px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; border: 3px solid var(--bg); font-size: 13px;
+    box-shadow: var(--shadow-sm); transition: background 0.2s, transform 0.2s;
+  }
+  .pfp-edit-btn:hover { background: var(--accent2); transform: scale(1.1); }
 
-    /* ── Section Visibility ── */
-    .edit-section {
-        display: none;
-        opacity: 0;
-        transform: translateY(20px);
-        transition: opacity 0.4s, transform 0.4s;
-    }
+  .spark-badge {
+    position: absolute; top: -8px; left: -8px; z-index: 3;
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: white; padding: 4px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 800; border: 2px solid var(--bg);
+    display: flex; align-items: center; gap: 4px;
+    box-shadow: 0 4px 12px rgba(245,158,11,0.4);
+  }
 
-    .edit-section.active {
-        display: block;
-        opacity: 1;
-        transform: translateY(0);
-    }
+  .pfp-name {
+    font-size: 26px; font-weight: 800;
+    letter-spacing: -0.8px; line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .pfp-sub { font-size: 13px; color: var(--text-sub); font-weight: 500; margin-bottom: 20px; }
 
-    .glass-card h3 {
-        font-size: 18px; font-weight: 900; color: var(--text-dark);
-        margin-bottom: 25px; display: flex; align-items: center; gap: 12px;
-    }
-    .glass-card h3 i { color: var(--primary-blue); font-size: 20px; }
+  .pfp-actions { display: flex; gap: 10px; }
 
-    /* ── Form Controls ── */
-    .form-group { margin-bottom: 25px; }
-    .form-group label {
-        display: block; font-size: 13px; font-weight: 800;
-        color: var(--text-muted); text-transform: uppercase;
-        margin-bottom: 10px; letter-spacing: 0.5px;
-    }
+  .btn-pill {
+    text-decoration: none;
+    padding: 10px 20px; border-radius: 40px;
+    font-size: 13px; font-weight: 700;
+    display: inline-flex; align-items: center; gap: 7px;
+    transition: all 0.2s; border: none; cursor: pointer; min-height: 42px;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-pill.primary {
+    background: var(--accent); color: white;
+    box-shadow: 0 4px 20px rgba(99,102,241,0.4);
+  }
+  .btn-pill.primary:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn-pill.ghost {
+    background: var(--surface); color: var(--text-sub);
+    border: 1px solid var(--border);
+  }
+  .btn-pill.ghost:hover { color: var(--text); background: var(--surface2); }
 
-    .form-control {
-        width: 100%; padding: 16px 20px;
-        border: 1px solid rgba(37, 99, 235, 0.12);
-        border-radius: 18px;
-        background: white;
-        font-size: 15px; font-weight: 600;
-        color: var(--text-dark);
-        transition: 0.4s;
-        box-sizing: border-box;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.04);
-    }
-    .form-control:focus {
-        border-color: var(--primary-blue);
-        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.08);
-        transform: translateY(-2px);
-        outline: none;
-    }
+  /* Tabs */
+  .edit-tabs {
+    display: flex;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 5px; margin-bottom: 28px; gap: 4px;
+    position: sticky; top: max(8px, env(safe-area-inset-top));
+    z-index: 100;
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  }
+  .tab-btn {
+    flex: 1; min-height: 40px;
+    border: none; background: none; border-radius: 11px;
+    font-size: 12px; font-weight: 700; color: var(--text-muted);
+    cursor: pointer; transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    font-family: 'Inter', sans-serif;
+  }
+  .tab-btn.active { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(99,102,241,0.35); }
+  @media (max-width: 420px) {
+    .edit-tabs { overflow-x: auto; scrollbar-width: none; white-space: nowrap; }
+    .edit-tabs::-webkit-scrollbar { display: none; }
+    .tab-btn { flex-shrink: 0; padding: 0 14px; font-size: 11px; }
+  }
 
-    /* ── Searchable Dropdown Chips ── */
-    .selected-chips-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-    .chip {
-        background: #eff6ff; color: var(--primary-blue);
-        border: 1px solid rgba(37, 99, 235, 0.1);
-        padding: 6px 14px; border-radius: 14px;
-        font-size: 13px; font-weight: 700;
-        display: inline-flex; align-items: center; gap: 8px;
-    }
-    .chip i { cursor: pointer; opacity: 0.6; transition: 0.2s; }
-    .chip i:hover { color: #ef4444; opacity: 1; }
+  /* Section visibility */
+  .edit-section { display: none; opacity: 0; transform: translateY(10px); transition: opacity 0.3s, transform 0.3s; }
+  .edit-section.active { display: block; opacity: 1; transform: translateY(0); }
 
-    /* ── Modern Steppers ── */
-    .inline-stepper {
-        display: flex; align-items: center; justify-content: space-between;
-        background: white; border-radius: 20px; padding: 8px;
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.04);
-        border: 1px solid rgba(37, 99, 235, 0.1);
-    }
-    .stepper-btn {
-        width: 44px; height: 44px; border-radius: 14px;
-        border: none; background: #f8fbff;
-        color: var(--primary-blue); font-size: 16px;
-        cursor: pointer; transition: 0.3s;
-    }
-    .stepper-btn:hover { background: var(--primary-blue); color: white; transform: scale(1.1); }
-    
-    .stepper-value { font-size: 24px; font-weight: 900; color: var(--text-dark); }
-    .stepper-label { font-size: 14px; font-weight: 700; color: var(--text-muted); margin-left: 5px; }
+  /* Card / section headers */
+  .glass-card { margin-bottom: 32px; }
+  .glass-card h3 {
+    font-size: 10px; font-weight: 800; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1.8px;
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .glass-card h3 i { color: var(--accent); font-size: 12px; }
 
-    /* ── Dual Stepper for Range ── */
-    .dual-stepper-container {
-        display: flex; align-items: center; justify-content: space-between;
-        background: white; border-radius: 24px; padding: 20px;
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.04);
-        border: 1px solid rgba(37, 99, 235, 0.1);
-        gap: 15px;
-    }
-    .stepper-box { flex: 1; text-align: center; }
-    .stepper-title { font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 12px; }
-    .stepper-controls { display: flex; align-items: center; justify-content: center; gap: 15px; }
+  /* Form groups */
+  .form-group { margin-bottom: 12px; }
+  .form-group > label {
+    display: block; font-size: 10px; font-weight: 700;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.2px;
+    margin-bottom: 8px; margin-left: 2px;
+  }
 
-    /* ── Floating Save Button ── */
-    .save-btn-fixed {
-        position: fixed; bottom: 30px; right: 30px;
-        width: 64px; height: 64px;
-        border-radius: 22px;
-        background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
-        color: white; border: none;
-        box-shadow: 0 15px 35px rgba(37, 99, 235, 0.35);
-        z-index: 2000;
-        cursor: pointer;
-        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .save-btn-fixed:hover { transform: translateY(-8px) scale(1.05); box-shadow: 0 20px 45px rgba(37, 99, 235, 0.45); }
-    .save-btn-fixed i { font-size: 26px; }
+  /* Inputs, textareas, selects */
+  .form-control, .dropdown-search-box {
+    width: 100%; padding: 15px 18px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 15px; font-weight: 600; color: var(--text);
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box; outline: none;
+    -webkit-appearance: none; appearance: none;
+  }
+  textarea.form-control { resize: none; min-height: 108px; line-height: 1.65; }
+  select.form-control {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 16px center; padding-right: 40px;
+  }
+  .form-control:focus, .dropdown-search-box:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+  }
+  .form-control::placeholder, .dropdown-search-box::placeholder { color: var(--text-muted); font-weight: 500; }
+  select option { background: var(--surface); color: var(--text); }
 
-    /* Gallery Grid & Items */
-    .gallery-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-        gap: 15px;
-        margin-top: 20px;
-    }
+  /* Tags / Chips */
+  .selected-chips-list { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(99,102,241,0.15); color: var(--accent2);
+    border: 1px solid rgba(99,102,241,0.25);
+    padding: 6px 12px; border-radius: 30px;
+    font-size: 12px; font-weight: 700;
+  }
+  .chip i { cursor: pointer; color: var(--text-muted); font-size: 11px; transition: color 0.15s; }
+  .chip i:hover { color: var(--pink); }
 
-    .gallery-item {
-        position: relative;
-        aspect-ratio: 1;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.06);
-        background: #f1f5f9;
-        transition: 0.3s;
-    }
-    .gallery-item:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); }
-    .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+  /* Dropdown list */
+  .dropdown-list {
+    display: none; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-md); margin-top: 6px;
+    max-height: 200px; overflow-y: auto;
+    box-shadow: var(--shadow); z-index: 999;
+  }
+  .dropdown-item {
+    padding: 12px 16px; font-size: 14px; font-weight: 500;
+    color: var(--text-sub); cursor: pointer;
+    border-bottom: 1px solid var(--border); transition: background 0.15s, color 0.15s;
+  }
+  .dropdown-item:last-child { border-bottom: none; }
+  .dropdown-item:hover { background: rgba(99,102,241,0.12); color: var(--text); }
 
-    .gallery-delete {
-        position: absolute; top: 8px; right: 8px;
-        width: 28px; height: 28px;
-        background: rgba(239, 68, 68, 0.9); color: white;
-        border-radius: 10px; display: flex; align-items: center; justify-content: center;
-        font-size: 12px; backdrop-filter: blur(4px);
-        transition: 0.2s; text-decoration: none;
-    }
-    .gallery-delete:hover { transform: scale(1.1); background: #ef4444; }
+  /* Age stepper */
+  .inline-stepper {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 10px;
+  }
+  .stepper-btn {
+    width: 44px; height: 44px; border-radius: var(--radius-sm);
+    border: none; background: var(--surface2);
+    color: var(--accent2); font-size: 15px;
+    cursor: pointer; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Inter', sans-serif;
+  }
+  .stepper-btn:hover { background: var(--accent); color: white; }
+  .stepper-value { font-size: 26px; font-weight: 900; color: var(--text); }
+  .stepper-label { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-left: 4px; }
 
-    .gallery-add {
-        aspect-ratio: 1; border-radius: 20px;
-        border: 3px dashed rgba(37, 99, 235, 0.1);
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        gap: 8px; cursor: pointer; color: var(--text-muted); transition: 0.3s;
-        font-size: 12px; font-weight: 700;
-    }
-    .gallery-add:hover { border-color: var(--primary-blue); color: var(--primary-blue); background: #f0f7ff; }
+  /* Dual stepper (age range) */
+  .dual-stepper-container {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px; gap: 10px;
+  }
+  .stepper-box { flex: 1; text-align: center; }
+  .stepper-title {
+    font-size: 10px; font-weight: 800; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+  }
+  .stepper-btn.small { width: 44px; height: 44px; min-width: 44px; border-radius: var(--radius-sm); font-size: 14px; }
+  .stepper-value.small { font-size: 22px; }
+  .stepper-controls { display: flex; align-items: center; justify-content: center; gap: 14px; }
+  .stepper-divider { color: var(--text-muted); font-size: 18px; }
+  @media (max-width: 420px) {
+    .dual-stepper-container { flex-direction: column; }
+    .stepper-divider { transform: rotate(90deg); }
+  }
 
-    /* Loader Overlay Fix */
-    .upload-overlay {
-        display: none; position: fixed; inset: 0;
-        background: rgba(30, 58, 138, 0.85); backdrop-filter: blur(15px);
-        z-index: 9999; flex-direction: column; align-items: center; justify-content: center;
-        color: white; gap: 20px;
-    }
-    .loader {
-        width: 48px; height: 48px; border: 5px solid rgba(255,255,255,0.2);
-        border-top-color: white; border-radius: 50%;
-        animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
+  /* Toggle switch */
+  .discover-row {
+    display: flex; align-items: center;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 16px 18px; gap: 14px;
+  }
+  .discover-text { flex: 1; }
+  .discover-text strong { font-size: 14px; font-weight: 700; color: var(--text); display: block; margin-bottom: 3px; }
+  .discover-text span { font-size: 12px; color: var(--text-muted); }
+
+  .toggle-switch { position: relative; flex-shrink: 0; }
+  .toggle-switch input[type=checkbox] { position: absolute; opacity: 0; width: 0; height: 0; }
+  .toggle-switch label {
+    display: block; width: 48px; height: 28px;
+    background: var(--surface2); border-radius: 14px;
+    cursor: pointer; transition: background 0.3s;
+    border: 1px solid var(--border);
+  }
+  .toggle-switch label::after {
+    content: ''; position: absolute; top: 4px; left: 4px;
+    width: 20px; height: 20px; background: white; border-radius: 50%;
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  }
+  .toggle-switch input:checked + label { background: var(--success); border-color: var(--success); }
+  .toggle-switch input:checked + label::after { transform: translateX(20px); }
+
+  /* Gallery */
+  .gallery-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px;
+  }
+  @media (min-width: 480px) { .gallery-grid { grid-template-columns: repeat(4, 1fr); } }
+  .gallery-item {
+    position: relative; aspect-ratio: 1;
+    border-radius: var(--radius-md); overflow: hidden;
+    background: var(--surface2); transition: transform 0.2s;
+    border: 1px solid var(--border);
+  }
+  .gallery-item:hover { transform: scale(1.03); }
+  .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .gallery-delete {
+    position: absolute; top: 7px; right: 7px;
+    width: 28px; height: 28px;
+    background: rgba(255,255,255,0.85); color: #64748b;
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; text-decoration: none; backdrop-filter: blur(6px); transition: all 0.2s;
+  }
+  .gallery-delete:hover { background: #ef4444; color: white; }
+  .gallery-add {
+    aspect-ratio: 1; border-radius: var(--radius-md);
+    border: 2px dashed var(--border);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 6px; cursor: pointer; color: var(--text-muted);
+    font-size: 11px; font-weight: 700; transition: border-color 0.2s, color 0.2s;
+  }
+  .gallery-add:hover { border-color: var(--accent); color: var(--accent2); }
+  .gallery-add i { font-size: 20px; }
+
+  .gallery-note {
+    font-size: 12px; color: var(--text-muted);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 14px;
+    display: flex; gap: 8px; align-items: flex-start;
+  }
+  .gallery-note i { color: var(--accent2); margin-top: 1px; flex-shrink: 0; }
+
+  /* Floating Save */
+  .save-btn-fixed {
+    position: fixed;
+    bottom: max(88px, env(safe-area-inset-bottom));
+    right: max(16px, env(safe-area-inset-right));
+    width: 58px; height: 58px; border-radius: 20px;
+    background: var(--accent); color: white; border: none;
+    box-shadow: 0 8px 30px rgba(99,102,241,0.5);
+    z-index: 2000; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275), box-shadow 0.3s;
+  }
+  .save-btn-fixed i { font-size: 22px; }
+  .save-btn-fixed:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 16px 40px rgba(99,102,241,0.6); }
+  .save-btn-fixed:active { transform: scale(0.95); }
+
+  /* Overlay */
+  .upload-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(240, 246, 255, 0.9); backdrop-filter: blur(16px);
+    z-index: 9999; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: var(--text); gap: 18px;
+  }
+  .loader {
+    width: 44px; height: 44px;
+    border: 4px solid rgba(37, 99, 235, 0.15);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .hint { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
 </style>
 
 </style>
 {% endblock %}
 
+
 {% block body %}
 <div class="edit-container">
-    <div style="padding: 10px 20px;">
-        <a href="{% url 'view_profile' profile.id %}" class="chat-back" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: white; border-radius: 14px; text-decoration: none; color: var(--text-muted); box-shadow: 0 8px 15px rgba(0,0,0,0.04);">
-            <i class="fas fa-chevron-left"></i>
-        </a>
-    </div>
+    <a href="{% url 'view_profile' profile.id %}" class="back-btn">
+        <i class="fas fa-chevron-left"></i> Back
+    </a>
 
     <div class="pfp-header">
         <div class="pfp-main-wrap">
+            <div class="pfp-ring"></div>
             <img src="{{ profile.get_profile_pic_url }}" alt="Me" class="pfp-main" id="preview-pfp">
             <label for="id_pfp_instant" class="pfp-edit-btn" id="pfp-edit-label">
                 <i class="fas fa-camera"></i>
             </label>
             {% if spark_count > 0 %}
-            <div style="position: absolute; top: -10px; right: -10px; background: linear-gradient(135deg, #f59e0b, #fbbf24); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 900; box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3); border: 2px solid white; display: flex; align-items: center; gap: 6px;">
-                <i class="fas fa-bolt"></i> {{ spark_count }}
-            </div>
+            <div class="spark-badge"><i class="fas fa-bolt"></i> {{ spark_count }}</div>
             {% endif %}
         </div>
-        <h2>{{ profile.name }}</h2>
-        <p>{{ profile.campus_display }} • {{ profile.age }} yrs</p>
-        
-        <div style="margin-top: 20px; display: flex; gap: 10px;">
-            <a href="{% url 'settings' %}" style="text-decoration: none; background: white; color: var(--text-dark); border: 1px solid rgba(0,0,0,0.05); padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.03); transition: 0.3s;">
-                <i class="fas fa-cog"></i> Settings
+        <div class="pfp-name">{{ profile.name }}</div>
+        <div class="pfp-sub">{{ profile.campus_display }} &bull; {{ profile.age }} yrs</div>
+        <div class="pfp-actions">
+            <a href="{% url 'view_profile' profile.id %}" class="btn-pill primary">
+                <i class="fas fa-eye"></i> View
             </a>
-            <a href="{% url 'view_profile' profile.id %}" style="text-decoration: none; background: var(--primary-blue); color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2); transition: 0.3s;">
-                <i class="fas fa-eye"></i> View Profile
+            <a href="{% url 'settings' %}" class="btn-pill ghost">
+                <i class="fas fa-cog"></i> Settings
             </a>
         </div>
     </div>
@@ -523,10 +624,10 @@
                 </div>
 
                 <div class="form-group">
-                    <div style="display: flex; align-items: flex-start; gap: 12px; background: white; padding: 16px; border-radius: 20px; border: 1px solid rgba(37, 99, 235, 0.1); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.03);">
-                        <div style="flex: 1;">
-                            <label for="id_is_discoverable" style="margin-bottom: 4px; cursor: pointer; text-transform: none; font-size: 14px; color: var(--text-dark);">Make my profile discoverable</label>
-                            <p style="font-size: 11px; color: var(--text-muted); margin: 0;">When enabled, your profile will appear in the match feed and other users can discover you.</p>
+                    <div class="discover-row">
+                        <div class="discover-text">
+                            <strong>Show me in match feed</strong>
+                            <span>When enabled, your profile appears to other users in discovery.</span>
                         </div>
                         <div class="toggle-switch">
                             <input type="checkbox" name="is_discoverable" id="id_is_discoverable" {% if profile.is_discoverable %}checked{% endif %}>
@@ -542,26 +643,30 @@
         </button>
     </form>
 
-    <!-- Gallery Section (Separate Form) -->
-    <div id="section-gallery" class="edit-section">
-        <div class="glass-card">
-            <h3><i class="fas fa-images"></i> Photo Gallery <span style="font-size: 12px; margin-left: auto;">{{ gallery.count }}/5</span></h3>
-            <div class="gallery-grid">
-                {% for img in gallery %}
-                <div class="gallery-item">
-                    <img src="{{ img.get_image_url }}" alt="Gallery">
-                    <a href="{% url 'delete_profile_image' img.id %}" class="gallery-delete" onclick="handleDeletePhoto(event, this.href)">
-                        <i class="fas fa-times"></i>
-                    </a>
+        <!-- Gallery Section -->
+        <div id="section-gallery" class="edit-section">
+            <div class="glass-card">
+                <h3><i class="fas fa-images"></i> Photo Gallery &nbsp; <span style="font-weight: 500; color: var(--text-muted);">{{ gallery.count }}/5</span></h3>
+                <div class="gallery-note">
+                    <i class="fas fa-shield-alt"></i>
+                    All uploads go through an AI NSFW check and are auto-compressed before saving.
                 </div>
-                {% endfor %}
-
-                {% if gallery.count < 5 %}
-                <label for="id_gallery_file" class="gallery-add">
-                    <i class="fas fa-plus"></i>
-                    <span>Add Photo</span>
-                </label>
-                {% endif %}
+                <div class="gallery-grid">
+                    {% for img in gallery %}
+                    <div class="gallery-item">
+                        <img src="{{ img.get_image_url }}" alt="Gallery">
+                        <a href="{% url 'delete_profile_image' img.id %}" class="gallery-delete" onclick="handleDeletePhoto(event, this.href)">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                    {% endfor %}
+                    {% if gallery.count < 5 %}
+                    <label for="id_gallery_file" class="gallery-add">
+                        <i class="fas fa-plus"></i>
+                        <span>Add</span>
+                    </label>
+                    {% endif %}
+                </div>
             </div>
         </div>
         <form method="POST" enctype="multipart/form-data" id="gallery-form" style="display: none;">
@@ -570,14 +675,15 @@
             <input type="file" name="image_file" id="id_gallery_file" onchange="handleGalleryUpload(this)">
         </form>
 
-        <!-- Hidden PFP Upload Form -->
+        <!-- Hidden PFP form -->
         <form method="POST" enctype="multipart/form-data" id="pfp-instant-form" style="display: none;">
             {% csrf_token %}
             <input type="hidden" name="update_pfp_instant" value="1">
             <input type="file" name="profile_pic_file" id="id_pfp_instant" accept="image/*">
         </form>
-    </div>
-</div>
+    </div> <!-- end edit-container -->
+
+    <span id="pfp-face-status" class="pfp-face-status"></span>
 
 <!-- Upload Overlay -->
 <div id="upload-overlay" class="upload-overlay">

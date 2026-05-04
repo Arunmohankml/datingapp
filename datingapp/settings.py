@@ -93,6 +93,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'home.middleware.ExceptionLoggingMiddleware',
+    'home.middleware.BanMiddleware',   # Site-wide IP/fingerprint/user ban enforcement
 ]
 
 ROOT_URLCONF = 'datingapp.urls'

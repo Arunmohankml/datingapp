@@ -215,6 +215,13 @@ class WallImage(models.Model):
 
 
 class Confession(models.Model):
+    MODERATION_STATUS = [
+        ('approved',       'Approved'),
+        ('pending_review', 'Pending Review'),
+        ('rejected',       'Rejected'),
+        ('flagged',        'Flagged'),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     content = models.TextField()
     image = models.URLField(max_length=500, blank=True, null=True)
@@ -223,6 +230,11 @@ class Confession(models.Model):
     likes_count = models.PositiveIntegerField(default=0)
     is_flagged = models.BooleanField(default=False)
     poster_fingerprint = models.CharField(max_length=100, blank=True, null=True)
+    # ── Moderation ──
+    moderation_status = models.CharField(
+        max_length=20, choices=MODERATION_STATUS, default='approved', db_index=True
+    )
+    moderation_reason = models.CharField(max_length=200, blank=True, default='')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -366,9 +378,26 @@ class FCMToken(models.Model):
         return f"Token for {self.user.username} ({self.device_type})"
 
 class BannedIdentifier(models.Model):
-    fingerprint = models.CharField(max_length=100, unique=True)
-    reason = models.TextField(blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    fingerprint  = models.CharField(max_length=100, unique=True)
+    reason       = models.TextField(blank=True)
+    is_shadow_ban = models.BooleanField(
+        default=False,
+        help_text="Shadow ban: user can post but posts are never shown publicly."
+    )
+    created_at   = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Banned: {self.fingerprint}"
+        kind = "Shadow" if self.is_shadow_ban else "Hard"
+        return f"{kind} Ban: {self.fingerprint}"
+
+
+class ConfessionRateLimit(models.Model):
+    """Tracks confession submissions per fingerprint/IP for rate limiting."""
+    identifier   = models.CharField(max_length=200, db_index=True)  # fingerprint or IP
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['submitted_at']
+
+    def __str__(self):
+        return f"RateLimit {self.identifier} @ {self.submitted_at}"

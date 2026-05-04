@@ -152,6 +152,54 @@
         </form>
     </div>
 
+    <!-- Pending Confessions -->
+    <div class="admin-card">
+        <h3><i class="fas fa-clock"></i> Pending Confessions</h3>
+        <div class="item-list">
+            {% for c in pending_confessions %}
+            <div class="item-row" style="flex-direction: column; align-items: stretch; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="item-info">
+                        <div class="item-title">{{ c.content|truncatechars:100 }}</div>
+                        <div class="item-meta">By {{ c.display_name }} • Campus: {{ c.campus|default:"N/A" }}</div>
+                        <div class="item-meta" style="color: #ea580c;">Reason: {{ c.moderation_reason }}</div>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="approve_confession">
+                            <input type="hidden" name="target_id" value="{{ c.id }}">
+                            <button type="submit" class="btn-secondary" style="background: #d1fae5; color: #047857; border-color: #a7f3d0;">Approve</button>
+                        </form>
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="reject_confession">
+                            <input type="hidden" name="target_id" value="{{ c.id }}">
+                            <button type="submit" class="btn-danger">Reject</button>
+                        </form>
+                        {% if c.poster_fingerprint %}
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="shadow_ban_fingerprint">
+                            <input type="hidden" name="fingerprint" value="{{ c.poster_fingerprint }}">
+                            <button type="submit" class="btn-secondary" style="background: #fef08a; color: #854d0e; border-color: #fde047;" title="Shadow Ban Device">Shadow Ban FP</button>
+                        </form>
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="ban_fingerprint">
+                            <input type="hidden" name="fingerprint" value="{{ c.poster_fingerprint }}">
+                            <button type="submit" class="btn-danger" style="background: #000; color: #fff; border-color: #000;" title="Hard Ban Device">Hard Ban FP</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p style="font-size: 14px; color: var(--text-muted);">No pending confessions.</p>
+            {% endfor %}
+        </div>
+    </div>
+
     <!-- Reported Confessions -->
     <div class="admin-card">
         <h3><i class="fas fa-flag"></i> Reported Confessions</h3>
@@ -306,6 +354,40 @@
             </div>
             {% empty %}
             <p style="font-size: 14px; color: var(--text-muted);">No profiles pending review.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Banned Identifiers -->
+    <div class="admin-card">
+        <h3><i class="fas fa-ban"></i> Banned Devices/IPs</h3>
+        <div class="item-list">
+            {% for b in banned_identifiers %}
+            <div class="item-row" style="flex-direction: column; align-items: stretch; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="item-info">
+                        <div class="item-title">{{ b.fingerprint|truncatechars:30 }}</div>
+                        <div class="item-meta">
+                            {% if b.is_shadow_ban %}
+                            <span class="badge" style="background: #fef08a; color: #854d0e; font-size: 10px; padding: 2px 6px; border-radius: 4px;">SHADOW BAN</span>
+                            {% else %}
+                            <span class="badge" style="background: #fee2e2; color: #ef4444; font-size: 10px; padding: 2px 6px; border-radius: 4px;">HARD BAN</span>
+                            {% endif %}
+                            • {{ b.reason|default:"Admin Action" }} • {{ b.created_at|date:"M d, Y" }}
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="unban_fingerprint">
+                            <input type="hidden" name="fingerprint" value="{{ b.fingerprint }}">
+                            <button type="submit" class="btn-secondary" style="background: #f0fdf4; color: #16a34a; border-color: #bbf7d0;">Unban</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p style="font-size: 14px; color: var(--text-muted);">No banned identifiers.</p>
             {% endfor %}
         </div>
     </div>

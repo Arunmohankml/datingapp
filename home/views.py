@@ -1093,23 +1093,26 @@ def wall_api(request):
 def confessions_feed(request):
     sort_by = request.GET.get('sort', 'latest')
     campus_filter = request.GET.get('campus', '')
-    
+
     is_admin = request.user.is_authenticated and request.user.email == 'arunmohankml@gmail.com'
-    
-    confessions = Confession.objects.all().select_related('user__profile')
-    
-    if not is_admin:
-        # For normal users, hide heavily flagged posts if you want, or just show everything
-        pass
+
+    if is_admin:
+        # Admins see everything
+        confessions = Confession.objects.all().select_related('user__profile')
+    else:
+        # Public feed: only approved confessions
+        confessions = Confession.objects.filter(
+            moderation_status='approved'
+        ).select_related('user__profile')
 
     if campus_filter:
         confessions = confessions.filter(campus__iexact=campus_filter)
-        
+
     if sort_by == 'top':
         confessions = confessions.order_by('-likes_count', '-created_at')
     else:
         confessions = confessions.order_by('-created_at')
-        
+
     return render(request, 'confessions.html', {
         'confessions': confessions,
         'current_sort': sort_by,
@@ -1118,34 +1121,113 @@ def confessions_feed(request):
     })
 
 def create_confession(request):
-    if request.method == 'POST':
-        content = request.POST.get('content')
-        is_anonymous = request.POST.get('is_anonymous') == 'true'
-        campus = request.POST.get('campus', '')
-        fingerprint = request.POST.get('fingerprint', '')
-
-        # Check if fingerprint is banned
-        if fingerprint and BannedIdentifier.objects.filter(fingerprint=fingerprint).exists():
-            messages.error(request, "You are banned from posting.")
-            return redirect('confessions_feed')
-
-        user = None
-        if request.user.is_authenticated:
-            if hasattr(request.user, 'profile') and request.user.profile.is_banned:
-                messages.error(request, "You are banned.")
-                return redirect('confessions_feed')
-            user = request.user
-
-        Confession.objects.create(
-            user=user,
-            content=content,
-            image='',
-            campus=campus,
-            is_anonymous=is_anonymous,
-            poster_fingerprint=fingerprint
-        )
-        messages.success(request, 'Confession posted!')
+    if request.method != 'POST':
         return redirect('confessions_feed')
+
+    from .moderation import (
+        check_bad_words, check_duplicate, check_name_mention,
+        check_rate_limit, record_rate_limit, check_shadow_ban
+    )
+
+    content    = request.POST.get('content', '').strip()
+    is_anon    = request.POST.get('is_anonymous') == 'true'
+    campus     = request.POST.get('campus', '')
+    fingerprint = request.POST.get('fingerprint', '').strip()
+    ip = (request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip()
+          or request.META.get('REMOTE_ADDR', ''))
+
+    if not content:
+        messages.error(request, 'Confession cannot be empty.')
+        return redirect('confessions_feed')
+
+    # ── 1. Hard ban check ──
+    if fingerprint and BannedIdentifier.objects.filter(
+        fingerprint=fingerprint, is_shadow_ban=False
+    ).exists():
+        messages.error(request, 'You are banned from posting.')
+        return redirect('confessions_feed')
+
+    user = None
+    if request.user.is_authenticated:
+        if hasattr(request.user, 'profile') and request.user.profile.is_banned:
+            messages.error(request, 'You are banned.')
+            return redirect('confessions_feed')
+        user = request.user
+
+    # ── 2. Rate limit ──
+    allowed, wait = check_rate_limit(fingerprint, ip)
+    if not allowed:
+        mins = max(1, wait // 60)
+        messages.warning(
+            request,
+            f"You\'re posting too fast. Please try again in about {mins} minute(s)."
+        )
+        return redirect('confessions_feed')
+
+    # ── 3. Shadow ban (silent — let them think it posted) ──
+    is_shadow = check_shadow_ban(fingerprint)
+
+    # ── 4. Bad word filter ──
+    bad, word = check_bad_words(content)
+    if bad:
+        record_rate_limit(fingerprint, ip)  # still counts toward rate limit
+        Confession.objects.create(
+            user=user, content=content, campus=campus,
+            is_anonymous=is_anon, poster_fingerprint=fingerprint,
+            moderation_status='rejected',
+            moderation_reason=f'bad_word:{word}'
+        )
+        messages.error(
+            request,
+            'Your confession was rejected because it violates community rules.'
+        )
+        return redirect('confessions_feed')
+
+    # ── 5. Duplicate / near-duplicate ──
+    if check_duplicate(content, fingerprint, user):
+        messages.warning(
+            request,
+            'Duplicate confession detected. Please don\'t spam.'
+        )
+        return redirect('confessions_feed')
+
+    # ── 6. Name mention → pending review ──
+    if check_name_mention(content):
+        record_rate_limit(fingerprint, ip)
+        Confession.objects.create(
+            user=user, content=content, campus=campus,
+            is_anonymous=is_anon, poster_fingerprint=fingerprint,
+            moderation_status='pending_review',
+            moderation_reason='name_mention'
+        )
+        messages.info(
+            request,
+            'Your confession has been sent for admin approval because it may mention a person.'
+        )
+        return redirect('confessions_feed')
+
+    # ── 7. Shadow ban → store but never show ──
+    if is_shadow:
+        record_rate_limit(fingerprint, ip)
+        Confession.objects.create(
+            user=user, content=content, campus=campus,
+            is_anonymous=is_anon, poster_fingerprint=fingerprint,
+            moderation_status='rejected',
+            moderation_reason='shadow_ban'
+        )
+        # Deliberately show success to avoid tipping off the spammer
+        messages.success(request, 'Confession posted! \u2728')
+        return redirect('confessions_feed')
+
+    # ── 8. All clear → approve ──
+    record_rate_limit(fingerprint, ip)
+    Confession.objects.create(
+        user=user, content=content, campus=campus,
+        is_anonymous=is_anon, poster_fingerprint=fingerprint,
+        moderation_status='approved',
+        moderation_reason=''
+    )
+    messages.success(request, 'Confession posted! \u2728')
     return redirect('confessions_feed')
 
 @login_required
@@ -1418,76 +1500,121 @@ def admin_view_user(request, user_id):
 def admin_dashboard(request):
     if not is_admin_check(request.user):
         return HttpResponse("Not authorized", status=403)
-    
-    reported_confessions = Confession.objects.filter(is_flagged=True).order_by('-created_at')
-    user_reports = UserReport.objects.all().order_by('-created_at')
-    all_users = Profile.objects.all().select_related('user').order_by('-created_at')
-    face_reviews = Profile.objects.filter(verification_status='manual_review').select_related('user').order_by('-updated_at')
-    
+
+    reported_confessions = Confession.objects.filter(
+        is_flagged=True
+    ).exclude(moderation_status='rejected').order_by('-created_at')
+
+    pending_confessions = Confession.objects.filter(
+        moderation_status='pending_review'
+    ).order_by('-created_at')
+
+    user_reports  = UserReport.objects.all().order_by('-created_at')
+    all_users     = Profile.objects.all().select_related('user').order_by('-created_at')
+    face_reviews  = Profile.objects.filter(
+        verification_status='manual_review'
+    ).select_related('user').order_by('-updated_at')
+    banned_identifiers = BannedIdentifier.objects.all().order_by('-created_at')[:50]
+
     return render(request, 'admin_dashboard.html', {
-        'reported_confessions': reported_confessions,
-        'user_reports': user_reports,
-        'all_users': all_users,
-        'face_reviews': face_reviews
+        'reported_confessions':  reported_confessions,
+        'pending_confessions':   pending_confessions,
+        'user_reports':          user_reports,
+        'all_users':             all_users,
+        'face_reviews':          face_reviews,
+        'banned_identifiers':    banned_identifiers,
     })
 
 @login_required
 def admin_action(request):
     if not is_admin_check(request.user):
         return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
-    
+
     if request.method == 'POST':
-        action = request.POST.get('action')
+        action    = request.POST.get('action')
         target_id = request.POST.get('target_id')
-        
+
         if action == 'delete_confession':
             Confession.objects.filter(id=target_id).delete()
+
+        elif action == 'approve_confession':
+            Confession.objects.filter(id=target_id).update(
+                moderation_status='approved', is_flagged=False
+            )
+
+        elif action == 'reject_confession':
+            Confession.objects.filter(id=target_id).update(
+                moderation_status='rejected'
+            )
+
         elif action == 'dismiss_confession':
             Confession.objects.filter(id=target_id).update(is_flagged=False)
             ConfessionReport.objects.filter(confession_id=target_id).delete()
+
         elif action == 'delete_user_report':
             UserReport.objects.filter(id=target_id).delete()
+
         elif action == 'clear_wall':
-            # Delete physical images from Supabase first
             wall_images = WallImage.objects.all()
             for img in wall_images:
                 if img.image:
                     delete_from_supabase_by_url(img.image, bucket="images")
-            
-            # Now clear DB
             WallStroke.objects.all().delete()
             WallImage.objects.all().delete()
+
         elif action == 'ban_user':
             profile = get_object_or_404(Profile, id=target_id)
             profile.is_banned = True
             profile.save()
+
         elif action == 'unban_user':
             profile = get_object_or_404(Profile, id=target_id)
             profile.is_banned = False
             profile.save()
-            
+
         elif action == 'delete_user':
             profile = get_object_or_404(Profile, id=target_id)
-            user = profile.user
-            user.delete()  # Cascades to profile and related data
-            
+            profile.user.delete()
+
         elif action == 'approve_face':
             profile = get_object_or_404(Profile, id=target_id)
             profile.verification_status = 'verified'
             profile.is_face_verified = True
             profile.save()
+
         elif action == 'reject_face':
             profile = get_object_or_404(Profile, id=target_id)
             profile.verification_status = 'rejected'
             profile.is_face_verified = False
             profile.save()
+
         elif action == 'ban_fingerprint':
-            fingerprint = request.POST.get('fingerprint')
+            # Hard ban — blocks site access entirely
+            fingerprint = request.POST.get('fingerprint', '').strip()
+            reason      = request.POST.get('reason', 'Admin ban').strip()
             if fingerprint:
-                BannedIdentifier.objects.get_or_create(fingerprint=fingerprint)
-            
+                BannedIdentifier.objects.update_or_create(
+                    fingerprint=fingerprint,
+                    defaults={'is_shadow_ban': False, 'reason': reason}
+                )
+
+        elif action == 'shadow_ban_fingerprint':
+            # Shadow ban — posts silently disappear
+            fingerprint = request.POST.get('fingerprint', '').strip()
+            reason      = request.POST.get('reason', 'Shadow ban').strip()
+            if fingerprint:
+                BannedIdentifier.objects.update_or_create(
+                    fingerprint=fingerprint,
+                    defaults={'is_shadow_ban': True, 'reason': reason}
+                )
+
+        elif action == 'unban_fingerprint':
+            fingerprint = request.POST.get('fingerprint', '').strip()
+            if fingerprint:
+                BannedIdentifier.objects.filter(fingerprint=fingerprint).delete()
+
         return redirect('admin_dashboard')
-    
+
     return redirect('admin_dashboard')
 @login_required
 def announcements_view(request):
