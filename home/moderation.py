@@ -11,35 +11,113 @@ from django.utils import timezone
 from datetime import timedelta
 
 # ─────────────────────────────────────────────────────────────────────────────
-# BAD WORD LIST  (English + transliterated Tamil/Hindi abuse/sexual/hate terms)
+# 1. ADVANCED BAD WORD FILTER TECHNOLOGY
 # ─────────────────────────────────────────────────────────────────────────────
-BAD_WORDS = {
-    # English profanity / sexual
-    "fuck", "fucked", "fucker", "fucking", "fuk", "f*ck", "f**k",
-    "shit", "bullshit", "shithead", "bastard", "bitch", "bitches",
-    "asshole", "ass", "arse", "dick", "dicks", "cock", "cocks",
-    "pussy", "pussies", "cunt", "slut", "whore", "hoe", "hoes",
-    "nigger", "nigga", "faggot", "fag", "retard", "retarded",
-    "rape", "raped", "rapist", "molest", "molested", "pedophile",
-    "penis", "vagina", "boob", "boobs", "tit", "tits", "nude", "nudes",
-    "naked", "sex", "sexy", "sexting", "porn", "porno", "pornography",
-    "masturbate", "masturbation", "horny", "boner", "blowjob",
-    "handjob", "threesome", "gangbang", "lust", "lusty",
-    "prostitute", "escort", "hookup", "hook-up", "one night stand",
-    # Hate / threats
-    "kill", "killing", "murder", "terrorist", "terrorism", "suicide",
-    "bomb", "explode", "shoot", "shooter", "hang", "lynch", "die bitch",
-    "kys", "kill yourself", "go kill",
+
+BLOCKED_WORDS = [
+    # User provided words
+    "fuck", "fucking", "fucker", "fucked", "fk", "fuk", "fck",
+    "shit", "shitty", "bullshit",
+    "ass", "asshole", "bitch", "bitches", "bastard",
+    "dick", "cock", "pussy", "cunt", "slut", "whore",
+    "sex", "sexy", "horny", "nude", "nudes", "porn",
+    "boobs", "boob", "tits", "tit", "butt",
+    "motherfucker", "mf", "wtf", "damn",
     # Transliterated Tamil abuse
     "punda", "pundai", "thevdiya", "thevidiya", "myiru", "otha", "oothu",
     "sunni", "koothi", "soothu", "naaiku", "naaye", "pottai", "kena",
-    "sakkadam", "oombu", "oombu", "kaai", "lavada", "lavde", "lavdya",
+    "sakkadam", "oombu", "kaai", "lavada", "lavde", "lavdya",
     # Transliterated Hindi abuse
     "madarchod", "behenchod", "chutiya", "chut", "lund", "gaand",
     "bhosdike", "bhosdi", "randi", "suar", "harami", "haramzada",
     "kamina", "kamini", "sala", "saali", "kutte", "kamine",
-    # Variations / leet speak patterns handled by normalize()
-}
+]
+
+STRICT_WORDS = {"ass", "sex", "tit", "butt", "fk", "mf", "wtf"}
+
+LEET_MAP = str.maketrans({
+    "0": "o",
+    "1": "i",
+    "!": "i",
+    "3": "e",
+    "4": "a",
+    "@": "a",
+    "5": "s",
+    "$": "s",
+    "7": "t",
+    "+": "t",
+    "8": "b",
+})
+
+
+def normalize_text_tech(text: str) -> str:
+    text = text.lower().translate(LEET_MAP)
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+    return text
+
+
+def remove_repeats(text: str) -> str:
+    return re.sub(r"(.)\1+", r"\1", text)
+
+
+def compact_text(text: str) -> str:
+    text = normalize_text_tech(text)
+    text = re.sub(r"[^a-z]", "", text)
+    return remove_repeats(text)
+
+
+def normalized_words(text: str) -> list[str]:
+    text = normalize_text_tech(text)
+    text = re.sub(r"[^a-z\s]", " ", text)
+    words = text.split()
+    return [remove_repeats(word) for word in words]
+
+
+def check_bad_words(message: str) -> dict:
+    """
+    Advanced detection using compact text comparison and normalized word sets.
+    Returns: {"safe": bool, "detected": list, "status": str}
+    """
+    compact = compact_text(message)
+    words = normalized_words(message)
+
+    detected = []
+
+    for bad_word in BLOCKED_WORDS:
+        clean_bad = compact_text(bad_word)
+
+        if clean_bad in STRICT_WORDS:
+            # For short/strict words, only flag if it's a standalone word
+            if clean_bad in words:
+                detected.append(bad_word)
+        else:
+            # For others, check both standalone and substring (compact)
+            if clean_bad in words or clean_bad in compact:
+                detected.append(bad_word)
+
+    detected = sorted(set(detected))
+
+    return {
+        "safe": len(detected) == 0,
+        "detected": detected,
+        "status": "verified" if len(detected) == 0 else "warning"
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HELPERS FOR DUPLICATE DETECTION
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _normalize(text: str) -> str:
+    """Compatible normalization for duplicate detection."""
+    return normalize_text_tech(text)
+
+
+def _word_set(text: str) -> set:
+    """Compatible word set for Jaccard similarity."""
+    return set(normalized_words(text))
+
 
 # Common Indian first names for name-detection heuristic
 COMMON_NAMES = {
@@ -55,49 +133,6 @@ COMMON_NAMES = {
     "sneha", "subash", "sudha", "suresh", "swetha", "tamil", "thiru",
     "usha", "venkat", "vijay", "vikram", "vinoth", "vishal", "yuvan",
 }
-
-
-def _normalize(text: str) -> str:
-    """Lowercase, strip accents, remove punctuation/spaces for comparison."""
-    text = text.lower()
-    text = unicodedata.normalize("NFKD", text)
-    text = re.sub(r"[^a-z0-9\s]", "", text)
-    text = re.sub(r"\s+", " ", text).strip()
-    return text
-
-
-def _word_set(text: str) -> set:
-    return set(_normalize(text).split())
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 1. BAD WORD FILTER
-# ─────────────────────────────────────────────────────────────────────────────
-def check_bad_words(text: str):
-    """
-    Returns (True, matched_word) if bad content found, else (False, '').
-    Uses word-boundary matching and leet-speak normalization.
-    """
-    norm = _normalize(text)
-    words = norm.split()
-
-    # Direct word check
-    for word in words:
-        if word in BAD_WORDS:
-            return True, word
-
-    # Substring check for compounds (e.g. "what_the_fuck")
-    for bw in BAD_WORDS:
-        if len(bw) > 4 and bw in norm:
-            return True, bw
-
-    # Leet-speak: replace common substitutions and re-check
-    leet = norm.replace("0", "o").replace("1", "i").replace("3", "e").replace("@", "a").replace("$", "s")
-    for word in leet.split():
-        if word in BAD_WORDS:
-            return True, word
-
-    return False, ""
 
 
 # ─────────────────────────────────────────────────────────────────────────────

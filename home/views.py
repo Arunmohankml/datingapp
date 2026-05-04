@@ -1170,14 +1170,15 @@ def create_confession(request):
     is_shadow = check_shadow_ban(fingerprint)
 
     # ── 4. Bad word filter ──
-    bad, word = check_bad_words(content)
-    if bad:
+    bad_word_result = check_bad_words(content)
+    if not bad_word_result["safe"]:
         record_rate_limit(fingerprint, ip)  # still counts toward rate limit
+        detected_str = ", ".join(bad_word_result["detected"])
         Confession.objects.create(
             user=user, content=content, campus=campus,
             is_anonymous=is_anon, poster_fingerprint=fingerprint,
             moderation_status='pending_review',
-            moderation_reason=f'bad_word:{word}'
+            moderation_reason=f'bad_word:{detected_str}'
         )
         messages.info(
             request,
