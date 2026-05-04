@@ -78,7 +78,8 @@ from django.utils import timezone
 
 from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm
-from .supabase_utils import upload_to_supabase, delete_from_supabase_by_url
+from .supabase_utils import delete_from_supabase_by_url
+from .cloudinary_utils import upload_to_cloudinary, upload_base64_to_cloudinary
 # AI imports moved inside functions to prevent Vercel crashes
 
 # Safe print for Windows console encoding issues
@@ -116,9 +117,8 @@ def complete_profile(request):
                 if verify_status == 'verified':
                     new_profile.is_face_verified = True
             elif verify_data:
-                # Fallback: Save base64 to Supabase on server
-                from .supabase_utils import upload_base64_to_supabase
-                verify_url, _ = upload_base64_to_supabase(verify_data, bucket="images", path="verification")
+                # Fallback: Save base64 to Cloudinary on server
+                verify_url = upload_base64_to_cloudinary(verify_data, folder="srm_match/verification_images")
                 if verify_url:
                     new_profile.verification_image = verify_url
                     new_profile.verification_status = verify_status
@@ -129,7 +129,7 @@ def complete_profile(request):
             if pic_url:
                 new_profile.profile_pic = pic_url
             elif 'profile_pic_file' in request.FILES:
-                img_url = upload_to_supabase(request.FILES['profile_pic_file'], bucket="images", path="profile_pics")
+                img_url = upload_to_cloudinary(request.FILES['profile_pic_file'], folder="srm_match/profile_pics")
                 if img_url:
                     new_profile.profile_pic = img_url
                 else:
@@ -150,7 +150,7 @@ def complete_profile(request):
             else:
                 gallery_files = request.FILES.getlist('gallery_images')
                 for gf in gallery_files:
-                    img_url = upload_to_supabase(gf, bucket="images", path="gallery")
+                    img_url = upload_to_cloudinary(gf, folder="srm_match/gallery_images")
                     if img_url: ProfileImage.objects.create(profile=new_profile, image=img_url)
 
             messages.success(request, "Profile created!")
@@ -1123,6 +1123,61 @@ def wall_api(request):
             from .pusher_utils import broadcast_event
             broadcast_event('wall', event_type, payload)
             return JsonResponse({'success': True, 'id': obj.id})
+    elif request.method == 'DELETE':
+        if not request.user.is_superuser and request.user.email != 'arunmohankml@gmail.com':
+            return JsonResponse({'error': 'Unauthorized'}, status=403)
+        
+        try:
+            data = json.loads(request.body)
+            x = data.get('x')
+            y = data.get('y')
+            size = data.get('size', 1)
+            pixel_size = 10 # Matches PIXEL_SIZE in wall.html
+            
+            # Area to clear
+            clear_rect = size * pixel_size
+            half = clear_rect / 2
+            
+            # Find and delete strokes that have points within the eraser area
+            # We use a slightly broader search for efficiency and then filter if needed
+            # For a pixel wall, most strokes are very short.
+            
+            # Simple approach: delete strokes whose first point is in the area
+            # (In a pixel wall, strokes are often just one or a few pixels)
+            deleted_ids = []
+            
+            # More robust: find any stroke that overlaps the bounding box
+            # This is hard with JSONField directly in SQL without complex queries,
+            # so we'll do a coordinate range check if possible, or just fetch recent ones and filter.
+            
+            # Optimization: only check strokes from the last 24 hours or just all of them if the wall is small
+            all_s = WallStroke.objects.all()
+            for s in all_s:
+                in_range = False
+                for p in s.points:
+                    if (x - half <= p['x'] <= x + half + pixel_size) and (y - half <= p['y'] <= y + half + pixel_size):
+                        in_range = True
+                        break
+                if in_range:
+                    deleted_ids.append(s.id)
+            
+            if deleted_ids:
+                WallStroke.objects.filter(id__in=deleted_ids).delete()
+                broadcast_event('wall', 'delete_strokes', {'ids': deleted_ids})
+                
+            # Also check images
+            deleted_image_ids = []
+            all_i = WallImage.objects.all()
+            for img in all_i:
+                # Check if center point overlaps image rect
+                if (img.x <= x <= img.x + img.width) and (img.y <= y <= img.y + img.height):
+                    deleted_image_ids.append(img.id)
+            
+            if deleted_image_ids:
+                WallImage.objects.filter(id__in=deleted_image_ids).delete()
+                broadcast_event('wall', 'delete_images', {'ids': deleted_image_ids})
+
+            return JsonResponse({'success': True, 'deleted_ids': deleted_ids, 'deleted_image_ids': deleted_image_ids})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
 
@@ -1685,11 +1740,11 @@ def admin_edit_user_profile(request, user_id):
                 
                 # Manual file handling for admin
                 if 'profile_pic_file' in request.FILES:
-                    img_url = upload_to_supabase(request.FILES['profile_pic_file'], bucket="images", path="profile_pics")
+                    img_url = upload_to_cloudinary(request.FILES['profile_pic_file'], folder="srm_match/profile_pics")
                     if img_url: updated_profile.profile_pic = img_url
                 
                 if 'verification_image_file' in request.FILES:
-                    img_url = upload_to_supabase(request.FILES['verification_image_file'], bucket="images", path="verification")
+                    img_url = upload_to_cloudinary(request.FILES['verification_image_file'], folder="srm_match/verification_images")
                     if img_url: updated_profile.verification_image = img_url
 
                 # Admin-only fields
@@ -1712,7 +1767,7 @@ def admin_edit_user_profile(request, user_id):
         
         elif 'add_image' in request.POST:
             if 'image_file' in request.FILES:
-                img_url = upload_to_supabase(request.FILES['image_file'], bucket="images", path="gallery")
+                img_url = upload_to_cloudinary(request.FILES['image_file'], folder="srm_match/gallery_images")
                 if img_url:
                     ProfileImage.objects.create(profile=profile, image=img_url)
                     messages.success(request, "Gallery photo added by Admin.")
@@ -1720,7 +1775,7 @@ def admin_edit_user_profile(request, user_id):
             
         elif 'update_pfp_instant' in request.POST:
             if 'profile_pic_file' in request.FILES:
-                img_url = upload_to_supabase(request.FILES['profile_pic_file'], bucket="images", path="profile_pics")
+                img_url = upload_to_cloudinary(request.FILES['profile_pic_file'], folder="srm_match/profile_pics")
                 if img_url:
                     profile.profile_pic = img_url
                     profile.save()
@@ -1852,18 +1907,13 @@ def upload_base64_api(request):
         if not base64_str:
             return JsonResponse({'success': False, 'message': 'Missing image data'}, status=400)
             
-        from .supabase_utils import upload_base64_to_supabase
-        import os
-        
-        has_url = bool(os.environ.get('SUPABASE_URL'))
-        has_key = bool(os.environ.get('SUPABASE_KEY'))
-        
-        url, error_msg = upload_base64_to_supabase(base64_str, bucket=bucket, path=path)
+        from .cloudinary_utils import upload_base64_to_cloudinary
+        url = upload_base64_to_cloudinary(base64_str, folder=f"srm_match/{path}")
         
         if url:
             return JsonResponse({'success': True, 'url': url})
         else:
-            return JsonResponse({'success': False, 'message': f'Upload failed: {error_msg}. Diagnostic: URL Set={has_url}, KEY Set={has_key}'}, status=500)
+            return JsonResponse({'success': False, 'message': f'Upload failed.'}, status=500)
             
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)

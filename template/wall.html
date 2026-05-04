@@ -171,9 +171,9 @@
         <input type="color" id="customColor" style="width: 24px; height: 24px; border: none; border-radius: 50%; padding: 0; cursor: pointer; background: none;" title="Custom Color">
 
         <div class="sep"></div>
-        <div class="size-btn active" data-size="1.5">S</div>
-        <div class="size-btn" data-size="3.5">M</div>
-        <div class="size-btn" data-size="8">L</div>
+        <div class="size-btn active" data-size="1">1x</div>
+        <div class="size-btn" data-size="2">2x</div>
+        <div class="size-btn" data-size="3">3x</div>
 
         {% if request.user.email == 'arunmohankml@gmail.com' %}
         <div class="sep"></div>
@@ -184,9 +184,9 @@
             <i class="fas fa-eraser"></i>
         </button>
         <div class="sep"></div>
-        <div class="size-btn admin-size" data-size="25">25</div>
-        <div class="size-btn admin-size" data-size="60">60</div>
-        <div class="size-btn admin-size" data-size="120">120</div>
+        <div class="size-btn admin-size" data-size="10">10</div>
+        <div class="size-btn admin-size" data-size="50">50</div>
+        <div class="size-btn admin-size" data-size="150">150</div>
         <div class="size-btn admin-size" data-size="400">400</div>
         <input type="file" id="adminImageInput" accept="image/*" style="display: none;" onchange="handleAdminImageUpload(this)">
         {% endif %}
@@ -248,6 +248,14 @@ if (pusherKey) {
             };
         }
     });
+    channel.bind('delete_strokes', (data) => {
+        allStrokes = allStrokes.filter(s => !data.ids.includes(s.id));
+        redraw();
+    });
+    channel.bind('delete_images', (data) => {
+        allImages = allImages.filter(img => !data.ids.includes(img.id));
+        redraw();
+    });
 }
 
 function showWarningModal(id, title, contentHTML, buttonsOptions) {
@@ -305,6 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 });
 const VIRTUAL_W = 8000, VIRTUAL_H = 8000;
+const PIXEL_SIZE = 10; // Smaller wall pixels for better detail
 const canvas = document.getElementById('drawCanvas');
 const ctx = canvas.getContext('2d');
 
@@ -313,7 +322,7 @@ let scale = 1;
 let offsetX = 0, offsetY = 0;
 let drawing = false, panning = false;
 let currentColor = '#0f172a';
-let brushSize = 1.5;
+let brushSize = 1; // Now represents number of pixels
 let isEraser = false;
 let currentStroke = [];
 let allStrokes = [];
@@ -336,33 +345,43 @@ function resizeCanvas() {
     redraw();
 }
 window.addEventListener('resize', resizeCanvas);
+window.addEventListener('load', resizeCanvas);
 resizeCanvas();
 
 function screenToWorld(sx, sy) {
-    return { x: (sx - offsetX) / scale, y: (sy - offsetY) / scale };
+    const worldX = (sx - offsetX) / scale;
+    const worldY = (sy - offsetY) / scale;
+    // Snap to pixel grid
+    return {
+        x: Math.floor(worldX / PIXEL_SIZE) * PIXEL_SIZE,
+        y: Math.floor(worldY / PIXEL_SIZE) * PIXEL_SIZE
+    };
 }
 
 function drawStroke(s) {
-    if (!s.points || s.points.length < 2) return;
-    ctx.beginPath();
-    ctx.strokeStyle = s.color;
-    ctx.lineWidth = s.brush_size * scale;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.moveTo(s.points[0].x * scale + offsetX, s.points[0].y * scale + offsetY);
-    for (let i = 1; i < s.points.length; i++) {
-        ctx.lineTo(s.points[i].x * scale + offsetX, s.points[i].y * scale + offsetY);
+    if (!s.points || s.points.length === 0) return;
+    ctx.fillStyle = s.color;
+    const drawSize = (s.brush_size || 1) * PIXEL_SIZE * scale;
+    
+    for (const p of s.points) {
+        ctx.fillRect(
+            p.x * scale + offsetX,
+            p.y * scale + offsetY,
+            drawSize,
+            drawSize
+        );
     }
-    ctx.stroke();
 }
 
 function drawGrid() {
-    const gridSize = 40 * scale;
-    if (gridSize < 5) return;
-    ctx.strokeStyle = 'rgba(0,0,0,0.04)';
-    ctx.lineWidth = 1;
+    const gridSize = PIXEL_SIZE * scale;
+    if (gridSize < 4) return; // Don't draw grid if too small
+    ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+    ctx.lineWidth = 0.5;
+    
     const startX = offsetX % gridSize;
     const startY = offsetY % gridSize;
+    
     ctx.beginPath();
     for (let x = startX; x < canvas.width; x += gridSize) { ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); }
     for (let y = startY; y < canvas.height; y += gridSize) { ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); }
@@ -371,7 +390,7 @@ function drawGrid() {
 
 function redraw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#f1f5f9';
+    ctx.fillStyle = '#ffffff'; // White wall for pixel art
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawGrid();
     
@@ -389,7 +408,7 @@ function redraw() {
     }
 
     for (const s of allStrokes) drawStroke(s);
-    if (currentStroke.length > 1) drawStroke({ points: currentStroke, color: currentColor, brush_size: brushSize });
+    if (currentStroke.length > 0) drawStroke({ points: currentStroke, color: currentColor, brush_size: brushSize });
 
     // Draw Pending Image in Placement Mode
     if (pendingImage) {
@@ -417,29 +436,76 @@ function redraw() {
 
 // Drawing
 canvas.addEventListener('pointerdown', e => {
-    if (e.button === 2 || spaceDown) { panning = true; panStart = { x: e.clientX - offsetX, y: e.clientY - offsetY }; canvas.style.cursor = 'grabbing'; return; }
+    if (e.button === 2 || spaceDown) { 
+        panning = true; 
+        panStart = { x: e.clientX - offsetX, y: e.clientY - offsetY }; 
+        canvas.style.cursor = 'grabbing'; 
+        return; 
+    }
     drawing = true;
-    currentStroke = [screenToWorld(e.clientX, e.clientY)];
+    const pos = screenToWorld(e.clientX, e.clientY);
+    currentStroke = [pos];
+    redraw();
 });
 canvas.addEventListener('pointermove', e => {
-    mouseWorldPos = screenToWorld(e.clientX, e.clientY);
+    const pos = screenToWorld(e.clientX, e.clientY);
+    mouseWorldPos = pos;
+    
     if (pendingImage) { redraw(); return; }
-    if (panning) { offsetX = e.clientX - panStart.x; offsetY = e.clientY - panStart.y; redraw(); return; }
+    if (panning) { 
+        offsetX = e.clientX - panStart.x; 
+        offsetY = e.clientY - panStart.y; 
+        redraw(); 
+        return; 
+    }
     if (!drawing) return;
-    currentStroke.push(screenToWorld(e.clientX, e.clientY));
-    redraw();
+    
+    if (isEraser) {
+        deleteWallPixel(pos.x, pos.y);
+        return;
+    }
+
+    // Only add if it's a new pixel
+    const last = currentStroke[currentStroke.length - 1];
+    if (last.x !== pos.x || last.y !== pos.y) {
+        currentStroke.push(pos);
+        redraw();
+    }
 });
 canvas.addEventListener('pointerup', e => {
     if (panning) { panning = false; canvas.style.cursor = 'crosshair'; return; }
     if (!drawing) return;
     drawing = false;
-    if (currentStroke.length > 1) {
+    if (!isEraser && currentStroke.length > 0) {
         const stroke = { points: [...currentStroke], color: currentColor, brush_size: brushSize };
         allStrokes.push(stroke);
         saveStroke(stroke);
     }
     currentStroke = [];
 });
+
+let lastDeleteTime = 0;
+async function deleteWallPixel(x, y) {
+    const now = Date.now();
+    if (now - lastDeleteTime < 100) return; // Throttle 10Hz
+    lastDeleteTime = now;
+
+    // Visual feedback (immediate)
+    const area = brushSize * PIXEL_SIZE;
+    const half = area / 2;
+    allStrokes = allStrokes.filter(s => {
+        return !s.points.some(p => (x - half <= p.x <= x + half + PIXEL_SIZE) && (y - half <= p.y <= y + half + PIXEL_SIZE));
+    });
+    redraw();
+
+    try {
+        await fetch('/api/wall/', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ x, y, size: brushSize })
+        });
+    } catch(e) {}
+}
 canvas.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('keydown', e => { 
     if (e.code === 'Space') { spaceDown = true; canvas.style.cursor = 'grab'; e.preventDefault(); } 
@@ -512,7 +578,7 @@ function toggleEraser(force) {
     const btn = document.getElementById('eraserBtn');
     if (isEraser) {
         btn.classList.add('active');
-        currentColor = '#f1f5f9'; // Canvas BG
+        currentColor = '#ffffff'; // Canvas BG (White for Pixel Wall)
         document.querySelectorAll('.color-dot').forEach(x => x.classList.remove('active'));
     } else {
         btn.classList.remove('active');
