@@ -297,6 +297,18 @@
 
         // Now run the AI analysis on the captured frame (or video stream)
         const fullDetection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+        
+        if (!fullDetection) {
+            status.innerText = 'Face not clear. Restarting...';
+            livenessState = LIVENESS_STATE.WAITING_FACE;
+            // Clear canvas and start over
+            verificationCaptured = false;
+            startVerification(); 
+            return;
+        }
+
+        verificationCaptured = true;
+        verificationDescriptor = fullDetection.descriptor;
 
         if (verifyStream) verifyStream.getTracks().forEach(t => t.stop());
         document.getElementById('verify-camera-ui').style.display = 'none';
