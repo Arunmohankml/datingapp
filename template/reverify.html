@@ -173,9 +173,9 @@
                 <p style="font-size: 11px; color: var(--text-muted);">This photo will be compared against your face scan.</p>
             </div>
 
-            <input type="hidden" name="verification_image_url" id="verification-image-url">
-            <input type="hidden" name="profile_pic_url" id="profile-pic-url-input">
-            <input type="hidden" name="verification_status" id="verification-status-input" value="pending">
+            <input type="hidden" name="verification_image_url" id="verification-image-url" value="{{ profile.verification_image|default:'' }}">
+            <input type="hidden" name="profile_pic_url" id="profile-pic-url-input" value="{{ profile.profile_pic|default:'' }}">
+            <input type="hidden" name="verification_status" id="verification-status-input" value="{{ profile.verification_status|default:'pending' }}">
 
             <button type="submit" class="btn-submit" id="submit-btn" disabled>Complete Verification</button>
         </form>
@@ -192,10 +192,9 @@
     const LIVENESS_STATE = {
         WAITING_FACE: 0,
         LOOK_LEFT: 1,
-        LOOK_RIGHT: 2,
-        LOOK_FRONT: 3,
-        CAPTURE_WAIT: 4,
-        DONE: 5
+        LOOK_FRONT: 2,
+        CAPTURE_WAIT: 3,
+        DONE: 4
     };
     let livenessState = LIVENESS_STATE.WAITING_FACE;
 
@@ -235,9 +234,11 @@
             const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224 })).withFaceLandmarks();
             
             if (!detection) {
-                statusEl.innerText = 'Please look straight at the camera.';
-                statusEl.style.color = '#ef4444';
-                livenessState = LIVENESS_STATE.WAITING_FACE;
+                if (livenessState !== LIVENESS_STATE.CAPTURE_WAIT) {
+                    statusEl.innerText = 'Please look straight at the camera.';
+                    statusEl.style.color = '#ef4444';
+                    livenessState = LIVENESS_STATE.WAITING_FACE;
+                }
             } else {
                 const nose = detection.landmarks.getNose()[3];
                 const leftCheek = detection.landmarks.getJawOutline()[0];
@@ -247,33 +248,31 @@
                 const ratio = distLeft / (distRight || 1);
                 
                 if (livenessState === LIVENESS_STATE.WAITING_FACE) {
-                    if (ratio > 0.5 && ratio < 1.8) livenessState = LIVENESS_STATE.LOOK_LEFT;
+                    if (ratio > 0.6 && ratio < 1.6) livenessState = LIVENESS_STATE.LOOK_LEFT;
                 }
                 
                 if (livenessState === LIVENESS_STATE.LOOK_LEFT) {
                     statusEl.innerText = 'Good! Now turn your head LEFT ⬅️';
                     statusEl.style.color = '#3b82f6';
-                    if (ratio > 1.4) livenessState = LIVENESS_STATE.LOOK_RIGHT;
-                }
-                else if (livenessState === LIVENESS_STATE.LOOK_RIGHT) {
-                    statusEl.innerText = 'Great! Now turn your head RIGHT ➡️';
-                    statusEl.style.color = '#3b82f6';
-                    if (ratio < 0.7) livenessState = LIVENESS_STATE.LOOK_FRONT;
+                    if (ratio > 1.3) livenessState = LIVENESS_STATE.LOOK_FRONT;
                 }
                 else if (livenessState === LIVENESS_STATE.LOOK_FRONT) {
-                    statusEl.innerText = 'Excellent! Look FRONT to capture 📷';
+                    statusEl.innerText = 'Excellent! Now look STRAIGHT 📷';
                     statusEl.style.color = '#10b981';
-                    if (ratio > 0.5 && ratio < 1.8) {
+                    if (ratio > 0.6 && ratio < 1.6) {
                         livenessState = LIVENESS_STATE.CAPTURE_WAIT;
+                        statusEl.innerText = 'Hold still... Capturing in 0.7s! 📷';
                         setTimeout(() => {
-                            if (!verificationCaptured) captureVerification();
-                        }, 200);
+                            if (!verificationCaptured && livenessState === LIVENESS_STATE.CAPTURE_WAIT) {
+                                captureVerification();
+                            }
+                        }, 700);
                     }
                 }
             }
         }
         
-        if (!verificationCaptured) {
+        if (!verificationCaptured && livenessState !== LIVENESS_STATE.DONE) {
             setTimeout(() => {
                 requestAnimationFrame(() => processLivenessFrame(video, statusEl));
             }, 50);
@@ -361,10 +360,246 @@
         });
     }
 
+    function clearPfp() {
+        const pfpInput = document.getElementById('id_profile_pic_file');
+        const preview = document.getElementById('pfp-preview');
+        const placeholder = document.getElementById('pfp-placeholder');
+        const urlInput = document.getElementById('profile-pic-url-input');
+        
+        if (pfpInput) pfpInput.value = ''; // Clear file input
+        if (urlInput) urlInput.value = ''; // Clear hidden URL input
+        if (preview) {
+            preview.src = ''; 
+            preview.style.display = 'none';
+        }
+        if (placeholder) placeholder.style.display = 'flex';
+        
+        document.getElementById('verification-status-input').value = 'pending';
+        document.getElementById('submit-btn').disabled = true;
+    }
+
+    function showRetakeConfirmationModal(onConfirm) {
+        // Create the modal overlay container
+        const overlay = document.createElement('div');
+        overlay.id = 'custom-confirm-modal';
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = 'rgba(15, 23, 42, 0.4)'; // Dark slate with low opacity
+        overlay.style.backdropFilter = 'blur(12px)';
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.zIndex = '100000';
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 0.3s ease';
+
+        // Modal card
+        const card = document.createElement('div');
+        card.style.background = 'rgba(255, 255, 255, 0.9)';
+        card.style.backdropFilter = 'blur(20px)';
+        card.style.borderRadius = '24px';
+        card.style.padding = '32px';
+        card.style.maxWidth = '400px';
+        card.style.width = '90%';
+        card.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.5)';
+        card.style.transform = 'scale(0.9)';
+        card.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        card.style.textAlign = 'center';
+        card.style.fontFamily = "'Outfit', 'Inter', sans-serif";
+
+        // Icon (warning/retake)
+        const iconContainer = document.createElement('div');
+        iconContainer.style.width = '64px';
+        iconContainer.style.height = '64px';
+        iconContainer.style.borderRadius = '50%';
+        iconContainer.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+        iconContainer.style.color = '#ef4444';
+        iconContainer.style.display = 'flex';
+        iconContainer.style.alignItems = 'center';
+        iconContainer.style.justifyContent = 'center';
+        iconContainer.style.fontSize = '24px';
+        iconContainer.style.margin = '0 auto 20px';
+        iconContainer.innerHTML = '<i class="fas fa-redo-alt"></i>';
+        card.appendChild(iconContainer);
+
+        // Title
+        const title = document.createElement('h3');
+        title.innerText = 'Retake Verification?';
+        title.style.margin = '0 0 12px';
+        title.style.fontSize = '20px';
+        title.style.fontWeight = '800';
+        title.style.color = '#0f172a';
+        card.appendChild(title);
+
+        // Description
+        const desc = document.createElement('p');
+        desc.innerText = 'Retaking the identity scan will delete your current verified scan and profile photo. You will need to take a new scan and upload your PFP again.';
+        desc.style.margin = '0 0 24px';
+        desc.style.fontSize = '14px';
+        desc.style.lineHeight = '1.5';
+        desc.style.color = '#64748b';
+        card.appendChild(desc);
+
+        // Buttons Container
+        const btnContainer = document.createElement('div');
+        btnContainer.style.display = 'flex';
+        btnContainer.style.gap = '12px';
+        btnContainer.style.justifyContent = 'center';
+
+        // Cancel Button
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.innerText = 'Cancel';
+        cancelBtn.style.flex = '1';
+        cancelBtn.style.padding = '12px 20px';
+        cancelBtn.style.border = '1px solid #cbd5e1';
+        cancelBtn.style.borderRadius = '14px';
+        cancelBtn.style.backgroundColor = 'transparent';
+        cancelBtn.style.color = '#475569';
+        cancelBtn.style.fontSize = '14px';
+        cancelBtn.style.fontWeight = '600';
+        cancelBtn.style.cursor = 'pointer';
+        cancelBtn.style.transition = 'all 0.2s';
+        cancelBtn.onmouseenter = () => { cancelBtn.style.backgroundColor = '#f1f5f9'; };
+        cancelBtn.onmouseleave = () => { cancelBtn.style.backgroundColor = 'transparent'; };
+        
+        // Confirm Button
+        const confirmBtn = document.createElement('button');
+        confirmBtn.type = 'button';
+        confirmBtn.innerText = 'Yes, Retake';
+        confirmBtn.style.flex = '1';
+        confirmBtn.style.padding = '12px 20px';
+        confirmBtn.style.border = 'none';
+        confirmBtn.style.borderRadius = '14px';
+        confirmBtn.style.backgroundColor = '#ef4444';
+        confirmBtn.style.color = 'white';
+        confirmBtn.style.fontSize = '14px';
+        confirmBtn.style.fontWeight = '600';
+        confirmBtn.style.cursor = 'pointer';
+        confirmBtn.style.transition = 'all 0.2s';
+        confirmBtn.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)';
+        confirmBtn.onmouseenter = () => { confirmBtn.style.backgroundColor = '#dc2626'; confirmBtn.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.3)'; };
+        confirmBtn.onmouseleave = () => { confirmBtn.style.backgroundColor = '#ef4444'; confirmBtn.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)'; };
+
+        btnContainer.appendChild(cancelBtn);
+        btnContainer.appendChild(confirmBtn);
+        card.appendChild(btnContainer);
+        overlay.appendChild(card);
+        document.body.appendChild(overlay);
+
+        // Trigger animations
+        setTimeout(() => {
+            overlay.style.opacity = '1';
+            card.style.transform = 'scale(1)';
+        }, 10);
+
+        // Close function
+        const closeModal = () => {
+            overlay.style.opacity = '0';
+            card.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                overlay.remove();
+            }, 300);
+        };
+
+        cancelBtn.addEventListener('click', closeModal);
+        confirmBtn.addEventListener('click', () => {
+            closeModal();
+            if (typeof onConfirm === 'function') onConfirm();
+        });
+
+        // Close on clicking overlay background
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeModal();
+        });
+    }
+
+    function handleVerificationRetake() {
+        // Reset states
+        verificationCaptured = false;
+        verificationBase64 = null;
+        verificationDescriptor = null;
+        
+        // Clear inputs in DOM
+        document.getElementById('verification-image-url').value = '';
+        document.getElementById('verification-status-input').value = 'pending';
+        document.getElementById('profile-pic-url-input').value = '';
+        
+        // Reset Verification box styling
+        const vfSection = document.getElementById('face-verification-section');
+        if (vfSection) {
+            vfSection.style.borderColor = '#cbd5e1';
+            vfSection.style.background = '#f8fafc';
+            vfSection.style.cursor = '';
+            vfSection.title = '';
+        }
+        
+        // Switch back UI elements to initial camera button view
+        document.getElementById('verify-initial-ui').style.display = 'block';
+        document.getElementById('verify-camera-ui').style.display = 'none';
+        document.getElementById('verify-success-ui').style.display = 'none';
+        
+        // Reset status text
+        const status = document.getElementById('verify-status');
+        if (status) {
+            status.innerText = '';
+            status.style.color = '';
+        }
+        
+        // Clear PFP Preview and input
+        clearPfp();
+        
+        // Disable PFP upload section
+        const pfpGrp = document.getElementById('pfp-group');
+        if (pfpGrp) {
+            pfpGrp.classList.remove('active');
+            pfpGrp.style.opacity = '0.5';
+            pfpGrp.style.pointerEvents = 'none';
+        }
+
+        // 2. Perform AJAX POST to delete/clear from database
+        const formData = new FormData();
+        formData.append('verification_image_url', '');
+        formData.append('verification_status', 'pending');
+        formData.append('profile_pic_url', '');
+        
+        fetch('/save_profile_progress/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                console.log("Successfully cleared verification from database.");
+            } else {
+                console.error("Failed to clear from database:", data.error);
+            }
+        })
+        .catch(err => console.error("Error calling save_profile_progress:", err));
+    }
+
+    // Attach click listener to face verification box
+    document.getElementById('face-verification-section').addEventListener('click', function(e) {
+        // Prevent trigger if they clicked inside active camera buttons or similar
+        if (e.target.closest('button') || e.target.closest('video')) return;
+        
+        const statusVal = document.getElementById('verification-status-input').value;
+        if (statusVal === 'verified') {
+            showRetakeConfirmationModal(() => {
+                handleVerificationRetake();
+            });
+        }
+    });
+
     async function handlePfpSelect(input) {
         if (!input.files || !input.files[0]) return;
         const statusText = document.getElementById('verify-status');
         statusText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing Face Match...';
+        statusText.style.color = 'var(--primary)';
         
         try {
             const compressedBase64 = await compressImage(input.files[0]);
@@ -374,6 +609,16 @@
                 const pfpDetection = await faceapi.detectSingleFace(tempImg).withFaceLandmarks().withFaceDescriptor();
                 if (!pfpDetection) {
                     statusText.innerText = "No face detected in photo!";
+                    statusText.style.color = '#ef4444';
+                    clearPfp();
+                    return;
+                }
+
+                // If verificationDescriptor is not present (e.g. reload or error), try to detect from the verified UI image or abort
+                if (!verificationDescriptor) {
+                    statusText.innerText = "Verification face scan not in memory. Please retake face scan.";
+                    statusText.style.color = '#ef4444';
+                    clearPfp();
                     return;
                 }
 
@@ -396,17 +641,74 @@
                         document.getElementById('verification-status-input').value = 'verified';
                         document.getElementById('submit-btn').disabled = false;
                         statusText.innerText = "Verification Complete! Submit now.";
+                        
+                        // Add green success style, pointer cursor and tooltip to face verification box
+                        const vfSection = document.getElementById('face-verification-section');
+                        if (vfSection) {
+                            vfSection.style.borderColor = '#16a34a';
+                            vfSection.style.background = '#f0fdf4';
+                            vfSection.style.cursor = 'pointer';
+                            vfSection.title = 'Click to retake verification scan';
+                        }
                     }
                 } else {
                     statusText.innerText = "Face mismatch! Use your own photo.";
                     statusText.style.color = '#ef4444';
+                    clearPfp();
                 }
             };
         } catch (err) {
             console.error(err);
+            statusText.innerText = "Error analyzing image.";
+            statusText.style.color = '#ef4444';
+            clearPfp();
         }
     }
 
     document.getElementById('id_profile_pic_file').addEventListener('change', function() { handlePfpSelect(this); });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Restore Verification & PFP state from database values on load
+        const verificationStatus = document.getElementById('verification-status-input').value;
+        const pfpUrlVal = document.getElementById('profile-pic-url-input').value;
+        
+        if (verificationStatus === 'verified') {
+            verificationCaptured = true;
+            const vfSection = document.getElementById('face-verification-section');
+            if (vfSection) {
+                vfSection.style.borderColor = '#16a34a';
+                vfSection.style.background = '#f0fdf4';
+                vfSection.style.cursor = 'pointer';
+                vfSection.title = 'Click to retake verification scan';
+            }
+            
+            const pfpGrp = document.getElementById('pfp-group');
+            if (pfpGrp) {
+                pfpGrp.classList.add('active');
+                pfpGrp.style.opacity = '1';
+                pfpGrp.style.pointerEvents = 'auto';
+            }
+            
+            const camUI = document.getElementById('verify-camera-ui');
+            const initUI = document.getElementById('verify-initial-ui');
+            const succUI = document.getElementById('verify-success-ui');
+            if (camUI) camUI.style.display = 'none';
+            if (initUI) initUI.style.display = 'none';
+            if (succUI) succUI.style.display = 'block';
+            
+            if (pfpUrlVal) {
+                const preview = document.getElementById('pfp-preview');
+                const placeholder = document.getElementById('pfp-placeholder');
+                if (preview) {
+                    preview.src = pfpUrlVal;
+                    preview.style.display = 'block';
+                }
+                if (placeholder) placeholder.style.display = 'none';
+                
+                // Enable submit button
+                document.getElementById('submit-btn').disabled = false;
+            }
+        }
+    });
 </script>
 {% endblock %}

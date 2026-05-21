@@ -69,6 +69,16 @@ class Profile(models.Model):
         return f"{self.name} - {self.user.email}"
 
     @property
+    def display_name(self):
+        if self.name and self.name.strip() and self.name.strip().lower() != "no name":
+            return self.name
+        if self.user and self.user.email:
+            email_parts = self.user.email.split('@')
+            if email_parts and email_parts[0]:
+                return email_parts[0]
+        return "No Name"
+
+    @property
     def campus_display(self):
         if self.campus == 'Ramapuram':
             return 'RMP Campus'

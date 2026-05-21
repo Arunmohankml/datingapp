@@ -1,77 +1,491 @@
 {% extends 'base.html' %}
 
 {% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+    /* Expand the container for wide layout on admin dashboards */
+    .container {
+        max-width: 900px !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+
     .admin-container {
-        padding: 30px 16px;
-        max-width: 800px;
+        padding: 24px 16px 40px;
         margin: 0 auto;
+        font-family: 'Outfit', 'Inter', sans-serif;
     }
-    .page-title {
-        font-size: 24px;
-        font-weight: 800;
-        color: var(--text-main);
+
+    /* Glassmorphic Header Card */
+    .dashboard-header {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        border-radius: 24px;
+        padding: 24px 32px;
         margin-bottom: 24px;
-        text-align: center;
-        background: linear-gradient(135deg, var(--primary), #f43f5e);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-    .users-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.1), inset 0 1px 0 rgba(255,255,255,0.6);
+        flex-wrap: wrap;
         gap: 16px;
     }
-    .user-box {
+
+    .header-info h2 {
+        font-size: 26px;
+        font-weight: 800;
+        margin: 0 0 6px 0;
+        background: linear-gradient(135deg, #1e3a8a, #2563eb, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -0.5px;
+    }
+
+    .header-info p {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin: 0;
+        font-weight: 500;
+    }
+
+    .stats-pill {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(236, 72, 153, 0.08));
+        border: 1px solid rgba(37, 99, 235, 0.15);
+        padding: 8px 16px;
+        border-radius: 99px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #2563eb;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.04);
+        transition: all 0.3s;
+    }
+
+    .stats-pill:hover {
+        transform: scale(1.05);
+        border-color: rgba(236, 72, 153, 0.3);
+    }
+
+    /* Toolbar styling */
+    .toolbar-container {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+        flex: 1;
+        position: relative;
+        min-width: 250px;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 15px;
+    }
+
+    .search-box input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 14px 16px 14px 44px;
+        border-radius: 18px;
+        border: 1px solid rgba(37, 99, 235, 0.1);
         background: white;
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 20px;
+        color: var(--text-main);
+        font-size: 14px;
+        font-weight: 600;
+        outline: none;
         box-shadow: var(--shadow-sm);
         transition: all 0.3s ease;
+    }
+
+    .search-box input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    .sort-box {
+        position: relative;
+        min-width: 200px;
+    }
+
+    .sort-box i {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        font-size: 15px;
+        pointer-events: none;
+    }
+
+    .sort-box select {
+        width: 100%;
+        padding: 14px 40px 14px 44px;
+        border-radius: 18px;
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        background: white;
+        color: var(--text-main);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        outline: none;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.3s ease;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+
+    .sort-box select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    /* Custom drop down arrow indicator */
+    .sort-box::after {
+        content: '\f078';
+        font-family: 'Font Awesome 5 Free';
+        font-weight: 900;
+        position: absolute;
+        right: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+        font-size: 11px;
+    }
+
+    /* Users Grid Layout */
+    .users-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    /* Premium User Card */
+    .user-box {
+        background: white;
+        border: 1px solid rgba(37, 99, 235, 0.08);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: var(--shadow-sm);
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        align-items: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
     }
+
     .user-box:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--shadow-md);
-        border-color: var(--primary);
+        transform: translateY(-5px);
+        box-shadow: 0 20px 35px -10px rgba(37, 99, 235, 0.15);
+        border-color: rgba(37, 99, 235, 0.25);
     }
+
+    /* Premium verified status indicators */
+    .verification-badge {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .verification-badge.verified {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .verification-badge.pending {
+        background: #fef9c3;
+        color: #ca8a04;
+    }
+
+    .verification-badge.rejected {
+        background: #fee2e2;
+        color: #ef4444;
+    }
+
+    /* PFP Circle Image */
+    .pfp-container {
+        position: relative;
+        margin-bottom: 16px;
+    }
+
+    .pfp-image {
+        width: 84px;
+        height: 84px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid white;
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.1);
+        transition: transform 0.4s ease;
+    }
+
+    .user-box:hover .pfp-image {
+        transform: scale(1.05) rotate(2deg);
+    }
+
+    .pfp-ring {
+        position: absolute;
+        top: -4px;
+        left: -4px;
+        right: -4px;
+        bottom: -4px;
+        border-radius: 50%;
+        border: 2px dashed rgba(37, 99, 235, 0.2);
+        pointer-events: none;
+        transition: transform 1s linear;
+    }
+
+    .user-box:hover .pfp-ring {
+        transform: rotate(180deg);
+    }
+
+    .pfp-ring.verified {
+        border: 2px solid rgba(22, 163, 74, 0.25);
+        box-shadow: 0 0 10px rgba(22, 163, 74, 0.15);
+    }
+
+    /* Text info styles */
     .user-name {
         font-size: 16px;
         font-weight: 700;
         color: var(--text-main);
+        margin: 0 0 8px 0;
         word-break: break-word;
+        line-height: 1.3;
     }
+
+    .details-divider {
+        width: 30px;
+        height: 2px;
+        background: linear-gradient(90deg, rgba(37, 99, 235, 0.2), rgba(236, 72, 153, 0.2));
+        margin: 4px 0 12px;
+        border-radius: 99px;
+    }
+
     .user-detail {
         font-size: 13px;
         color: var(--text-muted);
-        font-weight: 500;
-    }
-    .empty-state {
-        text-align: center;
-        padding: 40px;
-        color: var(--text-muted);
         font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin-bottom: 6px;
+        width: 100%;
+    }
+
+    .user-detail i {
+        color: #3b82f6;
+        font-size: 12px;
+        width: 16px;
+        text-align: center;
+    }
+
+    /* Empty search state */
+    .empty-state {
+        grid-column: 1 / -1;
+        background: white;
+        border-radius: 24px;
+        padding: 48px;
+        text-align: center;
+        border: 1px dashed rgba(37, 99, 235, 0.15);
+        color: var(--text-muted);
+        font-size: 15px;
+        font-weight: 600;
+        box-shadow: var(--shadow-sm);
     }
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="admin-container">
-    <h2 class="page-title">All Registered Users</h2>
-    
+    <!-- Beautiful Header Block -->
+    <div class="dashboard-header">
+        <div class="header-info">
+            <h2>System Users</h2>
+            <p>Admin Directory and Liveness Control Center</p>
+        </div>
+        <div class="stats-pill">
+            <i class="fas fa-users"></i>
+            <span>Total: <span id="visible-count">{{ profiles|length }}</span> / {{ profiles|length }}</span>
+        </div>
+    </div>
+
+    <!-- Search & Sort Toolbar -->
+    <div class="toolbar-container">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="user-search" placeholder="Search name, campus, native..." oninput="filterUsers()">
+        </div>
+        <div class="sort-box">
+            <i class="fas fa-filter"></i>
+            <select id="user-sort" onchange="sortUsers(this.value)">
+                <option value="name">Sort by Name</option>
+                <option value="campus">Sort by Campus</option>
+                <option value="course">Sort by Course</option>
+                <option value="native">Sort by Native Place</option>
+                <option value="mother-tongue">Sort by Mother Tongue</option>
+                <option value="age">Sort by Age (Youngest)</option>
+                <option value="age-desc">Sort by Age (Oldest)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Grid Container -->
     <div class="users-grid">
         {% for profile in profiles %}
-            <div class="user-box">
-                <div class="user-name">{{ profile.name|default:"No Name" }}</div>
-                <div class="user-detail"><i class="fas fa-university" style="margin-right: 6px; width: 14px;"></i>{{ profile.campus|default:"No Campus" }}</div>
-                <div class="user-detail"><i class="fas fa-birthday-cake" style="margin-right: 6px; width: 14px;"></i>{{ profile.age|default:"N/A" }} Yrs</div>
+            <div class="user-box" 
+                 data-name="{{ profile.display_name|lower }}" 
+                 data-campus="{{ profile.campus|default:'No Campus'|lower }}" 
+                 data-course="{{ profile.course|default:'No Course'|lower }}" 
+                 data-native="{{ profile.native_place|default:'No Native Place'|lower }}" 
+                 data-mother-tongue="{{ profile.mother_tongues|default:'No Mother Tongue'|lower }}"
+                 data-age="{{ profile.age|default:0 }}">
+                 
+                <!-- Verification status badge (no click actions, for viewing only) -->
+                {% if profile.verification_status == 'verified' %}
+                    <div class="verification-badge verified" title="Verified Identity"><i class="fas fa-check"></i></div>
+                {% elif profile.verification_status == 'pending' %}
+                    <div class="verification-badge pending" title="Pending Verification"><i class="fas fa-clock"></i></div>
+                {% else %}
+                    <div class="verification-badge rejected" title="Rejected / Verification Required"><i class="fas fa-times"></i></div>
+                {% endif %}
+
+                <!-- Profile Pic Circle -->
+                <div class="pfp-container">
+                    <img class="pfp-image" src="{{ profile.get_profile_pic_url }}" alt="{{ profile.display_name }}">
+                    <div class="pfp-ring {% if profile.verification_status == 'verified' %}verified{% endif %}"></div>
+                </div>
+
+                <!-- User Name -->
+                <div class="user-name">{{ profile.display_name }}</div>
+                
+                <div class="details-divider"></div>
+
+                <!-- Campus Detail -->
+                <div class="user-detail">
+                    <i class="fas fa-university"></i>
+                    <span>{{ profile.campus|default:"No Campus" }}</span>
+                </div>
+
+                <!-- Age Detail -->
+                <div class="user-detail">
+                    <i class="fas fa-birthday-cake"></i>
+                    <span>{{ profile.age|default:"N/A" }} Yrs</span>
+                </div>
             </div>
         {% empty %}
-            <div class="empty-state">No users registered yet.</div>
+            <div class="empty-state">
+                <i class="fas fa-users-slash" style="font-size: 32px; color: var(--text-muted); margin-bottom: 12px; display: block;"></i>
+                No registered users found.
+            </div>
         {% endfor %}
     </div>
 </div>
+
+<script>
+    // Live frontend filtering
+    function filterUsers() {
+        const query = document.getElementById('user-search').value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.user-box');
+        let visibleCount = 0;
+        
+        cards.forEach(card => {
+            const name = card.getAttribute('data-name') || '';
+            const campus = card.getAttribute('data-campus') || '';
+            const course = card.getAttribute('data-course') || '';
+            const native = card.getAttribute('data-native') || '';
+            const mt = card.getAttribute('data-mother-tongue') || '';
+            
+            const match = name.includes(query) || 
+                          campus.includes(query) || 
+                          course.includes(query) || 
+                          native.includes(query) || 
+                          mt.includes(query);
+                          
+            if (match) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        const countBadge = document.getElementById('visible-count');
+        if (countBadge) {
+            countBadge.innerText = visibleCount;
+        }
+
+        // Show empty state if nothing matches
+        const grid = document.querySelector('.users-grid');
+        let emptyState = document.getElementById('search-empty-state');
+        
+        if (visibleCount === 0) {
+            if (!emptyState) {
+                emptyState = document.createElement('div');
+                emptyState.id = 'search-empty-state';
+                emptyState.className = 'empty-state';
+                emptyState.innerHTML = '<i class="fas fa-search-minus" style="font-size: 32px; color: var(--text-muted); margin-bottom: 12px; display: block;"></i>No matching users found.';
+                grid.appendChild(emptyState);
+            }
+        } else {
+            if (emptyState) {
+                emptyState.remove();
+            }
+        }
+    }
+
+    // Live frontend sorting
+    function sortUsers(criteria) {
+        const grid = document.querySelector('.users-grid');
+        const cards = Array.from(grid.querySelectorAll('.user-box'));
+        const emptyState = document.getElementById('search-empty-state');
+        
+        cards.sort((a, b) => {
+            if (criteria === 'age') {
+                const ageA = parseInt(a.getAttribute('data-age')) || 0;
+                const ageB = parseInt(b.getAttribute('data-age')) || 0;
+                return ageA - ageB; // Youngest first
+            } else if (criteria === 'age-desc') {
+                const ageA = parseInt(a.getAttribute('data-age')) || 0;
+                const ageB = parseInt(b.getAttribute('data-age')) || 0;
+                return ageB - ageA; // Oldest first
+            } else {
+                const valA = a.getAttribute(`data-${criteria}`) || '';
+                const valB = b.getAttribute(`data-${criteria}`) || '';
+                return valA.localeCompare(valB);
+            }
+        });
+        
+        // Remove existing cards & re-append sorted
+        cards.forEach(card => card.remove());
+        if (emptyState) emptyState.remove();
+        
+        cards.forEach(card => grid.appendChild(card));
+        
+        // Re-append empty state if needed
+        if (emptyState) grid.appendChild(emptyState);
+    }
+</script>
 {% endblock %}

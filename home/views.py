@@ -235,6 +235,18 @@ def save_profile_progress(request):
             if 'pref_languages' in request.POST:
                 profile.pref_languages = request.POST.get('pref_languages')
                 
+            # Face Verification & PFP
+            if 'verification_image_url' in request.POST:
+                profile.verification_image = request.POST.get('verification_image_url')
+            if 'verification_status' in request.POST:
+                profile.verification_status = request.POST.get('verification_status')
+                if profile.verification_status == 'verified':
+                    profile.is_face_verified = True
+                else:
+                    profile.is_face_verified = False
+            if 'profile_pic_url' in request.POST:
+                profile.profile_pic = request.POST.get('profile_pic_url')
+                
             profile.save()
             return JsonResponse({'success': True})
         except Exception as e:
