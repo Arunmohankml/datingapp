@@ -103,8 +103,8 @@ def complete_profile(request):
     user = request.user
     profile = getattr(user, 'profile', None)
 
-    # If profile is already completed (has a name), don't allow re-entry to this setup page
-    if profile and profile.name:
+    # If profile is already completed (has both a name and profile picture), don't allow re-entry to this setup page
+    if profile and profile.name and profile.profile_pic:
         return redirect('home')
 
     if request.method == 'POST':
@@ -168,6 +168,79 @@ def complete_profile(request):
 
     return render(request, 'complete_profile.html', {'form': form})
 
+
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+@login_required
+def save_profile_progress(request):
+    if request.method == 'POST':
+        try:
+            user = request.user
+            profile, created = Profile.objects.get_or_create(user=user)
+            
+            # Basic Info
+            if 'name' in request.POST:
+                profile.name = request.POST.get('name')
+            if 'gender' in request.POST:
+                profile.gender = request.POST.get('gender')
+            if 'age' in request.POST:
+                age_val = request.POST.get('age')
+                profile.age = int(age_val) if age_val else None
+            
+            # Origins
+            if 'living_place' in request.POST:
+                profile.living_place = request.POST.get('living_place')
+            if 'native_place' in request.POST:
+                profile.native_place = request.POST.get('native_place')
+                
+            # Languages
+            if 'languages' in request.POST:
+                profile.languages = request.POST.get('languages')
+            if 'mother_tongues' in request.POST:
+                profile.mother_tongues = request.POST.get('mother_tongues')
+                
+            # Interests & Bio
+            if 'interest_tags' in request.POST:
+                profile.interest_tags = request.POST.get('interest_tags')
+            if 'bio' in request.POST:
+                profile.bio = request.POST.get('bio')
+            if 'liked_songs' in request.POST:
+                profile.liked_songs = request.POST.get('liked_songs')
+            if 'liked_movies' in request.POST:
+                profile.liked_movies = request.POST.get('liked_movies')
+            if 'fav_shows' in request.POST:
+                profile.fav_shows = request.POST.get('fav_shows')
+                
+            # Education
+            if 'clg_year' in request.POST:
+                year_val = request.POST.get('clg_year')
+                profile.clg_year = int(year_val) if year_val else None
+            if 'campus' in request.POST:
+                profile.campus = request.POST.get('campus')
+            if 'course' in request.POST:
+                profile.course = request.POST.get('course')
+                
+            # Preferences
+            if 'looking_for' in request.POST:
+                profile.looking_for = request.POST.get('looking_for')
+            if 'pref_gender' in request.POST:
+                profile.pref_gender = request.POST.get('pref_gender')
+            if 'pref_age_min' in request.POST:
+                min_val = request.POST.get('pref_age_min')
+                profile.pref_age_min = int(min_val) if min_val else 18
+            if 'pref_age_max' in request.POST:
+                max_val = request.POST.get('pref_age_max')
+                profile.pref_age_max = int(max_val) if max_val else 25
+            if 'pref_languages' in request.POST:
+                profile.pref_languages = request.POST.get('pref_languages')
+                
+            profile.save()
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
+
 @login_required
 def reverify(request):
     user = request.user
@@ -222,7 +295,7 @@ def home(request):
         else:
             raise e
 
-    if not profile.name:
+    if not profile.name or not profile.profile_pic:
         return redirect('complete_profile')
 
     if not profile.is_face_verified:
@@ -484,7 +557,7 @@ def login_view(request):
     if request.user.is_authenticated:
         # Check if profile is set up — if not, send to complete_profile
         profile = getattr(request.user, 'profile', None)
-        if profile and profile.name:
+        if profile and profile.name and profile.profile_pic:
             return redirect('home')
         return redirect('complete_profile')
     return render(request, "login.html")
@@ -514,7 +587,7 @@ def api_verify_token(request):
             
             # Check if profile is complete
             profile = getattr(user, 'profile', None)
-            profile_complete = profile is not None and bool(profile.name)
+            profile_complete = profile is not None and bool(profile.name) and bool(profile.profile_pic)
             
             # Sync round count to avoid immediate check_match popup for existing users
             if profile_complete:

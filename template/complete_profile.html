@@ -1075,6 +1075,33 @@
     const totalSteps = 7;
     let currentStep = 1;
 
+    function getInitialStep() {
+        const hasValue = (id) => {
+            const el = document.getElementById(id);
+            return el && el.value && el.value.trim().length > 0;
+        };
+
+        if (hasValue('id_looking_for') && hasValue('id_pref_gender') && hasValue('id_pref_languages')) {
+            return 7;
+        }
+        if (hasValue('id_campus') && hasValue('id_clg_year') && hasValue('id_course')) {
+            return 6;
+        }
+        if (hasValue('id_interest_tags')) {
+            return 5;
+        }
+        if (hasValue('id_languages') && hasValue('id_mother_tongues')) {
+            return 4;
+        }
+        if (hasValue('id_living_place') && hasValue('id_native_place')) {
+            return 3;
+        }
+        if (hasValue('id_name') && hasValue('id_age')) {
+            return 2;
+        }
+        return 1;
+    }
+
     function updateStepUI() {
         // Update Form Steps
         document.querySelectorAll('.form-step').forEach((el, index) => {
@@ -1102,6 +1129,37 @@
         document.getElementById('stepProgress').style.width = `${progressPercentage}%`;
         
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function saveProgress() {
+        const form = document.getElementById('profileForm');
+        if (!form) return;
+        const formData = new FormData(form);
+        
+        // Remove heavy files to keep auto-save requests light
+        formData.delete('profile_pic_file');
+        formData.delete('gallery_images');
+        
+        fetch('/save_profile_progress/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                console.log("Progress auto-saved.");
+            } else {
+                console.error("Auto-save failed:", data.error);
+            }
+        })
+        .catch(err => {
+            console.error("Auto-save network error:", err);
+        });
+        
+        localStorage.setItem('complete_profile_current_step', currentStep);
     }
 
     function nextStep(step) {
@@ -1136,6 +1194,7 @@
         if (currentStep < totalSteps) {
             currentStep++;
             updateStepUI();
+            saveProgress();
             if (currentStep === 7) {
                 checkStep7Validity();
             }
@@ -1146,10 +1205,22 @@
         if (currentStep > 1) {
             currentStep--;
             updateStepUI();
+            saveProgress();
         }
     }
 
-    // Initialize Stepper
+    // Initialize Stepper step from localStorage or backend fallback
+    const storedStep = localStorage.getItem('complete_profile_current_step');
+    if (storedStep) {
+        const parsed = parseInt(storedStep, 10);
+        if (!isNaN(parsed) && parsed >= 1 && parsed <= 7) {
+            currentStep = parsed;
+        } else {
+            currentStep = getInitialStep();
+        }
+    } else {
+        currentStep = getInitialStep();
+    }
     updateStepUI();
 
 
@@ -1403,14 +1474,14 @@
                 if (livenessState === LIVENESS_STATE.LOOK_LEFT) {
                     statusEl.innerText = 'Good! Now turn your head LEFT ⬅️';
                     statusEl.style.color = '#3b82f6';
-                    if (ratio > 1.4) { // Very loose threshold for fast UX
+                    if (ratio < 0.7) { // Swapped to mirror view correctly (left turn moves nose to left of image)
                         livenessState = LIVENESS_STATE.LOOK_RIGHT;
                     }
                 }
                 else if (livenessState === LIVENESS_STATE.LOOK_RIGHT) {
                     statusEl.innerText = 'Great! Now turn your head RIGHT ➡️';
                     statusEl.style.color = '#3b82f6';
-                    if (ratio < 0.7) { // Very loose threshold for fast UX
+                    if (ratio > 1.4) { // Swapped to mirror view correctly (right turn moves nose to right of image)
                         livenessState = LIVENESS_STATE.LOOK_FRONT;
                     }
                 }
@@ -1700,6 +1771,9 @@
     }
 
     document.getElementById('profileForm').addEventListener('submit', function(e) {
+        // Clear local storage progress on final successful submission
+        localStorage.removeItem('complete_profile_current_step');
+
         // No longer injecting gallery files into the form native inputs!
         // The background fetch process handles it, and the URLs are already in the hidden inputs.
         const submitBtn = document.querySelector('button[type="submit"]');

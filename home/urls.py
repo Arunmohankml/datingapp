@@ -8,6 +8,7 @@ urlpatterns = [
     path("api/save-fcm-token/", views.api_save_fcm_token, name="api_save_fcm_token"),
     path("", views.home, name="home"),
     path("complete_profile/", views.complete_profile, name="complete_profile"),
+    path("save_profile_progress/", views.save_profile_progress, name="save_profile_progress"),
     path("reverify/", views.reverify, name="reverify"),
     path("check_match/", views.check_match, name="check_match"),
     path("api/quiz/batch/", views.get_quiz_batch, name="get_quiz_batch"),
