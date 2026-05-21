@@ -188,6 +188,7 @@
     let verificationBase64 = null;
     let verificationDescriptor = null;
     let verifyStream = null;
+    let lastFaceSeenTime = Date.now();
     
     const LIVENESS_STATE = {
         WAITING_FACE: 0,
@@ -197,6 +198,59 @@
         DONE: 4
     };
     let livenessState = LIVENESS_STATE.WAITING_FACE;
+
+    // Laplacian Variance Blur Detection
+    function checkBlurriness(canvas, threshold = 30) {
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const imgData = ctx.getImageData(0, 0, width, height);
+        const data = imgData.data;
+        
+        // 1. Grayscale
+        const gray = new Float32Array(width * height);
+        for (let i = 0; i < data.length; i += 4) {
+            gray[i / 4] = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        }
+        
+        // 2. Laplace Kernel Convolution
+        let sum = 0;
+        const laplacian = new Float32Array(width * height);
+        for (let y = 1; y < height - 1; y++) {
+            for (let x = 1; x < width - 1; x++) {
+                const idx = y * width + x;
+                const val = (
+                    gray[idx - width] +
+                    gray[idx - 1] -
+                    4 * gray[idx] +
+                    gray[idx + 1] +
+                    gray[idx + width]
+                );
+                laplacian[idx] = val;
+                sum += val;
+            }
+        }
+        
+        const size = (width - 2) * (height - 2);
+        const mean = sum / size;
+        
+        // 3. Calculate Variance
+        let sumSqDiff = 0;
+        for (let y = 1; y < height - 1; y++) {
+            for (let x = 1; x < width - 1; x++) {
+                const idx = y * width + x;
+                const diff = laplacian[idx] - mean;
+                sumSqDiff += diff * diff;
+            }
+        }
+        
+        const variance = sumSqDiff / size;
+        console.log("Blur check - Variance of Laplacian:", variance);
+        return {
+            isBlurry: variance < threshold,
+            variance: variance
+        };
+    }
 
     async function startVerification() {
         const video = document.getElementById('verify-video');
@@ -220,6 +274,7 @@
             status.innerText = 'Please look straight at the camera.';
             
             livenessState = LIVENESS_STATE.WAITING_FACE;
+            lastFaceSeenTime = Date.now();
             requestAnimationFrame(() => processLivenessFrame(video, status));
         } catch (err) {
             console.error(err);
@@ -235,11 +290,15 @@
             
             if (!detection) {
                 if (livenessState !== LIVENESS_STATE.CAPTURE_WAIT) {
-                    statusEl.innerText = 'Please look straight at the camera.';
-                    statusEl.style.color = '#ef4444';
-                    livenessState = LIVENESS_STATE.WAITING_FACE;
+                    // Only reset state if the face has been missing for more than 2 seconds
+                    if (Date.now() - lastFaceSeenTime > 2000) {
+                        statusEl.innerText = 'Please look straight at the camera.';
+                        statusEl.style.color = '#ef4444';
+                        livenessState = LIVENESS_STATE.WAITING_FACE;
+                    }
                 }
             } else {
+                lastFaceSeenTime = Date.now();
                 const nose = detection.landmarks.getNose()[3];
                 const leftCheek = detection.landmarks.getJawOutline()[0];
                 const rightCheek = detection.landmarks.getJawOutline()[16];
@@ -261,12 +320,12 @@
                     statusEl.style.color = '#10b981';
                     if (ratio > 0.6 && ratio < 1.6) {
                         livenessState = LIVENESS_STATE.CAPTURE_WAIT;
-                        statusEl.innerText = 'Hold still... Capturing in 0.7s! 📷';
+                        statusEl.innerText = 'Capturing... Hold still! 📷';
                         setTimeout(() => {
                             if (!verificationCaptured && livenessState === LIVENESS_STATE.CAPTURE_WAIT) {
                                 captureVerification();
                             }
-                        }, 700);
+                        }, 100); // 100ms quick capture delay
                     }
                 }
             }
@@ -292,17 +351,34 @@
         canvas.getContext('2d').drawImage(video, 0, 0, 400, 400);
         verificationBase64 = canvas.toDataURL('image/jpeg', 0.8);
         
-        status.innerText = 'Capturing & Analyzing...';
+        status.innerText = 'Checking photo clarity...';
+        status.style.color = '#3b82f6';
 
-        // Now run the AI analysis on the captured frame (or video stream)
-        const fullDetection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+        // Blur Check
+        const blurCheck = checkBlurriness(canvas, 30);
+        if (blurCheck.isBlurry) {
+            status.innerText = 'Photo was blurry! Let\'s retake. Hold still.';
+            status.style.color = '#ef4444';
+            verificationCaptured = false;
+            livenessState = LIVENESS_STATE.WAITING_FACE;
+            lastFaceSeenTime = Date.now();
+            processLivenessFrame(video, status);
+            return;
+        }
+
+        status.innerText = 'Analyzing face...';
+        status.style.color = '#10b981';
+
+        // Now run the AI analysis on the static captured canvas
+        const fullDetection = await faceapi.detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
         
         if (!fullDetection) {
             status.innerText = 'Face not clear. Restarting...';
-            livenessState = LIVENESS_STATE.WAITING_FACE;
-            // Clear canvas and start over
+            status.style.color = '#ef4444';
             verificationCaptured = false;
-            startVerification(); 
+            livenessState = LIVENESS_STATE.WAITING_FACE;
+            lastFaceSeenTime = Date.now();
+            processLivenessFrame(video, status);
             return;
         }
 
