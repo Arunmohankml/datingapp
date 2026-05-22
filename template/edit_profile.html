@@ -101,15 +101,22 @@
 
   .ep-topbar {
     flex-shrink: 0;
-    height: calc(var(--ep-header) + env(safe-area-inset-top));
-    padding: env(safe-area-inset-top) 8px 0;
+    position: sticky; top: 0; z-index: 300;
+    background: rgba(248,251,255,0.92);
+    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid rgba(37,99,235,0.08);
+    padding: 16px 20px;
     display: flex; align-items: center;
-    background: rgba(255,255,255,0.92);
-    backdrop-filter: blur(24px) saturate(1.5);
-    -webkit-backdrop-filter: blur(24px) saturate(1.5);
-    border-bottom: 1px solid var(--ep-line);
-    border-radius: 0;
-    z-index: 300;
+    animation: ep-rise 0.5s cubic-bezier(0.16,1,0.3,1) both;
+  }
+  .ep-topbar-title {
+    font-size: 20px; font-weight: 900; letter-spacing: -0.8px;
+    color: #0c1929;
+    margin: 0;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ep-topbar-title i {
+    color: #2563eb; font-size: 18px;
   }
   .ep-topbar-btn {
     width: var(--ep-tap); height: var(--ep-tap);
@@ -693,9 +700,7 @@
 <div id="ep-app">
 
   <header class="ep-topbar">
-    <span class="ep-topbar-end"></span>
-    <span class="ep-topbar-title">Edit Profile</span>
-    <span class="ep-topbar-end"></span>
+    <h2 class="ep-topbar-title"><i class="fas fa-user-edit"></i> Edit Profile</h2>
   </header>
 
   <div class="ep-scroll">

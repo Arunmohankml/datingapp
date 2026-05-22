@@ -23,17 +23,63 @@
         transition: 0.2s;
     }
     .install-btn:active { transform: scale(0.95); }
+
+    /* Confession-style page header */
+    .s-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 900;
+        background: rgba(248, 251, 255, 0.92);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid rgba(37, 99, 235, 0.08);
+        margin: 0 -20px 24px;
+        animation: fadeInDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    @keyframes fadeInDown {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .s-topbar-title {
+        font-size: 20px;
+        font-weight: 900;
+        letter-spacing: -0.8px;
+        color: var(--text-main);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .s-topbar-title i { color: var(--primary); font-size: 18px; }
+    .s-back-btn {
+        width: 34px; height: 34px;
+        border-radius: 10px;
+        background: rgba(37, 99, 235, 0.07);
+        color: var(--primary);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 14px;
+        text-decoration: none;
+        flex-shrink: 0;
+        transition: background 0.2s, transform 0.15s;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .s-back-btn:active { background: rgba(37,99,235,0.15); transform: scale(0.92); }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="settings-container" style="max-width: 500px; margin: 0 auto; padding: 20px 16px;">
-    <!-- Back Button -->
-    <a href="{% url 'edit_profile' %}" style="text-decoration: none; color: var(--text-muted); font-size: 16px; margin-bottom: 24px; display: inline-flex; align-items: center; gap: 8px;">
-        <i class="fas fa-arrow-left"></i> Back to Profile
-    </a>
-
-    <h2 style="font-size: 24px; font-weight: 800; color: var(--text-main); margin-bottom: 32px;">Settings</h2>
+<div class="settings-container" style="max-width: 500px; margin: 0 auto; padding: 0 16px 20px;">
+    <!-- Confession-style Header -->
+    <div class="s-topbar">
+        <a href="{% url 'edit_profile' %}" class="s-back-btn" title="Back">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        <h2 class="s-topbar-title"><i class="fas fa-cog"></i> Settings</h2>
+    </div>
 
     <!-- Install App Card -->
     <div id="install-app-card" class="card" style="padding: 20px; margin-bottom: 16px; display: none; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
