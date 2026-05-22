@@ -1584,77 +1584,75 @@
         const canvas = document.getElementById('verify-canvas');
         const status = document.getElementById('verify-status');
         
-        // Preserve aspect ratio to avoid squishing faces on tall mobile streams
-        const targetWidth = 400;
-        const targetHeight = video.videoWidth > 0 ? Math.floor(video.videoHeight * (targetWidth / video.videoWidth)) : 400;
-        canvas.width = targetWidth; 
-        canvas.height = targetHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0, targetWidth, targetHeight);
-        verificationBase64 = canvas.toDataURL('image/jpeg', 0.8);
-        
-        // STOP CAMERA IMMEDIATELY
-        if (verifyStream) verifyStream.getTracks().forEach(t => t.stop());
-        document.getElementById('verify-camera-ui').style.display = 'none';
-        document.getElementById('verify-success-ui').style.display = 'block';
-
-        status.innerText = 'Verifying your photo...';
-        status.style.color = '#3b82f6';
-
         function handleFailure(msg) {
             status.innerText = msg + " Retrying in 3s...";
             status.style.color = '#ef4444';
             document.getElementById('verification-status-input').value = 'rejected';
             document.getElementById('face-verification-section').style.borderColor = '#ef4444';
+            if (verifyStream) verifyStream.getTracks().forEach(t => t.stop());
+            document.getElementById('verify-camera-ui').style.display = 'none';
+            document.getElementById('verify-success-ui').style.display = 'none';
             setTimeout(() => {
                 handleVerificationRetake();
             }, 3000);
         }
 
-        try {
-            // Load the captured image into a fresh Image object to avoid display:none canvas issues on mobile
-            const img = new Image();
-            img.src = verificationBase64;
-            await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = reject;
-            });
+        status.innerText = 'Capturing & Analyzing... Please wait...';
+        status.style.color = '#3b82f6';
 
-            // 1. Blur Check
-            // We draw the image to a temporary, off-DOM canvas to check blur
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = img.width;
-            tempCanvas.height = img.height;
-            tempCanvas.getContext('2d').drawImage(img, 0, 0);
+        try {
+            // STEP 1: Deep Analysis ON THE LIVE VIDEO STREAM 
+            // (Bypasses all Canvas/WebGL extraction bugs on Android by analyzing before stopping the stream)
+            const allFaces = await faceapi.detectAllFaces(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 })).withFaceLandmarks().withFaceDescriptors().withAgeAndGender();
             
-            const blurCheck = checkBlurriness(tempCanvas, 15); // Forgiving threshold for budget cameras
+            if (allFaces.length === 0) {
+                // 100% Fallback: If SsdMobilenet fails due to hardware limits, use TinyFaceDetector which we KNOW works
+                const fallback = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224 })).withFaceLandmarks().withFaceDescriptor();
+                if (!fallback) {
+                    return handleFailure('No human face detected clearly.');
+                }
+                verificationDescriptor = fallback.descriptor;
+            } else {
+                // Multiple Faces Check
+                if (allFaces.length > 1) {
+                    return handleFailure('Multiple faces detected. Please ensure you are alone.');
+                }
+                const fullDetection = allFaces[0];
+                
+                // Gender Check
+                const selectedGender = document.getElementById('id_gender').value;
+                const detectedGender = fullDetection.gender;
+                if (selectedGender !== 'other' && selectedGender !== detectedGender) {
+                    return handleFailure(`Gender mismatch! Form says ${selectedGender}, but AI sees ${detectedGender}.`);
+                }
+                verificationDescriptor = fullDetection.descriptor;
+            }
+
+            // Blur Check directly from video pixels
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 400; tempCanvas.height = 400;
+            tempCanvas.getContext('2d').drawImage(video, 0, 0, 400, 400);
+            const blurCheck = checkBlurriness(tempCanvas, 10); // Extremely forgiving threshold
             if (blurCheck.isBlurry) {
                 return handleFailure('Photo is too blurry.');
             }
 
-            // 2. Multiple/No Faces Check & Landmarks
-            const allFaces = await faceapi.detectAllFaces(img, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 })).withFaceLandmarks().withFaceDescriptors().withAgeAndGender();
-            
-            if (allFaces.length === 0) {
-                return handleFailure('No human face detected clearly.');
-            }
-            if (allFaces.length > 1) {
-                return handleFailure('Multiple faces detected. Please ensure you are alone.');
-            }
-
-            const fullDetection = allFaces[0];
-
-            // 3. Gender Check
-            const selectedGender = document.getElementById('id_gender').value;
-            const detectedGender = fullDetection.gender;
-            if (selectedGender !== 'other' && selectedGender !== detectedGender) {
-                return handleFailure(`Gender mismatch! Form says ${selectedGender}, but AI sees ${detectedGender}.`);
-            }
-
-            // All checks passed!
-            verificationDescriptor = fullDetection.descriptor;
+            // STEP 2: Save the verified frame to canvas
+            const targetWidth = 400;
+            const targetHeight = video.videoWidth > 0 ? Math.floor(video.videoHeight * (targetWidth / video.videoWidth)) : 400;
+            canvas.width = targetWidth; 
+            canvas.height = targetHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0, targetWidth, targetHeight);
+            verificationBase64 = canvas.toDataURL('image/jpeg', 0.8);
             document.getElementById('verification-image-data').value = verificationBase64;
+            
+            // STEP 3: Safely stop the camera and update UI
+            if (verifyStream) verifyStream.getTracks().forEach(t => t.stop());
+            document.getElementById('verify-camera-ui').style.display = 'none';
+            document.getElementById('verify-success-ui').style.display = 'block';
 
-            // 4. Upload to Cloud
+            // STEP 4: Upload to Cloud
+            status.innerText = "Verifying your photo...";
             const res = await fetch('/api/upload/base64/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
@@ -1675,8 +1673,9 @@
             } else {
                 return handleFailure("Upload failed: " + data.message);
             }
+
         } catch (e) {
-            console.error("Network error on verification upload", e);
+            console.error("Camera analysis error", e);
             return handleFailure("Error processing photo.");
         }
     }
