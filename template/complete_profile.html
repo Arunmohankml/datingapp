@@ -1585,8 +1585,12 @@
         const status = document.getElementById('verify-status');
         
         // INSTANT PIXEL CAPTURE
-        canvas.width = 400; canvas.height = 400;
-        canvas.getContext('2d').drawImage(video, 0, 0, 400, 400);
+        // Preserve aspect ratio to avoid squishing faces on tall mobile streams
+        const targetWidth = 400;
+        const targetHeight = video.videoWidth > 0 ? Math.floor(video.videoHeight * (targetWidth / video.videoWidth)) : 400;
+        canvas.width = targetWidth; 
+        canvas.height = targetHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, targetWidth, targetHeight);
         verificationBase64 = canvas.toDataURL('image/jpeg', 0.8);
         
         // STOP CAMERA IMMEDIATELY
@@ -1608,8 +1612,8 @@
         }
 
         // BACKGROUND PROCESSING
-        // Blur Check
-        const blurCheck = checkBlurriness(canvas, 30);
+        // Blur Check (Lower threshold to accommodate budget phone cameras)
+        const blurCheck = checkBlurriness(canvas, 15);
         if (blurCheck.isBlurry) {
             return handleFailure('Photo was blurry!');
         }
