@@ -28,8 +28,32 @@ self.addEventListener('push', function(event) {
         data: { url: url }
     };
 
+    // Show system notification unless the app is open and the user is already on the exact target URL
     event.waitUntil(
-        self.registration.showNotification(title, options)
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+            let isCurrentPage = false;
+            for (var i = 0; i < windowClients.length; i++) {
+                var client = windowClients[i];
+                if (client.visibilityState === 'visible') {
+                    try {
+                        const clientUrl = new URL(client.url);
+                        const targetUrl = new URL(url, client.url);
+                        if (clientUrl.pathname === targetUrl.pathname) {
+                            isCurrentPage = true;
+                            break;
+                        }
+                    } catch (e) {
+                        if (url !== '/' && client.url.includes(url)) {
+                            isCurrentPage = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!isCurrentPage) {
+                return self.registration.showNotification(title, options);
+            }
+        })
     );
 });
 

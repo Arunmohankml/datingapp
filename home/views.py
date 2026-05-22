@@ -627,6 +627,9 @@ def api_save_fcm_token(request):
             if not token:
                 return JsonResponse({'success': False, 'error': 'Token missing'}, status=400)
             
+            # Prevent unique token IntegrityError if token belongs to another user
+            FCMToken.objects.filter(token=token).exclude(user=request.user).delete()
+            
             # Save or update the token
             FCMToken.objects.update_or_create(
                 user=request.user,
@@ -646,6 +649,18 @@ def send_push_to_user(user, title, body, url='/'):
     
     # Lazy init check
     get_firebase_app()
+
+    # Construct absolute HTTPS URL as required by Firebase WebpushFCMOptions.link
+    domain = os.environ.get('VERCEL_URL')
+    if not domain:
+        domain = 'srmmatch.vercel.app' # fallback
+    
+    if not domain.startswith('http'):
+        domain = f"https://{domain}"
+    elif domain.startswith('http://'):
+        domain = domain.replace('http://', 'https://')
+        
+    absolute_url = f"{domain.rstrip('/')}/{url.lstrip('/')}"
 
     message = messaging.MulticastMessage(
         notification=messaging.Notification(
@@ -667,12 +682,12 @@ def send_push_to_user(user, title, body, url='/'):
                 renotify=True
             ),
             fcm_options=messaging.WebpushFCMOptions(
-                link=url
+                link=absolute_url
             )
         )
     )
     try:
-        response = messaging.send_multicast(message)
+        response = messaging.send_each_for_multicast(message)
         if response.failure_count > 0:
             # log or handle invalid tokens here
             pass
@@ -694,6 +709,17 @@ def send_match_request(request, receiver_id):
                     'sender_id': request.user.id,
                     'sender_name': request.user.profile.name if hasattr(request.user, 'profile') else request.user.username
                 })
+                # Send Push Notification
+                try:
+                    sender_name = request.user.profile.name if hasattr(request.user, 'profile') else request.user.username
+                    send_push_to_user(
+                        receiver,
+                        title="New Connection Request ⚡",
+                        body=f"{sender_name} wants to connect with you!",
+                        url="/connections/"
+                    )
+                except Exception as e:
+                    print(f"Push Error (Connection Request): {e}")
             else:
                 messages.info(request, "Connection request already sent.")
         
@@ -718,6 +744,28 @@ def accept_match(request, req_id):
     req = get_object_or_404(MatchRequest, id=req_id, receiver=request.user)
     req.status = 'accepted'
     req.save()
+    
+    # Send Push Notification to the sender of the request
+    try:
+        receiver_name = request.user.profile.name if hasattr(request.user, 'profile') else request.user.username
+        send_push_to_user(
+            req.sender,
+            title="Connection Accepted! 🎉",
+            body=f"{receiver_name} accepted your connection request. Start chatting now!",
+            url=f"/chat/{request.user.id}/"
+        )
+    except Exception as e:
+        print(f"Push Error (Accept Match): {e}")
+
+    # Broadcast to Pusher for real-time foreground update
+    try:
+        broadcast_event(f'chat_{req.sender.id}', 'connection_accepted', {
+            'receiver_id': request.user.id,
+            'receiver_name': request.user.profile.name if hasattr(request.user, 'profile') else request.user.username
+        })
+    except Exception as e:
+        print(f"Pusher Error (Accept Match): {e}")
+
     return redirect('connections')
 
 @login_required

@@ -422,13 +422,12 @@
             const userChannel = pusher.subscribe(`chat_${USER_ID}`);
             
             userChannel.bind('new_message', (data) => {
-                // If not in the specific chat, show chat indicator and toast
+                // If not in the specific chat, show chat indicator
                 if (!window.location.pathname.includes(`/chat/${data.sender_id}/`)) {
                     const chatBadge = document.getElementById('chat-badge');
                     if (chatBadge) {
                         chatBadge.style.display = 'block';
                     }
-                    showGlobalToast(`New message from ${data.sender_name || 'someone'}`);
                 } else {
                     // We are in the chat, so ensure the badge is hidden
                     const chatBadge = document.getElementById('chat-badge');
@@ -439,14 +438,26 @@
             userChannel.bind('new_connection', (data) => {
                 const matchBadge = document.getElementById('match-badge');
                 if (matchBadge) matchBadge.style.display = 'block';
-                showGlobalToast(`You have a new match request!`);
+            });
+
+            userChannel.bind('connection_accepted', (data) => {
+                const matchBadge = document.getElementById('match-badge');
+                if (matchBadge) matchBadge.style.display = 'block';
             });
         }
 
-        function showGlobalToast(text) {
+        function showGlobalToast(text, url = null) {
             const container = document.querySelector('.messages-toast-container') || createToastContainer();
             const toast = document.createElement('div');
             toast.className = 'message-toast info';
+            if (url) {
+                toast.style.cursor = 'pointer';
+                toast.addEventListener('click', (e) => {
+                    if (e.target.tagName !== 'BUTTON') {
+                        window.location.href = url;
+                    }
+                });
+            }
             toast.innerHTML = `<span>${text}</span><button onclick="this.parentElement.remove()" style="margin-left:auto; background:none; border:none; color:#94a3b8; font-size:20px; cursor:pointer;">&times;</button>`;
             container.appendChild(toast);
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 5000);
@@ -575,11 +586,9 @@
         };
 
         if ("serviceWorker" in navigator) {
-            window.addEventListener("load", () => {
-                navigator.serviceWorker.register("/sw.js")
-                    .then(reg => console.log("SW Registered"))
-                    .catch(err => console.log("SW Failed", err));
-            });
+            navigator.serviceWorker.register("/sw.js")
+                .then(reg => console.log("SW Registered"))
+                .catch(err => console.log("SW Failed", err));
         }
 
         window.addEventListener('beforeinstallprompt', (e) => {
