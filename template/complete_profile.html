@@ -1092,22 +1092,29 @@
             return el && el.value && el.value.trim().length > 0;
         };
 
-        if (hasValue('id_looking_for') && hasValue('id_pref_gender')) {
+        const step1Filled = hasValue('id_name') && hasValue('id_age') && hasValue('id_gender');
+        const step2Filled = hasValue('id_living_place') && hasValue('id_native_place');
+        const step3Filled = hasValue('id_languages') && hasValue('id_mother_tongues');
+        const step4Filled = hasValue('id_interest_tags') && hasValue('id_bio');
+        const step5Filled = hasValue('id_campus') && hasValue('id_clg_year') && hasValue('id_course');
+        const step6Filled = hasValue('id_looking_for') && hasValue('id_pref_gender');
+
+        if (step1Filled && step2Filled && step3Filled && step4Filled && step5Filled && step6Filled) {
             return 7;
         }
-        if (hasValue('id_campus') && hasValue('id_clg_year') && hasValue('id_course')) {
+        if (step1Filled && step2Filled && step3Filled && step4Filled && step5Filled) {
             return 6;
         }
-        if (hasValue('id_interest_tags') && hasValue('id_bio')) {
+        if (step1Filled && step2Filled && step3Filled && step4Filled) {
             return 5;
         }
-        if (hasValue('id_languages') && hasValue('id_mother_tongues')) {
+        if (step1Filled && step2Filled && step3Filled) {
             return 4;
         }
-        if (hasValue('id_living_place') && hasValue('id_native_place')) {
+        if (step1Filled && step2Filled) {
             return 3;
         }
-        if (hasValue('id_name') && hasValue('id_age') && hasValue('id_gender')) {
+        if (step1Filled) {
             return 2;
         }
         return 1;
@@ -1230,15 +1237,17 @@
 
     // Initialize Stepper step from localStorage or backend fallback
     const storedStep = localStorage.getItem('complete_profile_current_step');
+    const calculatedInitialStep = getInitialStep();
     if (storedStep) {
         const parsed = parseInt(storedStep, 10);
         if (!isNaN(parsed) && parsed >= 1 && parsed <= 7) {
-            currentStep = parsed;
+            // Only restore if the user has actually filled out the pre-requisite steps
+            currentStep = Math.min(parsed, calculatedInitialStep);
         } else {
-            currentStep = getInitialStep();
+            currentStep = calculatedInitialStep;
         }
     } else {
-        currentStep = getInitialStep();
+        currentStep = calculatedInitialStep;
     }
     updateStepUI();
 
