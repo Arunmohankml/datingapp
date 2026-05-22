@@ -51,19 +51,19 @@ class ProfileForm(forms.ModelForm):
     profile_pic_file = forms.ImageField(required=False, label="Upload Photo", widget=forms.FileInput(attrs={'class': 'form-control'}))
     # Multiselect (JSON) fields as comma-separated strings
     languages = forms.CharField(
-        required=False,
+        required=True,
         widget=forms.TextInput(attrs={'placeholder': 'English, Tamil, Hindi'})
     )
     mother_tongues = forms.CharField(
-        required=False,
+        required=True,
         widget=forms.TextInput(attrs={'placeholder': 'Hindi, Telugu'})
     )
     interest_tags = forms.CharField(
-        required=False,
+        required=True,
         widget=forms.TextInput(attrs={'placeholder': 'anime, food, humor'})
     )
     pref_languages = forms.CharField(
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={'placeholder': 'English, Hindi'})
     )
     profile_pic_url = forms.CharField(required=False, widget=forms.HiddenInput())
@@ -100,7 +100,7 @@ class ProfileForm(forms.ModelForm):
         mandatory_fields = [
             'living_place', 'native_place', 
             'clg_year', 'campus', 'course',
-            'pref_age_min', 'pref_age_max', 'pref_gender', 'age', 'interest_tags'
+            'pref_age_min', 'pref_age_max', 'pref_gender', 'age', 'interest_tags', 'bio'
         ]
         for field in mandatory_fields:
             if field in self.fields:

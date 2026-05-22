@@ -1081,13 +1081,13 @@
             return el && el.value && el.value.trim().length > 0;
         };
 
-        if (hasValue('id_looking_for') && hasValue('id_pref_gender') && hasValue('id_pref_languages')) {
+        if (hasValue('id_looking_for') && hasValue('id_pref_gender')) {
             return 7;
         }
         if (hasValue('id_campus') && hasValue('id_clg_year') && hasValue('id_course')) {
             return 6;
         }
-        if (hasValue('id_interest_tags')) {
+        if (hasValue('id_interest_tags') && hasValue('id_bio')) {
             return 5;
         }
         if (hasValue('id_languages') && hasValue('id_mother_tongues')) {
@@ -1096,7 +1096,7 @@
         if (hasValue('id_living_place') && hasValue('id_native_place')) {
             return 3;
         }
-        if (hasValue('id_name') && hasValue('id_age')) {
+        if (hasValue('id_name') && hasValue('id_age') && hasValue('id_gender')) {
             return 2;
         }
         return 1;
@@ -1167,15 +1167,23 @@
         if (step === 1) {
             const name = document.getElementById('id_name').value.trim();
             const age = document.getElementById('id_age').value.trim();
-            if (!name || !age) { customAlert("Please fill out your Name and Age to continue.", "Missing Info"); return; }
+            const gender = document.getElementById('id_gender').value;
+            if (!name || !age || !gender) { customAlert("Please fill out your Name, Gender, and Age to continue.", "Missing Info"); return; }
         }
         else if (step === 2) {
             const living = document.getElementById('id_living_place').value.trim();
             const native = document.getElementById('id_native_place').value.trim();
             if (!living || !native) { customAlert("Current and Native places are required.", "Missing Info"); return; }
         }
+        else if (step === 3) {
+            const languages = document.getElementById('id_languages').value.trim();
+            const motherTongue = document.getElementById('id_mother_tongues').value.trim();
+            if (!languages || !motherTongue) { customAlert("Languages spoken and Mother tongue details are mandatory.", "Missing Info"); return; }
+        }
         else if (step === 4) {
+            const bio = document.getElementById('id_bio').value.trim();
             const interests = document.getElementById('id_interest_tags').value.trim();
+            if (!bio) { customAlert("Please tell us a bit about yourself in the bio section.", "Missing Info"); return; }
             if (!interests) { customAlert("Please select at least one interest to help us find matches!", "Interests Required"); return; }
         }
         else if (step === 5) {
@@ -1187,8 +1195,8 @@
         else if (step === 6) {
             const looking = document.getElementById('id_looking_for').value;
             const pGender = document.getElementById('id_pref_gender').value;
-            const pLang = document.getElementById('id_pref_languages').value.trim();
-            if (!looking || !pGender || !pLang) { customAlert("All preferences are mandatory.", "Missing Info"); return; }
+            // pref_languages is explicitly excluded here since it is optional
+            if (!looking || !pGender) { customAlert("Looking for and Preferred Gender preferences are mandatory.", "Missing Info"); return; }
         }
 
         if (currentStep < totalSteps) {

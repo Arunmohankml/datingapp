@@ -1035,7 +1035,21 @@ def toggle_discoverable(request):
     profile = request.user.profile
     profile.is_discoverable = not profile.is_discoverable
     profile.save()
-    return JsonResponse({'success': True, 'is_discoverable': profile.is_discoverable})
+    
+    # Check if request prefers JSON response (AJAX/Fetch)
+    is_ajax = (
+        request.headers.get('x-requested-with') == 'XMLHttpRequest' or
+        'application/json' in request.headers.get('Accept', '') or
+        request.content_type == 'application/json'
+    )
+    if is_ajax:
+        return JsonResponse({'success': True, 'is_discoverable': profile.is_discoverable})
+        
+    # Otherwise, redirect native form submission back to the referring page
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
+    return redirect('home')
 
 @login_required
 def edit_profile(request):
