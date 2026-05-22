@@ -29,16 +29,14 @@
         position: sticky;
         top: 0;
         z-index: 900;
-        background: rgba(248, 251, 255, 0.92);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        padding: 16px 20px;
+        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        padding: 18px 20px;
         display: flex;
         align-items: center;
         gap: 12px;
-        border-bottom: 1px solid rgba(37, 99, 235, 0.08);
-        margin: 0 -20px 24px;
+        margin: 0 -16px 24px;
         animation: fadeInDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        box-shadow: 0 4px 20px rgba(37, 99, 235, 0.25);
     }
     @keyframes fadeInDown {
         from { opacity: 0; transform: translateY(-10px); }
@@ -48,18 +46,18 @@
         font-size: 20px;
         font-weight: 900;
         letter-spacing: -0.8px;
-        color: var(--text-main);
+        color: #ffffff;
         margin: 0;
         display: flex;
         align-items: center;
         gap: 8px;
     }
-    .s-topbar-title i { color: var(--primary); font-size: 18px; }
+    .s-topbar-title i { color: rgba(255,255,255,0.85); font-size: 18px; }
     .s-back-btn {
         width: 34px; height: 34px;
         border-radius: 10px;
-        background: rgba(37, 99, 235, 0.07);
-        color: var(--primary);
+        background: rgba(255, 255, 255, 0.18);
+        color: #ffffff;
         display: flex; align-items: center; justify-content: center;
         font-size: 14px;
         text-decoration: none;
@@ -67,12 +65,12 @@
         transition: background 0.2s, transform 0.15s;
         -webkit-tap-highlight-color: transparent;
     }
-    .s-back-btn:active { background: rgba(37,99,235,0.15); transform: scale(0.92); }
+    .s-back-btn:active { background: rgba(255,255,255,0.3); transform: scale(0.92); }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="settings-container" style="max-width: 500px; margin: 0 auto; padding: 0 16px 20px;">
+<div class="settings-container" style="max-width: 500px; margin: 0 auto; padding: 0 16px 20px; overflow: hidden;">
     <!-- Confession-style Header -->
     <div class="s-topbar">
         <a href="{% url 'edit_profile' %}" class="s-back-btn" title="Back">
