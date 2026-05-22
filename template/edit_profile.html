@@ -631,32 +631,24 @@
     }
 
     .container {
-      width: 430px !important;
-      max-width: 430px !important;
+      width: 500px !important;
+      max-width: 500px !important;
       height: 100dvh !important;
       margin: 0 auto !important;
       padding: 0 !important;
       position: relative;
       border-left: 1px solid rgba(37,99,235,0.07);
       border-right: 1px solid rgba(37,99,235,0.07);
-      box-shadow: 0 0 60px rgba(37,99,235,0.08), 0 0 0 1px rgba(37,99,235,0.05);
+      box-shadow: 0 0 60px rgba(37,99,235,0.08);
     }
 
     #ep-app {
-      width: 430px;
+      width: 500px;
     }
 
-    /* Bottom nav stays within the 430px column */
-    nav {
-      left: 50% !important;
-      transform: translateX(-50%) !important;
-      width: 430px !important;
-      border-radius: 0 !important;
-    }
-
-    /* FAB stays within the phone column */
+    /* FAB stays within the content column */
     .ep-savebar {
-      right: calc(50% - 430px/2 + 20px);
+      right: calc(50% - 500px/2 + 20px);
     }
   }
 
