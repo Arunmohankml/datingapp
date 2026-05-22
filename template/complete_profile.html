@@ -797,6 +797,25 @@
                     <p id="verify-status" style="margin-top: 16px; font-size: 13px; font-weight: 700; color: var(--primary);"></p>
                 </div>
 
+                <div id="verify-loading-ui" style="display: none;">
+                    <div style="width: 60px; height: 60px; background: #e0e7ff; color: #4f46e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 24px;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                    <h4 style="margin: 0 0 4px; color: #4f46e5;">Verifying Photo...</h4>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 0;">Analyzing your secure scan.</p>
+                </div>
+
+                <div id="verify-error-ui" style="display: none;">
+                    <div style="width: 60px; height: 60px; background: #fee2e2; color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 24px;">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <h4 style="margin: 0 0 4px; color: #ef4444;">Verification Failed</h4>
+                    <p id="verify-error-msg" style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Error processing photo.</p>
+                    <button type="button" onclick="handleVerificationRetake()" class="btn" style="background: #ef4444; color: white; border-radius: 12px; padding: 8px 16px; font-weight: 600; border: none; cursor: pointer; font-size: 13px;">
+                        Retake Verification
+                    </button>
+                </div>
+
                 <div id="verify-success-ui" style="display: none;">
                     <div style="width: 60px; height: 60px; background: #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 24px;">
                         <i class="fas fa-check-circle"></i>
@@ -1585,74 +1604,52 @@
         const status = document.getElementById('verify-status');
         
         function handleFailure(msg) {
-            status.innerText = msg + " Retrying in 3s...";
-            status.style.color = '#ef4444';
             document.getElementById('verification-status-input').value = 'rejected';
             document.getElementById('face-verification-section').style.borderColor = '#ef4444';
-            if (verifyStream) verifyStream.getTracks().forEach(t => t.stop());
             document.getElementById('verify-camera-ui').style.display = 'none';
+            document.getElementById('verify-loading-ui').style.display = 'none';
             document.getElementById('verify-success-ui').style.display = 'none';
-            setTimeout(() => {
-                handleVerificationRetake();
-            }, 3000);
+            document.getElementById('verify-error-ui').style.display = 'block';
+            document.getElementById('verify-error-msg').innerText = msg;
         }
 
-        status.innerText = 'Capturing & Analyzing... Please wait...';
-        status.style.color = '#3b82f6';
+        // STEP 1: INSTANT CAPTURE
+        const targetWidth = 400;
+        const targetHeight = video.videoWidth > 0 ? Math.floor(video.videoHeight * (targetWidth / video.videoWidth)) : 400;
+        canvas.width = targetWidth; 
+        canvas.height = targetHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, targetWidth, targetHeight);
+        verificationBase64 = canvas.toDataURL('image/jpeg', 0.8);
+        
+        // STEP 2: INSTANT CAMERA CLOSE
+        if (verifyStream) verifyStream.getTracks().forEach(t => t.stop());
+        document.getElementById('verify-camera-ui').style.display = 'none';
+        document.getElementById('verify-success-ui').style.display = 'none';
+        document.getElementById('verify-error-ui').style.display = 'none';
+        document.getElementById('verify-loading-ui').style.display = 'block';
 
         try {
-            // STEP 1: Deep Analysis ON THE LIVE VIDEO STREAM 
-            // (Bypasses all Canvas/WebGL extraction bugs on Android by analyzing before stopping the stream)
-            const allFaces = await faceapi.detectAllFaces(video, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 })).withFaceLandmarks().withFaceDescriptors().withAgeAndGender();
+            // STEP 3: BACKGROUND ANALYSIS
+            // Create Image object to avoid display:none canvas issues
+            const img = new Image();
+            img.src = verificationBase64;
+            await new Promise(r => { img.onload = r; img.onerror = r; });
+
+            // Use TinyFaceDetector for reliable detection on all budget devices
+            const allFaces = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 320 })).withFaceLandmarks().withFaceDescriptors();
             
             if (allFaces.length === 0) {
-                // 100% Fallback: If SsdMobilenet fails due to hardware limits, use TinyFaceDetector which we KNOW works
-                const fallback = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224 })).withFaceLandmarks().withFaceDescriptor();
-                if (!fallback) {
-                    return handleFailure('No human face detected clearly.');
-                }
-                verificationDescriptor = fallback.descriptor;
-            } else {
-                // Multiple Faces Check
-                if (allFaces.length > 1) {
-                    return handleFailure('Multiple faces detected. Please ensure you are alone.');
-                }
-                const fullDetection = allFaces[0];
-                
-                // Gender Check
-                const selectedGender = document.getElementById('id_gender').value;
-                const detectedGender = fullDetection.gender;
-                if (selectedGender !== 'other' && selectedGender !== detectedGender) {
-                    return handleFailure(`Gender mismatch! Form says ${selectedGender}, but AI sees ${detectedGender}.`);
-                }
-                verificationDescriptor = fullDetection.descriptor;
+                return handleFailure('No human face detected clearly.');
             }
-
-            // Blur Check directly from video pixels
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = 400; tempCanvas.height = 400;
-            tempCanvas.getContext('2d').drawImage(video, 0, 0, 400, 400);
-            const blurCheck = checkBlurriness(tempCanvas, 10); // Extremely forgiving threshold
-            if (blurCheck.isBlurry) {
-                return handleFailure('Photo is too blurry.');
+            if (allFaces.length > 1) {
+                return handleFailure('Multiple faces detected. Please ensure you are alone.');
             }
-
-            // STEP 2: Save the verified frame to canvas
-            const targetWidth = 400;
-            const targetHeight = video.videoWidth > 0 ? Math.floor(video.videoHeight * (targetWidth / video.videoWidth)) : 400;
-            canvas.width = targetWidth; 
-            canvas.height = targetHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0, targetWidth, targetHeight);
-            verificationBase64 = canvas.toDataURL('image/jpeg', 0.8);
-            document.getElementById('verification-image-data').value = verificationBase64;
             
-            // STEP 3: Safely stop the camera and update UI
-            if (verifyStream) verifyStream.getTracks().forEach(t => t.stop());
-            document.getElementById('verify-camera-ui').style.display = 'none';
-            document.getElementById('verify-success-ui').style.display = 'block';
+            const fullDetection = allFaces[0];
+            verificationDescriptor = fullDetection.descriptor;
+            document.getElementById('verification-image-data').value = verificationBase64;
 
             // STEP 4: Upload to Cloud
-            status.innerText = "Verifying your photo...";
             const res = await fetch('/api/upload/base64/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
@@ -1662,9 +1659,9 @@
             
             if (data.success) {
                 document.getElementById('verification-image-url').value = data.url;
-                status.innerText = "Scan secured and uploaded successfully!";
-                status.style.color = '#16a34a';
                 
+                document.getElementById('verify-loading-ui').style.display = 'none';
+                document.getElementById('verify-success-ui').style.display = 'block';
                 document.getElementById('face-verification-section').style.borderColor = '#16a34a';
                 document.getElementById('face-verification-section').style.background = '#f0fdf4';
                 
@@ -1676,7 +1673,7 @@
 
         } catch (e) {
             console.error("Camera analysis error", e);
-            return handleFailure("Error processing photo.");
+            return handleFailure("Error processing photo. Please retry.");
         }
     }
 
@@ -1704,7 +1701,8 @@
         statusText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing Face...';
         
         try {
-            const pfpDetection = await faceapi.detectSingleFace(pfpImgElement).withFaceLandmarks().withFaceDescriptor();
+            // Use TinyFaceDetector for PFP check so it matches the verification perfectly on all devices
+            const pfpDetection = await faceapi.detectSingleFace(pfpImgElement, new faceapi.TinyFaceDetectorOptions({ inputSize: 320 })).withFaceLandmarks().withFaceDescriptor();
             if (!pfpDetection) {
                 statusText.innerHTML = '<i class="fas fa-times-circle"></i> No face detected in PFP!';
                 statusText.style.color = '#ef4444';
@@ -1900,6 +1898,8 @@
         document.getElementById('verify-initial-ui').style.display = 'block';
         document.getElementById('verify-camera-ui').style.display = 'none';
         document.getElementById('verify-success-ui').style.display = 'none';
+        document.getElementById('verify-loading-ui').style.display = 'none';
+        document.getElementById('verify-error-ui').style.display = 'none';
         
         // Reset status text
         const status = document.getElementById('verify-status');
