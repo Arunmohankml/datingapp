@@ -119,6 +119,22 @@
         </div>
     </div>
 
+    <!-- Request Permission Option -->
+    <div class="card" style="padding: 20px; margin-bottom: 16px;">
+        <button type="button" onclick="forceAskPushPermission()" style="width: 100%; background: none; border: none; padding: 0; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: var(--text-main);">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; background: rgba(37, 99, 235, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #2563eb; font-size: 18px;">
+                    <i class="fas fa-key"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 16px;">Request Notification Permissions</h4>
+                    <p style="margin: 4px 0 0; font-size: 13px; color: var(--text-muted);">Force prompt to enable notification settings</p>
+                </div>
+            </div>
+            <i class="fas fa-chevron-right" style="color: #cbd5e1;"></i>
+        </button>
+    </div>
+
     <!-- Updates -->
     <div class="card" style="padding: 20px; margin-bottom: 16px;">
         <a href="{% url 'announcements' %}" style="display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: var(--text-main);">
@@ -262,8 +278,18 @@
         }
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    function forceAskPushPermission() {
+        if (window.showCustomNotificationPrompt) {
+            window.showCustomNotificationPrompt(true);
+        } else {
+            customAlert("Push notification system is loading. Please try again in a moment.", "System Loading");
+        }
+    }
+
+    function updateNotifStatus() {
         const statusEl = document.getElementById('notif-status');
+        if (!statusEl) return;
+        
         if ('Notification' in window) {
             if (Notification.permission === 'granted') {
                 statusEl.innerText = "Enabled";
@@ -273,10 +299,17 @@
                 statusEl.style.color = "#ef4444";
             } else {
                 statusEl.innerText = "Not yet granted";
+                statusEl.style.color = "var(--text-muted)";
             }
         } else {
             statusEl.innerText = "Not supported in this browser";
+            statusEl.style.color = "#ef4444";
         }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateNotifStatus();
+        window.addEventListener('notificationPermissionChanged', updateNotifStatus);
 
         const deleteBtn = document.getElementById('delete-account-btn');
         const deleteForm = document.getElementById('delete-account-form');

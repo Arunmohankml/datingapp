@@ -641,30 +641,118 @@
         const app = initializeApp(firebaseConfig);
         const messaging = getMessaging(app);
 
-        async function initPush() {
+        async function registerPushToken() {
             try {
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    // Note: In production, you'll need to add your VAPID key from Firebase Console
-                    const token = await getToken(messaging, {
-                        vapidKey: 'BJYK8Wi09iSDWAKuFRUzHzPBF-r3aLqqYuDTyB1h6ATz3fNqvCnlB2oGmjRU61kcdxo4OM7Sj6PkiCzq3YJl80U',
-                        serviceWorkerRegistration: await navigator.serviceWorker.ready
+                const token = await getToken(messaging, {
+                    vapidKey: 'BJYK8Wi09iSDWAKuFRUzHzPBF-r3aLqqYuDTyB1h6ATz3fNqvCnlB2oGmjRU61kcdxo4OM7Sj6PkiCzq3YJl80U',
+                    serviceWorkerRegistration: await navigator.serviceWorker.ready
+                });
+                
+                if (token) {
+                    await fetch('/api/save-fcm-token/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ token: token })
                     });
-                    
-                    if (token) {
-                        fetch('/api/save-fcm-token/', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ token: token })
-                        });
-                    }
+                    console.log("FCM Token saved successfully.");
                 }
             } catch (err) {
-                console.log("Push Init Error:", err);
+                console.log("Error obtaining FCM Token:", err);
             }
         }
 
-        initPush();
+        window.registerPushToken = registerPushToken;
+
+        window.showCustomNotificationPrompt = function(isForced = false) {
+            if (!('Notification' in window)) {
+                if (isForced) {
+                    customAlert("Notifications are not supported in this browser.", "Not Supported");
+                }
+                return;
+            }
+
+            if (Notification.permission === 'granted') {
+                if (isForced) {
+                    customAlert("Notifications are already enabled!", "Notification Enabled");
+                }
+                registerPushToken();
+                return;
+            }
+
+            if (Notification.permission === 'denied') {
+                if (isForced) {
+                    customAlert("Notifications are currently blocked. To receive messages and match requests, please enable notifications in your browser's site settings.", "Notifications Blocked");
+                }
+                return;
+            }
+
+            if (!isForced && sessionStorage.getItem('customNotifPromptDismissed') === 'true') {
+                return;
+            }
+
+            // Create and show custom permission modal
+            const modal = document.createElement('div');
+            modal.className = "custom-alert-wrapper";
+            modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:11000; backdrop-filter:blur(8px); animation: fadeIn 0.3s ease;";
+            modal.innerHTML = `
+                <div style="background:white; padding:32px; border-radius:28px; max-width:380px; width:90%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); text-align:center; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                    <div style="width:64px; height:64px; background:rgba(37,99,235,0.1); color:#2563eb; border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 20px; font-size:28px; animation: pulseRing 2s infinite;">
+                        <i class="fas fa-bell"></i>
+                    </div>
+                    <h3 style="margin:0 0 12px; font-size:22px; font-weight:800; color:#1e3a8a;">Enable Notifications</h3>
+                    <p style="margin:0 0 24px; color:#64748b; font-size:15px; line-height:1.6;">To receive messages from users and requests, you should enable notification permissions.</p>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <button id="enable-notif-btn" style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:14px; font-weight:700; cursor:pointer; font-size:15px; transition:0.2s;">Enable Notifications</button>
+                        <button id="dismiss-notif-btn" style="width:100%; padding:12px; background:none; color:#64748b; border:none; font-weight:600; cursor:pointer; font-size:14px;">Not Now</button>
+                    </div>
+                </div>
+            `;
+            
+            if (!document.getElementById('pulse-ring-style')) {
+                const style = document.createElement('style');
+                style.id = 'pulse-ring-style';
+                style.innerHTML = `
+                    @keyframes pulseRing {
+                        0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+                        70% { box-shadow: 0 0 0 10px rgba(37, 99, 235, 0); }
+                        100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            document.body.appendChild(modal);
+
+            modal.querySelector('#enable-notif-btn').onclick = async () => {
+                modal.remove();
+                try {
+                    const permission = await Notification.requestPermission();
+                    if (permission === 'granted') {
+                        registerPushToken();
+                        customAlert("Notification permissions successfully enabled!", "Success");
+                    } else if (permission === 'denied') {
+                        customAlert("Notifications were blocked. You can enable them in your browser settings.", "Notifications Blocked");
+                    }
+                    window.dispatchEvent(new Event('notificationPermissionChanged'));
+                } catch (err) {
+                    console.log("Permission Request Error:", err);
+                }
+            };
+
+            modal.querySelector('#dismiss-notif-btn').onclick = () => {
+                modal.remove();
+                sessionStorage.setItem('customNotifPromptDismissed', 'true');
+            };
+        };
+
+        if ('Notification' in window) {
+            const isChatPage = window.location.pathname.startsWith('/chat/') || window.location.pathname.startsWith('/chats/');
+            if (Notification.permission === 'granted') {
+                registerPushToken();
+            } else if (Notification.permission === 'default' && isChatPage) {
+                showCustomNotificationPrompt();
+            }
+        }
 
         onMessage(messaging, (payload) => {
             console.log('Message received. ', payload);
