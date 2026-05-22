@@ -611,16 +611,16 @@
   }
   .ep-save-btn {
     width: 100%; min-height: 50px;
-    border: none; border-radius: var(--ep-r-lg);
-    background: linear-gradient(135deg, var(--ep-blue) 0%, var(--ep-blue-2) 100%);
+    border: none; border-radius: 25px;
+    background: linear-gradient(135deg, #0084ff 0%, #00c6ff 100%);
     color: #fff; font-family: inherit;
-    font-size: 15px; font-weight: 700; letter-spacing: -0.2px;
+    font-size: 16px; font-weight: 700; letter-spacing: -0.2px;
     cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-    box-shadow: 0 8px 28px var(--ep-blue-glow);
+    box-shadow: 0 8px 24px rgba(0, 132, 255, 0.25);
     transition: transform 0.2s var(--ep-spring), opacity 0.2s;
     -webkit-tap-highlight-color: transparent;
   }
-  .ep-save-btn:active { transform: scale(0.98); }
+  .ep-save-btn:active { transform: scale(0.97); }
   .ep-save-btn.is-busy { opacity: 0.75; pointer-events: none; }
 
   /* Overlay & toast */
@@ -973,7 +973,7 @@
   <!-- Sticky save -->
   <div class="ep-savebar">
     <button type="submit" form="profile-edit-form" class="ep-save-btn" id="save-btn">
-      <i class="fas fa-check-circle"></i> Save changes
+      <i class="fas fa-check"></i> Save changes
     </button>
   </div>
 
