@@ -96,7 +96,6 @@
   #ep-app {
     display: flex; flex-direction: column;
     height: 100dvh; width: 100%;
-    max-width: 440px; margin: 0 auto;
     position: relative;
   }
 
@@ -138,12 +137,13 @@
 
   /* ─── Profile strip ─── */
   .ep-profile {
-    margin: 14px 16px 0;
-    padding: 16px;
+    margin: 0;
+    padding: 16px 18px;
     background: var(--ep-surface);
-    border-radius: var(--ep-r-xl);
-    box-shadow: var(--ep-shadow);
-    border: 1px solid var(--ep-line);
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+    border-bottom: 1px solid var(--ep-line);
     display: flex; align-items: center; gap: 14px;
     animation: ep-rise 0.45s var(--ep-ease) both;
   }
@@ -216,17 +216,18 @@
 
   /* ─── Tabs ─── */
   .ep-tabs-wrap {
-    margin: 14px 16px 0;
+    margin: 0;
     padding: 0;
+    position: sticky; top: 0; z-index: 100;
   }
   .ep-tabs {
     display: flex; gap: 0;
     position: relative;
     background: var(--ep-surface);
-    border: 1px solid var(--ep-line);
-    border-bottom: none;
-    border-radius: var(--ep-r-xl) var(--ep-r-xl) 0 0;
-    box-shadow: var(--ep-shadow-sm);
+    border: none;
+    border-bottom: 1px solid var(--ep-line);
+    border-radius: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     overflow: hidden;
   }
   .ep-tab {
@@ -260,7 +261,7 @@
   }
 
   /* ─── Sections ─── */
-  .ep-panel { display: none; padding: 0 16px 16px; animation: ep-fade 0.3s var(--ep-ease) both; }
+  .ep-panel { display: none; padding: 0 14px 16px; animation: ep-fade 0.3s var(--ep-ease) both; }
   .ep-panel.is-active { display: block; }
   @keyframes ep-fade {
     from { opacity: 0; transform: translateY(6px); }
