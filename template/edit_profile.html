@@ -102,27 +102,18 @@
   .ep-topbar {
     flex-shrink: 0;
     height: calc(var(--ep-header) + env(safe-area-inset-top));
-    padding: env(safe-area-inset-top) 8px 0;
+    padding: env(safe-area-inset-top) 20px 0;
     display: flex; align-items: center;
-    background: rgba(255,255,255,0.92);
-    backdrop-filter: blur(24px) saturate(1.5);
-    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+    background: #ffffff;
     border-bottom: 1px solid var(--ep-line);
     border-radius: 0;
     z-index: 300;
+    box-shadow: 0 2px 12px rgba(37,99,235,0.06);
   }
-  .ep-topbar-btn {
-    width: var(--ep-tap); height: var(--ep-tap);
-    display: flex; align-items: center; justify-content: center;
-    border-radius: var(--ep-r-md); color: var(--ep-blue);
-    text-decoration: none; font-size: 18px;
-    transition: background 0.2s, transform 0.15s;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .ep-topbar-btn:active { background: rgba(37,99,235,0.08); transform: scale(0.94); }
   .ep-topbar-title {
-    flex: 1; text-align: center;
-    font-size: 17px; font-weight: 700; letter-spacing: -0.4px;
+    flex: 1; text-align: left;
+    font-size: 21px; font-weight: 900; letter-spacing: -0.7px;
+    color: #1e3a8a;
   }
   .ep-topbar-end { width: var(--ep-tap); }
 
