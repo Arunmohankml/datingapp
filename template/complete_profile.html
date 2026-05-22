@@ -1553,18 +1553,17 @@
                         statusEl.style.color = '#f59e0b';
                     }
                 }
-                
-                if (livenessState === LIVENESS_STATE.WAITING_FOR_LEFT) {
+                else if (livenessState === LIVENESS_STATE.WAITING_FOR_LEFT) {
                     statusEl.innerText = 'Good! Now turn your head LEFT ⬅️';
                     statusEl.style.color = '#3b82f6';
-                    if (ratio > 1.3) { // Mirrored physical left turn moves nose closer to camera's right cheek (ratio increases)
+                    if (ratio > 1.8) { // Require a distinct left turn
                         livenessState = LIVENESS_STATE.WAITING_FOR_STRAIGHT;
                     }
                 }
                 else if (livenessState === LIVENESS_STATE.WAITING_FOR_STRAIGHT) {
                     statusEl.innerText = 'Excellent! Now look STRAIGHT 📷';
                     statusEl.style.color = '#10b981';
-                    if (ratio > 0.6 && ratio < 1.6) {
+                    if (ratio > 0.7 && ratio < 1.5) { // Require looking straight
                         if (!verificationCaptured) {
                             verificationCaptured = true;
                             livenessState = LIVENESS_STATE.CAPTURED;
@@ -1598,36 +1597,34 @@
         status.innerText = 'Verifying your photo...';
         status.style.color = '#3b82f6';
 
+        function handleFailure(msg) {
+            status.innerText = msg + " Retrying in 3s...";
+            status.style.color = '#ef4444';
+            document.getElementById('verification-status-input').value = 'rejected';
+            document.getElementById('face-verification-section').style.borderColor = '#ef4444';
+            setTimeout(() => {
+                handleVerificationRetake();
+            }, 3000);
+        }
+
         // BACKGROUND PROCESSING
         // Blur Check
         const blurCheck = checkBlurriness(canvas, 30);
         if (blurCheck.isBlurry) {
-            status.innerText = 'Photo was blurry! Click the verification section to retake.';
-            status.style.color = '#ef4444';
-            document.getElementById('verification-status-input').value = 'rejected';
-            document.getElementById('face-verification-section').style.borderColor = '#ef4444';
-            return;
+            return handleFailure('Photo was blurry!');
         }
 
         // High accuracy detection for verification image using SSD Mobilenet on the static captured canvas
         const fullDetection = await faceapi.detectSingleFace(canvas, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceDescriptor().withAgeAndGender();
         
         if (!fullDetection) {
-            status.innerText = 'Face not clear. Click the verification section to retake.';
-            status.style.color = '#ef4444';
-            document.getElementById('verification-status-input').value = 'rejected';
-            document.getElementById('face-verification-section').style.borderColor = '#ef4444';
-            return;
+            return handleFailure('Face not clear.');
         }
 
         const selectedGender = document.getElementById('id_gender').value;
         const detectedGender = fullDetection.gender;
         if (selectedGender !== 'other' && selectedGender !== detectedGender) {
-            status.innerText = `Gender mismatch! Form says ${selectedGender}, but camera sees ${detectedGender}. Click to retake.`;
-            status.style.color = '#ef4444';
-            document.getElementById('verification-status-input').value = 'rejected';
-            document.getElementById('face-verification-section').style.borderColor = '#ef4444';
-            return;
+            return handleFailure(`Gender mismatch! Form says ${selectedGender}, but camera sees ${detectedGender}.`);
         }
 
         verificationDescriptor = fullDetection.descriptor;
@@ -1652,15 +1649,11 @@
                 document.getElementById('pfp-group').style.opacity = '1';
                 document.getElementById('pfp-group').style.pointerEvents = 'auto';
             } else {
-                status.innerText = "Upload failed: " + data.message + ". Click to try again.";
-                status.style.color = '#ef4444';
-                document.getElementById('face-verification-section').style.borderColor = '#ef4444';
+                return handleFailure("Upload failed: " + data.message);
             }
         } catch (e) {
             console.error("Network error on verification upload", e);
-            status.innerText = "Network error. Click to try again.";
-            status.style.color = '#ef4444';
-            document.getElementById('face-verification-section').style.borderColor = '#ef4444';
+            return handleFailure("Network error.");
         }
     }
 
