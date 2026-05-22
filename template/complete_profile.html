@@ -1584,7 +1584,6 @@
         const canvas = document.getElementById('verify-canvas');
         const status = document.getElementById('verify-status');
         
-        // INSTANT PIXEL CAPTURE
         // Preserve aspect ratio to avoid squishing faces on tall mobile streams
         const targetWidth = 400;
         const targetHeight = video.videoWidth > 0 ? Math.floor(video.videoHeight * (targetWidth / video.videoWidth)) : 400;
@@ -1611,20 +1610,51 @@
             }, 3000);
         }
 
-        // BACKGROUND PROCESSING
-        // High accuracy detection for verification image using SSD Mobilenet
-        // Lowered minConfidence to 0.4 for budget cameras. Removed blur check (fails on built-in beauty filters).
-        // Removed AI gender check as it is often inaccurate on lower resolution captures.
-        const fullDetection = await faceapi.detectSingleFace(canvas, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 })).withFaceLandmarks().withFaceDescriptor();
-        
-        if (!fullDetection) {
-            return handleFailure('Face not detected properly. Please ensure good lighting.');
-        }
-
-        verificationDescriptor = fullDetection.descriptor;
-        document.getElementById('verification-image-data').value = verificationBase64;
-
         try {
+            // Load the captured image into a fresh Image object to avoid display:none canvas issues on mobile
+            const img = new Image();
+            img.src = verificationBase64;
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+            });
+
+            // 1. Blur Check
+            // We draw the image to a temporary, off-DOM canvas to check blur
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = img.width;
+            tempCanvas.height = img.height;
+            tempCanvas.getContext('2d').drawImage(img, 0, 0);
+            
+            const blurCheck = checkBlurriness(tempCanvas, 15); // Forgiving threshold for budget cameras
+            if (blurCheck.isBlurry) {
+                return handleFailure('Photo is too blurry.');
+            }
+
+            // 2. Multiple/No Faces Check & Landmarks
+            const allFaces = await faceapi.detectAllFaces(img, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 })).withFaceLandmarks().withFaceDescriptors().withAgeAndGender();
+            
+            if (allFaces.length === 0) {
+                return handleFailure('No human face detected clearly.');
+            }
+            if (allFaces.length > 1) {
+                return handleFailure('Multiple faces detected. Please ensure you are alone.');
+            }
+
+            const fullDetection = allFaces[0];
+
+            // 3. Gender Check
+            const selectedGender = document.getElementById('id_gender').value;
+            const detectedGender = fullDetection.gender;
+            if (selectedGender !== 'other' && selectedGender !== detectedGender) {
+                return handleFailure(`Gender mismatch! Form says ${selectedGender}, but AI sees ${detectedGender}.`);
+            }
+
+            // All checks passed!
+            verificationDescriptor = fullDetection.descriptor;
+            document.getElementById('verification-image-data').value = verificationBase64;
+
+            // 4. Upload to Cloud
             const res = await fetch('/api/upload/base64/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
@@ -1647,7 +1677,7 @@
             }
         } catch (e) {
             console.error("Network error on verification upload", e);
-            return handleFailure("Network error.");
+            return handleFailure("Error processing photo.");
         }
     }
 
