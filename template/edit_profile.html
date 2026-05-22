@@ -1,1327 +1,1311 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block head %}
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+{% block title %}Edit Profile — SRM Match{% endblock %}
 
+{% block head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
   :root {
-    --bg:         #f0f6ff;
-    --surface:    #ffffff;
-    --surface2:   #eef4ff;
-    --accent:     #2563eb;
-    --accent2:    #3b82f6;
-    --pink:       #ec4899;
-    --success:    #16a34a;
-    --text:       #0f172a;
-    --text-sub:   #475569;
-    --text-muted: #94a3b8;
-    --border:     rgba(37, 99, 235, 0.1);
-    --radius-lg:  20px;
-    --radius-md:  14px;
-    --radius-sm:  10px;
-    --shadow:     0 4px 24px rgba(37, 99, 235, 0.08);
-    --shadow-sm:  0 2px 10px rgba(37, 99, 235, 0.06);
+    --ep-bg: #eef4fc;
+    --ep-bg-accent: linear-gradient(165deg, #e8f1ff 0%, #f5f8ff 45%, #eef4fc 100%);
+    --ep-surface: #ffffff;
+    --ep-surface-dim: #f6f9fe;
+    --ep-ink: #0c1929;
+    --ep-ink-2: #334155;
+    --ep-ink-3: #64748b;
+    --ep-ink-4: #94a3b8;
+    --ep-blue: #2563eb;
+    --ep-blue-2: #3b82f6;
+    --ep-blue-glow: rgba(37, 99, 235, 0.22);
+    --ep-pink: #ec4899;
+    --ep-amber: #f59e0b;
+    --ep-green: #10b981;
+    --ep-line: rgba(37, 99, 235, 0.09);
+    --ep-r-xl: 24px;
+    --ep-r-lg: 20px;
+    --ep-r-md: 16px;
+    --ep-r-sm: 12px;
+    --ep-shadow: 0 1px 2px rgba(12, 25, 41, 0.04), 0 12px 40px rgba(37, 99, 235, 0.08);
+    --ep-shadow-sm: 0 2px 8px rgba(37, 99, 235, 0.06);
+    --ep-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --ep-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+    --ep-nav: 72px;
+    --ep-save: 64px;
+    --ep-header: 56px;
+    --ep-tap: 48px;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  /* No blue/grey tap flash — native-app touch feel */
+  #ep-app, #ep-app * {
+    -webkit-tap-highlight-color: transparent;
+    tap-highlight-color: transparent;
+  }
+  #ep-app button,
+  #ep-app a,
+  #ep-app label,
+  #ep-app .ep-tab,
+  #ep-app .ep-chip,
+  #ep-app .ep-picker-item,
+  #ep-app .ep-media,
+  #ep-app .ep-gallery-add,
+  #ep-app .ep-gallery-del,
+  #ep-app .ep-stepper-btn,
+  #ep-app .ep-search-btn,
+  #ep-app .ep-save-btn {
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+  #ep-app input,
+  #ep-app textarea,
+  #ep-app select,
+  #ep-app .ep-picker-input {
+    user-select: text;
+    -webkit-user-select: text;
+  }
+  #ep-app button:focus,
+  #ep-app a:focus,
+  #ep-app label:focus,
+  #ep-app .ep-tab:focus {
+    outline: none;
+  }
+
   html, body {
-    height: 100dvh; width: 100vw;
+    height: 100dvh; width: 100%;
     overflow: hidden !important;
     position: fixed; inset: 0;
-    background: var(--bg) !important;
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--text);
+    background: var(--ep-bg-accent) !important;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    color: var(--ep-ink);
     -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    tap-highlight-color: transparent;
   }
 
   .container {
-    height: 100dvh !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
+    height: 100dvh !important; width: 100% !important;
+    max-width: 100% !important; padding: 0 !important; margin: 0 !important;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+
+  /* ─── App shell ─── */
+  #ep-app {
     display: flex; flex-direction: column;
+    height: 100dvh; width: 100%;
+    max-width: 440px; margin: 0 auto;
+    position: relative;
+  }
+
+  .ep-topbar {
+    flex-shrink: 0;
+    height: calc(var(--ep-header) + env(safe-area-inset-top));
+    padding: env(safe-area-inset-top) 8px 0;
+    display: flex; align-items: center;
+    background: rgba(255,255,255,0.78);
+    backdrop-filter: blur(24px) saturate(1.5);
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+    border-bottom: 1px solid var(--ep-line);
+    border-radius: 0 0 var(--ep-r-lg) var(--ep-r-lg);
+    z-index: 300;
+  }
+  .ep-topbar-btn {
+    width: var(--ep-tap); height: var(--ep-tap);
+    display: flex; align-items: center; justify-content: center;
+    border-radius: var(--ep-r-md); color: var(--ep-blue);
+    text-decoration: none; font-size: 18px;
+    transition: background 0.2s, transform 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ep-topbar-btn:active { background: rgba(37,99,235,0.08); transform: scale(0.94); }
+  .ep-topbar-title {
+    flex: 1; text-align: center;
+    font-size: 17px; font-weight: 700; letter-spacing: -0.4px;
+  }
+  .ep-topbar-end { width: var(--ep-tap); }
+
+  .ep-scroll {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    padding-bottom: calc(var(--ep-nav) + var(--ep-save) + 20px + env(safe-area-inset-bottom));
+  }
+  .ep-scroll::-webkit-scrollbar { display: none; }
+
+  /* ─── Profile strip ─── */
+  .ep-profile {
+    margin: 14px 16px 0;
+    padding: 16px;
+    background: var(--ep-surface);
+    border-radius: var(--ep-r-xl);
+    box-shadow: var(--ep-shadow);
+    border: 1px solid var(--ep-line);
+    display: flex; align-items: center; gap: 14px;
+    animation: ep-rise 0.45s var(--ep-ease) both;
+  }
+  @keyframes ep-rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .ep-avatar-wrap { position: relative; flex-shrink: 0; }
+  .ep-avatar-ring {
+    position: absolute; inset: -3px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--ep-pink), var(--ep-blue), var(--ep-blue-2));
+  }
+  .ep-avatar {
+    position: relative; z-index: 1;
+    width: 76px; height: 76px;
+    border-radius: 17px; object-fit: cover;
+    border: 2.5px solid var(--ep-surface);
+    display: block;
+  }
+  .ep-avatar-edit {
+    position: absolute; bottom: -4px; right: -4px; z-index: 2;
+    width: 30px; height: 30px; border-radius: 10px;
+    background: var(--ep-blue); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; border: 2.5px solid var(--ep-surface);
+    cursor: pointer; box-shadow: 0 4px 12px var(--ep-blue-glow);
+    transition: transform 0.2s var(--ep-spring);
+  }
+  .ep-avatar-edit:active { transform: scale(0.9); }
+  .ep-spark {
+    position: absolute; top: -6px; left: -6px; z-index: 3;
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    color: #fff; font-size: 10px; font-weight: 800;
+    padding: 3px 8px; border-radius: 20px;
+    border: 2px solid var(--ep-surface);
+    display: flex; align-items: center; gap: 3px;
+    box-shadow: 0 3px 10px rgba(245,158,11,0.35);
+  }
+
+  .ep-profile-info { flex: 1; min-width: 0; }
+  .ep-profile-name {
+    font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
+    line-height: 1.2; margin-bottom: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ep-profile-meta {
+    font-size: 12px; font-weight: 500; color: var(--ep-ink-3);
+    margin-bottom: 10px;
+  }
+  .ep-profile-actions { display: flex; gap: 8px; }
+  .ep-action {
+    flex: 1; min-height: 36px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    border-radius: var(--ep-r-sm); font-size: 12px; font-weight: 700;
+    text-decoration: none; border: none; cursor: pointer;
+    font-family: inherit; transition: transform 0.15s, box-shadow 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ep-action:active { transform: scale(0.97); }
+  .ep-action--primary {
+    background: linear-gradient(135deg, var(--ep-blue), var(--ep-blue-2));
+    color: #fff; box-shadow: 0 4px 14px var(--ep-blue-glow);
+  }
+  .ep-action--ghost {
+    background: var(--ep-surface-dim); color: var(--ep-ink-2);
+    border: 1px solid var(--ep-line);
+  }
+
+  /* ─── Tabs ─── */
+  .ep-tabs-wrap {
+    margin: 14px 16px 0;
+    padding: 0 0 4px;
+  }
+  .ep-tabs {
+    display: flex; gap: 0;
+    position: relative;
+    background: var(--ep-surface);
+    border: 1px solid var(--ep-line);
+    border-radius: var(--ep-r-xl);
+    box-shadow: var(--ep-shadow-sm);
     overflow: hidden;
   }
-
-  .edit-container {
-    flex: 1;
-    overflow-y: auto; overflow-x: hidden;
-    width: 100%; max-width: 600px; margin: 0 auto;
-    padding: max(16px, env(safe-area-inset-top)) 18px max(110px, env(safe-area-inset-bottom)) 18px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+  .ep-tab {
+    flex: 1; min-width: 0;
+    padding: 12px 4px 14px;
+    border: none; background: none;
+    font-family: inherit; font-size: 12px; font-weight: 700;
+    color: var(--ep-ink-4); cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+    transition: color 0.25s;
+    -webkit-tap-highlight-color: transparent;
   }
-  .edit-container::-webkit-scrollbar { display: none; }
-
-  /* Back Button */
-  .back-btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    color: var(--text-sub); text-decoration: none;
-    font-size: 14px; font-weight: 600;
-    padding: 10px 0; margin-bottom: 4px;
-    transition: color 0.2s;
+  .ep-tab i { font-size: 15px; }
+  .ep-tab.is-active { color: var(--ep-blue); }
+  .ep-tab:active { opacity: 0.65; transform: scale(0.97); transition: transform 0.1s, opacity 0.1s; }
+  .ep-tab-indicator {
+    position: absolute; bottom: 0; height: 3px;
+    background: linear-gradient(90deg, var(--ep-blue), var(--ep-blue-2));
+    border-radius: 3px 3px 0 0;
+    transition: left 0.3s var(--ep-ease), width 0.3s var(--ep-ease);
+    pointer-events: none;
   }
-  .back-btn:hover { color: var(--text); }
-
-  /* Profile Header */
-  .pfp-header {
-    display: flex; flex-direction: column;
-    align-items: center; text-align: center;
-    padding: 20px 0 28px; gap: 0;
-  }
-
-  .pfp-main-wrap {
-    position: relative;
-    width: 104px; height: 104px;
-    margin-bottom: 16px;
+  .ep-tabs::after {
+    content: '';
+    position: absolute; bottom: 0; left: 12px; right: 12px;
+    height: 1px; background: var(--ep-line);
+    pointer-events: none;
   }
 
-  .pfp-ring {
-    position: absolute; inset: -3px;
-    border-radius: 36px;
-    background: linear-gradient(135deg, var(--pink), var(--accent), var(--accent2));
-    z-index: 0;
-    animation: ring-spin 4s linear infinite;
-  }
-  @keyframes ring-spin { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }
-
-  .pfp-main {
-    position: relative; z-index: 1;
-    width: 100%; height: 100%;
-    border-radius: 33px; object-fit: cover;
-    border: 3px solid var(--bg); display: block;
+  /* ─── Sections ─── */
+  .ep-panel { display: none; padding: 12px 16px 16px; animation: ep-fade 0.3s var(--ep-ease) both; }
+  .ep-panel.is-active { display: block; }
+  @keyframes ep-fade {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
-  .pfp-edit-btn {
-    position: absolute; bottom: -6px; right: -6px; z-index: 2;
-    background: var(--accent); color: white;
-    width: 36px; height: 36px; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; border: 3px solid var(--bg); font-size: 13px;
-    box-shadow: var(--shadow-sm); transition: background 0.2s, transform 0.2s;
-  }
-  .pfp-edit-btn:hover { background: var(--accent2); transform: scale(1.1); }
-
-  .spark-badge {
-    position: absolute; top: -8px; left: -8px; z-index: 3;
-    background: linear-gradient(135deg, #f59e0b, #fbbf24);
-    color: white; padding: 4px 10px; border-radius: 20px;
-    font-size: 11px; font-weight: 800; border: 2px solid var(--bg);
-    display: flex; align-items: center; gap: 4px;
-    box-shadow: 0 4px 12px rgba(245,158,11,0.4);
-  }
-
-  .pfp-name {
-    font-size: 26px; font-weight: 800;
-    letter-spacing: -0.8px; line-height: 1.1;
-    margin-bottom: 6px;
-  }
-  .pfp-sub { font-size: 13px; color: var(--text-sub); font-weight: 500; margin-bottom: 20px; }
-
-  .pfp-actions { display: flex; gap: 10px; }
-
-  .btn-pill {
-    text-decoration: none;
-    padding: 10px 20px; border-radius: 40px;
-    font-size: 13px; font-weight: 700;
-    display: inline-flex; align-items: center; gap: 7px;
-    transition: all 0.2s; border: none; cursor: pointer; min-height: 42px;
-    font-family: 'Inter', sans-serif;
-  }
-  .btn-pill.primary {
-    background: var(--accent); color: white;
-    box-shadow: 0 4px 20px rgba(99,102,241,0.4);
-  }
-  .btn-pill.primary:hover { background: var(--accent2); transform: translateY(-1px); }
-  .btn-pill.ghost {
-    background: var(--surface); color: var(--text-sub);
-    border: 1px solid var(--border);
-  }
-  .btn-pill.ghost:hover { color: var(--text); background: var(--surface2); }
-
-  /* Tabs */
-  .edit-tabs {
-    display: flex;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 16px; padding: 5px; margin-bottom: 28px; gap: 4px;
-    position: sticky; top: max(8px, env(safe-area-inset-top));
-    z-index: 100;
-    backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-  }
-  .tab-btn {
-    flex: 1; min-height: 40px;
-    border: none; background: none; border-radius: 11px;
-    font-size: 12px; font-weight: 700; color: var(--text-muted);
-    cursor: pointer; transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-    font-family: 'Inter', sans-serif;
-  }
-  .tab-btn.active { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(99,102,241,0.35); }
-  @media (max-width: 420px) {
-    .edit-tabs { overflow-x: auto; scrollbar-width: none; white-space: nowrap; }
-    .edit-tabs::-webkit-scrollbar { display: none; }
-    .tab-btn { flex-shrink: 0; padding: 0 14px; font-size: 11px; }
-  }
-
-  /* Section visibility */
-  .edit-section { display: none; opacity: 0; transform: translateY(10px); transition: opacity 0.3s, transform 0.3s; }
-  .edit-section.active { display: block; opacity: 1; transform: translateY(0); }
-
-  /* Card / section headers */
-  .glass-card { margin-bottom: 32px; }
-  .glass-card h3 {
-    font-size: 10px; font-weight: 800; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: 1.8px;
+  .ep-group {
+    background: var(--ep-surface);
+    border-radius: var(--ep-r-lg);
+    box-shadow: var(--ep-shadow-sm);
+    border: 1px solid var(--ep-line);
+    overflow: hidden;
     margin-bottom: 14px;
-    display: flex; align-items: center; gap: 7px;
   }
-  .glass-card h3 i { color: var(--accent); font-size: 12px; }
-
-  /* Form groups */
-  .form-group { margin-bottom: 12px; }
-  .form-group > label {
-    display: block; font-size: 10px; font-weight: 700;
-    color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.2px;
-    margin-bottom: 8px; margin-left: 2px;
+  .ep-group-head {
+    padding: 14px 16px 10px;
+    font-size: 11px; font-weight: 800;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ep-ink-4);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ep-group-head i {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: rgba(37,99,235,0.1); color: var(--ep-blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px;
+  }
+  .ep-group-head .ep-badge {
+    margin-left: auto; font-size: 12px; font-weight: 700;
+    color: var(--ep-blue); letter-spacing: 0; text-transform: none;
   }
 
-  /* Inputs, textareas, selects */
-  .form-control, .dropdown-search-box {
-    width: 100%; padding: 15px 18px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    font-size: 15px; font-weight: 600; color: var(--text);
-    font-family: 'Inter', sans-serif;
-    transition: border-color 0.2s, box-shadow 0.2s;
-    box-sizing: border-box; outline: none;
+  .ep-row {
+    padding: 0 16px 14px;
+    border-top: 1px solid var(--ep-line);
+  }
+  .ep-row:first-of-type { border-top: none; }
+  .ep-row + .ep-row { padding-top: 14px; }
+
+  .ep-label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--ep-ink-3); margin-bottom: 8px;
+  }
+  .ep-label--lock::after {
+    content: 'Locked'; margin-left: 6px;
+    font-size: 10px; font-weight: 700; color: var(--ep-ink-4);
+    background: var(--ep-surface-dim); padding: 2px 6px;
+    border-radius: 6px; vertical-align: middle;
+  }
+
+  .ep-input,
+  #profile-edit-form input[type="text"],
+  #profile-edit-form input[type="number"],
+  #profile-edit-form select,
+  #profile-edit-form textarea {
+    width: 100%; min-height: var(--ep-tap);
+    padding: 13px 14px;
+    background: var(--ep-surface-dim);
+    border: 1px solid transparent;
+    border-radius: var(--ep-r-md);
+    font-family: inherit; font-size: 15px; font-weight: 500;
+    color: var(--ep-ink); outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
     -webkit-appearance: none; appearance: none;
+    margin-bottom: 0 !important;
   }
-  textarea.form-control { resize: none; min-height: 108px; line-height: 1.65; }
-  select.form-control {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat; background-position: right 16px center; padding-right: 40px;
+  #profile-edit-form textarea { min-height: 100px; resize: none; line-height: 1.55; }
+  #profile-edit-form .app-select { margin-bottom: 0; width: 100%; }
+  #profile-edit-form .app-select-trigger {
+    min-height: var(--ep-tap);
+    background: var(--ep-surface2);
+    border: 1px solid var(--ep-line);
+    border-radius: var(--ep-r-sm);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ep-ink);
+    box-shadow: none;
   }
-  .form-control:focus, .dropdown-search-box:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+  #profile-edit-form .app-select.is-open .app-select-trigger {
+    background: var(--ep-surface);
+    border-color: var(--ep-blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   }
-  .form-control::placeholder, .dropdown-search-box::placeholder { color: var(--text-muted); font-weight: 500; }
-  select option { background: var(--surface); color: var(--text); }
+  #profile-edit-form .app-select-list { z-index: 9000; }
+  .ep-input:focus,
+  #profile-edit-form input:focus,
+  #profile-edit-form select:focus,
+  #profile-edit-form textarea:focus {
+    background: var(--ep-surface);
+    border-color: rgba(37,99,235,0.35);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+  }
+  .ep-input--locked {
+    background: var(--ep-surface-dim) !important;
+    color: var(--ep-ink-2) !important;
+    border: 1px dashed var(--ep-line) !important;
+    cursor: default; display: flex; align-items: center;
+  }
 
-  /* Tags / Chips */
-  .selected-chips-list { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
-  .chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(99,102,241,0.15); color: var(--accent2);
-    border: 1px solid rgba(99,102,241,0.25);
-    padding: 6px 12px; border-radius: 30px;
+  /* Stepper */
+  .ep-stepper {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--ep-surface-dim); border-radius: var(--ep-r-md);
+    padding: 6px 8px; min-height: var(--ep-tap);
+  }
+  .ep-stepper-btn {
+    width: 42px; height: 42px; border: none; border-radius: var(--ep-r-sm);
+    background: var(--ep-surface); color: var(--ep-blue);
+    font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--ep-shadow-sm);
+    transition: transform 0.15s, background 0.2s, color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ep-stepper-btn:active { transform: scale(0.92); background: var(--ep-blue); color: #fff; }
+  .ep-stepper-val { text-align: center; }
+  .ep-stepper-num { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
+  .ep-stepper-unit { font-size: 12px; font-weight: 600; color: var(--ep-ink-4); }
+
+  .ep-range {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px;
+    align-items: center; padding: 4px 0;
+  }
+  .ep-range-box { text-align: center; }
+  .ep-range-label { font-size: 10px; font-weight: 800; color: var(--ep-ink-4); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .ep-range-controls { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .ep-range-num { font-size: 22px; font-weight: 800; min-width: 28px; }
+  .ep-range-sep { color: var(--ep-ink-4); font-size: 14px; padding-top: 18px; }
+
+  /* Picker / chips */
+  .ep-picker {
+    position: relative;
+    background: var(--ep-surface-dim); border-radius: var(--ep-r-md);
+    padding: 10px 12px;
+  }
+  .ep-picker:focus-within { box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  .ep-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+  .ep-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 6px 11px; border-radius: 20px;
+    background: rgba(37,99,235,0.1); color: var(--ep-blue);
     font-size: 12px; font-weight: 700;
   }
-  .chip i { cursor: pointer; color: var(--text-muted); font-size: 11px; transition: color 0.15s; }
-  .chip i:hover { color: var(--pink); }
+  .ep-chip i { font-size: 10px; cursor: pointer; opacity: 0.6; }
+  .ep-chip i:hover { opacity: 1; color: var(--ep-pink); }
+  .ep-picker-input {
+    width: 100%; border: none; background: var(--ep-surface);
+    border-radius: var(--ep-r-sm); padding: 11px 12px;
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    outline: none;
+  }
+  .ep-picker-list {
+    display: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 9500;
+    max-height: 200px;
+    overflow-y: auto;
+    background: var(--ep-surface);
+    border-radius: var(--ep-r-md);
+    border: 1px solid var(--ep-line);
+    box-shadow: 0 20px 45px -5px rgba(12, 25, 41, 0.25), 0 8px 20px -3px rgba(37, 99, 235, 0.15);
+    animation: ep-dropdown-slide 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes ep-dropdown-slide {
+    from {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  .ep-picker-item {
+    padding: 12px 14px; font-size: 14px; font-weight: 500;
+    color: var(--ep-ink-2); cursor: pointer;
+    border-bottom: 1px solid var(--ep-line);
+    transition: background 0.15s;
+  }
+  .ep-picker-item:last-child { border-bottom: none; }
+  .ep-picker-item:active { background: rgba(37,99,235,0.08); color: var(--ep-ink); transform: scale(0.98); }
+  .ep-chip:active { opacity: 0.8; transform: scale(0.97); }
 
-  /* Dropdown list */
-  .dropdown-list {
-    display: none; background: var(--surface2); border: 1px solid var(--border);
-    border-radius: var(--radius-md); margin-top: 6px;
-    max-height: 200px; overflow-y: auto;
-    box-shadow: var(--shadow); z-index: 999;
+  /* Toggle */
+  .ep-toggle-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
   }
-  .dropdown-item {
-    padding: 12px 16px; font-size: 14px; font-weight: 500;
-    color: var(--text-sub); cursor: pointer;
-    border-bottom: 1px solid var(--border); transition: background 0.15s, color 0.15s;
+  .ep-toggle-text { flex: 1; }
+  .ep-toggle-text strong { display: block; font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+  .ep-toggle-text span { font-size: 12px; color: var(--ep-ink-3); line-height: 1.4; }
+  .ep-switch { position: relative; flex-shrink: 0; }
+  .ep-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .ep-switch label {
+    display: block; width: 50px; height: 30px;
+    background: #e2e8f0; border-radius: 15px; cursor: pointer;
+    transition: background 0.25s;
   }
-  .dropdown-item:last-child { border-bottom: none; }
-  .dropdown-item:hover { background: rgba(99,102,241,0.12); color: var(--text); }
-
-  /* Age stepper */
-  .inline-stepper {
-    display: flex; align-items: center; justify-content: space-between;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-md); padding: 10px;
-  }
-  .stepper-btn {
-    width: 44px; height: 44px; border-radius: var(--radius-sm);
-    border: none; background: var(--surface2);
-    color: var(--accent2); font-size: 15px;
-    cursor: pointer; transition: all 0.2s;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Inter', sans-serif;
-  }
-  .stepper-btn:hover { background: var(--accent); color: white; }
-  .stepper-value { font-size: 26px; font-weight: 900; color: var(--text); }
-  .stepper-label { font-size: 13px; font-weight: 600; color: var(--text-muted); margin-left: 4px; }
-
-  /* Dual stepper (age range) */
-  .dual-stepper-container {
-    display: flex; align-items: center; justify-content: space-between;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 20px; gap: 10px;
-  }
-  .stepper-box { flex: 1; text-align: center; }
-  .stepper-title {
-    font-size: 10px; font-weight: 800; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
-  }
-  .stepper-btn.small { width: 44px; height: 44px; min-width: 44px; border-radius: var(--radius-sm); font-size: 14px; }
-  .stepper-value.small { font-size: 22px; }
-  .stepper-controls { display: flex; align-items: center; justify-content: center; gap: 14px; }
-  .stepper-divider { color: var(--text-muted); font-size: 18px; }
-  @media (max-width: 420px) {
-    .dual-stepper-container { flex-direction: column; }
-    .stepper-divider { transform: rotate(90deg); }
-  }
-
-  /* Toggle switch */
-  .discover-row {
-    display: flex; align-items: center;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-md); padding: 16px 18px; gap: 14px;
-  }
-  .discover-text { flex: 1; }
-  .discover-text strong { font-size: 14px; font-weight: 700; color: var(--text); display: block; margin-bottom: 3px; }
-  .discover-text span { font-size: 12px; color: var(--text-muted); }
-
-  .toggle-switch { position: relative; flex-shrink: 0; }
-  .toggle-switch input[type=checkbox] { position: absolute; opacity: 0; width: 0; height: 0; }
-  .toggle-switch label {
-    display: block; width: 48px; height: 28px;
-    background: var(--surface2); border-radius: 14px;
-    cursor: pointer; transition: background 0.3s;
-    border: 1px solid var(--border);
-  }
-  .toggle-switch label::after {
+  .ep-switch label::after {
     content: ''; position: absolute; top: 4px; left: 4px;
-    width: 20px; height: 20px; background: white; border-radius: 50%;
-    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    width: 22px; height: 22px; background: #fff; border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    transition: transform 0.25s var(--ep-ease);
   }
-  .toggle-switch input:checked + label { background: var(--success); border-color: var(--success); }
-  .toggle-switch input:checked + label::after { transform: translateX(20px); }
+  .ep-switch input:checked + label { background: var(--ep-green); }
+  .ep-switch input:checked + label::after { transform: translateX(20px); }
+
+  /* Vibe */
+  .ep-vibe-block { padding: 0 16px 16px; border-top: 1px solid var(--ep-line); }
+  .ep-vibe-title { font-size: 14px; font-weight: 700; padding: 14px 0 4px; display: flex; align-items: center; gap: 8px; }
+  .ep-vibe-title i { color: var(--ep-blue); }
+  .ep-vibe-hint { font-size: 12px; color: var(--ep-ink-3); margin-bottom: 14px; line-height: 1.45; }
+  .ep-search {
+    display: flex; gap: 8px; margin-bottom: 10px;
+  }
+  .ep-search .ep-picker-input { flex: 1; }
+  .ep-search-btn {
+    width: var(--ep-tap); height: var(--ep-tap); flex-shrink: 0;
+    border: none; border-radius: var(--ep-r-md);
+    background: linear-gradient(135deg, var(--ep-blue), var(--ep-blue-2));
+    color: #fff; font-size: 15px; cursor: pointer;
+    box-shadow: 0 4px 14px var(--ep-blue-glow);
+    transition: transform 0.15s;
+  }
+  .ep-search-btn:active { transform: scale(0.94); }
+  .ep-carousel {
+    display: flex; gap: 10px; overflow-x: auto;
+    padding: 4px 2px 12px; margin-bottom: 8px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .ep-carousel::-webkit-scrollbar { display: none; }
+  .ep-carousel-label { font-size: 10px; font-weight: 700; color: var(--ep-ink-4); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .ep-media {
+    flex: 0 0 72px; scroll-snap-align: start;
+    text-align: center; cursor: pointer; position: relative;
+  }
+  .ep-media-pick { transition: transform 0.2s; }
+  .ep-media-pick:active { transform: scale(0.95); }
+  .ep-media-cover {
+    border-radius: 12px; overflow: hidden;
+    background: var(--ep-surface-dim); border: 1px solid var(--ep-line);
+    box-shadow: var(--ep-shadow-sm);
+  }
+  .ep-media-cover--poster { aspect-ratio: 2/3; }
+  .ep-media-cover--sq { aspect-ratio: 1; }
+  .ep-media-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ep-media-name {
+    font-size: 10px; font-weight: 700; margin-top: 5px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ep-media-rm {
+    position: absolute; top: -5px; right: -5px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #ef4444; color: #fff; border: 2px solid #fff;
+    font-size: 9px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; z-index: 2;
+  }
+  .ep-media-empty { font-size: 12px; color: var(--ep-ink-4); font-style: italic; padding: 6px 0; }
+  .ep-selected { display: flex; flex-wrap: wrap; gap: 10px; min-height: 44px; }
 
   /* Gallery */
-  .gallery-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 8px;
+  .ep-gallery-note {
+    margin: 0 16px 12px; padding: 11px 13px;
+    background: rgba(37,99,235,0.06); border-radius: var(--ep-r-sm);
+    font-size: 12px; color: var(--ep-ink-2); line-height: 1.45;
+    display: flex; gap: 9px;
   }
-  @media (min-width: 480px) { .gallery-grid { grid-template-columns: repeat(4, 1fr); } }
-  .gallery-item {
-    position: relative; aspect-ratio: 1;
-    border-radius: var(--radius-md); overflow: hidden;
-    background: var(--surface2); transition: transform 0.2s;
-    border: 1px solid var(--border);
+  .ep-gallery-note i { color: var(--ep-blue); margin-top: 2px; }
+  .ep-gallery-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; padding: 0 16px 16px;
   }
-  .gallery-item:hover { transform: scale(1.03); }
-  .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .gallery-delete {
-    position: absolute; top: 7px; right: 7px;
-    width: 28px; height: 28px;
-    background: rgba(255,255,255,0.85); color: #64748b;
-    border-radius: 8px; display: flex; align-items: center; justify-content: center;
-    font-size: 11px; text-decoration: none; backdrop-filter: blur(6px); transition: all 0.2s;
+  .ep-gallery-slot {
+    position: relative; aspect-ratio: 3/4;
+    border-radius: var(--ep-r-md); overflow: hidden;
+    background: var(--ep-surface-dim);
   }
-  .gallery-delete:hover { background: #ef4444; color: white; }
-  .gallery-add {
-    aspect-ratio: 1; border-radius: var(--radius-md);
-    border: 2px dashed var(--border);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 6px; cursor: pointer; color: var(--text-muted);
-    font-size: 11px; font-weight: 700; transition: border-color 0.2s, color 0.2s;
-  }
-  .gallery-add:hover { border-color: var(--accent); color: var(--accent2); }
-  .gallery-add i { font-size: 20px; }
-
-  .gallery-note {
-    font-size: 12px; color: var(--text-muted);
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 14px;
-    display: flex; gap: 8px; align-items: flex-start;
-  }
-  .gallery-note i { color: var(--accent2); margin-top: 1px; flex-shrink: 0; }
-
-  /* Floating Save */
-  .save-btn-fixed {
-    position: fixed;
-    bottom: max(88px, env(safe-area-inset-bottom));
-    right: max(16px, env(safe-area-inset-right));
-    width: 58px; height: 58px; border-radius: 20px;
-    background: var(--accent); color: white; border: none;
-    box-shadow: 0 8px 30px rgba(99,102,241,0.5);
-    z-index: 2000; cursor: pointer;
+  .ep-gallery-slot img { width: 100%; height: 100%; object-fit: cover; }
+  .ep-gallery-del {
+    position: absolute; top: 6px; right: 6px;
+    width: 28px; height: 28px; border-radius: 9px;
+    background: rgba(255,255,255,0.92); color: var(--ep-ink-3);
     display: flex; align-items: center; justify-content: center;
-    transition: transform 0.3s cubic-bezier(0.175,0.885,0.32,1.275), box-shadow 0.3s;
+    font-size: 11px; text-decoration: none;
+    backdrop-filter: blur(8px); transition: background 0.2s, color 0.2s;
   }
-  .save-btn-fixed i { font-size: 22px; }
-  .save-btn-fixed:hover { transform: translateY(-4px) scale(1.05); box-shadow: 0 16px 40px rgba(99,102,241,0.6); }
-  .save-btn-fixed:active { transform: scale(0.95); }
-
-  /* Overlay */
-  .upload-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(240, 246, 255, 0.9); backdrop-filter: blur(16px);
-    z-index: 9999; flex-direction: column;
-    align-items: center; justify-content: center;
-    color: var(--text); gap: 18px;
+  .ep-gallery-del:active { background: #ef4444; color: #fff; }
+  .ep-gallery-add {
+    aspect-ratio: 3/4; border-radius: var(--ep-r-md);
+    border: 2px dashed rgba(37,99,235,0.2);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 6px; color: var(--ep-ink-4); font-size: 11px; font-weight: 700;
+    cursor: pointer; transition: border-color 0.2s, color 0.2s;
   }
-  .loader {
-    width: 44px; height: 44px;
-    border: 4px solid rgba(37, 99, 235, 0.15);
-    border-top-color: var(--accent); border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+  .ep-gallery-add:active { border-color: var(--ep-blue); color: var(--ep-blue); }
+  .ep-gallery-add i { font-size: 22px; }
+
+  /* Admin */
+  .ep-admin { border-color: rgba(245,158,11,0.35); background: #fffbeb; }
+  .ep-admin .ep-group-head { color: #92400e; }
+  .ep-admin .ep-group-head i { background: rgba(245,158,11,0.15); color: #b45309; }
+  .ep-admin-img { width: 100%; border-radius: var(--ep-r-md); border: 2px solid #fcd34d; margin-bottom: 10px; }
+  .ep-admin-tag {
+    position: absolute; top: 8px; right: 8px;
+    background: #92400e; color: #fff; font-size: 9px; font-weight: 800;
+    padding: 3px 8px; border-radius: 6px;
   }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .ep-admin-warn {
+    margin: 0 16px 16px; padding: 12px;
+    background: rgba(245,158,11,0.12); border-radius: var(--ep-r-sm);
+    font-size: 11px; color: #92400e; line-height: 1.5;
+  }
 
-  .hint { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; }
-</style>
+  /* Save bar */
+  .ep-savebar {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: calc(var(--ep-nav) + env(safe-area-inset-bottom));
+    width: 100%; max-width: 440px;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--ep-line);
+    border-radius: var(--ep-r-xl) var(--ep-r-xl) 0 0;
+    z-index: 250;
+  }
+  .ep-save-btn {
+    width: 100%; min-height: 50px;
+    border: none; border-radius: var(--ep-r-lg);
+    background: linear-gradient(135deg, var(--ep-blue) 0%, var(--ep-blue-2) 100%);
+    color: #fff; font-family: inherit;
+    font-size: 15px; font-weight: 700; letter-spacing: -0.2px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 8px 28px var(--ep-blue-glow);
+    transition: transform 0.2s var(--ep-spring), opacity 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ep-save-btn:active { transform: scale(0.98); }
+  .ep-save-btn.is-busy { opacity: 0.75; pointer-events: none; }
 
+  /* Overlay & toast */
+  .ep-overlay {
+    display: none; position: fixed; inset: 0; z-index: 9999;
+    background: rgba(238,244,252,0.92);
+    backdrop-filter: blur(16px);
+    flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+  }
+  .ep-overlay.is-show { display: flex; }
+  .ep-spinner {
+    width: 40px; height: 40px;
+    border: 3px solid rgba(37,99,235,0.15);
+    border-top-color: var(--ep-blue); border-radius: 50%;
+    animation: ep-spin 0.7s linear infinite;
+  }
+  @keyframes ep-spin { to { transform: rotate(360deg); } }
+  .ep-overlay-text { font-size: 14px; font-weight: 600; color: var(--ep-ink-2); }
+
+  .ep-toast {
+    display: none; position: fixed;
+    top: calc(var(--ep-header) + env(safe-area-inset-top) + 8px);
+    left: 50%; transform: translateX(-50%);
+    max-width: 90%; padding: 10px 16px;
+    background: #fef2f2; color: #b91c1c;
+    border: 1px solid #fecaca; border-radius: var(--ep-r-md);
+    font-size: 13px; font-weight: 600; z-index: 4000;
+    box-shadow: var(--ep-shadow);
+  }
+
+  .ep-hint { font-size: 12px; color: var(--ep-ink-3); line-height: 1.45; margin-bottom: 10px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
 </style>
 {% endblock %}
 
-
 {% block body %}
-<div class="edit-container">
-    <a href="{% url 'view_profile' profile.id %}" class="back-btn">
-        <i class="fas fa-chevron-left"></i> Back
-    </a>
+<div id="ep-app">
 
-    <div class="pfp-header">
-        <div class="pfp-main-wrap">
-            <div class="pfp-ring"></div>
-            <img src="{{ profile.get_profile_pic_url }}" alt="Me" class="pfp-main" id="preview-pfp">
-            <label for="id_pfp_instant" class="pfp-edit-btn" id="pfp-edit-label">
-                <i class="fas fa-camera"></i>
-            </label>
-            {% if spark_count > 0 %}
-            <div class="spark-badge"><i class="fas fa-bolt"></i> {{ spark_count }}</div>
+  <header class="ep-topbar">
+    <a href="{% url 'view_profile' profile.id %}" class="ep-topbar-btn" aria-label="Back"><i class="fas fa-chevron-left"></i></a>
+    <span class="ep-topbar-title">Edit Profile</span>
+    <span class="ep-topbar-end"></span>
+  </header>
+
+  <div class="ep-scroll">
+
+    <!-- Profile strip -->
+    <section class="ep-profile">
+      <div class="ep-avatar-wrap">
+        <div class="ep-avatar-ring"></div>
+        <img src="{{ profile.get_profile_pic_url }}" alt="" class="ep-avatar" id="preview-pfp">
+        <label for="id_pfp_instant" class="ep-avatar-edit" aria-label="Change photo"><i class="fas fa-camera"></i></label>
+        {% if spark_count %}<div class="ep-spark"><i class="fas fa-bolt"></i> {{ spark_count }}</div>{% endif %}
+      </div>
+      <div class="ep-profile-info">
+        <div class="ep-profile-name">{{ profile.name }}</div>
+        <div class="ep-profile-meta">{{ profile.campus_display }} · {{ profile.age }} yrs</div>
+        <div class="ep-profile-actions">
+          <a href="{% url 'view_profile' profile.id %}" class="ep-action ep-action--primary"><i class="fas fa-eye"></i> View</a>
+          <a href="{% url 'settings' %}" class="ep-action ep-action--ghost"><i class="fas fa-cog"></i> Settings</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Tabs -->
+    <div class="ep-tabs-wrap">
+      <nav class="ep-tabs" role="tablist" id="ep-tabs">
+        <button type="button" class="ep-tab is-active" data-tab="basic" role="tab"><i class="fas fa-user"></i>Basic</button>
+        <button type="button" class="ep-tab" data-tab="gallery" role="tab"><i class="fas fa-images"></i>Gallery</button>
+        <button type="button" class="ep-tab" data-tab="edu" role="tab"><i class="fas fa-graduation-cap"></i>Academy</button>
+        <button type="button" class="ep-tab" data-tab="prefs" role="tab"><i class="fas fa-heart"></i>Prefs</button>
+        {% if is_admin_editing %}
+        <button type="button" class="ep-tab" data-tab="moderation" role="tab"><i class="fas fa-shield-alt"></i>Verify</button>
+        {% endif %}
+        <span class="ep-tab-indicator" id="ep-tab-indicator"></span>
+      </nav>
+    </div>
+
+    <!-- Main form -->
+    <form method="POST" enctype="multipart/form-data" id="profile-edit-form"
+          action="{% if is_admin_editing %}{% url 'admin_edit_user_profile' profile.user.id %}{% else %}{% url 'edit_profile' %}{% endif %}">
+      {% csrf_token %}
+      <input type="hidden" name="update_profile" value="1">
+
+      <!-- BASIC -->
+      <div id="section-basic" class="ep-panel is-active" role="tabpanel">
+        <div class="ep-group">
+          <div class="ep-group-head"><i class="fas fa-id-card"></i> About you</div>
+
+          <div class="ep-row">
+            <label class="ep-label{% if not is_admin_editing %} ep-label--lock{% endif %}">Full name</label>
+            {% if is_admin_editing %}
+              <input type="text" name="name" value="{{ profile.name }}" class="ep-input">
+            {% else %}
+              <input type="hidden" name="name" value="{{ profile.name }}">
+              <div class="ep-input ep-input--locked">{{ profile.name }}</div>
             {% endif %}
-        </div>
-        <div class="pfp-name">{{ profile.name }}</div>
-        <div class="pfp-sub">{{ profile.campus_display }} &bull; {{ profile.age }} yrs</div>
-        <div class="pfp-actions">
-            <a href="{% url 'view_profile' profile.id %}" class="btn-pill primary">
-                <i class="fas fa-eye"></i> View
-            </a>
-            <a href="{% url 'settings' %}" class="btn-pill ghost">
-                <i class="fas fa-cog"></i> Settings
-            </a>
-        </div>
-    </div>
+          </div>
 
-    <!-- Tabs Navigation -->
-    <div class="edit-tabs">
-        <button class="tab-btn active" onclick="switchTab('basic')">
-            <i class="fas fa-user-circle"></i> Basic
-        </button>
-        <button class="tab-btn" onclick="switchTab('gallery')">
-            <i class="fas fa-th-large"></i> Gallery
-        </button>
-        <button class="tab-btn" onclick="switchTab('edu')">
-            <i class="fas fa-graduation-cap"></i> Academy
-        </button>
-        <button class="tab-btn" onclick="switchTab('prefs')">
-            <i class="fas fa-sliders-h"></i> Prefs
-        </button>
-        {% if is_admin_editing %}
-        <button class="tab-btn" onclick="switchTab('moderation')">
-            <i class="fas fa-user-shield"></i> Verify
-        </button>
-        {% endif %}
-    </div>
+          <div class="ep-row">
+            <label class="ep-label">Bio</label>
+            {{ form.bio }}
+          </div>
 
-    <!-- Main Edit Form -->
-    <form method="POST" enctype="multipart/form-data" id="profile-edit-form" action="{% if is_admin_editing %}{% url 'admin_edit_user_profile' profile.user.id %}{% else %}{% url 'edit_profile' %}{% endif %}">
-        {% csrf_token %}
-        <input type="hidden" name="update_profile" value="1">
-        
-        <!-- PFP input removed from here -->
-
-        <!-- Basic Info Section -->
-        <div id="section-basic" class="edit-section active">
-            <div class="glass-card">
-                <h3><i class="fas fa-id-card"></i> Basic Info</h3>
-                
-                <div class="form-group">
-                    <label>Full Name {% if not is_admin_editing %}(Locked){% endif %}</label>
-                    {% if is_admin_editing %}
-                        <input type="text" name="name" value="{{ profile.name }}" class="form-control">
-                    {% else %}
-                        <input type="hidden" name="name" value="{{ profile.name }}">
-                        <div class="form-control" style="background: var(--surface2); color: var(--text-sub); border: 1px dashed var(--border);">{{ profile.name }}</div>
-                    {% endif %}
-                </div>
-
-                <div class="form-group">
-                    <label>Bio</label>
-                    {{ form.bio }}
-                </div>
-                <div class="form-group">
-                    <label>Your Age *</label>
-                    <div class="inline-stepper">
-                        <button type="button" class="stepper-btn minus" onclick="stepAge(-1)"><i class="fas fa-minus"></i></button>
-                        <div class="stepper-value-wrap">
-                            <span class="stepper-value" id="age-display">{{ profile.age }}</span>
-                            <span class="stepper-label">yrs</span>
-                        </div>
-                        <button type="button" class="stepper-btn plus" onclick="stepAge(1)"><i class="fas fa-plus"></i></button>
-                    </div>
-                    <input type="hidden" name="age" id="id_age" value="{{ profile.age }}">
-                </div>
-                <div class="form-group">
-                    <label>Living Place</label>
-                    <div class="searchable-dropdown" id="drop-living">
-                        <div class="selected-chips-list" id="chips-living"></div>
-                        <input type="text" class="dropdown-search-box" id="search-living" placeholder="Search city..." autocomplete="off">
-                        <div class="dropdown-list" id="list-living"></div>
-                        <input type="hidden" name="living_place" id="id_living_place" value="{{ profile.living_place }}">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Native Place (From)</label>
-                    <div class="searchable-dropdown" id="drop-native">
-                        <div class="selected-chips-list" id="chips-native"></div>
-                        <input type="text" class="dropdown-search-box" id="search-native" placeholder="Search city..." autocomplete="off">
-                        <div class="dropdown-list" id="list-native"></div>
-                        <input type="hidden" name="native_place" id="id_native_place" value="{{ profile.native_place }}">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Mother Tongue(s) {% if profile.mother_tongues and not is_admin_editing %}(Locked){% endif %}</label>
-                    {% if profile.mother_tongues and not is_admin_editing %}
-                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
-                            {% for lang in profile.mother_tongues_list %}
-                            <span class="chip">{{ lang }}</span>
-                            {% endfor %}
-                        </div>
-                        <input type="hidden" name="mother_tongues" value="{{ profile.mother_tongues }}">
-                    {% else %}
-                        <div class="searchable-dropdown" id="drop-mothertongue">
-                            <div class="selected-chips-list" id="chips-mothertongue"></div>
-                            <input type="text" class="dropdown-search-box" id="search-mothertongue" placeholder="Select mother tongue..." autocomplete="off">
-                            <div class="dropdown-list" id="list-mothertongue"></div>
-                            <input type="hidden" name="mother_tongues" id="id_mother_tongues" value="{{ profile.mother_tongues }}">
-                        </div>
-                    {% endif %}
-                </div>
-                <div class="form-group">
-                    <label>Languages</label>
-                    <div class="searchable-dropdown" id="drop-languages">
-                        <div class="selected-chips-list" id="chips-languages"></div>
-                        <input type="text" class="dropdown-search-box" id="search-languages" placeholder="Select languages..." autocomplete="off">
-                        <div class="dropdown-list" id="list-languages"></div>
-                        <input type="hidden" name="languages" id="id_languages" value="{{ profile.languages }}">
-                    </div>
-                </div>
+          <div class="ep-row">
+            <label class="ep-label">Your age</label>
+            <div class="ep-stepper">
+              <button type="button" class="ep-stepper-btn" onclick="stepAge(-1)"><i class="fas fa-minus"></i></button>
+              <div class="ep-stepper-val">
+                <span class="ep-stepper-num" id="age-display">{{ profile.age }}</span>
+                <span class="ep-stepper-unit"> years</span>
+              </div>
+              <button type="button" class="ep-stepper-btn" onclick="stepAge(1)"><i class="fas fa-plus"></i></button>
             </div>
+            <input type="hidden" name="age" id="id_age" value="{{ profile.age }}">
+          </div>
 
-            <div class="glass-card">
-                <h3><i class="fas fa-star"></i> Interests</h3>
-                <div class="form-group">
-                    <label>Interests</label>
-                    <div class="searchable-dropdown" id="drop-interests">
-                        <div class="selected-chips-list" id="chips-interests"></div>
-                        <input type="text" class="dropdown-search-box" id="search-interests" placeholder="Select interests..." autocomplete="off">
-                        <div class="dropdown-list" id="list-interests"></div>
-                        <input type="hidden" name="interest_tags" id="id_interest_tags" value="{{ profile.interest_tags }}">
-                    </div>
-                </div>
-
-                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
-                    <h4 style="font-size: 14px; margin-bottom: 12px; color: var(--text-main); display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-music" style="color: var(--primary);"></i> My Vibe (Optional)
-                    </h4>
-                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Select up to 3 movies and 3 songs to display on your profile.</p>
-
-                    <!-- Movies -->
-                    <div class="form-group" style="margin-bottom: 24px;">
-                        <label style="font-size: 13px;"><i class="fas fa-film"></i> Favorite Movies (<span id="movie-count">0</span>/3)</label>
-                        <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
-                            <input type="text" id="movie-search-input" class="form-control" placeholder="Search for a movie..." style="margin-bottom: 0 !important; flex: 1;">
-                            <button type="button" class="btn btn-primary" onclick="searchMovies()" style="width: 42px; height: 42px; padding: 0; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;"><i class="fas fa-search"></i></button>
-                        </div>
-                        <div id="movie-search-results" style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px;"></div>
-                        
-                        <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Selected Movies</label>
-                        <div id="selected-movies" style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; min-height: 40px;">
-                            <span style="font-size: 12px; color: #94a3b8; font-style: italic;" id="no-movies-msg">No movies selected yet.</span>
-                        </div>
-                    </div>
-
-                    <!-- Songs -->
-                    <div class="form-group">
-                        <label style="font-size: 13px;"><i class="fas fa-headphones"></i> Favorite Songs (<span id="song-count">0</span>/3)</label>
-                        <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center;">
-                            <input type="text" id="song-search-input" class="form-control" placeholder="Search for a song..." style="margin-bottom: 0 !important; flex: 1;">
-                            <button type="button" class="btn btn-primary" onclick="searchSongs()" style="width: 42px; height: 42px; padding: 0; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;"><i class="fas fa-search"></i></button>
-                        </div>
-                        <div id="song-search-results" style="display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px;"></div>
-                        
-                        <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Selected Songs</label>
-                        <div id="selected-songs" style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; min-height: 40px;">
-                            <span style="font-size: 12px; color: #94a3b8; font-style: italic;" id="no-songs-msg">No songs selected yet.</span>
-                        </div>
-                    </div>
-                </div>
+          <div class="ep-row">
+            <label class="ep-label">Living place</label>
+            <div class="ep-picker" id="drop-living">
+              <div class="ep-chips" id="chips-living"></div>
+              <input type="text" class="ep-picker-input" id="search-living" placeholder="Search city…" autocomplete="off">
+              <div class="ep-picker-list" id="list-living"></div>
+              <input type="hidden" name="living_place" id="id_living_place" value="{{ profile.living_place }}">
             </div>
+          </div>
+
+          <div class="ep-row">
+            <label class="ep-label">Native place</label>
+            <div class="ep-picker" id="drop-native">
+              <div class="ep-chips" id="chips-native"></div>
+              <input type="text" class="ep-picker-input" id="search-native" placeholder="Search city…" autocomplete="off">
+              <div class="ep-picker-list" id="list-native"></div>
+              <input type="hidden" name="native_place" id="id_native_place" value="{{ profile.native_place }}">
+            </div>
+          </div>
+
+          <div class="ep-row">
+            <label class="ep-label{% if profile.mother_tongues and not is_admin_editing %} ep-label--lock{% endif %}">Mother tongue</label>
+            {% if profile.mother_tongues and not is_admin_editing %}
+              <div class="ep-chips">
+                {% for lang in profile.mother_tongues_list %}
+                <span class="ep-chip"><span>{{ lang }}</span></span>
+                {% endfor %}
+              </div>
+              <input type="hidden" name="mother_tongues" value="{{ profile.mother_tongues }}">
+            {% else %}
+              <div class="ep-picker" id="drop-mothertongue">
+                <div class="ep-chips" id="chips-mothertongue"></div>
+                <input type="text" class="ep-picker-input" id="search-mothertongue" placeholder="Select tongue…" autocomplete="off">
+                <div class="ep-picker-list" id="list-mothertongue"></div>
+                <input type="hidden" name="mother_tongues" id="id_mother_tongues" value="{{ profile.mother_tongues }}">
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="ep-row">
+            <label class="ep-label">Languages</label>
+            <div class="ep-picker" id="drop-languages">
+              <div class="ep-chips" id="chips-languages"></div>
+              <input type="text" class="ep-picker-input" id="search-languages" placeholder="Add languages…" autocomplete="off">
+              <div class="ep-picker-list" id="list-languages"></div>
+              <input type="hidden" name="languages" id="id_languages" value="{{ profile.languages }}">
+            </div>
+          </div>
         </div>
 
-        <!-- Education Section -->
-        <div id="section-edu" class="edit-section">
-            <div class="glass-card">
-                <h3><i class="fas fa-graduation-cap"></i> Education</h3>
-                <div class="form-group">
-                    <label>Campus {% if not is_admin_editing %}(Locked){% endif %}</label>
-                    {% if is_admin_editing %}
-                        {{ form.campus }}
-                    {% else %}
-                        <div class="form-control" style="background: var(--surface2); color: var(--text-sub); border: 1px dashed var(--border);">{{ profile.campus_display }}</div>
-                        <input type="hidden" name="campus" value="{{ profile.campus }}">
-                    {% endif %}
-                </div>
-                <div class="form-group">
-                    <label>Course</label>
-                    {{ form.course }}
-                </div>
-
-                <div class="form-group">
-                    <label>Year of Study</label>
-                    {{ form.clg_year }}
-                </div>
+        <div class="ep-group">
+          <div class="ep-group-head"><i class="fas fa-star"></i> Interests</div>
+          <div class="ep-row" style="border-top:none; padding-top:0;">
+            <div class="ep-picker" id="drop-interests">
+              <div class="ep-chips" id="chips-interests"></div>
+              <input type="text" class="ep-picker-input" id="search-interests" placeholder="Pick your interests…" autocomplete="off">
+              <div class="ep-picker-list" id="list-interests"></div>
+              <input type="hidden" name="interest_tags" id="id_interest_tags" value="{{ profile.interest_tags }}">
             </div>
+          </div>
 
-        </div>
+          <div class="ep-vibe-block">
+            <div class="ep-vibe-title"><i class="fas fa-music"></i> My vibe</div>
+            <p class="ep-vibe-hint">Up to 3 movies & 3 songs shown on your profile.</p>
 
-        {% if is_admin_editing %}
-        <div id="section-moderation" class="edit-section">
-            <div class="glass-card" style="border: 1px solid #fde68a; background: #fffbeb;">
-                <h3 style="color: #92400e;"><i class="fas fa-user-shield"></i> Moderation Tools</h3>
-                
-                <div class="form-group">
-                    <label>Force Update Verification Image</label>
-                    {% if profile.verification_image_url %}
-                        <div style="position: relative; margin-bottom: 12px;">
-                            <img src="{{ profile.verification_image_url }}" style="width: 100%; border-radius: 16px; border: 2px solid #fcd34d;">
-                            <div style="position: absolute; top: 10px; right: 10px; background: #92400e; color: white; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 800;">CURRENT</div>
-                        </div>
-                    {% else %}
-                        <div style="padding: 20px; background: rgba(0,0,0,0.05); border-radius: 16px; text-align: center; margin-bottom: 12px;">
-                            <i class="fas fa-image" style="font-size: 24px; color: #94a3b8; margin-bottom: 8px; display: block;"></i>
-                            <span style="font-size: 12px; color: #64748b;">No verification image on record</span>
-                        </div>
-                    {% endif %}
-                    
-                    <div style="position: relative; background: white; border-radius: 12px; border: 1px dashed #f59e0b; padding: 12px;">
-                        <input type="file" name="verification_image_file" style="font-size: 12px; width: 100%;">
-                        <p style="font-size: 10px; color: #92400e; margin-top: 6px;"><i class="fas fa-info-circle"></i> Uploading a new image will overwrite the current one.</p>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Identity Verification Status</label>
-                    <select name="verification_status" class="form-control" style="border-color: #fcd34d;">
-                        <option value="pending" {% if profile.verification_status == 'pending' %}selected{% endif %}>Pending (Redirection Active)</option>
-                        <option value="verified" {% if profile.verification_status == 'verified' %}selected{% endif %}>Verified (Access Granted)</option>
-                        <option value="rejected" {% if profile.verification_status == 'rejected' %}selected{% endif %}>Rejected (Blocked)</option>
-                        <option value="manual_review" {% if profile.verification_status == 'manual_review' %}selected{% endif %}>Manual Review</option>
-                    </select>
-                </div>
-
-                <div style="margin-top: 20px; padding: 15px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; font-size: 11px; color: #92400e; line-height: 1.5;">
-                    <i class="fas fa-exclamation-triangle"></i> <strong>Admin Note:</strong> Changing status to 'Pending' or 'Rejected' will force the user into the re-verification pipeline on their next visit.
-                </div>
+            <label class="ep-label"><i class="fas fa-film"></i> Movies (<span id="movie-count">0</span>/3)</label>
+            <div class="ep-search">
+              <input type="text" id="movie-search-input" class="ep-picker-input" placeholder="Search movies…" autocomplete="off">
+              <button type="button" class="ep-search-btn" onclick="searchMovies()" aria-label="Search"><i class="fas fa-search"></i></button>
             </div>
-        </div>
-        {% endif %}
+            <div id="movie-search-results" class="ep-carousel"></div>
+            <div class="ep-carousel-label">Selected</div>
+            <div id="selected-movies" class="ep-selected"><span class="ep-media-empty">No movies yet</span></div>
 
-        <!-- Preferences Section -->
-        <div id="section-prefs" class="edit-section">
-            <div class="glass-card">
-                <h3><i class="fas fa-search-heart"></i> Preferences</h3>
-                <div class="form-group">
-                    <label>Looking For</label>
-                    {{ form.looking_for }}
-                </div>
-                <div class="form-group">
-                    <label>Interested In</label>
-                    {{ form.pref_gender }}
-                </div>
-                <div class="form-group">
-                    <label>Discovery Age Range</label>
-                    <div class="hint" style="margin-bottom: 12px; font-size: 12px;">This is the minimum and maximum age of people you will get matched with.</div>
-                    <div class="dual-stepper-container">
-                        <div class="stepper-box">
-                            <div class="stepper-title">Min Age</div>
-                            <div class="stepper-controls">
-                                <button type="button" class="stepper-btn small minus" onclick="stepRange('min', -1)"><i class="fas fa-minus"></i></button>
-                                <span class="stepper-value small" id="min-age-display">{{ profile.pref_age_min }}</span>
-                                <button type="button" class="stepper-btn small plus" onclick="stepRange('min', 1)"><i class="fas fa-plus"></i></button>
-                            </div>
-                        </div>
-                        <div class="stepper-divider"><i class="fas fa-arrow-right"></i></div>
-                        <div class="stepper-box">
-                            <div class="stepper-title">Max Age</div>
-                            <div class="stepper-controls">
-                                <button type="button" class="stepper-btn small minus" onclick="stepRange('max', -1)"><i class="fas fa-minus"></i></button>
-                                <span class="stepper-value small" id="max-age-display">{{ profile.pref_age_max }}</span>
-                                <button type="button" class="stepper-btn small plus" onclick="stepRange('max', 1)"><i class="fas fa-plus"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                    <input type="hidden" name="pref_age_min" id="id_pref_age_min" value="{{ profile.pref_age_min }}">
-                    <input type="hidden" name="pref_age_max" id="id_pref_age_max" value="{{ profile.pref_age_max }}">
-                </div>
-
-                <div class="form-group">
-                    <label>Preferred Languages</label>
-                    <div class="searchable-dropdown" id="drop-pref-languages">
-                        <div class="selected-chips-list" id="chips-pref-languages"></div>
-                        <input type="text" class="dropdown-search-box" id="search-pref-languages" placeholder="Select languages..." autocomplete="off">
-                        <div class="dropdown-list" id="list-pref-languages"></div>
-                        <input type="hidden" name="pref_languages" id="id_pref_languages" value="{{ profile.pref_languages }}">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <div class="discover-row">
-                        <div class="discover-text">
-                            <strong>Show me in match feed</strong>
-                            <span>When enabled, your profile appears to other users in discovery.</span>
-                        </div>
-                        <div class="toggle-switch">
-                            <input type="checkbox" name="is_discoverable" id="id_is_discoverable" {% if profile.is_discoverable %}checked{% endif %}>
-                            <label for="id_is_discoverable"></label>
-                        </div>
-                    </div>
-                </div>
+            <label class="ep-label" style="margin-top:16px;"><i class="fas fa-headphones"></i> Songs (<span id="song-count">0</span>/3)</label>
+            <div class="ep-search">
+              <input type="text" id="song-search-input" class="ep-picker-input" placeholder="Search songs…" autocomplete="off">
+              <button type="button" class="ep-search-btn" onclick="searchSongs()" aria-label="Search"><i class="fas fa-search"></i></button>
             </div>
+            <div id="song-search-results" class="ep-carousel"></div>
+            <div class="ep-carousel-label">Selected</div>
+            <div id="selected-songs" class="ep-selected"><span class="ep-media-empty">No songs yet</span></div>
+          </div>
         </div>
+      </div>
 
-        <button type="submit" class="btn btn-primary save-btn-fixed" id="save-btn" title="Save All Changes">
-            <i class="fas fa-save"></i>
-        </button>
+      <!-- ACADEMY -->
+      <div id="section-edu" class="ep-panel" role="tabpanel">
+        <div class="ep-group">
+          <div class="ep-group-head"><i class="fas fa-graduation-cap"></i> Education</div>
+          <div class="ep-row" style="border-top:none; padding-top:0;">
+            <label class="ep-label{% if not is_admin_editing %} ep-label--lock{% endif %}">Campus</label>
+            {% if is_admin_editing %}
+              {{ form.campus }}
+            {% else %}
+              <div class="ep-input ep-input--locked">{{ profile.campus_display }}</div>
+              <input type="hidden" name="campus" value="{{ profile.campus }}">
+            {% endif %}
+          </div>
+          <div class="ep-row">
+            <label class="ep-label">Course</label>
+            {{ form.course }}
+          </div>
+          <div class="ep-row">
+            <label class="ep-label">Year of study</label>
+            {{ form.clg_year }}
+          </div>
+        </div>
+      </div>
+
+      <!-- PREFS -->
+      <div id="section-prefs" class="ep-panel" role="tabpanel">
+        <div class="ep-group">
+          <div class="ep-group-head"><i class="fas fa-search"></i> Discovery</div>
+          <div class="ep-row" style="border-top:none; padding-top:0;">
+            <label class="ep-label">Looking for</label>
+            {{ form.looking_for }}
+          </div>
+          <div class="ep-row">
+            <label class="ep-label">Interested in</label>
+            {{ form.pref_gender }}
+          </div>
+          <div class="ep-row">
+            <label class="ep-label">Age range</label>
+            <p class="ep-hint">Min and max age of people you’ll see in the feed.</p>
+            <div class="ep-range">
+              <div class="ep-range-box">
+                <div class="ep-range-label">Min</div>
+                <div class="ep-range-controls">
+                  <button type="button" class="ep-stepper-btn" onclick="stepRange('min', -1)"><i class="fas fa-minus"></i></button>
+                  <span class="ep-range-num" id="min-age-display">{{ profile.pref_age_min }}</span>
+                  <button type="button" class="ep-stepper-btn" onclick="stepRange('min', 1)"><i class="fas fa-plus"></i></button>
+                </div>
+              </div>
+              <span class="ep-range-sep"><i class="fas fa-arrows-alt-h"></i></span>
+              <div class="ep-range-box">
+                <div class="ep-range-label">Max</div>
+                <div class="ep-range-controls">
+                  <button type="button" class="ep-stepper-btn" onclick="stepRange('max', -1)"><i class="fas fa-minus"></i></button>
+                  <span class="ep-range-num" id="max-age-display">{{ profile.pref_age_max }}</span>
+                  <button type="button" class="ep-stepper-btn" onclick="stepRange('max', 1)"><i class="fas fa-plus"></i></button>
+                </div>
+              </div>
+            </div>
+            <input type="hidden" name="pref_age_min" id="id_pref_age_min" value="{{ profile.pref_age_min }}">
+            <input type="hidden" name="pref_age_max" id="id_pref_age_max" value="{{ profile.pref_age_max }}">
+          </div>
+          <div class="ep-row">
+            <label class="ep-label">Preferred languages</label>
+            <div class="ep-picker" id="drop-pref-languages">
+              <div class="ep-chips" id="chips-pref-languages"></div>
+              <input type="text" class="ep-picker-input" id="search-pref-languages" placeholder="Add languages…" autocomplete="off">
+              <div class="ep-picker-list" id="list-pref-languages"></div>
+              <input type="hidden" name="pref_languages" id="id_pref_languages" value="{{ profile.pref_languages }}">
+            </div>
+          </div>
+        </div>
+        <div class="ep-group">
+          <div class="ep-toggle-row">
+            <div class="ep-toggle-text">
+              <strong>Show me in match feed</strong>
+              <span>When on, others can discover your profile.</span>
+            </div>
+            <div class="ep-switch">
+              <input type="checkbox" name="is_discoverable" id="id_is_discoverable" {% if profile.is_discoverable %}checked{% endif %}>
+              <label for="id_is_discoverable"></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if is_admin_editing %}
+      <div id="section-moderation" class="ep-panel" role="tabpanel">
+        <div class="ep-group ep-admin">
+          <div class="ep-group-head"><i class="fas fa-user-shield"></i> Moderation</div>
+          <div class="ep-row" style="border-top:none; padding-top:0;">
+            <label class="ep-label">Verification image</label>
+            {% if profile.verification_image %}
+            <div style="position:relative;">
+              <img src="{{ profile.verification_image }}" class="ep-admin-img" alt="Verification">
+              <span class="ep-admin-tag">CURRENT</span>
+            </div>
+            {% else %}
+            <div class="ep-input ep-input--locked" style="justify-content:center; flex-direction:column; gap:6px; min-height:80px;">
+              <i class="fas fa-image" style="color:var(--ep-ink-4);"></i>
+              <span style="font-size:12px;">No verification image</span>
+            </div>
+            {% endif %}
+            <div style="margin-top:10px; padding:12px; border:1px dashed #f59e0b; border-radius:var(--ep-r-sm); background:#fff;">
+              <input type="file" name="verification_image_file" style="font-size:12px; width:100%;">
+            </div>
+          </div>
+          <div class="ep-row">
+            <label class="ep-label">Verification status</label>
+            <select name="verification_status" class="ep-input">
+              <option value="pending" {% if profile.verification_status == 'pending' %}selected{% endif %}>Pending</option>
+              <option value="verified" {% if profile.verification_status == 'verified' %}selected{% endif %}>Verified</option>
+              <option value="rejected" {% if profile.verification_status == 'rejected' %}selected{% endif %}>Rejected</option>
+              <option value="manual_review" {% if profile.verification_status == 'manual_review' %}selected{% endif %}>Manual review</option>
+            </select>
+          </div>
+          <p class="ep-admin-warn"><i class="fas fa-exclamation-triangle"></i> Setting Pending or Rejected forces re-verification on next visit.</p>
+        </div>
+      </div>
+      {% endif %}
     </form>
 
-        <!-- Gallery Section -->
-        <div id="section-gallery" class="edit-section">
-            <div class="glass-card">
-                <h3><i class="fas fa-images"></i> Photo Gallery &nbsp; <span style="font-weight: 500; color: var(--text-muted);">{{ gallery.count }}/5</span></h3>
-                <div class="gallery-note">
-                    <i class="fas fa-shield-alt"></i>
-                    All uploads go through an AI NSFW check and are auto-compressed before saving.
-                </div>
-                <div class="gallery-grid">
-                    {% for img in gallery %}
-                    <div class="gallery-item">
-                        <img src="{{ img.get_image_url }}" alt="Gallery">
-                        <a href="{% url 'delete_profile_image' img.id %}" class="gallery-delete" onclick="handleDeletePhoto(event, this.href)">
-                            <i class="fas fa-times"></i>
-                        </a>
-                    </div>
-                    {% endfor %}
-                    {% if gallery.count < 5 %}
-                    <label for="id_gallery_file" class="gallery-add">
-                        <i class="fas fa-plus"></i>
-                        <span>Add</span>
-                    </label>
-                    {% endif %}
-                </div>
-            </div>
+    <!-- GALLERY (outside main form) -->
+    <div id="section-gallery" class="ep-panel" role="tabpanel">
+      <div class="ep-group">
+        <div class="ep-group-head"><i class="fas fa-images"></i> Photos <span class="ep-badge">{{ gallery.count }}/5</span></div>
+        <p class="ep-gallery-note"><i class="fas fa-shield-alt"></i> AI safety check & auto-compress on every upload.</p>
+        <div class="ep-gallery-grid">
+          {% for img in gallery %}
+          <div class="ep-gallery-slot">
+            <img src="{{ img.get_image_url }}" alt="">
+            <a href="{% url 'delete_profile_image' img.id %}" class="ep-gallery-del" onclick="handleDeletePhoto(event, this.href)"><i class="fas fa-times"></i></a>
+          </div>
+          {% endfor %}
+          {% if gallery.count < 5 %}
+          <label for="id_gallery_file" class="ep-gallery-add"><i class="fas fa-plus"></i><span>Add</span></label>
+          {% endif %}
         </div>
-        <form method="POST" enctype="multipart/form-data" id="gallery-form" style="display: none;">
-            {% csrf_token %}
-            <input type="hidden" name="add_image" value="1">
-            <input type="file" name="image_file" id="id_gallery_file" onchange="handleGalleryUpload(this)">
-        </form>
+      </div>
+    </div>
 
-        <!-- Hidden PFP form -->
-        <form method="POST" enctype="multipart/form-data" id="pfp-instant-form" style="display: none;">
-            {% csrf_token %}
-            <input type="hidden" name="update_pfp_instant" value="1">
-            <input type="file" name="profile_pic_file" id="id_pfp_instant" accept="image/*">
-        </form>
-    </div> <!-- end edit-container -->
+  </div><!-- .ep-scroll -->
 
-    <span id="pfp-face-status" class="pfp-face-status"></span>
+  <!-- Sticky save -->
+  <div class="ep-savebar">
+    <button type="submit" form="profile-edit-form" class="ep-save-btn" id="save-btn">
+      <i class="fas fa-check-circle"></i> Save changes
+    </button>
+  </div>
 
-<!-- Upload Overlay -->
-<div id="upload-overlay" class="upload-overlay">
-    <div class="loader"></div>
-    <p id="upload-text">Uploading your photo...</p>
+</div><!-- #ep-app -->
+
+<form method="POST" enctype="multipart/form-data" id="gallery-form" style="display:none;">
+  {% csrf_token %}
+  <input type="hidden" name="add_image" value="1">
+  <input type="file" name="image_file" id="id_gallery_file" accept="image/*" onchange="handleGalleryUpload(this)">
+</form>
+<form method="POST" enctype="multipart/form-data" id="pfp-instant-form" style="display:none;">
+  {% csrf_token %}
+  <input type="hidden" name="update_pfp_instant" value="1">
+  <input type="file" name="profile_pic_file" id="id_pfp_instant" accept="image/*">
+</form>
+
+<div id="pfp-face-status" class="ep-toast"></div>
+<div id="upload-overlay" class="ep-overlay">
+  <div class="ep-spinner"></div>
+  <p class="ep-overlay-text" id="upload-text">Uploading…</p>
 </div>
 
-<!-- Cities Datalist -->
-<datalist id="indian-cities">
-    <option value="Chennai, Tamil Nadu">
-    <option value="Kanchipuram, Tamil Nadu">
-    <option value="Trichy, Tamil Nadu">
-    <option value="Madurai, Tamil Nadu">
-    <option value="Coimbatore, Tamil Nadu">
-    <option value="Bangalore, Karnataka">
-    <option value="Hyderabad, Telangana">
-    <option value="Delhi, NCR">
-    <option value="Kochi, Kerala">
-    <option value="Trivandrum, Kerala">
-    <option value="Calicut, Kerala">
-    <option value="Kozhikode, Kerala">
-    <option value="Kannur, Kerala">
-    <option value="Kollam, Kerala">
-    <option value="Malappuram, Kerala">
-    <option value="Vellore, Tamil Nadu">
-    <option value="Chengalpattu, Tamil Nadu">
-</datalist>
-
 <script>
-    function switchTab(tabId) {
-        // Auto-save progress in background
-        autoSaveProfile();
+(function() {
+  /* ── Tabs ── */
+  const tabs = document.querySelectorAll('.ep-tab');
+  const indicator = document.getElementById('ep-tab-indicator');
 
-        document.querySelectorAll('.edit-section').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        
-        document.getElementById('section-' + tabId).classList.add('active');
-        document.querySelector(`.tab-btn[onclick="switchTab('${tabId}')"]`).classList.add('active');
+  function moveIndicator(el) {
+    if (!indicator || !el) return;
+    indicator.style.width = el.offsetWidth + 'px';
+    indicator.style.left = el.offsetLeft + 'px';
+  }
+
+  window.switchTab = function(tabId) {
+    autoSaveProfile();
+    document.querySelectorAll('.ep-panel').forEach(p => p.classList.remove('is-active'));
+    tabs.forEach(t => t.classList.remove('is-active'));
+    const panel = document.getElementById('section-' + tabId);
+    const tab = document.querySelector('.ep-tab[data-tab="' + tabId + '"]');
+    if (panel) panel.classList.add('is-active');
+    if (tab) { tab.classList.add('is-active'); moveIndicator(tab); }
+  };
+
+  tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+  window.addEventListener('resize', () => {
+    const active = document.querySelector('.ep-tab.is-active');
+    moveIndicator(active);
+  });
+  requestAnimationFrame(() => moveIndicator(document.querySelector('.ep-tab.is-active')));
+
+  function autoSaveProfile() {
+    const form = document.getElementById('profile-edit-form');
+    if (!form) return;
+    fetch(window.location.href, {
+      method: 'POST', body: new FormData(form),
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    }).catch(() => {});
+  }
+
+  function showOverlay(text) {
+    document.getElementById('upload-text').textContent = text;
+    document.getElementById('upload-overlay').classList.add('is-show');
+  }
+  window.hideOverlay = function() {
+    document.getElementById('upload-overlay').classList.remove('is-show');
+  };
+
+  function compressImage(file, quality, maxWidth) {
+    quality = quality || 0.7; maxWidth = maxWidth || 1080;
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        let w = img.width, h = img.height;
+        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        c.toBlob(b => b ? resolve(new File([b], file.name, { type: 'image/jpeg' })) : reject(), 'image/jpeg', quality);
+      };
+      img.onerror = reject;
+    });
+  }
+
+  window.handleGalleryUpload = async function(input) {
+    if (!input.files || !input.files[0]) return;
+    showOverlay('Compressing & uploading…');
+    try {
+      const c = await compressImage(input.files[0]);
+      const dt = new DataTransfer(); dt.items.add(c); input.files = dt.files;
+    } catch (e) {}
+    document.getElementById('gallery-form').submit();
+  };
+
+  const dropdownOptions = {
+    location: ["Kochi, Kerala","Trivandrum, Kerala","Calicut, Kerala","Chennai, Tamil Nadu","Coimbatore, Tamil Nadu","Madurai, Tamil Nadu","Bangalore, Karnataka","Hyderabad, Telangana","Delhi, NCR","Mumbai, Maharashtra","Vellore, Tamil Nadu","Chengalpattu, Tamil Nadu","Kanchipuram, Tamil Nadu","Trichy, Tamil Nadu","Kozhikode, Kerala","Kannur, Kerala","Kollam, Kerala","Malappuram, Kerala","Pune, Maharashtra","Jaipur, Rajasthan","Kolkata, West Bengal","Visakhapatnam, Andhra Pradesh","Chandigarh, UT","Guwahati, Assam","Tiruchirappalli, Tamil Nadu","Salem, Tamil Nadu","Erode, Tamil Nadu","Nagercoil, Tamil Nadu"],
+    interests: ["Photography","Traveling","Gaming","Music","Coding","Reading","Cooking","Fitness","Yoga","Art","Dancing","Movies","Anime","Fashion","Sports","Football","Cricket","Startups","Tech","Design","Coffee","Foodie","Netflix","Social Media"],
+    languages: ["English","Hindi","Tamil","Malayalam","Telugu","Kannada","Marathi","Bengali","Punjabi","Gujarati","Urdu"],
+    mother_tongue: ["Tamil","Malayalam","Hindi","Telugu","Kannada","English","Marathi","Bengali","Gujarati","Punjabi","Urdu"]
+  };
+
+  function initDropdown(searchId, listId, chipsId, hiddenId, optionsKey, multi) {
+    const searchEl = document.getElementById(searchId);
+    const listEl = document.getElementById(listId);
+    const chipsEl = document.getElementById(chipsId);
+    const hiddenEl = document.getElementById(hiddenId);
+    if (!searchEl || !listEl || !chipsEl || !hiddenEl) return;
+    const options = dropdownOptions[optionsKey];
+    let rawVal = hiddenEl.value || '';
+    if (rawVal.startsWith('[')) rawVal = rawVal.slice(1,-1).replace(/['"]/g,'');
+    let selected = rawVal ? rawVal.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+    function renderChips() {
+      chipsEl.innerHTML = '';
+      selected.forEach(val => {
+        const chip = document.createElement('span');
+        chip.className = 'ep-chip';
+        chip.innerHTML = '<span>' + val + '</span><i class="fas fa-times"></i>';
+        chip.querySelector('i').onclick = e => { e.stopPropagation(); selected = selected.filter(v => v !== val); renderChips(); };
+        chipsEl.appendChild(chip);
+      });
+      hiddenEl.value = selected.join(',');
     }
 
-    function autoSaveProfile() {
-        const form = document.getElementById('profile-edit-form');
-        if (!form) return;
-        const formData = new FormData(form);
-        fetch(window.location.href, {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        }).then(res => {
-            console.log("Progress auto-saved");
-        }).catch(err => console.warn("Auto-save failed", err));
+    function showList(q) {
+      listEl.innerHTML = '';
+      const filtered = options.filter(o => o.toLowerCase().includes(q.toLowerCase()) && !selected.includes(o));
+      if (!filtered.length) { listEl.style.display = 'none'; return; }
+      listEl.style.display = 'block';
+      filtered.forEach(o => {
+        const item = document.createElement('div');
+        item.className = 'ep-picker-item';
+        item.textContent = o;
+        item.onclick = () => {
+          selected = multi ? [...selected, o] : [o];
+          renderChips(); searchEl.value = ''; listEl.style.display = 'none';
+        };
+        listEl.appendChild(item);
+      });
     }
 
-    function showOverlay(text) {
-        document.getElementById('upload-text').innerText = text;
-        document.getElementById('upload-overlay').style.display = 'flex';
-    }
+    searchEl.addEventListener('focus', () => showList(searchEl.value));
+    searchEl.addEventListener('input', () => showList(searchEl.value));
+    document.addEventListener('click', e => {
+      const wrap = searchEl.closest('.ep-picker');
+      if (wrap && !wrap.contains(e.target)) listEl.style.display = 'none';
+    });
+    renderChips();
+  }
 
-    // ───── IMAGE COMPRESSION UTILITY ─────
-    function compressImage(file, quality = 0.7, maxWidth = 1080) {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.src = URL.createObjectURL(file);
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                if (width > maxWidth) {
-                    height = Math.round((height * maxWidth) / width);
-                    width = maxWidth;
-                }
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                canvas.toBlob((blob) => {
-                    if(!blob) return reject(new Error("Canvas toBlob failed"));
-                    resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
-                }, 'image/jpeg', quality);
-            };
-            img.onerror = reject;
-        });
-    }
-
-    // PFP Instant Upload
-    async function handlePfpInstantUpload(input) {
-        if (input.files && input.files[0]) {
-            showOverlay("Compressing & Uploading...");
-            try {
-                const compressed = await compressImage(input.files[0]);
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(compressed);
-                input.files = dataTransfer.files;
-                document.getElementById('pfp-instant-form').submit();
-            } catch (err) {
-                console.error("Compression failed:", err);
-                document.getElementById('pfp-instant-form').submit(); // Fallback to original
-            }
-        }
-    }
-
-    // Gallery Upload
-    async function handleGalleryUpload(input) {
-        if (input.files && input.files[0]) {
-            showOverlay("Compressing & Uploading...");
-            try {
-                const compressed = await compressImage(input.files[0]);
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(compressed);
-                input.files = dataTransfer.files;
-                document.getElementById('gallery-form').submit();
-            } catch (err) {
-                console.error("Gallery upload failed:", err);
-                document.getElementById('gallery-form').submit(); // Fallback
-            }
-        }
-    }
-
-    let nsfwModel = null;
-    async function loadNSFWModel() {
-        if (nsfwModel) return nsfwModel;
-        try {
-            nsfwModel = await nsfwjs.load();
-            return nsfwModel;
-        } catch (err) {
-            console.error("NSFW model failed to load:", err);
-            return null;
-        }
-    }
-
-    function hideOverlay() {
-        document.getElementById('upload-overlay').style.display = 'none';
-    }
-
-    // ───── SEARCHABLE DROPDOWN LOGIC ─────
-    var dropdownOptions = {
-        location: ["Kochi, Kerala", "Trivandrum, Kerala", "Calicut, Kerala", "Kannur, Kerala", "Kollam, Kerala", "Malappuram, Kerala", "Mumbai, Maharashtra", "Delhi, NCR", "Bangalore, Karnataka", "Hyderabad, Telangana", "Ahmedabad, Gujarat", "Chennai, Tamil Nadu", "Kolkata, West Bengal", "Surat, Gujarat", "Pune, Maharashtra", "Jaipur, Rajasthan", "Lucknow, Uttar Pradesh", "Kanpur, Uttar Pradesh", "Nagpur, Maharashtra", "Indore, Madhya Pradesh", "Thane, Maharashtra", "Bhopal, Madhya Pradesh", "Visakhapatnam, Andhra Pradesh", "Pimpri-Chinchwad, Maharashtra", "Patna, Bihar", "Vadodara, Gujarat", "Ghaziabad, Uttar Pradesh", "Ludhiana, Punjab", "Coimbatore, Tamil Nadu", "Agra, Uttar Pradesh", "Madurai, Tamil Nadu", "Nashik, Maharashtra", "Faridabad, Haryana", "Meerut, Uttar Pradesh", "Rajkot, Gujarat", "Varanasi, Uttar Pradesh", "Srinagar, Jammu and Kashmir", "Aurangabad, Maharashtra", "Dhanbad, Jharkhand", "Amritsar, Punjab", "Navi Mumbai, Maharashtra", "Allahabad, Uttar Pradesh", "Ranchi, Jharkhand", "Howrah, West Bengal", "Jabalpur, Madhya Pradesh", "Gwalior, Madhya Pradesh", "Vijayawada, Andhra Pradesh", "Jodhpur, Rajasthan", "Raipur, Chhattisgarh", "Kota, Rajasthan", "Guwahati, Assam", "Chandigarh, UT", "Solapur, Maharashtra", "Hubli-Dharwad, Karnataka", "Bareilly, Uttar Pradesh", "Moradabad, Uttar Pradesh", "Mysore, Karnataka", "Gurgaon, Haryana", "Aligarh, Uttar Pradesh", "Jalandhar, Punjab", "Tiruchirappalli, Tamil Nadu", "Bhubaneswar, Odisha", "Salem, Tamil Nadu", "Warangal, Telangana", "Guntur, Andhra Pradesh", "Bhiwandi, Maharashtra", "Saharanpur, Uttar Pradesh", "Vellore, Tamil Nadu", "Chengalpattu, Tamil Nadu", "Erode, Tamil Nadu", "Hosur, Tamil Nadu", "Nagercoil, Tamil Nadu"],
-        interests: ["Photography", "Traveling", "Gaming", "Music", "Coding", "Reading", "Cooking", "Fitness", "Yoga", "Art", "Dancing", "Movies", "Anime", "Fashion", "Sports", "Football", "Cricket", "Basketball", "Startups", "Crypto", "Web3", "Tech", "Design", "Writing", "Gardening", "Pets", "Hiking", "Board Games", "Stand-up Comedy", "Podcasts", "Volunteering", "Coffee", "Tea", "Foodie", "Meditation", "Shopping", "Social Media", "Netflix", "Marvel", "DC"],
-        languages: ["English", "Hindi", "Tamil", "Malayalam", "Telugu", "Kannada", "Marathi", "Bengali", "Punjabi", "Gujarati", "Assamese", "Bodo", "Dogri", "Kashmiri", "Konkani", "Maithili", "Manipuri", "Nepali", "Odia", "Sanskrit", "Santali", "Sindhi", "Urdu"],
-        mother_tongue: ["Tamil", "Malayalam", "Hindi", "Telugu", "Kannada", "English", "Marathi", "Bengali", "Gujarati", "Punjabi", "Urdu"]
+  function initAgeStepper() {
+    const display = document.getElementById('age-display');
+    const hidden = document.getElementById('id_age');
+    if (!display || !hidden) return;
+    window.stepAge = function(d) {
+      let v = parseInt(hidden.value, 10) || 18;
+      v = Math.min(30, Math.max(18, v + d));
+      display.textContent = v;
+      hidden.value = v;
     };
+  }
 
-    function initDropdown(searchId, listId, chipsId, hiddenId, optionsKey, multi) {
-        var searchEl = document.getElementById(searchId);
-        var listEl = document.getElementById(listId);
-        var chipsEl = document.getElementById(chipsId);
-        var hiddenEl = document.getElementById(hiddenId);
-        if (!searchEl || !listEl || !chipsEl || !hiddenEl) return;
-        var options = dropdownOptions[optionsKey];
+  function initDiscoveryRange() {
+    const minD = document.getElementById('min-age-display');
+    const maxD = document.getElementById('max-age-display');
+    const hMin = document.getElementById('id_pref_age_min');
+    const hMax = document.getElementById('id_pref_age_max');
+    if (!minD || !hMin) return;
+    window.stepRange = function(type, d) {
+      let min = parseInt(hMin.value, 10) || 18;
+      let max = parseInt(hMax.value, 10) || 25;
+      if (type === 'min') { min = Math.min(30, Math.max(18, min + d)); if (min > max) max = min; }
+      else { max = Math.min(30, Math.max(18, max + d)); if (max < min) min = max; }
+      minD.textContent = min; maxD.textContent = max;
+      hMin.value = min; hMax.value = max;
+    };
+  }
 
-        var rawVal = hiddenEl.value || '';
-        if (rawVal.startsWith('[') && rawVal.endsWith(']')) rawVal = rawVal.slice(1,-1).replace(/['"]/g,'');
-        var selected = rawVal ? rawVal.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+  document.addEventListener('DOMContentLoaded', () => {
+    initAgeStepper();
+    initDiscoveryRange();
+    initDropdown('search-living','list-living','chips-living','id_living_place','location',false);
+    initDropdown('search-native','list-native','chips-native','id_native_place','location',false);
+    initDropdown('search-mothertongue','list-mothertongue','chips-mothertongue','id_mother_tongues','mother_tongue',false);
+    initDropdown('search-interests','list-interests','chips-interests','id_interest_tags','interests',true);
+    initDropdown('search-languages','list-languages','chips-languages','id_languages','languages',true);
+    initDropdown('search-pref-languages','list-pref-languages','chips-pref-languages','id_pref_languages','languages',true);
+  });
 
-        function renderChips() {
-            chipsEl.innerHTML = '';
-            selected.forEach(function(val) {
-                var chip = document.createElement('div');
-                chip.className = 'chip';
-                chip.innerHTML = '<span>' + val + '</span><i class="fas fa-times"></i>';
-                chip.querySelector('i').onclick = function(e) {
-                    e.stopPropagation();
-                    selected = selected.filter(function(v) { return v !== val; });
-                    renderChips();
-                };
-                chipsEl.appendChild(chip);
-            });
-            hiddenEl.value = selected.join(',');
+  /* ── Favorites ── */
+  let selectedMovies = [], selectedSongs = [];
+
+  {% if profile.user.favorite_movies.all %}
+  {% for m in profile.user.favorite_movies.all %}
+  selectedMovies.push({ id:'{{ m.tmdb_id }}', title:'{{ m.title|escapejs }}', poster_url:'{{ m.poster_url }}', release_year:'{{ m.release_year }}' });
+  {% endfor %}
+  {% endif %}
+  {% if profile.user.favorite_songs.all %}
+  {% for s in profile.user.favorite_songs.all %}
+  selectedSongs.push({ id:'{{ s.itunes_track_id }}', title:'{{ s.title|escapejs }}', artist:'{{ s.artist|escapejs }}', album:'{{ s.album|escapejs }}', artwork_url:'{{ s.artwork_url }}' });
+  {% endfor %}
+  {% endif %}
+
+  function renderFavorites() {
+    const mc = document.getElementById('selected-movies');
+    document.getElementById('movie-count').textContent = selectedMovies.length;
+    mc.innerHTML = selectedMovies.length ? selectedMovies.map((m,i) => `
+      <div class="ep-media">
+        <div class="ep-media-cover ep-media-cover--poster"><img src="${m.poster_url}" alt=""></div>
+        <button type="button" class="ep-media-rm" onclick="removeMovie(${i})"><i class="fas fa-times"></i></button>
+        <div class="ep-media-name">${m.title}</div>
+      </div>`).join('') : '<span class="ep-media-empty">No movies yet</span>';
+
+    const sc = document.getElementById('selected-songs');
+    document.getElementById('song-count').textContent = selectedSongs.length;
+    sc.innerHTML = selectedSongs.length ? selectedSongs.map((s,i) => `
+      <div class="ep-media">
+        <div class="ep-media-cover ep-media-cover--sq"><img src="${s.artwork_url}" alt=""></div>
+        <button type="button" class="ep-media-rm" onclick="removeSong(${i})"><i class="fas fa-times"></i></button>
+        <div class="ep-media-name">${s.title}</div>
+      </div>`).join('') : '<span class="ep-media-empty">No songs yet</span>';
+  }
+  renderFavorites();
+
+  window.searchMovies = async function() {
+    const q = document.getElementById('movie-search-input').value.trim();
+    const el = document.getElementById('movie-search-results');
+    if (!q) return;
+    el.innerHTML = '<span class="ep-media-empty">Searching…</span>';
+    try {
+      const res = await fetch('/api/movies/search/?q=' + encodeURIComponent(q));
+      const data = await res.json();
+      el.innerHTML = (data.results && data.results.length)
+        ? data.results.map(m => `<div class="ep-media ep-media-pick" onclick='addMovie(${JSON.stringify(m).replace(/'/g,"&apos;")})'>
+            <div class="ep-media-cover ep-media-cover--poster"><img src="${m.poster_url||'https://placehold.co/120x180?text=?'}" alt=""></div>
+            <div class="ep-media-name">${m.title}</div></div>`).join('')
+        : '<span class="ep-media-empty">No results</span>';
+    } catch (e) { el.innerHTML = '<span class="ep-media-empty" style="color:#ef4444">Failed</span>'; }
+  };
+
+  window.searchSongs = async function() {
+    const q = document.getElementById('song-search-input').value.trim();
+    const el = document.getElementById('song-search-results');
+    if (!q) return;
+    el.innerHTML = '<span class="ep-media-empty">Searching…</span>';
+    try {
+      const res = await fetch('https://itunes.apple.com/search?term=' + encodeURIComponent(q) + '&entity=song&limit=10');
+      const data = await res.json();
+      el.innerHTML = (data.results && data.results.length)
+        ? data.results.map(s => {
+            const o = { id:s.trackId, title:s.trackName, artist:s.artistName, album:s.collectionName, artwork_url:s.artworkUrl100.replace('100x100bb','400x400bb') };
+            return `<div class="ep-media ep-media-pick" onclick='addSong(${JSON.stringify(o).replace(/'/g,"&apos;")})'>
+              <div class="ep-media-cover ep-media-cover--sq"><img src="${o.artwork_url}" alt=""></div>
+              <div class="ep-media-name">${s.trackName}</div></div>`;
+          }).join('')
+        : '<span class="ep-media-empty">No results</span>';
+    } catch (e) { el.innerHTML = '<span class="ep-media-empty" style="color:#ef4444">Failed</span>'; }
+  };
+
+  window.addMovie = m => { if (selectedMovies.length >= 3) return customAlert('Max 3 movies.','Limit'); if (!selectedMovies.find(x=>x.id==m.id)) { selectedMovies.push(m); renderFavorites(); } };
+  window.addSong = s => { if (selectedSongs.length >= 3) return customAlert('Max 3 songs.','Limit'); if (!selectedSongs.find(x=>x.id==s.id)) { selectedSongs.push(s); renderFavorites(); } };
+  window.removeMovie = i => { selectedMovies.splice(i,1); renderFavorites(); };
+  window.removeSong = i => { selectedSongs.splice(i,1); renderFavorites(); };
+
+  document.getElementById('profile-edit-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    document.getElementById('save-btn').classList.add('is-busy');
+    showOverlay('Saving profile…');
+    try {
+      await fetch('/api/favorites/save/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ movies: selectedMovies, songs: selectedSongs })
+      });
+    } catch (err) {}
+    this.submit();
+  });
+
+  /* ── PFP + face verify ── */
+  const pfpInput = document.getElementById('id_pfp_instant');
+  const pfpForm = document.getElementById('pfp-instant-form');
+  const faceToast = document.getElementById('pfp-face-status');
+  const isAdminEdit = {{ is_admin_editing|yesno:"true,false" }};
+
+  if (pfpInput) {
+    pfpInput.addEventListener('change', async function() {
+      if (!this.files || !this.files[0]) return;
+      const file = this.files[0];
+      showOverlay('Processing…');
+
+      async function submitCompressed() {
+        try {
+          const c = await compressImage(file, 0.7, 800);
+          const dt = new DataTransfer(); dt.items.add(c); pfpInput.files = dt.files;
+        } catch (e) {}
+        pfpForm.submit();
+      }
+
+      if (isAdminEdit) { await submitCompressed(); return; }
+      await loadFaceModelsOnce();
+
+      try {
+        const verificationUrl = "{{ profile.verification_image|default:'' }}";
+        if (!verificationUrl || verificationUrl === 'None') { await submitCompressed(); return; }
+
+        const verifyImg = new Image();
+        try {
+          const r = await fetch(verificationUrl);
+          verifyImg.src = URL.createObjectURL(await r.blob());
+        } catch (e) {
+          verifyImg.crossOrigin = 'anonymous';
+          verifyImg.src = verificationUrl;
+        }
+        await new Promise((res, rej) => { verifyImg.onload = res; verifyImg.onerror = rej; });
+
+        let vd = await faceapi.detectSingleFace(verifyImg, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceDescriptor();
+        if (!vd) vd = await faceapi.detectSingleFace(verifyImg, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+        if (!vd) throw new Error('Face not found in verification scan.');
+
+        const pfpImg = new Image();
+        pfpImg.src = URL.createObjectURL(file);
+        await new Promise(r => pfpImg.onload = r);
+        let pd = await faceapi.detectSingleFace(pfpImg, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceDescriptor();
+        if (!pd) pd = await faceapi.detectSingleFace(pfpImg, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+        if (!pd) {
+          hideOverlay();
+          faceToast.textContent = 'No face in photo';
+          faceToast.style.display = 'block';
+          this.value = '';
+          return;
         }
 
-        function showList(query) {
-            listEl.innerHTML = '';
-            var filtered = options.filter(function(o) {
-                return o.toLowerCase().includes(query.toLowerCase()) && !selected.includes(o);
-            });
-            if (filtered.length > 0) {
-                listEl.style.display = 'block';
-                filtered.forEach(function(o) {
-                    var item = document.createElement('div');
-                    item.className = 'dropdown-item';
-                    item.innerText = o;
-                    item.onclick = function() {
-                        if (multi) { selected.push(o); } else { selected = [o]; }
-                        renderChips();
-                        searchEl.value = '';
-                        listEl.style.display = 'none';
-                    };
-                    listEl.appendChild(item);
-                });
-            } else {
-                listEl.style.display = 'none';
-            }
-        }
-
-        searchEl.addEventListener('focus', function() { showList(searchEl.value); });
-        searchEl.addEventListener('input', function() { showList(searchEl.value); });
-        document.addEventListener('click', function(e) {
-            var wrap = searchEl.closest('.searchable-dropdown');
-            if (wrap && !wrap.contains(e.target)) listEl.style.display = 'none';
-        });
-        renderChips();
-    }
-
-    // ───── STEPPER LOGIC ─────
-    function initAgeStepper() {
-        const display = document.getElementById('age-display');
-        const hidden = document.getElementById('id_age');
-        if (!display || !hidden) return;
-
-        window.stepAge = function(change) {
-            let val = parseInt(hidden.value, 10) || 18;
-            val += change;
-            if (val < 18) val = 18;
-            if (val > 30) val = 30;
-            display.innerText = val;
-            hidden.value = val;
-        };
-    }
-
-    function initDiscoveryRange() {
-        const minDisplay = document.getElementById('min-age-display');
-        const maxDisplay = document.getElementById('max-age-display');
-        const hiddenMin = document.getElementById('id_pref_age_min');
-        const hiddenMax = document.getElementById('id_pref_age_max');
-        if (!minDisplay || !hiddenMin) return;
-
-        window.stepRange = function(type, change) {
-            let min = parseInt(hiddenMin.value, 10) || 18;
-            let max = parseInt(hiddenMax.value, 10) || 25;
-
-            if (type === 'min') {
-                min += change;
-                if (min < 18) min = 18;
-                if (min > 30) min = 30;
-                if (min > max) max = min; // Push max up
-            } else {
-                max += change;
-                if (max < 18) max = 18;
-                if (max > 30) max = 30;
-                if (max < min) min = max; // Push min down
-            }
-
-            minDisplay.innerText = min;
-            maxDisplay.innerText = max;
-            hiddenMin.value = min;
-            hiddenMax.value = max;
-        };
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        initAgeStepper();
-        initDiscoveryRange();
-
-        initDropdown('search-living',        'list-living',        'chips-living',        'id_living_place',   'location',     false);
-        initDropdown('search-native',        'list-native',        'chips-native',        'id_native_place',   'location',     false);
-        initDropdown('search-mothertongue',  'list-mothertongue',  'chips-mothertongue',  'id_mother_tongues', 'mother_tongue', false);
-        initDropdown('search-interests',     'list-interests',     'chips-interests',     'id_interest_tags',  'interests',    true);
-        initDropdown('search-languages',     'list-languages',     'chips-languages',     'id_languages',      'languages',    true);
-        initDropdown('search-pref-languages','list-pref-languages','chips-pref-languages','id_pref_languages', 'languages',    true);
-    });
-
-
-
-
-    // ───── MY VIBE (FAVORITES) LOGIC ─────
-    let selectedMovies = [];
-    let selectedSongs = [];
-
-    // Initialize from template if they already exist
-    {% if profile.user.favorite_movies.all %}
-        {% for m in profile.user.favorite_movies.all %}
-            selectedMovies.push({
-                id: '{{ m.tmdb_id }}',
-                title: '{{ m.title|escapejs }}',
-                poster_url: '{{ m.poster_url }}',
-                release_year: '{{ m.release_year }}'
-            });
-        {% endfor %}
-    {% endif %}
-
-    {% if profile.user.favorite_songs.all %}
-        {% for s in profile.user.favorite_songs.all %}
-            selectedSongs.push({
-                id: '{{ s.itunes_track_id }}',
-                title: '{{ s.title|escapejs }}',
-                artist: '{{ s.artist|escapejs }}',
-                album: '{{ s.album|escapejs }}',
-                artwork_url: '{{ s.artwork_url }}'
-            });
-        {% endfor %}
-    {% endif %}
-
-    function renderFavorites() {
-        // Movies
-        const mContainer = document.getElementById('selected-movies');
-        document.getElementById('movie-count').innerText = selectedMovies.length;
-        if(selectedMovies.length === 0) {
-            mContainer.innerHTML = '<span style="font-size: 13px; color: #94a3b8; font-style: italic;">No movies selected yet.</span>';
+        if (faceapi.euclideanDistance(vd.descriptor, pd.descriptor) < 0.6) {
+          faceToast.style.display = 'none';
+          showOverlay('Updating photo…');
+          await submitCompressed();
         } else {
-            mContainer.innerHTML = selectedMovies.map((m, i) => `
-                <div style="position: relative; width: 80px; text-align: center;">
-                    <div style="width: 100%; aspect-ratio: 2/3; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid var(--border);">
-                        <img src="${m.poster_url}" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
-                    <button type="button" onclick="removeMovie(${i})" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><i class="fas fa-times"></i></button>
-                    <div style="font-size: 10px; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; color: var(--text-main);">${m.title}</div>
-                </div>
-            `).join('');
+          hideOverlay();
+          faceToast.textContent = 'Photo does not match verification';
+          faceToast.style.display = 'block';
+          this.value = '';
+          customAlert("This photo doesn't match your verification scan.", 'Rejected');
         }
-
-        // Songs
-        const sContainer = document.getElementById('selected-songs');
-        document.getElementById('song-count').innerText = selectedSongs.length;
-        if(selectedSongs.length === 0) {
-            sContainer.innerHTML = '<span style="font-size: 13px; color: #94a3b8; font-style: italic;">No songs selected yet.</span>';
-        } else {
-            sContainer.innerHTML = selectedSongs.map((s, i) => `
-                <div style="position: relative; width: 80px; text-align: center;">
-                    <div style="width: 100%; aspect-ratio: 1/1; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 1px solid var(--border);">
-                        <img src="${s.artwork_url}" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
-                    <button type="button" onclick="removeSong(${i})" style="position: absolute; top: -8px; right: -8px; background: #ef4444; color: white; border: 2px solid white; border-radius: 50%; width: 24px; height: 24px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"><i class="fas fa-times"></i></button>
-                    <div style="font-size: 10px; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; color: var(--text-main);">${s.title}</div>
-                </div>
-            `).join('');
-        }
-    }
-
-    renderFavorites(); // Call once on load
-
-    async function searchMovies() {
-        const query = document.getElementById('movie-search-input').value.trim();
-        const resultsDiv = document.getElementById('movie-search-results');
-        if(!query) return;
-        
-        resultsDiv.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); padding: 10px;">Searching...</div>';
-        try {
-            const res = await fetch(`/api/movies/search/?q=${encodeURIComponent(query)}`);
-            const data = await res.json();
-            if(data.results && data.results.length > 0) {
-                resultsDiv.innerHTML = data.results.map(m => `
-                    <div style="flex: 0 0 100px; text-align: center; cursor: pointer; transition: 0.2s;" onclick='addMovie(${JSON.stringify(m).replace(/'/g, "&apos;")})' class="search-item">
-                        <div style="width: 100%; aspect-ratio: 2/3; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #f1f5f9; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                            <img src="${m.poster_url || 'https://placehold.co/200x300?text=No+Poster'}" style="width: 100%; height: 100%; object-fit: cover;">
-                        </div>
-                        <div style="font-size: 11px; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; color: var(--text-main); padding: 0 4px;">${m.title}</div>
-                        <div style="font-size: 10px; color: var(--text-muted);">${m.release_year}</div>
-                    </div>
-                `).join('');
-            } else {
-                resultsDiv.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); padding: 10px;">No movies found.</div>';
-            }
-        } catch(e) {
-            resultsDiv.innerHTML = '<div style="font-size: 12px; color: #ef4444; padding: 10px;">Failed to search.</div>';
-        }
-    }
-
-    async function searchSongs() {
-        const query = document.getElementById('song-search-input').value.trim();
-        const resultsDiv = document.getElementById('song-search-results');
-        if(!query) return;
-        
-        resultsDiv.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); padding: 10px;">Searching...</div>';
-        try {
-            // Use iTunes API
-            const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=10`);
-            const data = await res.json();
-            if(data.results && data.results.length > 0) {
-                resultsDiv.innerHTML = data.results.map(s => `
-                    <div style="flex: 0 0 100px; text-align: center; cursor: pointer; transition: 0.2s;" onclick='addSong(${JSON.stringify({id: s.trackId, title: s.trackName, artist: s.artistName, album: s.collectionName, artwork_url: s.artworkUrl100.replace("100x100bb", "400x400bb")}).replace(/'/g, "&apos;")})' class="search-item">
-                        <div style="width: 100%; aspect-ratio: 1/1; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: #f1f5f9; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-                            <img src="${s.artworkUrl100.replace("100x100bb", "400x400bb") || 'https://placehold.co/200x200?text=No+Art'}" style="width: 100%; height: 100%; object-fit: cover;">
-                        </div>
-                        <div style="font-size: 11px; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; color: var(--text-main); padding: 0 4px;">${s.trackName}</div>
-                        <div style="font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.artistName}</div>
-                    </div>
-                `).join('');
-            } else {
-                resultsDiv.innerHTML = '<div style="font-size: 12px; color: var(--text-muted); padding: 10px;">No songs found.</div>';
-            }
-        } catch(e) {
-            resultsDiv.innerHTML = '<div style="font-size: 12px; color: #ef4444; padding: 10px;">Failed to search.</div>';
-        }
-    }
-
-    // Add styles for hover
-    document.head.insertAdjacentHTML('beforeend', `<style>.search-item:hover { transform: translateY(-4px); }</style>`);
-
-    function addMovie(m) {
-        if(selectedMovies.length >= 3) {
-            customAlert("You can select only 3 movies max.", "Limit Reached");
-            return;
-        }
-        if(!selectedMovies.find(x => x.id == m.id)) {
-            selectedMovies.push(m);
-            renderFavorites();
-        }
-    }
-    window.addMovie = addMovie;
-
-    function addSong(s) {
-        if(selectedSongs.length >= 3) {
-            customAlert("You can select only 3 songs max.", "Limit Reached");
-            return;
-        }
-        if(!selectedSongs.find(x => x.id == s.id)) {
-            selectedSongs.push(s);
-            renderFavorites();
-        }
-    }
-    window.addSong = addSong;
-
-    function removeMovie(idx) {
-        selectedMovies.splice(idx, 1);
-        renderFavorites();
-    }
-    window.removeMovie = removeMovie;
-
-    function removeSong(idx) {
-        selectedSongs.splice(idx, 1);
-        renderFavorites();
-    }
-    window.removeSong = removeSong;
-
-    // Form Submit Loader
-    document.getElementById('profile-edit-form').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        showOverlay("Saving your profile...");
-        
-        try {
-            // First save the favorites via API
-            await fetch('/api/favorites/save/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                    movies: selectedMovies,
-                    songs: selectedSongs
-                })
-            });
-        } catch(err) {
-            console.error('Failed to save favorites', err);
-            // Non-fatal, proceed with profile save
-        }
-        
-        // Then submit the main form via HTML submit
-        this.submit();
+      } catch (err) {
+        hideOverlay();
+        customAlert(err.message || 'Verification failed.', 'Error');
+        this.value = '';
+      }
     });
+  }
 
-    // ─── INSTANT PFP UPLOAD WITH FACE VERIFICATION ───
-    const pfpInstantInput = document.getElementById('id_pfp_instant');
-    const pfpInstantForm = document.getElementById('pfp-instant-form');
-    const pfpFaceStatus = document.getElementById('pfp-face-status');
-    let modelsLoaded = false;
-
-    // AI Models are now loaded via global loadFaceModelsOnce() in base.html
-
-    if (pfpInstantInput) {
-        pfpInstantInput.addEventListener('change', async function() {
-            if (!this.files || !this.files[0]) return;
-            const file = this.files[0];
-
-            showOverlay("Processing Image...");
-
-            // Admin Bypass
-            const isAdminEdit = {{ is_admin_editing|yesno:"true,false" }};
-            if (isAdminEdit) {
-                console.log("Admin editing: Bypassing face verification.");
-                try {
-                    const compressed = await compressImage(file, 0.7, 800);
-                    const dt = new DataTransfer();
-                    dt.items.add(compressed);
-                    pfpInstantInput.files = dt.files;
-                } catch (e) { console.warn("Compression failed, using original"); }
-                pfpInstantForm.submit();
-                return;
-            }
-
-            await loadFaceModelsOnce();
-
-            try {
-                // 1. Get descriptor from verification image (original scan) - Robust Fetch Method
-                const verificationUrl = "{{ profile.verification_image }}";
-                if (!verificationUrl || verificationUrl === "None") {
-                    console.warn("No verification image found. Bypassing strict verification for legacy profile.");
-                    const compressed = await compressImage(file, 0.7, 800);
-                    const dataTransfer = new DataTransfer();
-                    dataTransfer.items.add(compressed);
-                    pfpInstantInput.files = dataTransfer.files;
-                    pfpInstantForm.submit();
-                    return;
-                }
-
-                const verifyImg = new Image();
-                try {
-                    const response = await fetch(verificationUrl);
-                    const blob = await response.blob();
-                    verifyImg.src = URL.createObjectURL(blob);
-                } catch (e) {
-                    console.warn("Secure fetch failed, falling back to direct load:", e);
-                    verifyImg.crossOrigin = "anonymous";
-                    verifyImg.src = verificationUrl;
-                }
-                
-                await new Promise((resolve, reject) => {
-                    verifyImg.onload = resolve;
-                    verifyImg.onerror = () => reject(new Error("Failed to load verification image from storage."));
-                });
-
-                // Try high-accuracy detection first
-                let verifyDetection = await faceapi.detectSingleFace(verifyImg, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceDescriptor();
-                
-                // Fallback to TinyFaceDetector if SSD fails
-                if (!verifyDetection) {
-                    // SSD failed
-                    verifyDetection = await faceapi.detectSingleFace(verifyImg, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.1 })).withFaceLandmarks().withFaceDescriptor();
-                }
-
-                if (!verifyDetection) {
-                    throw new Error("Face not detected in original scan. Please contact support or redo verification.");
-                }
-
-                // 2. Get descriptor from new PFP
-                const pfpImg = new Image();
-                pfpImg.src = URL.createObjectURL(file);
-                await new Promise(resolve => pfpImg.onload = resolve);
-                
-                let pfpDetection = await faceapi.detectSingleFace(pfpImg, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceDescriptor();
-                if (!pfpDetection) {
-                    pfpDetection = await faceapi.detectSingleFace(pfpImg, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-                }
-                
-                if (!pfpDetection) {
-                    hideOverlay();
-                    pfpFaceStatus.innerText = "No face detected in new photo!";
-                    pfpFaceStatus.style.display = "block";
-                    this.value = ''; 
-                    return;
-                }
-
-                // 3. Compare
-                const distance = faceapi.euclideanDistance(verifyDetection.descriptor, pfpDetection.descriptor);
-                // distance check
-
-                if (distance < 0.6) {
-                    pfpFaceStatus.style.display = "none";
-                    showOverlay("Updating profile picture...");
-                    try {
-                        const compressed = await compressImage(file);
-                        const dt = new DataTransfer();
-                        dt.items.add(compressed);
-                        this.files = dt.files;
-                    } catch (e) { console.warn('Compression skipped'); }
-                    pfpInstantForm.submit();
-                } else {
-                    hideOverlay();
-                    pfpFaceStatus.innerText = "Identity mismatch! (Rejected)";
-                    pfpFaceStatus.style.display = "block";
-                    this.value = ''; 
-                    customAlert("This photo doesn't match your original verification scan.", "Rejected");
-                }
-
-            } catch (err) {
-                console.error("Verification error:", err);
-                hideOverlay();
-                customAlert(err.message || "Verification failed. Please try again.", "Error");
-                this.value = '';
-            }
-        });
-    }
-
-    async function handleDeletePhoto(e, url) {
-        e.preventDefault();
-        const confirmed = await customConfirm("Are you sure you want to delete this photo?", "Delete Photo", "Delete", "Cancel");
-        if (confirmed) window.location.href = url;
-    }
+  window.handleDeletePhoto = async function(e, url) {
+    e.preventDefault();
+    if (await customConfirm('Delete this photo?', 'Delete Photo', 'Delete', 'Cancel')) location.href = url;
+  };
+})();
 </script>
-
 {% endblock %}

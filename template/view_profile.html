@@ -139,31 +139,61 @@
     }
     .profile-section h3 i { color: var(--primary-blue); font-size: 18px; }
 
+    .bio-text {
+        font-size: 15px;
+        line-height: 1.65;
+        color: var(--text-muted);
+        font-weight: 500;
+        margin: 0;
+    }
+
     /* ── Info Grid ── */
     .info-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 14px;
+        gap: 10px;
+        align-items: stretch;
     }
     .info-item {
         background: #f8fbff;
-        padding: 14px;
-        border-radius: 18px;
-        border: 1px solid rgba(37, 99, 235, 0.04);
-        transition: 0.3s;
+        padding: 14px 12px;
+        border-radius: 16px;
+        border: 1px solid rgba(37, 99, 235, 0.08);
+        min-height: 76px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        box-sizing: border-box;
     }
-    .info-item:hover { background: #f0f7ff; transform: translateY(-2px); }
+    .info-item--wide {
+        grid-column: 1 / -1;
+        min-height: auto;
+        padding: 16px 14px;
+        background: linear-gradient(135deg, #eff6ff 0%, #f8fbff 100%);
+        border: 1px solid rgba(37, 99, 235, 0.14);
+        margin-top: 2px;
+    }
+    .info-item--wide .info-label { color: var(--primary-blue); }
+    .info-item--wide .info-value {
+        color: var(--primary-blue);
+        font-size: 15px;
+        font-weight: 800;
+    }
     .info-label {
-        font-size: 11px;
+        font-size: 10px;
         font-weight: 800;
         color: var(--text-muted);
         text-transform: uppercase;
-        margin-bottom: 4px;
+        letter-spacing: 0.04em;
+        margin-bottom: 6px;
+        line-height: 1.2;
     }
     .info-value {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 700;
         color: var(--text-dark);
+        line-height: 1.35;
+        word-break: break-word;
     }
 
     /* ── Tags Grid ── */
@@ -311,8 +341,6 @@
         {% endif %}
     </div>
 
-    <div style="margin-top: 40px;"></div>
-
     <!-- Gallery (Top) -->
     <div class="profile-section">
         <h3><i class="fas fa-images"></i> Gallery</h3>
@@ -369,9 +397,9 @@
             </div>
             {% endif %}
             {% if profile.looking_for %}
-            <div class="info-item" style="grid-column: span 2; background: #fff1f2; border: 1px solid #fda4af;">
-                <div class="info-label" style="color: #be123c;">Looking For</div>
-                <div class="info-value" style="color: #e11d48; font-size: 16px; font-weight: 800;">
+            <div class="info-item info-item--wide">
+                <div class="info-label">Looking for</div>
+                <div class="info-value">
                     {% if profile.looking_for == 'friendship' %}Friendship 🤝
                     {% elif profile.looking_for == 'serious' %}Serious Relationship 💍
                     {% else %}Just Vibing ✌️

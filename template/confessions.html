@@ -66,28 +66,17 @@
         from { opacity: 0; }
         to { opacity: 1; }
     }
-    .filter-select {
+    .filter-bar .app-select {
         flex: 1;
-        padding: 10px 15px;
-        border-radius: 14px;
-        border: 1px solid rgba(37, 99, 235, 0.1);
-        background: white;
-        color: var(--text-dark);
+        margin-bottom: 0;
+        min-width: 0;
+    }
+    .filter-bar .app-select-trigger {
+        background: #fff;
         font-size: 13px;
         font-weight: 700;
-        outline: none;
+        color: var(--text-dark);
         box-shadow: 0 8px 15px rgba(37, 99, 235, 0.04);
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%232563eb'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        background-size: 14px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .filter-select:focus {
-        border-color: var(--primary-blue);
-        transform: translateY(-2px);
-        box-shadow: 0 15px 30px rgba(37, 99, 235, 0.08);
     }
 
     /* ── Floating Create Button ── */
@@ -252,11 +241,19 @@
         to { transform: translateY(0); }
     }
     
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
     .modal-header h3 {
         font-size: 24px;
         font-weight: 900;
         color: var(--text-dark);
         margin: 0;
+        flex: 1;
     }
     .close-modal {
         background: white;
@@ -267,9 +264,17 @@
         box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         color: var(--text-muted);
         font-size: 24px;
+        flex-shrink: 0;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
     }
 
-    textarea {
+    #createConfessionForm {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    #createConfessionForm textarea {
         width: 100%;
         padding: 20px;
         border-radius: 24px;
@@ -277,13 +282,13 @@
         background: white;
         font-size: 16px;
         font-weight: 600;
-        margin-bottom: 20px;
+        margin: 0;
         box-shadow: 0 10px 25px rgba(37, 99, 235, 0.05);
         outline: none;
         transition: 0.3s;
         color: var(--text-dark);
     }
-    textarea:focus {
+    #createConfessionForm textarea:focus {
         border-color: var(--primary-blue);
         box-shadow: 0 15px 35px rgba(37, 99, 235, 0.1);
     }
@@ -296,7 +301,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 25px;
+        margin-bottom: 0;
         box-shadow: 0 4px 15px rgba(0,0,0,0.02);
     }
     .toggle-label {
@@ -322,17 +327,34 @@
     input:checked + .slider { background: var(--primary-blue); }
     input:checked + .slider:before { transform: translateX(24px); }
 
-    /* Campus Select */
-    .campus-select {
+    .form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
         width: 100%;
-        padding: 16px 20px;
-        border-radius: 20px;
-        border: none;
-        background: white;
-        font-weight: 700;
+    }
+    .form-field-label {
+        font-weight: 800;
         color: var(--text-dark);
-        margin-bottom: 25px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+        font-size: 14px;
+        line-height: 1.2;
+    }
+
+    /* Campus select uses global .app-select (app-select.js) */
+    #createConfessionForm .app-select--modal .app-select-trigger {
+        min-height: 52px;
+        background: #fff;
+        border-radius: 16px;
+        font-weight: 700;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.06);
+    }
+
+    #createConfessionForm .create-btn--submit {
+        margin-bottom: 0;
+        min-height: 52px;
+        border-radius: 16px;
+        font-size: 16px;
+        width: 100%;
     }
 
     .login-banner {
@@ -394,7 +416,6 @@
         padding-left: 10px;
         padding-right: 10px;
     }
-</style>
 </style>
 {% endblock %}
 
@@ -550,9 +571,9 @@
                 </label>
             </div>
             
-            <div style="margin-bottom: 25px;">
-                <label style="display: block; font-weight: 800; color: var(--text-dark); margin-bottom: 12px; font-size: 14px;">Select Campus (Optional)</label>
-                <select name="campus" class="campus-select">
+            <div class="form-field">
+                <label class="form-field-label" for="campusSelect">Select Campus (Optional)</label>
+                <select name="campus" id="campusSelect" class="campus-select">
                     <option value="">Global Feed</option>
                     <option value="KTR">SRM KTR</option>
                     <option value="RMP">SRM Ramapuram</option>
@@ -560,7 +581,7 @@
                 </select>
             </div>
             
-            <button type="submit" class="create-btn" style="margin-bottom:0;">Share Secret</button>
+            <button type="submit" class="create-btn create-btn--submit">Post</button>
         </form>
     </div>
 </div>
