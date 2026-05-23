@@ -7,29 +7,31 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Load Vladmandic Human library (includes its own TFJS bundle) -->
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/human/dist/human.js"></script>
 <style>
   :root {
-    --ep-bg: #eef4fc;
-    --ep-bg-accent: linear-gradient(165deg, #e8f1ff 0%, #f5f8ff 45%, #eef4fc 100%);
+    --ep-bg: #f8fafc;
+    --ep-bg-accent: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     --ep-surface: #ffffff;
-    --ep-surface-dim: #f6f9fe;
-    --ep-ink: #0c1929;
+    --ep-surface-dim: #f8fafc;
+    --ep-ink: #0f172a;
     --ep-ink-2: #334155;
     --ep-ink-3: #64748b;
     --ep-ink-4: #94a3b8;
-    --ep-blue: #2563eb;
-    --ep-blue-2: #3b82f6;
-    --ep-blue-glow: rgba(37, 99, 235, 0.22);
+    --ep-blue: #3b82f6;
+    --ep-blue-2: #2563eb;
+    --ep-blue-glow: rgba(59, 130, 246, 0.15);
     --ep-pink: #ec4899;
     --ep-amber: #f59e0b;
     --ep-green: #10b981;
-    --ep-line: rgba(37, 99, 235, 0.09);
-    --ep-r-xl: 24px;
-    --ep-r-lg: 20px;
-    --ep-r-md: 16px;
-    --ep-r-sm: 12px;
-    --ep-shadow: 0 1px 2px rgba(12, 25, 41, 0.04), 0 12px 40px rgba(37, 99, 235, 0.08);
-    --ep-shadow-sm: 0 2px 8px rgba(37, 99, 235, 0.06);
+    --ep-line: rgba(226, 232, 240, 0.8);
+    --ep-r-xl: 20px;
+    --ep-r-lg: 16px;
+    --ep-r-md: 12px;
+    --ep-r-sm: 8px;
+    --ep-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 10px 30px -10px rgba(15, 23, 42, 0.05);
+    --ep-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.02);
     --ep-ease: cubic-bezier(0.22, 1, 0.36, 1);
     --ep-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
     --ep-nav: 66px;
@@ -104,15 +106,17 @@
     height: calc(var(--ep-header) + env(safe-area-inset-top));
     padding: env(safe-area-inset-top) 20px 0;
     display: flex; align-items: center;
-    background: #ffffff;
-    border-bottom: 1px solid var(--ep-line);
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1.5px solid rgba(30, 58, 138, 0.12);
     border-radius: 0;
     z-index: 300;
-    box-shadow: 0 2px 12px rgba(37,99,235,0.06);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
   }
   .ep-topbar-title {
     flex: 1; text-align: left;
-    font-size: 21px; font-weight: 900; letter-spacing: -0.7px;
+    font-size: 20px; font-weight: 700; letter-spacing: -0.5px;
     color: #1e3a8a;
   }
   .ep-topbar-end { width: var(--ep-tap); }
@@ -126,153 +130,250 @@
   }
   .ep-scroll::-webkit-scrollbar { display: none; }
 
-  /* ─── Profile strip ─── */
-  .ep-profile {
-    margin: 0;
-    padding: 16px 18px;
-    background: var(--ep-surface);
-    border-radius: 0;
-    box-shadow: none;
-    border: none;
-    border-bottom: 1px solid var(--ep-line);
-    display: flex; align-items: center; gap: 14px;
-    animation: ep-rise 0.45s var(--ep-ease) both;
+  /* ─── Profile Hero & Banner ─── */
+  .ep-profile-hero {
+    position: relative;
+    height: 140px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    overflow: visible; /* Let the avatar container pop out! */
   }
-  @keyframes ep-rise {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+  .ep-hero-blur-bg-wrap {
+    position: absolute;
+    inset: 0;
+    overflow: hidden; /* crop the blurred background edges here */
+    z-index: 1;
   }
-
-  .ep-avatar-wrap { position: relative; flex-shrink: 0; }
-  .ep-avatar-ring {
-    position: absolute; inset: -3px;
-    border-radius: 20px;
-    background: linear-gradient(135deg, var(--ep-pink), var(--ep-blue), var(--ep-blue-2));
+  .ep-hero-blur-bg {
+    position: absolute;
+    inset: -12px;
+    background-size: cover;
+    background-position: center;
+    filter: blur(16px) saturate(1.15) brightness(0.95);
   }
-  .ep-avatar {
-    position: relative; z-index: 1;
-    width: 76px; height: 76px;
-    border-radius: 17px; object-fit: cover;
-    border: 2.5px solid var(--ep-surface);
+  .ep-hero-blur-bg-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 40%, rgba(248,250,252,0.75) 75%, rgba(248,250,252,1) 100%);
+  }
+  .ep-avatar-container {
+    position: absolute;
+    bottom: -50px;
+    z-index: 10;
+  }
+  .ep-avatar-border {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: #ffffff;
+    padding: 2px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+    border: 2px solid #93c5fd; /* light blue border, thinner thickness */
+  }
+  .ep-hero-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
     display: block;
   }
-  .ep-avatar-edit {
-    position: absolute; bottom: -4px; right: -4px; z-index: 2;
-    width: 30px; height: 30px; border-radius: 10px;
-    background: var(--ep-blue); color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; border: 2.5px solid var(--ep-surface);
-    cursor: pointer; box-shadow: 0 4px 12px var(--ep-blue-glow);
-    transition: transform 0.2s var(--ep-spring);
+  .ep-avatar-edit-icon {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    border: 2.5px solid #ffffff;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    transition: transform 0.2s ease;
   }
-  .ep-avatar-edit:active { transform: scale(0.9); }
-  .ep-spark {
-    position: absolute; top: -6px; left: -6px; z-index: 3;
-    background: linear-gradient(135deg, #f59e0b, #fbbf24);
-    color: #fff; font-size: 10px; font-weight: 800;
-    padding: 3px 8px; border-radius: 20px;
-    border: 2px solid var(--ep-surface);
-    display: flex; align-items: center; gap: 3px;
-    box-shadow: 0 3px 10px rgba(245,158,11,0.35);
+  .ep-avatar-edit-icon:active {
+    transform: scale(0.9);
+  }
+  .ep-verification-medal {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    border: 2px solid #ffffff;
+    box-shadow: 0 3px 8px rgba(217, 119, 6, 0.3);
+    z-index: 5;
   }
 
-  .ep-profile-info { flex: 1; min-width: 0; }
-  .ep-profile-name {
-    font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
-    line-height: 1.2; margin-bottom: 3px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  .ep-profile-intro {
+    text-align: center;
+    margin-top: 60px;
+    margin-bottom: 20px;
+    padding: 0 20px;
   }
-  .ep-profile-meta {
-    font-size: 12px; font-weight: 500; color: var(--ep-ink-3);
-    margin-bottom: 10px;
+  .ep-profile-display-name {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 3px;
+    letter-spacing: -0.5px;
   }
-  .ep-profile-actions { display: flex; gap: 8px; }
-  .ep-action {
-    flex: 1; min-height: 36px;
-    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    border-radius: var(--ep-r-sm); font-size: 12px; font-weight: 700;
-    text-decoration: none; border: none; cursor: pointer;
-    font-family: inherit; transition: transform 0.15s, box-shadow 0.2s;
-    -webkit-tap-highlight-color: transparent;
+  .ep-profile-display-meta {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    margin: 0;
   }
-  .ep-action:active { transform: scale(0.97); }
-  .ep-action--primary {
-    background: linear-gradient(135deg, var(--ep-blue), var(--ep-blue-2));
-    color: #fff; box-shadow: 0 4px 14px var(--ep-blue-glow);
+
+  /* Premium Actions Group */
+  .ep-actions-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 28px;
+    padding: 0 20px;
   }
-  .ep-action--ghost {
-    background: var(--ep-surface-dim); color: var(--ep-ink-2);
-    border: 1px solid var(--ep-line);
+  .ep-actions-pill {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 99px;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+    max-width: 280px;
+    width: 100%;
+  }
+  .ep-pill-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    text-decoration: none;
+    transition: background 0.2s ease;
+  }
+  .ep-pill-btn i {
+    color: #64748b;
+    font-size: 14px;
+  }
+  .ep-pill-btn:active {
+    background: #f8fafc;
+  }
+  .ep-pill-divider {
+    width: 1px;
+    height: 18px;
+    background: #e2e8f0;
   }
 
   /* ─── Tabs ─── */
   .ep-tabs-wrap {
-    margin: 0;
-    padding: 0;
+    background: transparent;
+    border-bottom: none;
+    margin-bottom: 20px;
+    margin-top: 10px;
+    padding: 0 16px;
   }
   .ep-tabs {
-    display: flex; gap: 0;
+    display: flex;
+    background: #f1f5f9;
+    border-radius: 99px;
+    padding: 3px;
+    gap: 2px;
+    max-width: 440px;
+    margin: 0 auto;
     position: relative;
-    background: var(--ep-surface);
     border: none;
-    border-bottom: 1px solid var(--ep-line);
-    border-radius: 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    overflow: hidden;
+    box-shadow: none;
   }
   .ep-tab {
-    flex: 1; min-width: 0;
-    padding: 12px 4px 14px;
-    border: none; background: none;
-    font-family: inherit; font-size: 12px; font-weight: 700;
-    color: var(--ep-ink-4); cursor: pointer;
-    display: flex; flex-direction: column; align-items: center; gap: 5px;
-    transition: color 0.25s;
-    -webkit-tap-highlight-color: transparent;
+    flex: 1;
+    background: none;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 6px 4px;
     position: relative;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    border-radius: 99px;
+    transition: all 0.2s ease;
+    z-index: 2;
+  }
+  .ep-tab-icon-circle {
+    width: auto;
+    height: auto;
+    border-radius: 0;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    color: inherit;
+    background: none !important;
+    transition: none;
+  }
+  .ep-tab-bg-pill {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 0;
+    width: 0;
+    background: #ffffff; /* White active capsule background */
+    border-radius: 99px;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04); /* Sleek iOS elevation shadow */
+    transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+    z-index: 1;
+  }
+  .ep-tab.is-active {
+    color: #1e3a8a; /* Dark blue active text */
+  }
+  .ep-tab.is-active .ep-tab-icon-circle {
+    color: #1e3a8a; /* Dark blue active icon highlight */
   }
   .ep-tab-dot {
     position: absolute;
     top: 6px;
-    right: calc(50% - 20px);
+    right: 8px;
     width: 6px;
     height: 6px;
-    background-color: var(--ep-pink);
+    background-color: #ef4444;
     border-radius: 50%;
     display: none;
-    box-shadow: 0 0 4px rgba(236, 72, 153, 0.5);
+    box-shadow: 0 0 4px rgba(239, 68, 68, 0.5);
   }
-  .ep-gallery-warning {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(239, 68, 68, 0.08);
-    border: 1px dashed rgba(239, 68, 68, 0.3);
-    color: #ef4444;
-    padding: 10px 14px;
-    border-radius: var(--ep-r-sm);
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 12px;
-  }
-  .ep-tab i { font-size: 15px; }
-  .ep-tab.is-active { color: var(--ep-blue); }
-  .ep-tab:active { opacity: 0.65; transform: scale(0.97); transition: transform 0.1s, opacity 0.1s; }
   .ep-tab-indicator {
-    position: absolute; bottom: 0; left: 0;
-    width: 24px; height: 3.5px;
-    background: linear-gradient(90deg, var(--ep-blue), var(--ep-blue-2));
-    border-radius: 3.5px 3.5px 0 0;
-    transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-    pointer-events: none;
-    transform: translateX(0);
-    will-change: transform;
+    display: none !important; /* Remove bottom blue bar */
   }
   .ep-tabs::after {
-    content: '';
-    position: absolute; bottom: 0; left: 12px; right: 12px;
-    height: 1px; background: var(--ep-line);
-    pointer-events: none;
+    display: none;
   }
 
   /* ─── Sections ─── */
@@ -284,30 +385,33 @@
   }
 
   .ep-group {
-    background: var(--ep-surface);
-    border-radius: 0;
-    box-shadow: none;
-    border: none;
-    border-top: 1px solid var(--ep-line);
-    border-bottom: 1px solid var(--ep-line);
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 16px rgba(15, 23, 42, 0.02);
+    padding: 24px 20px;
+    margin: 0 16px 20px;
+    box-sizing: border-box;
     overflow: visible;
-    margin-bottom: 24px;
   }
   .ep-panel .ep-group:first-child {
-    border-top: 1px solid var(--ep-line);
+    border-top: 1px solid #e2e8f0;
   }
   .ep-group-head {
-    padding: 14px 16px 10px;
-    font-size: 11px; font-weight: 800;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--ep-ink-4);
-    display: flex; align-items: center; gap: 8px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 16.5px;
+    font-weight: 700;
+    color: #0f172a;
+    text-transform: none;
+    letter-spacing: -0.3px;
+    padding: 0;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   .ep-group-head i {
-    width: 26px; height: 26px; border-radius: 8px;
-    background: rgba(37,99,235,0.1); color: var(--ep-blue);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px;
+    display: none;
   }
   .ep-group-head .ep-badge {
     margin-left: auto; font-size: 12px; font-weight: 700;
@@ -315,21 +419,33 @@
   }
 
   .ep-row {
-    padding: 0 16px 14px;
-    border-top: 1px solid var(--ep-line);
+    padding: 0;
+    border: none;
+    margin-bottom: 20px;
   }
-  .ep-row:first-of-type { border-top: none; }
-  .ep-row + .ep-row { padding-top: 14px; }
+  .ep-row:last-child { margin-bottom: 0; }
 
   .ep-label {
-    display: block; font-size: 12px; font-weight: 600;
-    color: var(--ep-ink-3); margin-bottom: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
   .ep-label--lock::after {
-    content: 'Locked'; margin-left: 6px;
-    font-size: 10px; font-weight: 700; color: var(--ep-ink-4);
-    background: var(--ep-surface-dim); padding: 2px 6px;
-    border-radius: 6px; vertical-align: middle;
+    content: 'Locked';
+    font-size: 9.5px;
+    font-weight: 700;
+    color: #64748b;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    padding: 2px 7px;
+    border-radius: 6px;
+    margin-left: auto; /* push locked badge to the far right */
+    vertical-align: middle;
   }
 
   .ep-input,
@@ -337,15 +453,19 @@
   #profile-edit-form input[type="number"],
   #profile-edit-form select,
   #profile-edit-form textarea {
-    width: 100%; min-height: var(--ep-tap);
-    padding: 13px 14px;
-    background: var(--ep-surface-dim);
-    border: 1px solid transparent;
-    border-radius: var(--ep-r-md);
-    font-family: inherit; font-size: 15px; font-weight: 500;
-    color: var(--ep-ink); outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    -webkit-appearance: none; appearance: none;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: #0f172a;
+    outline: none;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
     margin-bottom: 0 !important;
   }
   #profile-edit-form textarea { min-height: 100px; resize: none; line-height: 1.55; }
@@ -358,55 +478,59 @@
     margin-bottom: 200px !important;
   }
   #profile-edit-form .app-select-trigger {
-    min-height: var(--ep-tap);
-    background: var(--ep-surface2);
-    border: 1px solid var(--ep-line);
-    border-radius: var(--ep-r-sm);
-    font-size: 15px;
+    min-height: 48px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    font-size: 14.5px;
     font-weight: 500;
-    color: var(--ep-ink);
+    color: #0f172a;
     box-shadow: none;
   }
   #profile-edit-form .app-select.is-open .app-select-trigger {
-    background: var(--ep-surface);
-    border-color: var(--ep-blue);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    background: #ffffff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
   }
   #profile-edit-form .app-select-list { z-index: 9000; }
   .ep-input:focus,
   #profile-edit-form input:focus,
   #profile-edit-form select:focus,
   #profile-edit-form textarea:focus {
-    background: var(--ep-surface);
-    border-color: rgba(37,99,235,0.35);
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+    background: #ffffff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
   }
   .ep-input--locked {
-    background: var(--ep-surface-dim) !important;
-    color: var(--ep-ink-2) !important;
-    border: 1px dashed var(--ep-line) !important;
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1px solid #cbd5e1 !important;
     cursor: default; display: flex; align-items: center;
+    font-weight: 500;
   }
 
   /* Stepper */
   .ep-stepper {
     display: flex; align-items: center; justify-content: space-between;
-    background: var(--ep-surface-dim); border-radius: var(--ep-r-md);
-    padding: 6px 8px; min-height: var(--ep-tap);
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
+    padding: 4px; min-height: 48px;
+    max-width: 240px;
+    margin: 0 auto;
   }
   .ep-stepper-btn {
-    width: 42px; height: 42px; border: none; border-radius: var(--ep-r-sm);
-    background: var(--ep-surface); color: var(--ep-blue);
-    font-size: 14px; cursor: pointer;
+    width: 38px; height: 38px; border: none; border-radius: 8px;
+    background: #ffffff; color: #475569;
+    font-size: 12px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: var(--ep-shadow-sm);
-    transition: transform 0.15s, background 0.2s, color 0.2s;
-    -webkit-tap-highlight-color: transparent;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
+    transition: all 0.2s ease;
   }
-  .ep-stepper-btn:active { transform: scale(0.92); background: var(--ep-blue); color: #fff; }
+  .ep-stepper-btn:hover { background: #f1f5f9; color: #0f172a; }
+  .ep-stepper-btn:active { transform: scale(0.95); background: #3b82f6; color: #ffffff; border-color: #3b82f6; }
   .ep-stepper-val { text-align: center; }
-  .ep-stepper-num { font-size: 26px; font-weight: 800; letter-spacing: -1px; }
-  .ep-stepper-unit { font-size: 12px; font-weight: 600; color: var(--ep-ink-4); }
+  .ep-stepper-num { font-size: 20px; font-weight: 700; color: #0f172a; }
+  .ep-stepper-unit { font-size: 12px; font-weight: 500; color: #64748b; }
 
   .ep-range {
     display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px;
@@ -415,32 +539,34 @@
   .ep-range-box { text-align: center; }
   .ep-range-label { font-size: 10px; font-weight: 800; color: var(--ep-ink-4); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
   .ep-range-controls { display: flex; align-items: center; justify-content: center; gap: 10px; }
-  .ep-range-num { font-size: 22px; font-weight: 800; min-width: 28px; }
+  .ep-range-num { font-size: 20px; font-weight: 700; min-width: 28px; }
   .ep-range-sep { color: var(--ep-ink-4); font-size: 14px; padding-top: 18px; }
 
   /* Picker / chips */
   .ep-picker {
     position: relative;
-    background: var(--ep-surface-dim); border-radius: var(--ep-r-md);
+    background: var(--ep-surface-dim); border-radius: 16px;
     padding: 10px 12px;
     transition: margin-bottom 0.28s var(--ep-ease);
   }
   .ep-picker.is-open {
     margin-bottom: 200px !important;
   }
-  .ep-picker:focus-within { box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+  .ep-picker:focus-within { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08); }
   .ep-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
   .ep-chip {
     display: inline-flex; align-items: center; gap: 5px;
-    padding: 6px 11px; border-radius: 20px;
-    background: rgba(37,99,235,0.1); color: var(--ep-blue);
-    font-size: 12px; font-weight: 700;
+    padding: 6px 12px; border-radius: 8px;
+    background: #f1f5f9; color: #334155;
+    font-size: 12px; font-weight: 600;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
   }
   .ep-chip i { font-size: 10px; cursor: pointer; opacity: 0.6; }
   .ep-chip i:hover { opacity: 1; color: var(--ep-pink); }
   .ep-picker-input {
     width: 100%; border: none; background: var(--ep-surface);
-    border-radius: var(--ep-r-sm); padding: 11px 12px;
+    border-radius: 12px; padding: 11px 12px;
     font-family: inherit; font-size: 14px; font-weight: 500;
     outline: none;
   }
@@ -477,7 +603,7 @@
     transition: background 0.15s;
   }
   .ep-picker-item:last-child { border-bottom: none; }
-  .ep-picker-item:active { background: rgba(37,99,235,0.08); color: var(--ep-ink); transform: scale(0.98); }
+  .ep-picker-item:active { background: rgba(59, 130, 246, 0.08); color: var(--ep-ink); transform: scale(0.98); }
   .ep-chip:active { opacity: 0.8; transform: scale(0.97); }
 
   /* Toggle */
@@ -647,18 +773,18 @@
     display: block;
   }
   .ep-save-btn {
-    width: 56px; height: 56px;
+    width: 54px; height: 54px;
     border: none; border-radius: 50%;
-    background: linear-gradient(135deg, #0084ff 0%, #00c6ff 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: #fff; font-family: inherit;
-    font-size: 22px; font-weight: 700;
+    font-size: 18px; font-weight: 700;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 6px 20px rgba(0, 132, 255, 0.4), 0 2px 6px rgba(0,0,0,0.12);
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
     transition: transform 0.2s var(--ep-spring), opacity 0.2s, box-shadow 0.2s;
     -webkit-tap-highlight-color: transparent;
     pointer-events: all;
   }
-  .ep-save-btn:active { transform: scale(0.91); box-shadow: 0 3px 10px rgba(0,132,255,0.3); }
+  .ep-save-btn:active { transform: scale(0.92); box-shadow: 0 4px 12px rgba(37,99,235,0.2); }
   .ep-save-btn.is-busy { opacity: 0.65; pointer-events: none; }
 
   /* ─── Desktop: phone-in-center layout ─── */
@@ -751,44 +877,81 @@
 <div id="ep-app">
 
   <header class="ep-topbar">
-    <span class="ep-topbar-end"></span>
     <span class="ep-topbar-title">Edit Profile</span>
     <span class="ep-topbar-end"></span>
   </header>
 
   <div class="ep-scroll">
 
-    <!-- Profile strip -->
-    <section class="ep-profile">
-      <div class="ep-avatar-wrap">
-        <div class="ep-avatar-ring"></div>
-        <img src="{{ profile.get_profile_pic_url }}" alt="" class="ep-avatar" id="preview-pfp">
-        <label for="id_pfp_instant" class="ep-avatar-edit" aria-label="Change photo"><i class="fas fa-camera"></i></label>
-        {% if spark_count %}<div class="ep-spark"><i class="fas fa-bolt"></i> {{ spark_count }}</div>{% endif %}
+    <!-- Profile Hero & Banner -->
+    <div class="ep-profile-hero">
+      <div class="ep-hero-blur-bg-wrap">
+        <div class="ep-hero-blur-bg" style="background-image: url('{{ profile.get_profile_pic_url }}');"></div>
       </div>
-      <div class="ep-profile-info">
-        <div class="ep-profile-name">{{ profile.name }}</div>
-        <div class="ep-profile-meta">{{ profile.campus_display }} · {{ profile.age }} yrs</div>
-        <div class="ep-profile-actions">
-          <a href="{% url 'view_profile' profile.id %}" class="ep-action ep-action--primary"><i class="fas fa-eye"></i> View</a>
-          {% if not profile.is_face_verified %}
-           <a href="{% url 'verify' %}" class="ep-action" style="background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);"><i class="fas fa-user-check"></i> Verify</a>
+      <div class="ep-avatar-container">
+        <div class="ep-avatar-border">
+          <img src="{{ profile.get_profile_pic_url }}" alt="" class="ep-hero-avatar" id="preview-pfp">
+          <label for="id_pfp_instant" class="ep-avatar-edit-icon" aria-label="Change photo">
+            <i class="fas fa-camera"></i>
+          </label>
+          {% if profile.is_face_verified %}
+          <div class="ep-verification-medal" title="Face Verified">
+            <i class="fas fa-bolt"></i>
+          </div>
           {% endif %}
-          <a href="{% url 'settings' %}" class="ep-action ep-action--ghost"><i class="fas fa-cog"></i> Settings</a>
         </div>
       </div>
-    </section>
+    </div>
+
+    <!-- User Name & Subtitle Info -->
+    <div class="ep-profile-intro">
+      <h1 class="ep-profile-display-name">{{ profile.name }}</h1>
+      <p class="ep-profile-display-meta">{{ profile.campus_display }} · {{ profile.age }} yrs</p>
+    </div>
+
+    <!-- Action Buttons Pill -->
+    <div class="ep-actions-container">
+      <div class="ep-actions-pill">
+        <a href="{% url 'view_profile' profile.id %}" class="ep-pill-btn">
+          <i class="fas fa-eye"></i> View
+        </a>
+        <div class="ep-pill-divider"></div>
+        <a href="{% url 'settings' %}" class="ep-pill-btn">
+          <i class="fas fa-cog"></i> Settings
+        </a>
+      </div>
+    </div>
 
     <!-- Tabs -->
     <div class="ep-tabs-wrap">
       <nav class="ep-tabs" role="tablist" id="ep-tabs">
-        <button type="button" class="ep-tab is-active" data-tab="basic" role="tab"><i class="fas fa-user"></i>Basic<span class="ep-tab-dot" id="dot-basic"></span></button>
-        <button type="button" class="ep-tab" data-tab="gallery" role="tab"><i class="fas fa-images"></i>Gallery<span class="ep-tab-dot" id="dot-gallery"></span></button>
-        <button type="button" class="ep-tab" data-tab="edu" role="tab"><i class="fas fa-graduation-cap"></i>Academy<span class="ep-tab-dot" id="dot-edu"></span></button>
-        <button type="button" class="ep-tab" data-tab="prefs" role="tab"><i class="fas fa-heart"></i>Prefs<span class="ep-tab-dot" id="dot-prefs"></span></button>
+        <button type="button" class="ep-tab is-active" data-tab="basic" role="tab">
+          <div class="ep-tab-icon-circle"><i class="fas fa-user"></i></div>
+          <span>Basic</span>
+          <span class="ep-tab-dot" id="dot-basic"></span>
+        </button>
+        <button type="button" class="ep-tab" data-tab="gallery" role="tab">
+          <div class="ep-tab-icon-circle"><i class="fas fa-images"></i></div>
+          <span>Gallery</span>
+          <span class="ep-tab-dot" id="dot-gallery"></span>
+        </button>
+        <button type="button" class="ep-tab" data-tab="edu" role="tab">
+          <div class="ep-tab-icon-circle"><i class="fas fa-graduation-cap"></i></div>
+          <span>Academy</span>
+          <span class="ep-tab-dot" id="dot-edu"></span>
+        </button>
+        <button type="button" class="ep-tab" data-tab="prefs" role="tab">
+          <div class="ep-tab-icon-circle"><i class="fas fa-heart"></i></div>
+          <span>Prefs</span>
+          <span class="ep-tab-dot" id="dot-prefs"></span>
+        </button>
         {% if is_admin_editing %}
-        <button type="button" class="ep-tab" data-tab="moderation" role="tab"><i class="fas fa-shield-alt"></i>Verify</button>
+        <button type="button" class="ep-tab" data-tab="moderation" role="tab">
+          <div class="ep-tab-icon-circle"><i class="fas fa-shield-alt"></i></div>
+          <span>Verify</span>
+        </button>
         {% endif %}
+        <span class="ep-tab-bg-pill" id="ep-tab-bg-pill"></span>
         <span class="ep-tab-indicator" id="ep-tab-indicator"></span>
       </nav>
     </div>
@@ -1096,9 +1259,39 @@
   let isFormDirty = false;
   let isInitializing = true;
 
+  // Initialize Vladmandic Human library
+  const humanConfig = {
+    backend: 'webgl',
+    modelBasePath: 'https://cdn.jsdelivr.net/npm/@vladmandic/human/models/',
+    face: {
+      enabled: true,
+      detector: { rotation: true, return: true },
+      mesh: { enabled: true },
+      description: { enabled: true },
+      liveness: { enabled: false },
+      gender: { enabled: true }
+    },
+    body: { enabled: false },
+    hand: { enabled: false },
+    object: { enabled: false },
+    gesture: { enabled: false }
+  };
+  const human = new Human.Human(humanConfig);
+
+  let humanModelsLoaded = false;
+  async function loadHumanOnce() {
+    if (humanModelsLoaded) return;
+    console.log("Initializing Human library and loading models...");
+    await human.load();
+    await human.warmup(); // Warm up for lag-free detection
+    humanModelsLoaded = true;
+    console.log("Human library models loaded & warmed up successfully.");
+  }
+
   /* ── Tabs ── */
   const tabs = document.querySelectorAll('.ep-tab');
   const indicator = document.getElementById('ep-tab-indicator');
+  const tabBgPill = document.getElementById('ep-tab-bg-pill');
 
   function moveIndicator(el) {
     if (!indicator || !el) return;
@@ -1107,13 +1300,23 @@
     indicator.style.transform = `translateX(${translateX}px)`;
   }
 
+  function moveTabBg(el) {
+    if (!tabBgPill || !el) return;
+    tabBgPill.style.width = el.offsetWidth + 'px';
+    tabBgPill.style.transform = `translateX(${el.offsetLeft}px)`;
+  }
+
   window.switchTab = function(tabId) {
     document.querySelectorAll('.ep-panel').forEach(function(p) { p.classList.remove('is-active'); });
     tabs.forEach(function(t) { t.classList.remove('is-active'); });
     var panel = document.getElementById('section-' + tabId);
     var tab = document.querySelector('.ep-tab[data-tab="' + tabId + '"]');
     if (panel) panel.classList.add('is-active');
-    if (tab) { tab.classList.add('is-active'); moveIndicator(tab); }
+    if (tab) {
+      tab.classList.add('is-active');
+      moveIndicator(tab);
+      moveTabBg(tab);
+    }
     // Re-apply dirty class after panel switch (class is on #ep-app so it persists)
     var app = document.getElementById('ep-app');
     if (app && isFormDirty) app.classList.add('has-unsaved');
@@ -1123,8 +1326,13 @@
   window.addEventListener('resize', () => {
     const active = document.querySelector('.ep-tab.is-active');
     moveIndicator(active);
+    moveTabBg(active);
   });
-  requestAnimationFrame(() => moveIndicator(document.querySelector('.ep-tab.is-active')));
+  requestAnimationFrame(() => {
+    const active = document.querySelector('.ep-tab.is-active');
+    moveIndicator(active);
+    moveTabBg(active);
+  });
 
   function autoSaveProfile() {
     const form = document.getElementById('profile-edit-form');
@@ -1517,7 +1725,15 @@
       }
 
       if (isAdminEdit) { await submitCompressed(); return; }
-      await loadFaceModelsOnce();
+
+      try {
+        await loadHumanOnce();
+      } catch (e) {
+        hideOverlay();
+        customAlert("Failed to load face verification modules: " + e.message, "Error");
+        this.value = '';
+        return;
+      }
 
       try {
         const verificationUrl = "{{ profile.verification_image|default:'' }}";
@@ -1533,24 +1749,83 @@
         }
         await new Promise((res, rej) => { verifyImg.onload = res; verifyImg.onerror = rej; });
 
-        let vd = await faceapi.detectSingleFace(verifyImg, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceDescriptor();
-        if (!vd) vd = await faceapi.detectSingleFace(verifyImg, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-        if (!vd) throw new Error('Face not found in verification scan.');
+        // Fresh canvas for verification image to bypass TF.js WebGL texture caching
+        const vCanvas = document.createElement('canvas');
+        const vWidth = verifyImg.naturalWidth || verifyImg.width || 400;
+        const vHeight = verifyImg.naturalHeight || verifyImg.height || 400;
+        vCanvas.width = vWidth;
+        vCanvas.height = vHeight;
+        const vCtx = vCanvas.getContext('2d');
+        vCtx.drawImage(verifyImg, 0, 0, vWidth, vHeight);
 
+        console.log("Running Human face detection on verification scan canvas...");
+        const vResult = await human.detect(vCanvas);
+        const vFaces = vResult.face || [];
+        if (vFaces.length === 0) throw new Error('No face detected in your verification scan.');
+        const vFace = vFaces[0];
+        if (!vFace.embedding) throw new Error('Failed to extract face features from verification scan.');
+
+        // Load and detect face in the uploaded profile picture
         const pfpImg = new Image();
         pfpImg.src = URL.createObjectURL(file);
-        await new Promise(r => pfpImg.onload = r);
-        let pd = await faceapi.detectSingleFace(pfpImg, new faceapi.SsdMobilenetv1Options()).withFaceLandmarks().withFaceDescriptor();
-        if (!pd) pd = await faceapi.detectSingleFace(pfpImg, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-        if (!pd) {
+        await new Promise((res, rej) => { pfpImg.onload = res; pfpImg.onerror = rej; });
+
+        const pCanvas = document.createElement('canvas');
+        const pWidth = pfpImg.naturalWidth || pfpImg.width || 400;
+        const pHeight = pfpImg.naturalHeight || pfpImg.height || 400;
+        pCanvas.width = pWidth;
+        pCanvas.height = pHeight;
+        const pCtx = pCanvas.getContext('2d');
+        pCtx.drawImage(pfpImg, 0, 0, pWidth, pHeight);
+
+        console.log("Running Human face detection on uploaded PFP canvas...");
+        const pResult = await human.detect(pCanvas);
+        const pFaces = pResult.face || [];
+        if (pFaces.length === 0) {
           hideOverlay();
           faceToast.textContent = 'No face in photo';
           faceToast.style.display = 'block';
           this.value = '';
+          customAlert("No face detected in your profile picture. Please upload a clear photo of yourself.", "Verification Failed");
+          return;
+        }
+        if (pFaces.length > 1) {
+          hideOverlay();
+          faceToast.textContent = 'Multiple faces in photo';
+          faceToast.style.display = 'block';
+          this.value = '';
+          customAlert("Multiple faces detected in your profile picture. Please upload a photo with only you.", "Verification Failed");
+          return;
+        }
+        const pFace = pFaces[0];
+        if (!pFace.embedding) {
+          hideOverlay();
+          faceToast.textContent = 'Feature extraction failed';
+          faceToast.style.display = 'block';
+          this.value = '';
+          customAlert("Could not read face features from your profile picture. Please try another photo.", "Verification Failed");
           return;
         }
 
-        if (faceapi.euclideanDistance(vd.descriptor, pd.descriptor) < 0.6) {
+        // Validate gender match
+        console.log("Selfie Gender:", vFace.gender, "Score:", vFace.genderScore);
+        console.log("PFP Gender:", pFace.gender, "Score:", pFace.genderScore);
+        if (vFace.gender && pFace.gender && vFace.gender !== pFace.gender) {
+          hideOverlay();
+          faceToast.textContent = 'Gender mismatch';
+          faceToast.style.display = 'block';
+          this.value = '';
+          customAlert(`Gender mismatch detected: Your verification selfie was detected as ${vFace.gender}, but this profile picture is detected as ${pFace.gender}. Please upload a correct photo of yourself.`, "Rejected");
+          return;
+        }
+
+        // Calculate similarity using human.match.similarity
+        const similarity = human.match.similarity(vFace.embedding, pFace.embedding);
+        console.log("Calculated face similarity between verification and PFP:", similarity);
+
+        const isMatch = similarity > 0.4; // Strict match threshold of 0.4 (user preferred value)
+
+        if (isMatch) {
           faceToast.style.display = 'none';
           showOverlay('Updating photo…');
           await submitCompressed();
@@ -1559,7 +1834,7 @@
           faceToast.textContent = 'Photo does not match verification';
           faceToast.style.display = 'block';
           this.value = '';
-          customAlert("This photo doesn't match your verification scan.", 'Rejected');
+          customAlert("Profile picture does not match your verification scan. Please upload a clear photo of yourself.", 'Rejected');
         }
       } catch (err) {
         hideOverlay();

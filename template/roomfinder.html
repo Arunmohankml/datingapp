@@ -416,6 +416,33 @@
         margin-top: 10px;
         cursor: pointer;
     }
+
+    /* PC Desktop Sizing Constraints */
+    @media (min-width: 600px) {
+        .container {
+            max-width: 600px !important;
+            margin: 0 auto !important;
+            border-left: 1px solid var(--rf-border);
+            border-right: 1px solid var(--rf-border);
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.04);
+            background: var(--rf-bg);
+            min-height: 100vh;
+            position: relative;
+        }
+        .rf-header {
+            width: 600px;
+        }
+        .rf-fab {
+            right: calc(50% - 300px + 20px);
+        }
+        .rf-modal {
+            max-width: 600px;
+            left: 50% !important;
+            right: auto !important;
+            width: 100%;
+            transform: translateX(-50%);
+        }
+    }
 </style>
 {% endblock %}
 
@@ -520,7 +547,8 @@
     <form id="postRoomForm" onsubmit="submitRoom(event)">
         <div class="rf-form-group">
             <label>Images (Up to 5)</label>
-            <input type="file" id="roomImages" class="rf-form-control" multiple accept="image/*" required>
+            <input type="file" id="roomImages" class="rf-form-control" multiple accept="image/*" onchange="previewRoomImages(this)">
+            <div id="imagePreviewContainer" class="rf-chips-wrapper" style="margin-top: 10px; display: none; gap: 10px; padding: 5px 0;"></div>
         </div>
         
         <div style="display:flex; gap:12px;">
@@ -608,6 +636,91 @@
 
 <script>
     let showSavedOnly = false;
+    let selectedRoomImages = [];
+
+    function previewRoomImages(input) {
+        if (!input.files || input.files.length === 0) return;
+        
+        const newFiles = Array.from(input.files);
+        let exceededLimit = false;
+
+        newFiles.forEach(file => {
+            if (selectedRoomImages.length >= 5) {
+                exceededLimit = true;
+                return;
+            }
+            if (!selectedRoomImages.some(f => f.name === file.name && f.size === file.size)) {
+                selectedRoomImages.push(file);
+            }
+        });
+
+        if (exceededLimit) {
+            customAlert("You can only upload a maximum of 5 images.", "Limit Exceeded");
+        }
+
+        input.value = ''; // Reset input to support progressive uploads of the same file
+        renderImagePreviews();
+    }
+
+    function renderImagePreviews() {
+        const container = document.getElementById('imagePreviewContainer');
+        container.innerHTML = '';
+        
+        if (selectedRoomImages.length > 0) {
+            container.style.display = 'flex';
+            selectedRoomImages.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const wrapper = document.createElement('div');
+                    wrapper.style.position = 'relative';
+                    wrapper.style.width = '100px';
+                    wrapper.style.height = '100px';
+                    wrapper.style.flexShrink = '0';
+
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.height = '100%';
+                    img.style.width = '100%';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '12px';
+                    img.style.border = '1px solid var(--rf-border)';
+                    
+                    const delBtn = document.createElement('button');
+                    delBtn.type = 'button';
+                    delBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    delBtn.style.position = 'absolute';
+                    delBtn.style.top = '4px';
+                    delBtn.style.right = '4px';
+                    delBtn.style.width = '22px';
+                    delBtn.style.height = '22px';
+                    delBtn.style.borderRadius = '50%';
+                    delBtn.style.background = 'rgba(15, 23, 42, 0.75)';
+                    delBtn.style.color = '#ffffff';
+                    delBtn.style.border = 'none';
+                    delBtn.style.display = 'flex';
+                    delBtn.style.alignItems = 'center';
+                    delBtn.style.justifyContent = 'center';
+                    delBtn.style.fontSize = '10px';
+                    delBtn.style.cursor = 'pointer';
+                    delBtn.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
+                    delBtn.style.transition = 'background 0.2s';
+                    
+                    delBtn.onclick = function(event) {
+                        event.stopPropagation();
+                        selectedRoomImages.splice(index, 1);
+                        renderImagePreviews();
+                    };
+
+                    wrapper.appendChild(img);
+                    wrapper.appendChild(delBtn);
+                    container.appendChild(wrapper);
+                }
+                reader.readAsDataURL(file);
+            });
+        } else {
+            container.style.display = 'none';
+        }
+    }
 
     function toggleSavedFilter() {
         showSavedOnly = !showSavedOnly;
@@ -737,22 +850,26 @@
             return;
         }
 
+        if (selectedRoomImages.length === 0) {
+            customAlert("Please upload at least one image.", "Images Required");
+            return;
+        }
+
         const btn = document.getElementById('submitBtn');
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
 
         btn.disabled = true;
 
         const formData = new FormData();
-        const files = document.getElementById('roomImages').files;
         
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Compressing Images...';
-        for(let i=0; i<files.length; i++) {
+        for(let i=0; i<selectedRoomImages.length; i++) {
             try {
-                const compressedFile = await compressImage(files[i], 0.6, 800);
+                const compressedFile = await compressImage(selectedRoomImages[i], 0.6, 800);
                 formData.append('images', compressedFile);
             } catch (err) {
                 console.error("Compression error:", err);
-                formData.append('images', files[i]);
+                formData.append('images', selectedRoomImages[i]);
             }
         }
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
@@ -780,6 +897,8 @@
                 closePostModal();
                 showGlobalToast("Listing created successfully!");
                 document.getElementById('postRoomForm').reset();
+                selectedRoomImages = []; // Reset the persistent image array
+                document.getElementById('imagePreviewContainer').style.display = 'none';
                 fetchListings();
             } else {
                 customAlert(data.error || "Failed to post listing.", "Error");

@@ -289,6 +289,7 @@
     let verificationCaptured = false;
     let verificationBase64 = null;
     let verificationDescriptor = null;
+    let verificationGender = null;
     let verifyStream = null;
     let faceSeenStartTime = null;
     let isProcessingFrame = false;
@@ -302,7 +303,8 @@
             detector: { rotation: true, return: true },
             mesh: { enabled: true },
             description: { enabled: true },
-            liveness: { enabled: false }
+            liveness: { enabled: false },
+            gender: { enabled: true }
         },
         body: { enabled: false },
         hand: { enabled: false },
@@ -577,6 +579,7 @@
             }
             
             verificationDescriptor = face.embedding;
+            verificationGender = face.gender;
             document.getElementById('verification-image-data').value = verificationBase64;
 
             // Base64 upload
@@ -681,6 +684,16 @@
                 return;
             }
 
+            // Validate gender match
+            console.log("Selfie Gender:", verificationGender, "PFP Gender:", pfpFace.gender);
+            if (verificationGender && pfpFace.gender && verificationGender !== pfpFace.gender) {
+                statusText.innerHTML = '<i class="fas fa-times-circle"></i> Gender mismatch!';
+                statusText.style.color = '#ef4444';
+                clearPfp();
+                customAlert(`Gender mismatch detected: Your verification selfie was detected as ${verificationGender}, but this profile picture is detected as ${pfpFace.gender}. Please upload a correct photo of yourself.`, "Rejected");
+                return;
+            }
+
             console.log("Selfie reference embedding (first 5):", Array.from(verificationDescriptor).slice(0, 5));
             console.log("PFP detected embedding (first 5):", Array.from(pfpFace.embedding).slice(0, 5));
 
@@ -688,7 +701,7 @@
             const similarity = human.match.similarity(verificationDescriptor, pfpFace.embedding);
             console.log("Calculated face similarity:", similarity);
             
-            const isMatch = similarity > 0.4; // Threshold is 0.4 for Human library (decreased strictness for higher tolerance)
+            const isMatch = similarity > 0.4; // Strict match threshold of 0.4 (user preferred value)
             
             if (isMatch) {
                 statusText.innerHTML = '<i class="fas fa-check-circle"></i> Profiles Match! (Verified)';

@@ -250,7 +250,7 @@ def home_hub(request):
     from .models import Confession, Announcement
     latest_confession = Confession.objects.filter(moderation_status='approved', is_flagged=False).order_by('-created_at').first()
     latest_update = Announcement.objects.order_by('-created_at').first()
-    total_users = User.objects.count()
+    total_users = Profile.objects.exclude(name="").exclude(name__isnull=True).count()
     
     # Discovery checklist & hint variables
     missing = _profile_missing_fields(profile)
