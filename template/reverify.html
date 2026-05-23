@@ -138,7 +138,7 @@
 
                 <div id="verify-camera-ui" style="display: none;">
                     <div style="position: relative; width: 100%; max-width: 320px; margin: 0 auto; aspect-ratio: 3/4; border-radius: 16px; overflow: hidden; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-                        <video id="verify-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                        <video id="verify-video" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
                         <canvas id="verify-canvas" style="display: none;"></canvas>
                         <div id="face-guide" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 60%; border: 2px dashed rgba(255,255,255,0.5); border-radius: 50% 50% 45% 45%; pointer-events: none;"></div>
                         <div id="gesture-hint" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
@@ -319,6 +319,8 @@
             status.innerText = 'Starting camera...';
 
             // ── Assign stream and explicitly play ──
+            video.muted = true;
+            video.playsInline = true;
             video.srcObject = verifyStream;
             try { await video.play(); } catch(e) { console.warn('play() blocked, continuing:', e); }
 
@@ -331,6 +333,11 @@
 
             status.innerText = 'Loading AI models...';
             await loadFaceModelsOnce();
+            if (!faceModelsLoaded) {
+                status.innerText = '❌ Failed to load AI models. Please check your network connection and reload.';
+                status.style.color = '#ef4444';
+                return;
+            }
             status.innerText = 'AI Models Loaded. Please look straight at the camera.';
             
             // Start our liveness check loop
@@ -355,55 +362,70 @@
         if (livenessState === LIVENESS_STATE.CAPTURED || verificationCaptured) return;
         
         if (video.readyState >= 2) {
-            // Use TinyFaceDetector with small input size for maximum speed
-            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224 })).withFaceLandmarks();
-            
-            if (!detection) {
-                // Only reset state if the face has been missing for more than 2 seconds
-                if (Date.now() - lastFaceSeenTime > 2000) {
-                    statusEl.innerText = 'Please look straight at the camera.';
-                    statusEl.style.color = '#ef4444';
-                    livenessState = LIVENESS_STATE.WAITING_FACE;
-                }
-            } else {
-                lastFaceSeenTime = Date.now();
-                const nose = detection.landmarks.getNose()[3];
-                const leftCheek = detection.landmarks.getJawOutline()[0];
-                const rightCheek = detection.landmarks.getJawOutline()[16];
+            try {
+                const detection = await faceapi
+                    .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224 }))
+                    .withFaceLandmarks();
                 
-                const distLeft = nose.x - leftCheek.x;
-                const distRight = rightCheek.x - nose.x;
-                
-                // Ratio tells us which way the head is turned
-                const ratio = distLeft / (distRight || 1);
-                
-                if (livenessState === LIVENESS_STATE.WAITING_FACE) {
-                    if (ratio > 0.6 && ratio < 1.6) {
-                        livenessState = LIVENESS_STATE.WAITING_FOR_LEFT;
-                    } else {
-                        statusEl.innerText = 'Look STRAIGHT to start.';
-                        statusEl.style.color = '#f59e0b';
+                if (!detection) {
+                    if (Date.now() - lastFaceSeenTime > 2000) {
+                        statusEl.innerText = '📷 Position your face in the oval';
+                        statusEl.style.color = '#ef4444';
+                        livenessState = LIVENESS_STATE.WAITING_FACE;
                     }
-                }
-                else if (livenessState === LIVENESS_STATE.WAITING_FOR_LEFT) {
-                    statusEl.innerText = 'Good! Now turn your head LEFT ⬅️';
-                    statusEl.style.color = '#3b82f6';
-                    if (ratio > 1.8) { // Require a distinct left turn
-                        livenessState = LIVENESS_STATE.WAITING_FOR_STRAIGHT;
-                    }
-                }
-                else if (livenessState === LIVENESS_STATE.WAITING_FOR_STRAIGHT) {
-                    statusEl.innerText = 'Excellent! Now look STRAIGHT 📷';
-                    statusEl.style.color = '#10b981';
-                    if (ratio > 0.7 && ratio < 1.5) { // Require looking straight
-                        if (!verificationCaptured) {
-                            verificationCaptured = true;
-                            livenessState = LIVENESS_STATE.CAPTURED;
-                            setTimeout(() => {
-                                captureVerification();
-                            }, 200);
+                } else {
+                    lastFaceSeenTime = Date.now();
+
+                    // Restore exact jaw-ratio liveness detection from yesterday's perfectly working code
+                    const nose = detection.landmarks.getNose()[3];
+                    const leftCheek = detection.landmarks.getJawOutline()[0];
+                    const rightCheek = detection.landmarks.getJawOutline()[16];
+                    
+                    const distLeft = nose.x - leftCheek.x;
+                    const distRight = rightCheek.x - nose.x;
+                    
+                    // Ratio tells us which way the head is turned
+                    const ratio = distLeft / (distRight || 1);
+
+                    if (livenessState === LIVENESS_STATE.WAITING_FACE) {
+                        if (ratio > 0.6 && ratio < 1.6) {
+                            livenessState = LIVENESS_STATE.WAITING_FOR_LEFT;
+                        } else {
+                            statusEl.innerText = 'Look STRAIGHT to start.';
+                            statusEl.style.color = '#f59e0b';
                         }
                     }
+                    else if (livenessState === LIVENESS_STATE.WAITING_FOR_LEFT) {
+                        statusEl.innerText = 'Good! Now turn your head LEFT ⬅️';
+                        statusEl.style.color = '#3b82f6';
+                        if (ratio > 1.8) { // Require a distinct left turn
+                            livenessState = LIVENESS_STATE.WAITING_FOR_STRAIGHT;
+                        }
+                    }
+                    else if (livenessState === LIVENESS_STATE.WAITING_FOR_STRAIGHT) {
+                        statusEl.innerText = 'Excellent! Now look STRAIGHT 📷';
+                        statusEl.style.color = '#10b981';
+                        if (ratio > 0.7 && ratio < 1.5) { // Require looking straight
+                            if (!verificationCaptured) {
+                                verificationCaptured = true;
+                                livenessState = LIVENESS_STATE.CAPTURED;
+                                setTimeout(() => captureVerification(), 200);
+                            }
+                        }
+                    }
+                }
+            } catch(e) {
+                console.warn('Detection frame error:', e);
+                statusEl.innerText = '⚠️ Detection error: ' + e.message;
+                statusEl.style.color = '#ef4444';
+            }
+        } else {
+            // Video readyState is less than 2
+            if (Date.now() - lastFaceSeenTime > 3000) {
+                statusEl.innerText = '⏳ Waiting for video feed (readyState: ' + video.readyState + ')...';
+                statusEl.style.color = '#f59e0b';
+                if (video.paused) {
+                    video.play().catch(err => console.warn("Retry play failed:", err));
                 }
             }
         }
@@ -412,6 +434,7 @@
             requestAnimationFrame(() => processLivenessFrame(video, statusEl));
         }
     }
+
 
     async function captureVerification() {
         const video = document.getElementById('verify-video');
