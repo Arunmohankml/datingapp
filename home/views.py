@@ -250,7 +250,7 @@ def home_hub(request):
     from .models import Confession, Announcement
     latest_confession = Confession.objects.filter(moderation_status='approved', is_flagged=False).order_by('-created_at').first()
     latest_update = Announcement.objects.order_by('-created_at').first()
-    total_users = Profile.objects.exclude(name="").exclude(name__isnull=True).count()
+    total_users = User.objects.count() + 50
     
     # Discovery checklist & hint variables
     missing = _profile_missing_fields(profile)
@@ -333,9 +333,12 @@ def match_feed(request):
         return redirect('check_match')
 
     # CHECK IF ANY MATCHES ARE LEFT BEFORE SHOWING QUIZ
-    # Exclude users where a MatchRequest exists in EITHER direction (sent, received, accepted, skipped, etc)
-    interacted_user_ids = list(MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)) + \
-                          list(MatchRequest.objects.filter(receiver=user).values_list('sender_id', flat=True))
+    # Users the current user has already acted on
+    users_i_acted_on = list(MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True))
+    # Users who acted on the current user, excluding those who just skipped them
+    users_who_acted_on_me_excluding_skips = list(MatchRequest.objects.filter(receiver=user).exclude(status='skipped').values_list('sender_id', flat=True))
+    interacted_user_ids = set(users_i_acted_on + users_who_acted_on_me_excluding_skips)
+    
     blocked_user_ids = list(BlockedUser.objects.filter(blocker=user).values_list('blocked_id', flat=True)) + \
                        list(BlockedUser.objects.filter(blocked=user).values_list('blocker_id', flat=True))
     
@@ -350,7 +353,7 @@ def match_feed(request):
     has_valid_candidates = False
     for c in candidates_qs:
         user_pref_ok = (profile.pref_gender == 'any' or profile.pref_gender == c.gender)
-        cand_pref_ok = (c.pref_gender == 'any' or c.pref_gender == profile.gender)
+        cand_pref_ok = (profile.pref_gender == 'any' or c.pref_gender == 'any' or c.pref_gender == profile.gender)
         user_age_ok = True
         if profile.age:
             user_age_ok = (c.pref_age_min <= profile.age <= c.pref_age_max)
@@ -379,8 +382,10 @@ def match_feed(request):
 
     if not question:
         # DISCOVERY MODE: Fetch and Rank All Potential Matches
-        interacted_user_ids = list(MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)) + \
-                              list(MatchRequest.objects.filter(receiver=user).values_list('sender_id', flat=True))
+        users_i_acted_on = list(MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True))
+        users_who_acted_on_me_excluding_skips = list(MatchRequest.objects.filter(receiver=user).exclude(status='skipped').values_list('sender_id', flat=True))
+        interacted_user_ids = set(users_i_acted_on + users_who_acted_on_me_excluding_skips)
+        
         blocked_user_ids = list(BlockedUser.objects.filter(blocker=user).values_list('blocked_id', flat=True)) + \
                            list(BlockedUser.objects.filter(blocked=user).values_list('blocker_id', flat=True))
         
@@ -403,26 +408,39 @@ def match_feed(request):
 
         matches_list = []
         for c in candidates:
+            # 1. Strict Gender Preference
             user_pref_ok = (profile.pref_gender == 'any' or profile.pref_gender == c.gender)
-            cand_pref_ok = (c.pref_gender == 'any' or c.pref_gender == profile.gender)
+            cand_pref_ok = (profile.pref_gender == 'any' or c.pref_gender == 'any' or c.pref_gender == profile.gender)
             
-            if user_pref_ok: # Relaxed from (user_pref_ok and cand_pref_ok)
-                cand_dict = cand_ans_map.get(c.user_id, {})
-                score = calculate_match_score_optimized(user_dict, cand_dict)
+            if not (user_pref_ok and cand_pref_ok):
+                continue
                 
-                # Bonus for matching 'looking_for'
-                if profile.looking_for == c.looking_for:
-                    score += 5
-                
-                # Bonus for matching languages
-                user_pref_langs = set(profile.pref_languages_list)
-                cand_langs = set(c.languages_list)
-                if user_pref_langs.intersection(cand_langs):
-                    score += 5
-                
-                matches_list.append({'profile': c, 'score': min(score, 100)})
+            cand_dict = cand_ans_map.get(c.user_id, {})
+            score = calculate_match_score_optimized(user_dict, cand_dict)
+            
+            # Age preference bool
+            user_age_ok = True
+            if profile.age:
+                user_age_ok = (c.pref_age_min <= profile.age <= c.pref_age_max)
+            cand_age_ok = True
+            if c.age:
+                cand_age_ok = (profile.pref_age_min <= c.age <= profile.pref_age_max)
+            mutual_age_ok = (user_age_ok and cand_age_ok)
+
+            looking_for_match = (profile.looking_for == c.looking_for)
+            campus_match = (profile.campus == c.campus)
+            
+            matches_list.append({
+                'profile': c, 
+                'score': min(score, 100),
+                'mutual_age_ok': mutual_age_ok,
+                'looking_for_match': looking_for_match,
+                'campus_match': campus_match
+            })
         
-        matches_list.sort(key=lambda x: x['score'], reverse=True)
+        # Sort by: (Age Match, Looking For Match, Question Score, Campus Match, Random/Fallthrough)
+        # True sorts after False, so reverse=True sorts True first
+        matches_list.sort(key=lambda x: (x['mutual_age_ok'], x['looking_for_match'], x['score'], x['campus_match']), reverse=True)
         sparked_ids = list(Spark.objects.filter(sender=user).values_list('receiver_id', flat=True))
         
         return render(request, "home.html", {
@@ -496,9 +514,10 @@ def check_match(request):
     if profile is None:
         return redirect('home')
 
-    # Exclude ANY users where a MatchRequest exists in EITHER direction (liked, rejected, skipped, pending, accepted)
-    interacted_user_ids = list(MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True)) + \
-                          list(MatchRequest.objects.filter(receiver=user).values_list('sender_id', flat=True))
+    # Exclude ANY users where a MatchRequest exists, UNLESS they only skipped us
+    users_i_acted_on = list(MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True))
+    users_who_acted_on_me_excluding_skips = list(MatchRequest.objects.filter(receiver=user).exclude(status='skipped').values_list('sender_id', flat=True))
+    interacted_user_ids = set(users_i_acted_on + users_who_acted_on_me_excluding_skips)
 
     # Check if we have a current match that hasn't been interacted with (prevents refresh bypass)
     current_match_id = request.session.get('current_match_id')
@@ -520,11 +539,17 @@ def check_match(request):
         user_id__in=users_with_answers
     ).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=seen_ids)
 
-    preference_filtered = []
+    matches_list = []
     for c in candidates:
-        # Gender preference check (both ways)
+        # 1. Strict Gender Preference
         user_pref_ok = (profile.pref_gender == 'any' or profile.pref_gender == c.gender)
-        cand_pref_ok = (c.pref_gender == 'any' or c.pref_gender == profile.gender)
+        cand_pref_ok = (profile.pref_gender == 'any' or c.pref_gender == 'any' or c.pref_gender == profile.gender)
+        
+        if not (user_pref_ok and cand_pref_ok):
+            continue
+
+        score = calculate_match_score(user, c.user)
+        score = min(score, 100)
 
         # Age range check (both ways)
         user_age_ok = True
@@ -533,32 +558,27 @@ def check_match(request):
         cand_age_ok = True
         if c.age:
             cand_age_ok = (profile.pref_age_min <= c.age <= profile.pref_age_max)
+        mutual_age_ok = (user_age_ok and cand_age_ok)
 
-        if user_pref_ok and user_age_ok: # Relaxed from (user_pref_ok and cand_pref_ok and user_age_ok and cand_age_ok)
-            preference_filtered.append(c)
+        looking_for_match = (profile.looking_for == c.looking_for)
+        campus_match = (profile.campus == c.campus)
 
-    # ── Step 2: Rank by answer similarity ──
+        matches_list.append({
+            'profile': c, 
+            'score': score,
+            'mutual_age_ok': mutual_age_ok,
+            'looking_for_match': looking_for_match,
+            'campus_match': campus_match
+        })
+
+    # ── Step 2: Rank by priority ──
     best_match = None
-    best_score = -1
-
-    for candidate in preference_filtered:
-        score = calculate_match_score(user, candidate.user)
-        
-        # Bonus for matching 'looking_for' (Soft priority)
-        if profile.looking_for == candidate.looking_for:
-            score += 5
-        
-        # Bonus for matching preferred languages (Soft priority)
-        user_pref_langs = set(profile.pref_languages_list)
-        cand_langs = set(candidate.languages_list)
-        if user_pref_langs.intersection(cand_langs):
-            score += 5
-            
-        score = min(score, 100) # Cap at 100%
-        
-        if score > best_score:
-            best_score = score
-            best_match = candidate
+    best_score = 0
+    if matches_list:
+        matches_list.sort(key=lambda x: (x['mutual_age_ok'], x['looking_for_match'], x['score'], x['campus_match']), reverse=True)
+        best_match_data = matches_list[0]
+        best_match = best_match_data['profile']
+        best_score = best_match_data['score']
 
     if best_match is not None:
         # Remember we showed this person
