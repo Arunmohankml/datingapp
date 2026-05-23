@@ -281,6 +281,16 @@
   .ep-pill-btn:active {
     background: #f8fafc;
   }
+  .ep-pill-btn.verify-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+    color: #ffffff !important;
+  }
+  .ep-pill-btn.verify-btn i {
+    color: #ffffff !important;
+  }
+  .ep-pill-btn.verify-btn:active {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  }
   .ep-pill-divider {
     width: 1px;
     height: 18px;
@@ -911,7 +921,7 @@
 
     <!-- Action Buttons Pill -->
     <div class="ep-actions-container">
-      <div class="ep-actions-pill">
+      <div class="ep-actions-pill" {% if not profile.is_face_verified %}style="max-width: 360px;"{% endif %}>
         <a href="{% url 'view_profile' profile.id %}" class="ep-pill-btn">
           <i class="fas fa-eye"></i> View
         </a>
@@ -919,6 +929,12 @@
         <a href="{% url 'settings' %}" class="ep-pill-btn">
           <i class="fas fa-cog"></i> Settings
         </a>
+        {% if not profile.is_face_verified %}
+        <div class="ep-pill-divider"></div>
+        <a href="{% url 'verify' %}" class="ep-pill-btn verify-btn">
+          <i class="fas fa-user-check"></i> Verify
+        </a>
+        {% endif %}
       </div>
     </div>
 
