@@ -749,19 +749,35 @@
                 .withAgeAndGender()
                 .withFaceDescriptors();
 
-            if (allDetections.length === 0) {
-                return handleLivenessFailure("Rejected: No clear face detected in your capture.");
+            console.log(`Total raw detections: ${allDetections.length}`);
+            
+            const validFaces = allDetections.filter(face => {
+                const box = face.detection.box;
+                const area = box.width * box.height;
+                const imageArea = img.width * img.height;
+                const areaRatio = area / imageArea;
+                
+                console.log(`Detection check - Score: ${face.detection.score.toFixed(3)}, Width: ${box.width}, Height: ${box.height}, Area Ratio: ${areaRatio.toFixed(3)}`);
+
+                return (
+                    face.detection.score > 0.75 &&
+                    box.width > 80 &&
+                    box.height > 80 &&
+                    areaRatio > 0.08
+                );
+            });
+
+            console.log(`Valid faces after filtering: ${validFaces.length}`);
+
+            if (validFaces.length === 0) {
+                return handleLivenessFailure("Rejected: No clear, strong face detected in your capture.");
             }
-            if (allDetections.length > 1) {
-                return handleLivenessFailure("Rejected: Multiple faces detected. Please verify alone.");
+            if (validFaces.length > 1) {
+                return handleLivenessFailure("Rejected: Multiple real faces detected. Please verify alone.");
             }
 
-            const faceMatch = allDetections[0];
-            
-            // Check confidence and position
-            if (faceMatch.detection.score < 0.55) {
-                return handleLivenessFailure("Rejected: Face confidence is too low. Ensure proper lighting.");
-            }
+            // Sort by highest confidence and select the best face
+            const faceMatch = validFaces.sort((a, b) => b.detection.score - a.detection.score)[0];
             
             const box = faceMatch.detection.box;
             if (box.x < 0 || box.y < 0 || box.x + box.width > img.width || box.y + box.height > img.height) {
