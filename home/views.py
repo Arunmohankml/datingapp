@@ -342,12 +342,10 @@ def match_feed(request):
     blocked_user_ids = list(BlockedUser.objects.filter(blocker=user).values_list('blocked_id', flat=True)) + \
                        list(BlockedUser.objects.filter(blocked=user).values_list('blocker_id', flat=True))
     
-    # Restrict candidates to only users who have answered at least one quiz question
-    users_with_answers = list(UserAnswer.objects.values_list('user_id', flat=True).distinct())
+    # Candidates are discoverable, verified profiles (quiz completion optional to avoid empty feeds after reset)
     candidates_qs = Profile.objects.filter(
         is_discoverable=True, 
         is_face_verified=True,
-        user_id__in=users_with_answers
     ).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=blocked_user_ids)
     
     has_valid_candidates = False
@@ -389,10 +387,8 @@ def match_feed(request):
         blocked_user_ids = list(BlockedUser.objects.filter(blocker=user).values_list('blocked_id', flat=True)) + \
                            list(BlockedUser.objects.filter(blocked=user).values_list('blocker_id', flat=True))
         
-        users_with_answers = list(UserAnswer.objects.values_list('user_id', flat=True).distinct())
         candidates = Profile.objects.filter(
             is_discoverable=True,
-            user_id__in=users_with_answers
         ).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=blocked_user_ids).select_related('user')
         
         user_ans = UserAnswer.objects.filter(user=user).select_related('option')
@@ -533,10 +529,8 @@ def check_match(request):
     # IDs of users already shown to this user in previous rounds (stored in session)
     seen_ids = request.session.get('seen_match_ids', [])
     
-    users_with_answers = list(UserAnswer.objects.values_list('user_id', flat=True).distinct())
     candidates = Profile.objects.filter(
         is_discoverable=True,
-        user_id__in=users_with_answers
     ).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=seen_ids)
 
     matches_list = []
