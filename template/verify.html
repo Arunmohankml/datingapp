@@ -744,7 +744,7 @@
 
             // 4. HEAVY DETECTIONS AFTER CAPTURE
             const allDetections = await faceapi
-                .detectAllFaces(img, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.7 }))
+                .detectAllFaces(img, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 }))
                 .withFaceLandmarks()
                 .withAgeAndGender()
                 .withFaceDescriptors();
@@ -760,10 +760,10 @@
                 console.log(`Detection check - Score: ${face.detection.score.toFixed(3)}, Width: ${box.width}, Height: ${box.height}, Area Ratio: ${areaRatio.toFixed(3)}`);
 
                 return (
-                    face.detection.score > 0.75 &&
-                    box.width > 80 &&
-                    box.height > 80 &&
-                    areaRatio > 0.08
+                    face.detection.score > 0.4 &&
+                    box.width > 60 &&
+                    box.height > 60 &&
+                    areaRatio > 0.04
                 );
             });
 
@@ -959,7 +959,7 @@
 
         try {
             const pfpDetection = await faceapi
-                .detectSingleFace(pfpImgElement, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.7 }))
+                .detectSingleFace(pfpImgElement, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.4 }))
                 .withFaceLandmarks()
                 .withFaceDescriptor();
 
