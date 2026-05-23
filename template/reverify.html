@@ -312,12 +312,24 @@
             verifyStream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } 
             });
-            video.srcObject = verifyStream;
-            
+
+            // ── Show camera UI FIRST so video element is visible/rendered ──
             cameraUI.style.display = 'block';
             initialUI.style.display = 'none';
+            status.innerText = 'Starting camera...';
+
+            // ── Assign stream and explicitly play ──
+            video.srcObject = verifyStream;
+            try { await video.play(); } catch(e) { console.warn('play() blocked, continuing:', e); }
+
+            // ── Wait until video is actually streaming frames ──
+            await new Promise((resolve) => {
+                if (video.readyState >= 2) { resolve(); return; }
+                video.addEventListener('canplay', resolve, { once: true });
+                setTimeout(resolve, 3000); // fallback: max 3s wait
+            });
+
             status.innerText = 'Loading AI models...';
-            
             await loadFaceModelsOnce();
             status.innerText = 'AI Models Loaded. Please look straight at the camera.';
             
@@ -337,6 +349,7 @@
             return;
         }
     }
+
 
     async function processLivenessFrame(video, statusEl) {
         if (livenessState === LIVENESS_STATE.CAPTURED || verificationCaptured) return;
