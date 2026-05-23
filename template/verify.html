@@ -127,18 +127,20 @@
             <!-- Face Verification Section -->
             <div id="face-verification-section" style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 24px; margin-bottom: 24px; text-align: center; transition: 0.3s;">
                 <div id="verify-initial-ui">
-                    <div style="width: 72px; height: 72px; background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(99,102,241,0.06)); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px;">
-                        <i class="fas fa-face-smile" style="font-size: 30px; color: var(--primary);"></i>
-                    </div>
-                    <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 16px;">Tap below to scan your face and confirm your identity.</p>
-                    <button type="button" onclick="startVerification()" class="btn" style="background: var(--primary); color: white; border-radius: 12px; padding: 10px 24px; font-weight: 700; border: none; cursor: pointer; font-size: 14px;">
-                        <i class="fas fa-camera" style="margin-right: 6px;"></i> Start Face Scan
+                    <i class="fas fa-shield-alt" style="font-size: 32px; color: var(--primary); margin-bottom: 12px; display: block;"></i>
+                    <h4 style="margin: 0 0 8px; font-size: 16px;">Identity Verification</h4>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Quickly verify your identity to get a "Verified" badge and 2x more matches!</p>
+                    <p style="font-size: 11px; color: var(--primary); font-weight: 600; margin-bottom: 16px; background: rgba(99,102,241,0.05); padding: 8px; border-radius: 10px;">
+                        <i class="fas fa-user-shield"></i> Your verification photo is private and will not appear on your profile.
+                    </p>
+                    <button type="button" onclick="startVerification()" class="btn" style="background: var(--primary); color: white; border-radius: 12px; padding: 10px 20px; font-weight: 700; border: none; cursor: pointer;">
+                        Verify Identity
                     </button>
                 </div>
 
                 <div id="verify-camera-ui" style="display: none;">
                     <div style="position: relative; width: 100%; max-width: 320px; margin: 0 auto; aspect-ratio: 3/4; border-radius: 16px; overflow: hidden; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-                        <video id="verify-video" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                        <video id="verify-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
                         <canvas id="verify-canvas" style="display: none;"></canvas>
                         <div id="face-guide" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 60%; border: 2px dashed rgba(255,255,255,0.5); border-radius: 50% 50% 45% 45%; pointer-events: none;"></div>
                         <div id="gesture-hint" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
