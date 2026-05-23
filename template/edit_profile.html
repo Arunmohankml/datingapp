@@ -229,6 +229,31 @@
     display: flex; flex-direction: column; align-items: center; gap: 5px;
     transition: color 0.25s;
     -webkit-tap-highlight-color: transparent;
+    position: relative;
+  }
+  .ep-tab-dot {
+    position: absolute;
+    top: 6px;
+    right: calc(50% - 20px);
+    width: 6px;
+    height: 6px;
+    background-color: var(--ep-pink);
+    border-radius: 50%;
+    display: none;
+    box-shadow: 0 0 4px rgba(236, 72, 153, 0.5);
+  }
+  .ep-gallery-warning {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px dashed rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    padding: 10px 14px;
+    border-radius: var(--ep-r-sm);
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 12px;
   }
   .ep-tab i { font-size: 15px; }
   .ep-tab.is-active { color: var(--ep-blue); }
@@ -553,6 +578,27 @@
     background: var(--ep-surface-dim);
   }
   .ep-gallery-slot img { width: 100%; height: 100%; object-fit: cover; }
+  .ep-gallery-slot.is-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed rgba(37,99,235,0.25);
+    background: rgba(37,99,235,0.03);
+  }
+  .ep-gallery-slot.is-deleting {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed rgba(239,68,68,0.25);
+    background: rgba(239,68,68,0.03);
+  }
+  .ep-gallery-spinner {
+    font-size: 24px;
+    color: var(--ep-blue);
+  }
+  .ep-gallery-spinner.del {
+    color: #ef4444;
+  }
   .ep-gallery-del {
     position: absolute; top: 6px; right: 6px;
     width: 28px; height: 28px; border-radius: 9px;
@@ -588,13 +634,17 @@
     font-size: 11px; color: #92400e; line-height: 1.5;
   }
 
-  /* Save FAB */
   .ep-savebar {
     position: fixed;
     right: 20px;
     bottom: calc(var(--ep-nav) + 16px);
     z-index: 250;
     pointer-events: none;
+    display: none;
+  }
+  /* Show save bar only when app has unsaved changes */
+  #ep-app.has-unsaved .ep-savebar {
+    display: block;
   }
   .ep-save-btn {
     width: 56px; height: 56px;
@@ -673,6 +723,23 @@
 
   .ep-hint { font-size: 12px; color: var(--ep-ink-3); line-height: 1.45; margin-bottom: 10px; }
 
+  .empty-indicator {
+    background: #fef2f2;
+    color: #ef4444;
+    border: 1px solid #fee2e2;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    margin-left: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    vertical-align: middle;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
     .ep-tab-indicator { transition-duration: 0.38s !important; }
@@ -704,6 +771,9 @@
         <div class="ep-profile-meta">{{ profile.campus_display }} · {{ profile.age }} yrs</div>
         <div class="ep-profile-actions">
           <a href="{% url 'view_profile' profile.id %}" class="ep-action ep-action--primary"><i class="fas fa-eye"></i> View</a>
+          {% if not profile.is_face_verified %}
+          <a href="{% url 'reverify' %}" class="ep-action" style="background: linear-gradient(135deg, #10b981, #059669); color: white; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);"><i class="fas fa-user-check"></i> Verify</a>
+          {% endif %}
           <a href="{% url 'settings' %}" class="ep-action ep-action--ghost"><i class="fas fa-cog"></i> Settings</a>
         </div>
       </div>
@@ -712,10 +782,10 @@
     <!-- Tabs -->
     <div class="ep-tabs-wrap">
       <nav class="ep-tabs" role="tablist" id="ep-tabs">
-        <button type="button" class="ep-tab is-active" data-tab="basic" role="tab"><i class="fas fa-user"></i>Basic</button>
-        <button type="button" class="ep-tab" data-tab="gallery" role="tab"><i class="fas fa-images"></i>Gallery</button>
-        <button type="button" class="ep-tab" data-tab="edu" role="tab"><i class="fas fa-graduation-cap"></i>Academy</button>
-        <button type="button" class="ep-tab" data-tab="prefs" role="tab"><i class="fas fa-heart"></i>Prefs</button>
+        <button type="button" class="ep-tab is-active" data-tab="basic" role="tab"><i class="fas fa-user"></i>Basic<span class="ep-tab-dot" id="dot-basic"></span></button>
+        <button type="button" class="ep-tab" data-tab="gallery" role="tab"><i class="fas fa-images"></i>Gallery<span class="ep-tab-dot" id="dot-gallery"></span></button>
+        <button type="button" class="ep-tab" data-tab="edu" role="tab"><i class="fas fa-graduation-cap"></i>Academy<span class="ep-tab-dot" id="dot-edu"></span></button>
+        <button type="button" class="ep-tab" data-tab="prefs" role="tab"><i class="fas fa-heart"></i>Prefs<span class="ep-tab-dot" id="dot-prefs"></span></button>
         {% if is_admin_editing %}
         <button type="button" class="ep-tab" data-tab="moderation" role="tab"><i class="fas fa-shield-alt"></i>Verify</button>
         {% endif %}
@@ -745,7 +815,7 @@
           </div>
 
           <div class="ep-row">
-            <label class="ep-label">Bio</label>
+            <label class="ep-label">Bio<span class="empty-indicator" id="indicator-bio" {% if profile.bio %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
             {{ form.bio }}
           </div>
 
@@ -763,7 +833,7 @@
           </div>
 
           <div class="ep-row">
-            <label class="ep-label">Living place</label>
+            <label class="ep-label">Living place<span class="empty-indicator" id="indicator-living_place" {% if profile.living_place %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
             <div class="ep-picker" id="drop-living">
               <div class="ep-chips" id="chips-living"></div>
               <input type="text" class="ep-picker-input" id="search-living" placeholder="Search city…" autocomplete="off">
@@ -773,7 +843,7 @@
           </div>
 
           <div class="ep-row">
-            <label class="ep-label">Native place</label>
+            <label class="ep-label">Native place<span class="empty-indicator" id="indicator-native_place" {% if profile.native_place %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
             <div class="ep-picker" id="drop-native">
               <div class="ep-chips" id="chips-native"></div>
               <input type="text" class="ep-picker-input" id="search-native" placeholder="Search city…" autocomplete="off">
@@ -783,7 +853,7 @@
           </div>
 
           <div class="ep-row">
-            <label class="ep-label{% if profile.mother_tongues and not is_admin_editing %} ep-label--lock{% endif %}">Mother tongue</label>
+            <label class="ep-label{% if profile.mother_tongues and not is_admin_editing %} ep-label--lock{% endif %}">Mother tongue<span class="empty-indicator" id="indicator-mother_tongues" {% if profile.mother_tongues %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
             {% if profile.mother_tongues and not is_admin_editing %}
               <div class="ep-chips">
                 {% for lang in profile.mother_tongues_list %}
@@ -802,7 +872,7 @@
           </div>
 
           <div class="ep-row">
-            <label class="ep-label">Languages</label>
+            <label class="ep-label">Languages<span class="empty-indicator" id="indicator-languages" {% if profile.languages %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
             <div class="ep-picker" id="drop-languages">
               <div class="ep-chips" id="chips-languages"></div>
               <input type="text" class="ep-picker-input" id="search-languages" placeholder="Add languages…" autocomplete="off">
@@ -813,7 +883,7 @@
         </div>
 
         <div class="ep-group">
-          <div class="ep-group-head"><i class="fas fa-star"></i> Interests</div>
+          <div class="ep-group-head"><i class="fas fa-star"></i> Interests<span class="empty-indicator" id="indicator-interest_tags" {% if profile.interest_tags %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></div>
           <div class="ep-row" style="border-top:none; padding-top:0;">
             <div class="ep-picker" id="drop-interests">
               <div class="ep-chips" id="chips-interests"></div>
@@ -862,11 +932,11 @@
             {% endif %}
           </div>
           <div class="ep-row">
-            <label class="ep-label">Course</label>
+            <label class="ep-label">Course<span class="empty-indicator" id="indicator-course" {% if profile.course %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
             {{ form.course }}
           </div>
           <div class="ep-row">
-            <label class="ep-label">Year of study</label>
+            <label class="ep-label">Year of study<span class="empty-indicator" id="indicator-clg_year" {% if profile.clg_year %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
             {{ form.clg_year }}
           </div>
         </div>
@@ -877,11 +947,11 @@
         <div class="ep-group">
           <div class="ep-group-head"><i class="fas fa-search"></i> Discovery</div>
           <div class="ep-row" style="border-top:none; padding-top:0;">
-            <label class="ep-label">Looking for</label>
+            <label class="ep-label">Looking for<span class="empty-indicator" id="indicator-looking_for" {% if profile.looking_for %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
             {{ form.looking_for }}
           </div>
           <div class="ep-row">
-            <label class="ep-label">Interested in</label>
+            <label class="ep-label">Interested in<span class="empty-indicator" id="indicator-pref_gender" {% if profile.pref_gender %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
             {{ form.pref_gender }}
           </div>
           <div class="ep-row">
@@ -925,9 +995,9 @@
               <strong>Show me in match feed</strong>
               <span>When on, others can discover your profile.</span>
             </div>
-            <div class="ep-switch">
-              <input type="checkbox" name="is_discoverable" id="id_is_discoverable" {% if profile.is_discoverable %}checked{% endif %}>
-              <label for="id_is_discoverable"></label>
+            <div class="ep-switch" id="disc-switch-wrap">
+              <input type="checkbox" name="is_discoverable" id="id_is_discoverable" {% if profile.is_discoverable %}checked{% endif %} style="pointer-events:none;">
+              <label for="id_is_discoverable" id="disc-toggle-label" style="cursor:pointer;"></label>
             </div>
           </div>
         </div>
@@ -974,6 +1044,10 @@
       <div class="ep-group">
         <div class="ep-group-head"><i class="fas fa-images"></i> Photos <span class="ep-badge">{{ gallery.count }}/5</span></div>
         <p class="ep-gallery-note"><i class="fas fa-shield-alt"></i> AI safety check & auto-compress on every upload.</p>
+        <div class="ep-gallery-warning" id="gallery-warning" {% if gallery.count >= 2 %}style="display: none;"{% endif %}>
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>At least 2 images are needed in your gallery.</span>
+        </div>
         <div class="ep-gallery-grid">
           {% for img in gallery %}
           <div class="ep-gallery-slot">
@@ -1018,6 +1092,10 @@
 
 <script>
 (function() {
+  /* ── State ── */
+  let isFormDirty = false;
+  let isInitializing = true;
+
   /* ── Tabs ── */
   const tabs = document.querySelectorAll('.ep-tab');
   const indicator = document.getElementById('ep-tab-indicator');
@@ -1030,13 +1108,15 @@
   }
 
   window.switchTab = function(tabId) {
-    autoSaveProfile();
-    document.querySelectorAll('.ep-panel').forEach(p => p.classList.remove('is-active'));
-    tabs.forEach(t => t.classList.remove('is-active'));
-    const panel = document.getElementById('section-' + tabId);
-    const tab = document.querySelector('.ep-tab[data-tab="' + tabId + '"]');
+    document.querySelectorAll('.ep-panel').forEach(function(p) { p.classList.remove('is-active'); });
+    tabs.forEach(function(t) { t.classList.remove('is-active'); });
+    var panel = document.getElementById('section-' + tabId);
+    var tab = document.querySelector('.ep-tab[data-tab="' + tabId + '"]');
     if (panel) panel.classList.add('is-active');
     if (tab) { tab.classList.add('is-active'); moveIndicator(tab); }
+    // Re-apply dirty class after panel switch (class is on #ep-app so it persists)
+    var app = document.getElementById('ep-app');
+    if (app && isFormDirty) app.classList.add('has-unsaved');
   };
 
   tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
@@ -1064,30 +1144,107 @@
   };
 
   function compressImage(file, quality, maxWidth) {
-    quality = quality || 0.7; maxWidth = maxWidth || 1080;
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.src = URL.createObjectURL(file);
-      img.onload = () => {
-        const c = document.createElement('canvas');
-        let w = img.width, h = img.height;
+    quality = quality || 0.75; maxWidth = maxWidth || 1080;
+    return new Promise(function(resolve, reject) {
+      if (!window.createImageBitmap) { reject(new Error('no createImageBitmap')); return; }
+      createImageBitmap(file).then(function(bitmap) {
+        var c = document.createElement('canvas');
+        var w = bitmap.width, h = bitmap.height;
         if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
         c.width = w; c.height = h;
-        c.getContext('2d').drawImage(img, 0, 0, w, h);
-        c.toBlob(b => b ? resolve(new File([b], file.name, { type: 'image/jpeg' })) : reject(), 'image/jpeg', quality);
-      };
-      img.onerror = reject;
+        c.getContext('2d').drawImage(bitmap, 0, 0, w, h);
+        bitmap.close();
+        c.toBlob(function(b) {
+          if (b) {
+            var ext = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+            resolve(new File([b], ext, { type: 'image/jpeg' }));
+          } else {
+            reject(new Error('toBlob returned null'));
+          }
+        }, 'image/jpeg', quality);
+      }).catch(reject);
     });
   }
 
   window.handleGalleryUpload = async function(input) {
     if (!input.files || !input.files[0]) return;
-    showOverlay('Compressing & uploading…');
+    
+    // Create and insert loading placeholder in the gallery grid
+    const grid = document.querySelector('.ep-gallery-grid');
+    const addLabel = document.querySelector('.ep-gallery-add');
+    const placeholder = document.createElement('div');
+    placeholder.className = 'ep-gallery-slot is-loading';
+    placeholder.innerHTML = '<div class="ep-gallery-spinner"><i class="fas fa-spinner fa-spin"></i></div>';
+    
+    if (addLabel) {
+      grid.insertBefore(placeholder, addLabel);
+    } else {
+      grid.appendChild(placeholder);
+    }
+    
+    updateSectionIndicators();
+    
+    let fileToUpload = input.files[0];
     try {
-      const c = await compressImage(input.files[0]);
-      const dt = new DataTransfer(); dt.items.add(c); input.files = dt.files;
-    } catch (e) {}
-    document.getElementById('gallery-form').submit();
+      fileToUpload = await compressImage(fileToUpload);
+    } catch (e) {
+      console.warn("Compression failed, uploading original:", e);
+    }
+    
+    const formData = new FormData();
+    formData.append('add_image', '1');
+    formData.append('image_file', fileToUpload);
+    
+    const csrfEl = document.querySelector('#gallery-form [name=csrfmiddlewaretoken]') || document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrfToken = csrfEl ? csrfEl.value : '';
+    formData.append('csrfmiddlewaretoken', csrfToken);
+    
+    try {
+      const response = await fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'x-requested-with': 'XMLHttpRequest'
+        }
+      });
+      
+      const data = await response.json();
+      if (response.ok && data.status === 'success') {
+        // Create the new slot element
+        const newSlot = document.createElement('div');
+        newSlot.className = 'ep-gallery-slot';
+        newSlot.innerHTML = `
+          <img src="${data.url}" alt="">
+          <a href="${data.delete_url}" class="ep-gallery-del" onclick="handleDeletePhoto(event, this.href)"><i class="fas fa-times"></i></a>
+        `;
+        placeholder.replaceWith(newSlot);
+        
+        // Update badge count
+        const badge = document.querySelector('#section-gallery .ep-badge');
+        if (badge) {
+          badge.textContent = `${data.count}/5`;
+        }
+        
+        // If maximum reached, remove add button
+        if (data.count >= 5 && addLabel) {
+          addLabel.remove();
+        }
+        
+        input.value = '';
+        markDirty();
+        updateSectionIndicators();
+      } else {
+        placeholder.remove();
+        customAlert(data.message || 'Failed to upload photo.', 'Upload Failed');
+        input.value = '';
+        updateSectionIndicators();
+      }
+    } catch (err) {
+      placeholder.remove();
+      customAlert(err.message || 'An error occurred during upload.', 'Error');
+      input.value = '';
+      updateSectionIndicators();
+    }
   };
 
   const dropdownOptions = {
@@ -1106,19 +1263,35 @@
     const pickerWrap = searchEl.closest('.ep-picker');
     const options = dropdownOptions[optionsKey];
     let rawVal = hiddenEl.value || '';
-    if (rawVal.startsWith('[')) rawVal = rawVal.slice(1,-1).replace(/['"]/g,'');
-    let selected = rawVal ? rawVal.split(',').map(s => s.trim()).filter(Boolean) : [];
+    // Strip Python list formatting if stored as ['val'] or ["val"]
+    if (rawVal.startsWith('[')) rawVal = rawVal.slice(1, -1).replace(/['"\[\]]/g, '');
+    // For single-select pickers (locations), the value itself may contain commas
+    // (e.g. 'Trivandrum, Kerala'), so do NOT split on comma for single-select.
+    let selected;
+    if (multi) {
+      selected = rawVal ? rawVal.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+    } else {
+      selected = rawVal.trim() ? [rawVal.trim()] : [];
+    }
 
-    function renderChips() {
+    function renderChips(isDirtyAction) {
       chipsEl.innerHTML = '';
       selected.forEach(val => {
         const chip = document.createElement('span');
         chip.className = 'ep-chip';
         chip.innerHTML = '<span>' + val + '</span><i class="fas fa-times"></i>';
-        chip.querySelector('i').onclick = e => { e.stopPropagation(); selected = selected.filter(v => v !== val); renderChips(); };
+        chip.querySelector('i').onclick = e => {
+          e.stopPropagation();
+          selected = selected.filter(v => v !== val);
+          renderChips(true);
+        };
         chipsEl.appendChild(chip);
       });
-      hiddenEl.value = selected.join(',');
+      hiddenEl.value = multi ? selected.join(',') : (selected[0] || '');
+      // Only dispatch change event for real user actions, not during init render
+      if (isDirtyAction) {
+        hiddenEl.dispatchEvent(new Event('change', { bubbles: true }));
+      }
     }
 
     function showList(q) {
@@ -1137,7 +1310,7 @@
         item.textContent = o;
         item.onclick = () => {
           selected = multi ? [...selected, o] : [o];
-          renderChips(); searchEl.value = ''; listEl.style.display = 'none';
+          renderChips(true); searchEl.value = ''; listEl.style.display = 'none';
           if (pickerWrap) pickerWrap.classList.remove('is-open');
         };
         listEl.appendChild(item);
@@ -1152,7 +1325,7 @@
         pickerWrap.classList.remove('is-open');
       }
     });
-    renderChips();
+    renderChips(false);
   }
 
   function initAgeStepper() {
@@ -1161,9 +1334,10 @@
     if (!display || !hidden) return;
     window.stepAge = function(d) {
       let v = parseInt(hidden.value, 10) || 18;
-      v = Math.min(30, Math.max(18, v + d));
+      v = Math.min(50, Math.max(18, v + d));
       display.textContent = v;
       hidden.value = v;
+      hidden.dispatchEvent(new Event('change', { bubbles: true }));
     };
   }
 
@@ -1176,10 +1350,12 @@
     window.stepRange = function(type, d) {
       let min = parseInt(hMin.value, 10) || 18;
       let max = parseInt(hMax.value, 10) || 25;
-      if (type === 'min') { min = Math.min(30, Math.max(18, min + d)); if (min > max) max = min; }
-      else { max = Math.min(30, Math.max(18, max + d)); if (max < min) min = max; }
+      if (type === 'min') { min = Math.min(50, Math.max(18, min + d)); if (min > max) max = min; }
+      else { max = Math.min(50, Math.max(18, max + d)); if (max < min) min = max; }
       minD.textContent = min; maxD.textContent = max;
       hMin.value = min; hMax.value = max;
+      hMin.dispatchEvent(new Event('change', { bubbles: true }));
+      hMax.dispatchEvent(new Event('change', { bubbles: true }));
     };
   }
 
@@ -1226,6 +1402,10 @@
         <button type="button" class="ep-media-rm" onclick="removeSong(${i})"><i class="fas fa-times"></i></button>
         <div class="ep-media-name">${s.title}</div>
       </div>`).join('') : '<span class="ep-media-empty">No songs yet</span>';
+
+    if (!isInitializing) {
+      markDirty();
+    }
   }
   renderFavorites();
 
@@ -1273,6 +1453,39 @@
     e.preventDefault();
     document.getElementById('save-btn').classList.add('is-busy');
     showOverlay('Saving profile…');
+
+    const validLocations = ["Kochi, Kerala","Trivandrum, Kerala","Calicut, Kerala","Chennai, Tamil Nadu","Coimbatore, Tamil Nadu","Madurai, Tamil Nadu","Bangalore, Karnataka","Hyderabad, Telangana","Delhi, NCR","Mumbai, Maharashtra","Vellore, Tamil Nadu","Chengalpattu, Tamil Nadu","Kanchipuram, Tamil Nadu","Trichy, Tamil Nadu","Kozhikode, Kerala","Kannur, Kerala","Kollam, Kerala","Malappuram, Kerala","Pune, Maharashtra","Jaipur, Rajasthan","Kolkata, West Bengal","Visakhapatnam, Andhra Pradesh","Chandigarh, UT","Guwahati, Assam","Tiruchirappalli, Tamil Nadu","Salem, Tamil Nadu","Erode, Tamil Nadu","Nagercoil, Tamil Nadu"];
+    
+    const livingPlaceVal = ((document.getElementById('id_living_place') || {}).value || '').trim();
+    const nativePlaceVal = ((document.getElementById('id_native_place') || {}).value || '').trim();
+    const searchLivingVal = ((document.getElementById('search-living') || {}).value || '').trim();
+    const searchNativeVal = ((document.getElementById('search-native') || {}).value || '').trim();
+    const courseVal = ((document.querySelector('[name="course"]') || {}).value || '').trim();
+    const yearVal = ((document.querySelector('[name="clg_year"]') || {}).value || '').trim();
+
+    // 1. Mandatory Fields Check
+    if (!livingPlaceVal || !nativePlaceVal || !courseVal || !yearVal) {
+      document.getElementById('save-btn').classList.remove('is-busy');
+      hideOverlay();
+      customAlert("Please fill in all necessary details.", "Fill Necessary Details");
+      return;
+    }
+
+    // 2. Dropdown Selection Validation Check
+    if (searchLivingVal !== '' || !validLocations.includes(livingPlaceVal)) {
+      document.getElementById('save-btn').classList.remove('is-busy');
+      hideOverlay();
+      customAlert("Please choose your living place from the dropdown.", "Selection Required");
+      return;
+    }
+
+    if (searchNativeVal !== '' || !validLocations.includes(nativePlaceVal)) {
+      document.getElementById('save-btn').classList.remove('is-busy');
+      hideOverlay();
+      customAlert("Please choose your native place from the dropdown.", "Selection Required");
+      return;
+    }
+
     try {
       await fetch('/api/favorites/save/', {
         method: 'POST',
@@ -1358,8 +1571,269 @@
 
   window.handleDeletePhoto = async function(e, url) {
     e.preventDefault();
-    if (await customConfirm('Delete this photo?', 'Delete Photo', 'Delete', 'Cancel')) location.href = url;
+    const deleteButton = e.currentTarget || e.target.closest('.ep-gallery-del');
+    if (!deleteButton) return;
+    const slot = deleteButton.closest('.ep-gallery-slot');
+    if (!slot) return;
+    
+    if (await customConfirm('Delete this photo?', 'Delete Photo', 'Delete', 'Cancel')) {
+      const originalHTML = slot.innerHTML;
+      slot.classList.add('is-deleting');
+      slot.innerHTML = '<div class="ep-gallery-spinner del"><i class="fas fa-spinner fa-spin"></i></div>';
+      
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'x-requested-with': 'XMLHttpRequest'
+          }
+        });
+        
+        const data = await response.json();
+        if (response.ok && data.status === 'success') {
+          slot.remove();
+          
+          // Update badge count
+          const badge = document.querySelector('#section-gallery .ep-badge');
+          if (badge) {
+            badge.textContent = `${data.count}/5`;
+          }
+          
+          // Restore add button if count < 5
+          let addLabel = document.querySelector('.ep-gallery-add');
+          if (data.count < 5 && !addLabel) {
+            const grid = document.querySelector('.ep-gallery-grid');
+            addLabel = document.createElement('label');
+            addLabel.setAttribute('for', 'id_gallery_file');
+            addLabel.className = 'ep-gallery-add';
+            addLabel.innerHTML = '<i class="fas fa-plus"></i><span>Add</span>';
+            grid.appendChild(addLabel);
+          }
+          
+          isFormDirty = true;
+          updateSaveBarVisibility();
+          updateSectionIndicators();
+        } else {
+          slot.classList.remove('is-deleting');
+          slot.innerHTML = originalHTML;
+          customAlert(data.message || 'Failed to delete photo.', 'Delete Failed');
+        }
+      } catch (err) {
+        slot.classList.remove('is-deleting');
+        slot.innerHTML = originalHTML;
+        customAlert(err.message || 'An error occurred.', 'Error');
+      }
+    }
   };
+
+  // ── Dynamic Section Indicators & Unsaved Confirmation ──
+
+  // ── Dirty state helpers ──
+  var epApp = document.getElementById('ep-app');
+  function markDirty() {
+    isFormDirty = true;
+    if (epApp) epApp.classList.add('has-unsaved');
+  }
+  function markClean() {
+    isFormDirty = false;
+    if (epApp) epApp.classList.remove('has-unsaved');
+  }
+  // Keep updateSaveBarVisibility as alias for backward compat
+  function updateSaveBarVisibility() {
+    if (isFormDirty) markDirty(); else markClean();
+  }
+
+  function updateSectionIndicators() {
+    const fields = [
+      { id: 'bio', selector: '[name="bio"]' },
+      { id: 'living_place', selector: '[name="living_place"]' },
+      { id: 'native_place', selector: '[name="native_place"]' },
+      { id: 'mother_tongues', selector: '[name="mother_tongues"]' },
+      { id: 'languages', selector: '[name="languages"]' },
+      { id: 'interest_tags', selector: '[name="interest_tags"]' },
+      { id: 'course', selector: '[name="course"]' },
+      { id: 'clg_year', selector: '[name="clg_year"]' },
+      { id: 'looking_for', selector: '[name="looking_for"]' },
+      { id: 'pref_gender', selector: '[name="pref_gender"]' }
+    ];
+
+    let hasEmptyBasic = false;
+    let hasEmptyEdu = false;
+    let hasEmptyPrefs = false;
+
+    fields.forEach(field => {
+      const el = document.querySelector(field.selector);
+      const indicator = document.getElementById('indicator-' + field.id);
+      if (!el) return;
+
+      const isEmpty = !el.value || el.value.trim() === '';
+
+      if (indicator) {
+        indicator.style.display = isEmpty ? 'inline-flex' : 'none';
+      }
+
+      if (['bio', 'living_place', 'native_place', 'mother_tongues', 'languages', 'interest_tags'].includes(field.id)) {
+        if (isEmpty) hasEmptyBasic = true;
+      } else if (['course', 'clg_year'].includes(field.id)) {
+        if (isEmpty) hasEmptyEdu = true;
+      } else if (['looking_for', 'pref_gender'].includes(field.id)) {
+        if (isEmpty) hasEmptyPrefs = true;
+      }
+    });
+
+    const photoSlots = document.querySelectorAll('.ep-gallery-slot:not(.is-loading)');
+    const hasEmptyGallery = photoSlots.length < 2;
+
+    const galleryWarning = document.getElementById('gallery-warning');
+    if (galleryWarning) {
+      galleryWarning.style.display = hasEmptyGallery ? 'flex' : 'none';
+    }
+
+    const dotBasic = document.getElementById('dot-basic');
+    const dotGallery = document.getElementById('dot-gallery');
+    const dotEdu = document.getElementById('dot-edu');
+    const dotPrefs = document.getElementById('dot-prefs');
+
+    if (dotBasic) dotBasic.style.display = hasEmptyBasic ? 'block' : 'none';
+    if (dotGallery) dotGallery.style.display = hasEmptyGallery ? 'block' : 'none';
+    if (dotEdu) dotEdu.style.display = hasEmptyEdu ? 'block' : 'none';
+    if (dotPrefs) dotPrefs.style.display = hasEmptyPrefs ? 'block' : 'none';
+  }
+
+  // Hook into input and change events to update indicators and mark form dirty
+  const profileForm = document.getElementById('profile-edit-form');
+  if (profileForm) {
+    profileForm.addEventListener('input', () => {
+      if (isInitializing) return;
+      markDirty();
+      updateSectionIndicators();
+    });
+    profileForm.addEventListener('change', () => {
+      if (isInitializing) return;
+      markDirty();
+      updateSectionIndicators();
+    });
+    profileForm.addEventListener('submit', () => {
+      markClean();
+    });
+  }
+
+  // Intercept navigation links
+  document.addEventListener('click', function(e) {
+    if (!isFormDirty || e.defaultPrevented) return;
+
+    const anchor = e.target.closest('a');
+    if (!anchor) return;
+
+    const href = anchor.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+    // Gallery deletion handles its own redirect after confirmation
+    if (anchor.classList.contains('ep-gallery-del')) return;
+
+    e.preventDefault();
+    customConfirm(
+      "You have unsaved changes on your profile. Are you sure you want to leave without saving?",
+      "Unsaved Changes",
+      "Leave",
+      "Stay"
+    ).then((confirmed) => {
+      if (confirmed) {
+        markClean();
+        window.location.href = href;
+      }
+    });
+  });
+
+
+
+  // Intercept page unload / back navigation
+  window.addEventListener('beforeunload', function(e) {
+    if (isFormDirty) {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    }
+  });
+
+  // Run initial indicator check on load
+  setTimeout(() => {
+    updateSectionIndicators();
+    isInitializing = false;
+    updateSaveBarVisibility();
+  }, 200);
+  // ── Discovery Toggle (AJAX) ──
+  (function() {
+    var label = document.getElementById('disc-toggle-label');
+    var checkbox = document.getElementById('id_is_discoverable');
+    if (!label || !checkbox) return;
+
+    var csrfToken = (document.querySelector('[name=csrfmiddlewaretoken]') || {}).value || '';
+    var toggleUrl = "{% url 'toggle_discoverable' %}";
+
+    label.addEventListener('click', function(e) {
+      e.preventDefault();
+      var turningOn = !checkbox.checked;
+
+      // Optimistically flip UI
+      checkbox.checked = turningOn;
+
+      fetch(toggleUrl, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest',
+          'Accept': 'application/json'
+        }
+      }).then(function(r) { return r.json(); }).then(function(data) {
+        if (data.success) {
+          // Server confirmed — keep the toggled state
+          checkbox.checked = data.is_discoverable;
+        } else {
+          // Revert the optimistic flip
+          checkbox.checked = !turningOn;
+
+          var code = data.error_code || '';
+          var editUrl = "{% url 'edit_profile' %}";
+          var verifyUrl = "{% url 'reverify' %}";
+
+          var missingHtml = '';
+          if (data.missing && data.missing.length) {
+            missingHtml = '<ul style="text-align:left;margin:12px 0 0;padding:0 0 0 18px;font-size:13px;color:#64748b;line-height:1.9;">'
+              + data.missing.map(function(f) { return '<li>' + f + '</li>'; }).join('')
+              + '</ul>';
+          }
+
+          if (code === 'need_both') {
+            customAlert(
+              'To enable discovery you need to:<br><br>' + missingHtml +
+              '<br><a href="' + editUrl + '" style="color:#2563eb;font-weight:700;">→ Complete Profile</a><br>' +
+              '<a href="' + verifyUrl + '" style="color:#2563eb;font-weight:700;">→ Verify Account</a>',
+              'Profile Incomplete'
+            );
+          } else if (code === 'need_profile') {
+            customAlert(
+              'Please fill in these details before enabling discovery:<br><br>' + missingHtml +
+              '<br><a href="' + editUrl + '" style="color:#2563eb;font-weight:700;">→ Complete Profile</a>',
+              'Profile Incomplete'
+            );
+          } else if (code === 'need_verification') {
+            customAlert(
+              'Your profile is complete! You just need to verify your account.<br><br>' +
+              '<a href="' + verifyUrl + '" style="color:#2563eb;font-weight:700;">→ Verify Now</a>',
+              'Verification Required'
+            );
+          } else {
+            customAlert(data.error || 'Could not toggle discovery.', 'Error');
+          }
+        }
+      }).catch(function() {
+        checkbox.checked = !turningOn;
+        customAlert('Network error. Please try again.', 'Error');
+      });
+    });
+  })();
+
 })();
 </script>
 {% endblock %}

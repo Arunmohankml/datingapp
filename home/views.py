@@ -85,7 +85,7 @@ import math
 from django.utils import timezone
 
 from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier
-from .forms import ProfileForm, ProfileEditForm, ProfileImageForm
+from .forms import ProfileForm, ProfileEditForm, ProfileImageForm, ProfileInitForm
 from .supabase_utils import delete_from_supabase_by_url
 from .cloudinary_utils import upload_to_cloudinary, upload_base64_to_cloudinary
 # AI imports moved inside functions to prevent Vercel crashes
@@ -101,70 +101,22 @@ def safe_print(msg):
 @login_required
 def complete_profile(request):
     user = request.user
-    profile = getattr(user, 'profile', None)
+    profile, created = Profile.objects.get_or_create(user=user)
 
-    # If profile is already completed (has both a name and profile picture), don't allow re-entry to this setup page
-    if profile and profile.name and profile.profile_pic:
+    # If profile is already initialized with basic info, don't allow re-entry
+    if profile.name and profile.age and profile.gender and profile.campus and profile.native_place:
         return redirect('home')
 
     if request.method == 'POST':
-        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        form = ProfileInitForm(request.POST, instance=profile)
         if form.is_valid():
             new_profile = form.save(commit=False)
             new_profile.user = user
-            
-            # Face Verification Data (Simplified)
-            verify_data = request.POST.get('verification_image_data')
-            verify_url_client = request.POST.get('verification_image_url')
-            verify_status = request.POST.get('verification_status', 'pending')
-            
-            if verify_url_client:
-                # Use URL directly from client (most reliable)
-                new_profile.verification_image = verify_url_client
-                new_profile.verification_status = verify_status
-                if verify_status == 'verified':
-                    new_profile.is_face_verified = True
-            elif verify_data:
-                # Fallback: Save base64 to Cloudinary on server
-                verify_url = upload_base64_to_cloudinary(verify_data, folder="srm_match/verification_images")
-                if verify_url:
-                    new_profile.verification_image = verify_url
-                    new_profile.verification_status = verify_status
-                    if verify_status == 'verified':
-                        new_profile.is_face_verified = True
-
-            pic_url = request.POST.get('profile_pic_url')
-            if pic_url:
-                new_profile.profile_pic = pic_url
-            elif 'profile_pic_file' in request.FILES:
-                img_url = upload_to_cloudinary(request.FILES['profile_pic_file'], folder="srm_match/profile_pics")
-                if img_url:
-                    new_profile.profile_pic = img_url
-                else:
-                    messages.warning(request, "Photo upload failed.")
-
-            if not new_profile.profile_pic:
-                messages.error(request, "A profile picture is required to complete your profile.")
-                return render(request, 'complete_profile.html', {'form': form})
-
             new_profile.save()
-
-            # Gallery
-            gallery_urls_raw = request.POST.get('gallery_urls')
-            if gallery_urls_raw:
-                urls = [u.strip() for u in gallery_urls_raw.split(',') if u.strip()]
-                for u in urls:
-                    ProfileImage.objects.create(profile=new_profile, image=u)
-            else:
-                gallery_files = request.FILES.getlist('gallery_images')
-                for gf in gallery_files:
-                    img_url = upload_to_cloudinary(gf, folder="srm_match/gallery_images")
-                    if img_url: ProfileImage.objects.create(profile=new_profile, image=img_url)
-
-            messages.success(request, "Profile created!")
+            messages.success(request, "Welcome! Basic profile created successfully.")
             return redirect('home')
     else:
-        form = ProfileForm(instance=profile)
+        form = ProfileInitForm(instance=profile)
 
     return render(request, 'complete_profile.html', {'form': form})
 
@@ -287,9 +239,46 @@ def reverify(request):
     return render(request, 'reverify.html', {'profile': profile})
 
 
-# ---------------- HOME / QUIZ ----------------
+# ---------------- HOME HUB ----------------
 @login_required
-def home(request):
+def home_hub(request):
+    user = request.user
+    profile = getattr(user, 'profile', None)
+    if not profile or not profile.name or not profile.age or not profile.gender or not profile.campus or not profile.native_place:
+        return redirect('complete_profile')
+
+    from .models import Confession, Announcement
+    latest_confession = Confession.objects.filter(moderation_status='approved', is_flagged=False).order_by('-created_at').first()
+    latest_update = Announcement.objects.order_by('-created_at').first()
+    total_users = User.objects.count()
+    
+    # Discovery checklist & hint variables
+    missing = _profile_missing_fields(profile)
+    checklist = _profile_discovery_checklist(profile)
+    profile_complete = len(missing) == 0
+    is_verified = profile.is_face_verified
+    
+    return render(request, "home_hub.html", {
+        "profile": profile,
+        "latest_confession": latest_confession,
+        "latest_update": latest_update,
+        "total_users": total_users,
+        "is_discoverable": profile.is_discoverable,
+        "profile_complete": profile_complete,
+        "is_verified": is_verified,
+        "missing_fields": missing,
+        "checklist": checklist,
+    })
+
+@login_required
+def more_menu(request):
+    user = request.user
+    profile = getattr(user, 'profile', None)
+    return render(request, "more_menu.html", {"profile": profile})
+
+# ---------------- MATCHING FEED ----------------
+@login_required
+def match_feed(request):
     user = request.user
     
     # Try getting the profile, but catch schema errors if migration is needed
@@ -307,17 +296,23 @@ def home(request):
         else:
             raise e
 
-    if not profile.name or not profile.profile_pic:
+    if not profile.name or not profile.age or not profile.gender or not profile.campus or not profile.native_place:
         return redirect('complete_profile')
 
-    if not profile.is_face_verified:
-        # If the user is unverified or rejected, send them to reverify
-        if profile.verification_status in ['pending', 'rejected']:
-            return redirect('reverify')
+
 
     # If user is not discoverable, they can't see the feed
     if not profile.is_discoverable:
-        return render(request, "home.html", {"not_discoverable": True, "profile": profile})
+        missing = _profile_missing_fields(profile)
+        checklist = _profile_discovery_checklist(profile)
+        return render(request, "home.html", {
+            "not_discoverable": True,
+            "profile": profile,
+            "missing_fields": missing,
+            "checklist": checklist,
+            "profile_complete": len(missing) == 0,
+            "is_verified": profile.is_face_verified,
+        })
 
     # Get answered questions count
     answered_ids = list(UserAnswer.objects.filter(user=user).values_list("question_id", flat=True))
@@ -325,8 +320,12 @@ def home(request):
 
     # ── 10-question round break ──
     # Round number = how many complete 10-question rounds the user has finished
-    rounds_shown = request.session.get('rounds_shown', 0)
     current_round = ans_count // 10  # 10→1, 20→2, 30→3 ...
+
+    if 'rounds_shown' not in request.session:
+        request.session['rounds_shown'] = current_round
+
+    rounds_shown = request.session['rounds_shown']
 
     if current_round > rounds_shown:
         # A new round has been completed — show a match
@@ -340,7 +339,13 @@ def home(request):
     blocked_user_ids = list(BlockedUser.objects.filter(blocker=user).values_list('blocked_id', flat=True)) + \
                        list(BlockedUser.objects.filter(blocked=user).values_list('blocker_id', flat=True))
     
-    candidates_qs = Profile.objects.filter(is_discoverable=True, is_face_verified=True).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=blocked_user_ids)
+    # Restrict candidates to only users who have answered at least one quiz question
+    users_with_answers = list(UserAnswer.objects.values_list('user_id', flat=True).distinct())
+    candidates_qs = Profile.objects.filter(
+        is_discoverable=True, 
+        is_face_verified=True,
+        user_id__in=users_with_answers
+    ).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=blocked_user_ids)
     
     has_valid_candidates = False
     for c in candidates_qs:
@@ -379,7 +384,11 @@ def home(request):
         blocked_user_ids = list(BlockedUser.objects.filter(blocker=user).values_list('blocked_id', flat=True)) + \
                            list(BlockedUser.objects.filter(blocked=user).values_list('blocker_id', flat=True))
         
-        candidates = Profile.objects.filter(is_discoverable=True).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=blocked_user_ids).select_related('user')
+        users_with_answers = list(UserAnswer.objects.values_list('user_id', flat=True).distinct())
+        candidates = Profile.objects.filter(
+            is_discoverable=True,
+            user_id__in=users_with_answers
+        ).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=blocked_user_ids).select_related('user')
         
         user_ans = UserAnswer.objects.filter(user=user).select_related('option')
         user_dict = {ans.question_id: ans.option.weight for ans in user_ans}
@@ -505,7 +514,11 @@ def check_match(request):
     # IDs of users already shown to this user in previous rounds (stored in session)
     seen_ids = request.session.get('seen_match_ids', [])
     
-    candidates = Profile.objects.filter(is_discoverable=True).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=seen_ids)
+    users_with_answers = list(UserAnswer.objects.values_list('user_id', flat=True).distinct())
+    candidates = Profile.objects.filter(
+        is_discoverable=True,
+        user_id__in=users_with_answers
+    ).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=seen_ids)
 
     preference_filtered = []
     for c in candidates:
@@ -569,7 +582,7 @@ def login_view(request):
     if request.user.is_authenticated:
         # Check if profile is set up — if not, send to complete_profile
         profile = getattr(request.user, 'profile', None)
-        if profile and profile.name and profile.profile_pic:
+        if profile and profile.name and profile.age and profile.gender and profile.campus and profile.native_place:
             return redirect('home')
         return redirect('complete_profile')
     return render(request, "login.html")
@@ -599,7 +612,7 @@ def api_verify_token(request):
             
             # Check if profile is complete
             profile = getattr(user, 'profile', None)
-            profile_complete = profile is not None and bool(profile.name) and bool(profile.profile_pic)
+            profile_complete = profile is not None and bool(profile.name) and bool(profile.age) and bool(profile.gender) and bool(profile.campus) and bool(profile.native_place)
             
             # Sync round count to avoid immediate check_match popup for existing users
             if profile_complete:
@@ -724,7 +737,7 @@ def send_match_request(request, receiver_id):
         
         # Reset last_match_count so they can continue answering
     
-    return redirect('home')
+    return redirect('match_feed')
     
 @login_required
 def skip_match(request, receiver_id):
@@ -736,7 +749,7 @@ def skip_match(request, receiver_id):
                 receiver=receiver, 
                 defaults={'status': 'skipped'}
             )
-    return redirect('home')
+    return redirect('match_feed')
 
 @login_required
 def accept_match(request, req_id):
@@ -1074,22 +1087,93 @@ def toggle_spark(request, user_id):
     new_count = Spark.objects.filter(receiver=target_user).count()
     return JsonResponse({'success': True, 'action': action, 'new_count': new_count})
 
+def _profile_missing_fields(profile):
+    """Return list of missing required field labels for discovery."""
+    missing = []
+    if not profile.profile_pic:
+        missing.append("Profile photo")
+    if not profile.bio or not profile.bio.strip():
+        missing.append("Bio")
+    if not profile.living_place or not profile.living_place.strip():
+        missing.append("Living place")
+    if not profile.native_place or not profile.native_place.strip():
+        missing.append("Native place")
+    if not profile.course or not profile.course.strip():
+        missing.append("Course")
+    if not profile.clg_year:
+        missing.append("Year of study")
+    if not profile.interest_tags or not profile.interest_tags.strip():
+        missing.append("Interests")
+    if not profile.looking_for or not profile.looking_for.strip():
+        missing.append("Looking for")
+    if not profile.pref_gender or not profile.pref_gender.strip():
+        missing.append("Interested in")
+    # Need at least 2 gallery photos
+    if profile.images.count() < 2:
+        missing.append("At least 2 gallery photos")
+    return missing
+
+
+def _profile_discovery_checklist(profile):
+    """Return a list of dicts with field names and their completion status."""
+    return [
+        {'name': 'Profile photo', 'done': bool(profile.profile_pic)},
+        {'name': 'Bio', 'done': bool(profile.bio and profile.bio.strip())},
+        {'name': 'Living place', 'done': bool(profile.living_place and profile.living_place.strip())},
+        {'name': 'Native place', 'done': bool(profile.native_place and profile.native_place.strip())},
+        {'name': 'Course', 'done': bool(profile.course and profile.course.strip())},
+        {'name': 'Year of study', 'done': bool(profile.clg_year)},
+        {'name': 'Interests', 'done': bool(profile.interest_tags and profile.interest_tags.strip())},
+        {'name': 'At least 2 gallery photos', 'done': profile.images.count() >= 2},
+        {'name': 'Account verification', 'done': profile.is_face_verified},
+    ]
+
+
 @login_required
 @csrf_exempt
 def toggle_discoverable(request):
     profile = request.user.profile
-    profile.is_discoverable = not profile.is_discoverable
-    profile.save()
-    
+
     # Check if request prefers JSON response (AJAX/Fetch)
     is_ajax = (
         request.headers.get('x-requested-with') == 'XMLHttpRequest' or
         'application/json' in request.headers.get('Accept', '') or
         request.content_type == 'application/json'
     )
+
+    if not profile.is_discoverable:
+        # Turning ON discovery — check completeness and verification
+        missing = _profile_missing_fields(profile)
+        profile_complete = len(missing) == 0
+        is_verified = profile.is_face_verified
+
+        if not profile_complete and not is_verified:
+            msg = f"Please complete your profile ({', '.join(missing[:3])}{'...' if len(missing) > 3 else ''}) and verify your account first."
+            if is_ajax:
+                return JsonResponse({'success': False, 'error_code': 'need_both', 'error': msg, 'missing': missing})
+            messages.error(request, msg)
+            return redirect('edit_profile')
+
+        if not profile_complete:
+            msg = f"Please complete your profile first. Missing: {', '.join(missing)}."
+            if is_ajax:
+                return JsonResponse({'success': False, 'error_code': 'need_profile', 'error': msg, 'missing': missing})
+            messages.error(request, msg)
+            return redirect('edit_profile')
+
+        if not is_verified:
+            msg = "Your account is not verified. Please verify your face to enable discovery."
+            if is_ajax:
+                return JsonResponse({'success': False, 'error_code': 'need_verification', 'error': msg})
+            messages.error(request, msg)
+            return redirect('reverify')
+
+    profile.is_discoverable = not profile.is_discoverable
+    profile.save()
+
     if is_ajax:
         return JsonResponse({'success': True, 'is_discoverable': profile.is_discoverable})
-        
+
     # Otherwise, redirect native form submission back to the referring page
     referer = request.META.get('HTTP_REFERER')
     if referer:
@@ -1155,19 +1239,33 @@ def edit_profile(request):
             # Handle Image Upload
             elif 'add_image' in request.POST:
                 if profile.images.count() >= 5:
+                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                        return JsonResponse({'status': 'error', 'message': 'Maximum 5 photos allowed.'}, status=400)
                     return redirect('edit_profile')
-                
-                image_form = ProfileImageForm(request.POST, request.FILES)
-                if image_form.is_valid():
-                    # Handle Cloudinary Upload for gallery
-                    if 'image_file' in request.FILES:
-                        img_url = upload_to_cloudinary(request.FILES['image_file'], folder="srm_match/gallery")
-                        if img_url:
-                            ProfileImage.objects.create(profile=profile, image=img_url)
-                            messages.success(request, "Gallery photo added successfully!")
-                        else:
-                            messages.error(request, "Failed to upload gallery image.")
-                    return redirect('edit_profile')
+
+                # Directly handle the uploaded file — skip ModelForm validation
+                # because ProfileImage.image is a URLField (Cloudinary URL), not a file field.
+                if 'image_file' in request.FILES:
+                    img_url = upload_to_cloudinary(request.FILES['image_file'], folder="srm_match/gallery")
+                    if img_url:
+                        img_obj = ProfileImage.objects.create(profile=profile, image=img_url)
+                        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                            return JsonResponse({
+                                'status': 'success',
+                                'id': img_obj.id,
+                                'url': img_obj.get_image_url,
+                                'count': profile.images.count(),
+                                'delete_url': f"/profile/image/delete/{img_obj.id}/"
+                            })
+                        messages.success(request, "Gallery photo added successfully!")
+                    else:
+                        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                            return JsonResponse({'status': 'error', 'message': 'Failed to upload to cloud storage.'}, status=500)
+                        messages.error(request, "Failed to upload gallery image.")
+                else:
+                    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                        return JsonResponse({'status': 'error', 'message': 'No image file received.'}, status=400)
+                return redirect('edit_profile')
 
         except Exception as e:
             import traceback
@@ -1196,10 +1294,18 @@ def delete_profile_image(request, image_id):
     gallery_count = profile.images.count()
 
     if gallery_count <= 2:
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'You must keep at least 2 images in your gallery.'}, status=400)
         messages.error(request, "You must keep at least 2 images in your gallery.")
         return redirect('edit_profile')
 
     image.delete()
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Photo removed.',
+            'count': profile.images.count()
+        })
     messages.success(request, "Photo removed.")
     return redirect('edit_profile')
 
@@ -2124,4 +2230,261 @@ def safe_print(msg):
             print(msg.encode('ascii', 'ignore').decode('ascii'))
         except:
             pass
+
+# ==========================================
+# ROOM FINDER VIEWS & APIs
+# ==========================================
+from .models import RoomListing, RoomImage, SavedRoomListing
+from django.core.paginator import Paginator
+
+@login_required
+def roomfinder_feed(request):
+    profile = getattr(request.user, 'profile', None)
+    if not profile or not profile.name or not profile.age or not profile.gender or not profile.campus or not profile.native_place:
+        return redirect('complete_profile')
+    
+    return render(request, 'roomfinder.html')
+
+@login_required
+def roomfinder_detail(request, id):
+    try:
+        listing = RoomListing.objects.get(id=id, is_active=True)
+    except RoomListing.DoesNotExist:
+        messages.error(request, "Listing not found or is no longer available.")
+        return redirect('roomfinder_feed')
+    
+    is_saved = SavedRoomListing.objects.filter(user=request.user, listing=listing).exists()
+    
+    return render(request, 'roomfinder_detail.html', {'listing': listing, 'is_saved': is_saved})
+
+@login_required
+@csrf_exempt
+def api_toggle_save_room(request, id):
+    if request.method == 'POST':
+        try:
+            listing = RoomListing.objects.get(id=id, is_active=True)
+            saved_item, created = SavedRoomListing.objects.get_or_create(user=request.user, listing=listing)
+            if not created:
+                saved_item.delete()
+                return JsonResponse({'success': True, 'saved': False, 'message': 'Listing removed from saved.'})
+            return JsonResponse({'success': True, 'saved': True, 'message': 'Listing saved to favorites!'})
+        except RoomListing.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Listing not found.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
+
+
+@login_required
+@csrf_exempt
+def api_edit_room(request, id):
+    if request.method == 'POST':
+        try:
+            listing = RoomListing.objects.get(id=id)
+            # Authorization check
+            if not (request.user == listing.user or request.user.is_staff or request.user.email == 'arunmohankml@gmail.com'):
+                return JsonResponse({'success': False, 'error': 'Unauthorized to edit this listing.'})
+            
+            # Update fields
+            listing.campus = request.POST.get('campus', listing.campus)
+            listing.room_type = request.POST.get('room_type', listing.room_type)
+            listing.location = request.POST.get('location', listing.location)
+            listing.rent = int(request.POST.get('rent', listing.rent))
+            listing.advance = int(request.POST.get('advance', listing.advance))
+            listing.gender_preference = request.POST.get('gender_preference', listing.gender_preference)
+            listing.furnished_status = request.POST.get('furnished_status', listing.furnished_status)
+            listing.current_occupants = int(request.POST.get('current_occupants', listing.current_occupants))
+            listing.needed_occupants = int(request.POST.get('needed_occupants', listing.needed_occupants))
+            listing.custom_note = request.POST.get('custom_note', listing.custom_note)
+            
+            contact_info = request.POST.get('contact_info', listing.contact_info)
+            # Validate contact info
+            cleaned_contact = contact_info.strip()
+            is_phone = any(c.isdigit() for c in cleaned_contact) and len([c for c in cleaned_contact if c.isdigit()]) >= 7
+            is_insta = ' ' not in cleaned_contact and (cleaned_contact.startswith('@') or len(cleaned_contact) >= 3)
+            if not cleaned_contact or not (is_phone or is_insta):
+                return JsonResponse({'success': False, 'error': 'Contact info must be a valid phone number or Instagram ID (no spaces).'})
+            
+            listing.contact_info = cleaned_contact
+            listing.save()
+            
+            new_images = request.FILES.getlist('images')
+            if new_images:
+                total_existing = listing.images.count()
+                for img in new_images[:(5 - total_existing)]:
+                    img_url = upload_to_cloudinary(img, folder="srm_match/room_images")
+                    if img_url:
+                        RoomImage.objects.create(listing=listing, image_url=img_url)
+            
+            return JsonResponse({'success': True})
+        except RoomListing.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Listing not found.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+
+@login_required
+@csrf_exempt
+def api_delete_room(request, id):
+    if request.method == 'POST':
+        try:
+            listing = RoomListing.objects.get(id=id)
+            # Authorization check
+            if not (request.user == listing.user or request.user.is_staff or request.user.email == 'arunmohankml@gmail.com'):
+                return JsonResponse({'success': False, 'error': 'Unauthorized to delete this listing.'})
+            
+            listing.is_active = False # soft delete
+            listing.save()
+            return JsonResponse({'success': True})
+        except RoomListing.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Listing not found.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
+
+@csrf_exempt
+@login_required
+def api_create_room(request):
+    if request.method == 'POST':
+        # Enforce max 2 listings
+        if RoomListing.objects.filter(user=request.user, is_active=True).count() >= 2:
+            return JsonResponse({'success': False, 'error': 'You can only have up to 2 active listings.'})
+        
+        try:
+            campus = request.POST.get('campus', '')
+            location = request.POST.get('location', '')
+            distance_from_campus = request.POST.get('distance_from_campus', '')
+            rent = request.POST.get('rent', 0)
+            advance = request.POST.get('advance', 0)
+            room_type = request.POST.get('room_type', '')
+            furnished_status = request.POST.get('furnished_status', '')
+            current_occupants = request.POST.get('current_occupants', 0)
+            needed_occupants = request.POST.get('needed_occupants', 1)
+            gender_preference = request.POST.get('gender_preference', 'any')
+            food_preference = request.POST.get('food_preference', '')
+            smoking_drinking_preference = request.POST.get('smoking_drinking_preference', '')
+            languages_preferred = request.POST.get('languages_preferred', '')
+            available_from_date = request.POST.get('available_from_date') or None
+            custom_note = request.POST.get('custom_note', '')
+            contact_info = request.POST.get('contact_info', '')
+
+            # Validate contact info is a valid phone number or Instagram ID (no spaces)
+            cleaned_contact = contact_info.strip()
+            is_phone = any(c.isdigit() for c in cleaned_contact) and len([c for c in cleaned_contact if c.isdigit()]) >= 7
+            is_insta = ' ' not in cleaned_contact and (cleaned_contact.startswith('@') or len(cleaned_contact) >= 3)
+            if not cleaned_contact or not (is_phone or is_insta):
+                return JsonResponse({'success': False, 'error': 'Contact info must be a valid phone number or Instagram ID (no spaces).'})
+
+
+            listing = RoomListing.objects.create(
+                user=request.user,
+                campus=campus,
+                location=location,
+                distance_from_campus=distance_from_campus,
+                rent=int(rent),
+                advance=int(advance),
+                room_type=room_type,
+                furnished_status=furnished_status,
+                current_occupants=int(current_occupants),
+                needed_occupants=int(needed_occupants),
+                gender_preference=gender_preference,
+                food_preference=food_preference,
+                smoking_drinking_preference=smoking_drinking_preference,
+                languages_preferred=languages_preferred,
+                available_from_date=available_from_date,
+                custom_note=custom_note,
+                contact_info=contact_info
+            )
+            
+            images = request.FILES.getlist('images')
+            for img in images[:5]: # Max 5 images
+                img_url = upload_to_cloudinary(img, folder="srm_match/room_images")
+                if img_url:
+                    RoomImage.objects.create(listing=listing, image_url=img_url)
+            
+            return JsonResponse({'success': True, 'listing_id': listing.id})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+            
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+@login_required
+def api_get_rooms(request):
+    if request.method == 'GET':
+        listings = RoomListing.objects.filter(is_active=True).order_by('-created_at')
+        
+        # Filters
+        saved_only = request.GET.get('saved_only')
+        if saved_only == 'true':
+            saved_ids = SavedRoomListing.objects.filter(user=request.user).values_list('listing_id', flat=True)
+            listings = listings.filter(id__in=saved_ids)
+
+        campus = request.GET.get('campus')
+
+        if campus:
+            listings = listings.filter(campus=campus)
+            
+        gender = request.GET.get('gender')
+        if gender:
+            listings = listings.filter(gender_preference=gender)
+            
+        room_type = request.GET.get('room_type')
+        if room_type:
+            listings = listings.filter(room_type=room_type)
+            
+        min_rent = request.GET.get('min_rent')
+        if min_rent:
+            listings = listings.filter(rent__gte=int(min_rent))
+            
+        max_rent = request.GET.get('max_rent')
+        if max_rent:
+            listings = listings.filter(rent__lte=int(max_rent))
+            
+        furnished = request.GET.get('furnished')
+        if furnished:
+            listings = listings.filter(furnished_status=furnished)
+            
+        # Pagination
+        page_num = request.GET.get('page', 1)
+        paginator = Paginator(listings, 10)
+        page = paginator.get_page(page_num)
+        
+        data = []
+        saved_ids = set(SavedRoomListing.objects.filter(user=request.user).values_list('listing_id', flat=True))
+        for lst in page.object_list:
+            images = [img.image_url for img in lst.images.all()]
+            
+            # Simple compatibility score mock (randomized per user for now, or based on overlap)
+            # You can enhance this by comparing lst.user.profile and request.user.profile
+            compatibility = 85
+            
+            profile = lst.user.profile
+            data.append({
+                'id': lst.id,
+                'campus': lst.campus,
+                'location': lst.location,
+                'distance': lst.distance_from_campus,
+                'rent': lst.rent,
+                'room_type': lst.get_room_type_display(),
+                'furnished_status': lst.get_furnished_status_display(),
+                'current_occupants': lst.current_occupants,
+                'needed_occupants': lst.needed_occupants,
+                'gender_preference': lst.get_gender_preference_display(),
+                'images': images,
+                'poster': {
+                    'name': profile.name,
+                    'pic': profile.get_profile_pic_url,
+                    'course': profile.course,
+                    'year': profile.clg_year
+                },
+                'compatibility': compatibility,
+                'is_saved': lst.id in saved_ids,
+                'created_at': lst.created_at.strftime("%b %d, %Y")
+            })
+            
+        return JsonResponse({'success': True, 'listings': data, 'has_next': page.has_next()})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 

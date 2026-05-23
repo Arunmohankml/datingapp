@@ -65,6 +65,37 @@ class Profile(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def save(self, *args, **kwargs):
+        if self.pk:
+            try:
+                is_complete = True
+                if not self.profile_pic:
+                    is_complete = False
+                elif not self.bio or not self.bio.strip():
+                    is_complete = False
+                elif not self.living_place or not self.living_place.strip():
+                    is_complete = False
+                elif not self.native_place or not self.native_place.strip():
+                    is_complete = False
+                elif not self.course or not self.course.strip():
+                    is_complete = False
+                elif not self.clg_year:
+                    is_complete = False
+                elif not self.interest_tags or not self.interest_tags.strip():
+                    is_complete = False
+                elif not self.looking_for or not self.looking_for.strip():
+                    is_complete = False
+                elif not self.pref_gender or not self.pref_gender.strip():
+                    is_complete = False
+                elif self.images.count() < 2:
+                    is_complete = False
+
+                if not is_complete or not self.is_face_verified:
+                    self.is_discoverable = False
+            except Exception:
+                pass
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"{self.name} - {self.user.email}"
 
@@ -431,3 +462,83 @@ class ConfessionRateLimit(models.Model):
 
     def __str__(self):
         return f"RateLimit {self.identifier} @ {self.submitted_at}"
+
+
+class RoomListing(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='room_listings')
+    campus = models.CharField(max_length=100)
+    location = models.CharField(max_length=200)
+    distance_from_campus = models.CharField(max_length=50, blank=True)
+    rent = models.PositiveIntegerField()
+    advance = models.PositiveIntegerField(default=0)
+    
+    ROOM_TYPE_CHOICES = [
+        ('1bhk', '1 BHK'),
+        ('2bhk', '2 BHK'),
+        ('3bhk', '3 BHK'),
+        ('pg', 'PG'),
+        ('hostel', 'Hostel'),
+        ('shared', 'Shared Room'),
+        ('flatmate', 'Flatmate Needed')
+    ]
+    room_type = models.CharField(max_length=50, choices=ROOM_TYPE_CHOICES)
+    
+    FURNISHED_CHOICES = [
+        ('fully', 'Fully Furnished'),
+        ('semi', 'Semi Furnished'),
+        ('unfurnished', 'Unfurnished')
+    ]
+    furnished_status = models.CharField(max_length=50, choices=FURNISHED_CHOICES)
+    
+    current_occupants = models.PositiveIntegerField(default=0)
+    needed_occupants = models.PositiveIntegerField(default=1)
+    
+    GENDER_CHOICES = [
+        ('boys', 'Boys Only'),
+        ('girls', 'Girls Only'),
+        ('any', 'Any')
+    ]
+    gender_preference = models.CharField(max_length=20, choices=GENDER_CHOICES, default='any')
+    food_preference = models.CharField(max_length=100, blank=True)
+    smoking_drinking_preference = models.CharField(max_length=100, blank=True)
+    languages_preferred = models.CharField(max_length=200, blank=True)
+    
+    available_from_date = models.DateField(null=True, blank=True)
+    custom_note = models.TextField(blank=True)
+    contact_info = models.CharField(max_length=100, blank=True, help_text="Phone number or Instagram ID")
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.room_type} at {self.location} by {self.user.username}"
+
+
+class RoomImage(models.Model):
+    listing = models.ForeignKey(RoomListing, on_delete=models.CASCADE, related_name='images')
+    image_url = models.URLField(max_length=1000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Image for {self.listing.id}"
+
+
+class SavedRoomListing(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_room_listings')
+    listing = models.ForeignKey(RoomListing, on_delete=models.CASCADE, related_name='saved_by_users')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ('user', 'listing')
+        ordering = ['-created_at']
+        
+    def __str__(self):
+        return f"{self.user.username} saved {self.listing.id}"
+

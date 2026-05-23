@@ -269,7 +269,7 @@
 <div class="conn-wrapper">
     <!-- Header -->
     <div class="conn-header">
-        <a href="{% url 'home' %}" class="conn-back"><i class="fas fa-arrow-left"></i></a>
+        <a href="{% url 'match_feed' %}" class="conn-back"><i class="fas fa-arrow-left"></i></a>
         <div class="conn-header-info">
             <h2>Your Connections</h2>
         </div>
@@ -339,7 +339,7 @@
                             <span>You matched!</span>
                         </div>
                     </div>
-                    <a href="{% url 'chat_view' conn.id %}" class="btn-chat">
+                    <a href="{% url 'chat_view' conn.id %}?from=connections" class="btn-chat">
                         <i class="fas fa-comment"></i> Chat
                     </a>
                 </div>

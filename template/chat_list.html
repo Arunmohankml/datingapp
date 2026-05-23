@@ -246,7 +246,7 @@
     <div class="chats-body">
         {% if chats %}
             {% for chat in chats %}
-            <div onclick="location.href='{% url 'chat_view' chat.partner.id %}'" class="chat-card">
+            <div onclick="goToChat('{% url 'chat_view' chat.partner.id %}')" class="chat-card">
                 <img src="{% if chat.partner.profile.profile_pic %}{{ chat.partner.profile.profile_pic }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ chat.partner.username }}{% endif %}" alt="Avatar" class="chat-avatar">
                 
                 <div class="chat-details">
@@ -305,5 +305,28 @@ async function confirmDeleteChat(event, url) {
         window.location.href = url;
     }
 }
+
+function goToChat(baseUrl) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromParam = urlParams.get('from');
+    if (fromParam) {
+        window.location.href = baseUrl + '?from=' + fromParam;
+    } else {
+        window.location.href = baseUrl;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromParam = urlParams.get('from');
+    const backBtn = document.querySelector('.c-back-btn');
+    if (backBtn && fromParam) {
+        if (fromParam === 'match') {
+            backBtn.href = "{% url 'match_feed' %}";
+        } else if (fromParam === 'home') {
+            backBtn.href = "{% url 'home' %}";
+        }
+    }
+});
 </script>
 {% endblock %}

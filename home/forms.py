@@ -52,6 +52,63 @@ COURSE_CHOICES = [
     ('Other', 'Other'),
 ]
 
+LOCATION_CHOICES = [
+    ('', 'Select Native Place'),
+    ('Kochi, Kerala', 'Kochi, Kerala'),
+    ('Trivandrum, Kerala', 'Trivandrum, Kerala'),
+    ('Calicut, Kerala', 'Calicut, Kerala'),
+    ('Chennai, Tamil Nadu', 'Chennai, Tamil Nadu'),
+    ('Coimbatore, Tamil Nadu', 'Coimbatore, Tamil Nadu'),
+    ('Madurai, Tamil Nadu', 'Madurai, Tamil Nadu'),
+    ('Bangalore, Karnataka', 'Bangalore, Karnataka'),
+    ('Hyderabad, Telangana', 'Hyderabad, Telangana'),
+    ('Delhi, NCR', 'Delhi, NCR'),
+    ('Mumbai, Maharashtra', 'Mumbai, Maharashtra'),
+    ('Vellore, Tamil Nadu', 'Vellore, Tamil Nadu'),
+    ('Chengalpattu, Tamil Nadu', 'Chengalpattu, Tamil Nadu'),
+    ('Kanchipuram, Tamil Nadu', 'Kanchipuram, Tamil Nadu'),
+    ('Trichy, Tamil Nadu', 'Trichy, Tamil Nadu'),
+    ('Kozhikode, Kerala', 'Kozhikode, Kerala'),
+    ('Kannur, Kerala', 'Kannur, Kerala'),
+    ('Kollam, Kerala', 'Kollam, Kerala'),
+    ('Malappuram, Kerala', 'Malappuram, Kerala'),
+    ('Pune, Maharashtra', 'Pune, Maharashtra'),
+    ('Jaipur, Rajasthan', 'Jaipur, Rajasthan'),
+    ('Kolkata, West Bengal', 'Kolkata, West Bengal'),
+    ('Visakhapatnam, Andhra Pradesh', 'Visakhapatnam, Andhra Pradesh'),
+    ('Chandigarh, UT', 'Chandigarh, UT'),
+    ('Guwahati, Assam', 'Guwahati, Assam'),
+    ('Tiruchirappalli, Tamil Nadu', 'Tiruchirappalli, Tamil Nadu'),
+    ('Salem, Tamil Nadu', 'Salem, Tamil Nadu'),
+    ('Erode, Tamil Nadu', 'Erode, Tamil Nadu'),
+    ('Nagercoil, Tamil Nadu', 'Nagercoil, Tamil Nadu')
+]
+
+
+class ProfileInitForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['name', 'age', 'gender', 'campus', 'native_place']
+        widgets = {
+            'gender': forms.Select(choices=GENDER_CHOICES, attrs={'class': 'form-control'}),
+            'campus': forms.Select(choices=CAMPUS_CHOICES, attrs={'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'age': forms.NumberInput(attrs={'class': 'form-control', 'min': 18, 'max': 50}),
+            'native_place': forms.Select(choices=LOCATION_CHOICES, attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in ['name', 'age', 'gender', 'campus', 'native_place']:
+            self.fields[field].required = True
+
+    def clean_age(self):
+        age = self.cleaned_data.get('age')
+        if age is not None:
+            if age < 18 or age > 50:
+                raise forms.ValidationError("Age must be between 18 and 50.")
+        return age
+
 
 class ProfileForm(forms.ModelForm):
     profile_pic_file = forms.ImageField(required=False, label="Upload Photo", widget=forms.FileInput(attrs={'class': 'form-control'}))
@@ -147,6 +204,13 @@ class ProfileForm(forms.ModelForm):
         tags = [x.strip() for x in data.split(',') if x.strip()]
         return ",".join(tags)
 
+    def clean_age(self):
+        age = self.cleaned_data.get('age')
+        if age is not None:
+            if age < 18 or age > 50:
+                raise forms.ValidationError("Age must be between 18 and 50.")
+        return age
+
     def clean(self):
         cleaned_data = super().clean()
         pfp_url = cleaned_data.get('profile_pic_url')
@@ -204,6 +268,13 @@ class ProfileEditForm(forms.ModelForm):
         data = self.cleaned_data.get('pref_languages', '')
         tags = [x.strip() for x in data.split(',') if x.strip()]
         return ",".join(tags)
+
+    def clean_age(self):
+        age = self.cleaned_data.get('age')
+        if age is not None:
+            if age < 18 or age > 50:
+                raise forms.ValidationError("Age must be between 18 and 50.")
+        return age
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

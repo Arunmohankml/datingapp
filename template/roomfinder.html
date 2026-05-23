@@ -1,0 +1,912 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Roomie | SRM Match{% endblock %}
+
+{% block head %}
+<style>
+    /* Light Theme */
+    :root {
+        --rf-bg: var(--bg-color, #f0f7ff);
+        --rf-card: var(--surface, #ffffff);
+        --rf-glass: var(--glass-bg, rgba(255, 255, 255, 0.8));
+        --rf-border: var(--border, #e0f2fe);
+        --rf-text: var(--text-main, #1e3a8a);
+        --rf-text-muted: var(--text-muted, #64748b);
+        --rf-primary: var(--primary, #2563eb);
+        --rf-accent: var(--accent, #ef4444);
+    }
+
+    body {
+        background: var(--rf-bg);
+        color: var(--rf-text);
+        padding-bottom: 80px;
+    }
+
+    /* Override base container */
+    .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin-top: 0 !important;
+    }
+
+    .rf-header {
+        position: fixed;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 600px;
+        box-sizing: border-box;
+        padding: 6px 16px 8px;
+        background: var(--glass-bg, rgba(255, 255, 255, 0.95));
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border-bottom: 1.5px solid var(--rf-primary);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        z-index: 500;
+    }
+
+    .rf-title {
+        font-size: 18px;
+        font-weight: 800;
+        margin: 0;
+        color: var(--rf-text);
+    }
+
+    .rf-subtitle {
+        font-size: 13px;
+        color: var(--rf-text-muted);
+        margin: 0 0 16px;
+    }
+
+    .rf-back-btn {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: var(--rf-glass);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-decoration: none;
+        color: var(--rf-text);
+        border: 1px solid var(--rf-border);
+        box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05));
+        transition: 0.2s ease;
+        flex-shrink: 0;
+        font-size: 12px;
+    }
+    .rf-back-btn:active {
+        transform: scale(0.9);
+    }
+
+    /* Search & Filter */
+    .rf-search-bar {
+        background: var(--rf-glass);
+        border: 1px solid var(--rf-border);
+        border-radius: 16px;
+        padding: 6px 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .rf-search-bar input {
+        background: transparent;
+        border: none;
+        color: var(--rf-text);
+        font-size: 13px;
+        width: 100%;
+        outline: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .rf-search-bar input::placeholder {
+        color: var(--rf-text-muted);
+    }
+
+    .rf-chips-wrapper {
+        display: flex;
+        overflow-x: auto;
+        gap: 6px;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .rf-chips-wrapper::-webkit-scrollbar {
+        display: none;
+    }
+
+    .rf-chip {
+        background: var(--rf-glass);
+        border: 1px solid var(--rf-border);
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--rf-text-muted);
+        white-space: nowrap;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .rf-chip.active {
+        background: var(--rf-primary);
+        color: white;
+        border-color: var(--rf-primary);
+    }
+
+    /* Feed & Cards */
+    .rf-feed {
+        padding: 24px 20px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 24px;
+        margin-top: 105px;
+    }
+
+    .rf-card {
+        background: var(--rf-card);
+        border-radius: 24px;
+        border: 1px solid var(--rf-border);
+        overflow: hidden;
+        box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,0.08));
+        transition: transform 0.3s;
+    }
+
+    .rf-card:active {
+        transform: scale(0.98);
+    }
+
+    .rf-carousel {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4/3;
+        background: #f1f5f9;
+        overflow: hidden;
+    }
+
+    .rf-carousel img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* PC Carousel Arrows */
+    .rf-carousel-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(255, 255, 255, 0.7);
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--text-main);
+        z-index: 10;
+        backdrop-filter: blur(4px);
+    }
+    .rf-card:hover .rf-carousel-btn {
+        display: flex; /* Show only on PC hover */
+    }
+    @media (hover: none) {
+        .rf-carousel-btn { display: none !important; }
+    }
+    .rf-carousel-btn.prev { left: 8px; }
+    .rf-carousel-btn.next { right: 8px; }
+    .rf-carousel-btn:hover { background: white; }
+
+    .rf-card-body {
+        padding: 20px;
+    }
+
+    .rf-price-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .rf-price {
+        font-size: 24px;
+        font-weight: 800;
+        color: var(--rf-text);
+    }
+
+    .rf-type-badge {
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--rf-primary);
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .rf-location {
+        font-size: 14px;
+        color: var(--rf-text-muted);
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .rf-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+
+    .rf-tag {
+        background: var(--rf-glass);
+        border: 1px solid var(--rf-border);
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 11px;
+        color: var(--rf-text-muted);
+    }
+
+    .rf-user-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding-top: 16px;
+        border-top: 1px solid var(--rf-border);
+    }
+
+    .rf-user-pic {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .rf-user-info {
+        flex: 1;
+    }
+    .rf-user-name {
+        font-size: 14px;
+        font-weight: 700;
+        margin: 0;
+    }
+    .rf-user-course {
+        font-size: 12px;
+        color: var(--rf-text-muted);
+        margin: 0;
+    }
+    
+    .rf-card-save-btn {
+        background: rgba(37, 99, 235, 0.06);
+        border: 1px solid rgba(37, 99, 235, 0.12);
+        color: var(--rf-primary);
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .rf-card-save-btn.saved {
+        background: var(--rf-primary);
+        border-color: var(--rf-primary);
+        color: white;
+        box-shadow: 0 3px 8px rgba(37, 99, 235, 0.25);
+    }
+    .rf-card-save-btn:hover {
+        background: rgba(37, 99, 235, 0.12);
+    }
+    .rf-card-save-btn.saved:hover {
+        background: #1d4ed8;
+    }
+    .rf-card-save-btn:active {
+        transform: scale(0.95);
+    }
+
+    /* FAB */
+    .rf-fab {
+        position: fixed;
+        bottom: 90px;
+        right: 20px;
+        background: var(--rf-primary);
+        color: white;
+        width: 56px;
+        height: 56px;
+        border-radius: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        box-shadow: 0 10px 25px rgba(99,102,241,0.5);
+        cursor: pointer;
+        z-index: 100;
+        transition: 0.3s;
+    }
+    .rf-fab:active { transform: scale(0.9); }
+
+    /* Bottom Sheet Modal */
+    .rf-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(5px);
+        z-index: 1000;
+        display: none;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+    
+    .rf-modal-overlay.active {
+        display: block;
+        opacity: 1;
+    }
+
+    .rf-modal {
+        position: fixed;
+        bottom: -100%;
+        left: 0;
+        right: 0;
+        background: var(--rf-bg);
+        border-top-left-radius: 24px;
+        border-top-right-radius: 24px;
+        padding: 24px 20px;
+        z-index: 1001;
+        transition: bottom 0.4s cubic-bezier(0.1, 1, 0.2, 1);
+        max-height: 90vh;
+        overflow-y: auto;
+        border-top: 1px solid var(--rf-border);
+    }
+    
+    .rf-modal.active {
+        bottom: 0;
+    }
+    
+    .rf-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    
+    .rf-modal-title { font-size: 20px; font-weight: 800; margin: 0; }
+    
+    .rf-form-group {
+        margin-bottom: 16px;
+    }
+    .rf-form-group label {
+        display: block;
+        font-size: 13px;
+        color: var(--rf-text-muted);
+        margin-bottom: 6px;
+    }
+    .rf-form-control {
+        width: 100%;
+        background: var(--rf-card);
+        border: 1px solid var(--rf-border);
+        color: var(--rf-text);
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-size: 15px;
+        font-family: inherit;
+        outline: none;
+        box-sizing: border-box;
+    }
+    .rf-form-control:focus { border-color: var(--rf-primary); }
+    
+    .rf-submit-btn {
+        width: 100%;
+        padding: 16px;
+        background: var(--rf-primary);
+        color: white;
+        border: none;
+        border-radius: 16px;
+        font-size: 16px;
+        font-weight: 700;
+        margin-top: 10px;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="rf-header">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+        <a href="{% url 'home' %}" class="rf-back-btn">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="rf-title">Roomie</h1>
+    </div>
+    
+    <div class="rf-search-bar">
+        <i class="fas fa-search" style="color:var(--rf-text-muted)"></i>
+        <input type="text" id="rfSearch" placeholder="Search area, campus, or keyword..." oninput="fetchListings()">
+    </div>
+    
+    <div class="rf-chips-wrapper" id="filterChips">
+        <div class="rf-chip" onclick="openFilterModal()" style="background: var(--rf-primary); color: white; border-color: var(--rf-primary);">
+            <i class="fas fa-filter"></i> Filters
+        </div>
+        <div class="rf-chip" id="savedFilterChip" onclick="toggleSavedFilter()">
+            <i class="far fa-bookmark"></i> Saved
+        </div>
+        <div class="rf-chip" id="activeFilterCount" style="display:none; font-weight: 800;">0 Active</div>
+    </div>
+</div>
+
+
+<div class="rf-feed" id="rfFeed">
+    <!-- Listings will be injected here via JS -->
+    <div style="text-align:center; padding: 40px; color: var(--rf-text-muted);">
+        <i class="fas fa-spinner fa-spin fa-2x"></i>
+        <p style="margin-top:12px;">Finding best places...</p>
+    </div>
+</div>
+
+<div class="rf-fab" onclick="openPostModal()">
+    <i class="fas fa-plus"></i>
+</div>
+
+<!-- Filter Modal -->
+<div class="rf-modal-overlay" id="filterModalOverlay" onclick="closeFilterModal()"></div>
+<div class="rf-modal" id="filterModal">
+    <div class="rf-modal-header">
+        <h2 class="rf-modal-title">Filters</h2>
+        <i class="fas fa-times" onclick="closeFilterModal()" style="font-size:20px; color:var(--rf-text-muted); cursor:pointer;"></i>
+    </div>
+    
+    <div class="rf-form-group">
+        <label>Campus</label>
+        <select id="filterCampus" class="rf-form-control">
+            <option value="">Any Campus</option>
+            <option value="KTR">KTR</option>
+            <option value="RMP">RMP</option>
+            <option value="VDP">VDP</option>
+            <option value="NCR">NCR</option>
+        </select>
+    </div>
+
+    <div class="rf-form-group">
+        <label>Room Type</label>
+        <select id="filterType" class="rf-form-control">
+            <option value="">Any Type</option>
+            <option value="1bhk">1 BHK</option>
+            <option value="2bhk">2 BHK</option>
+            <option value="3bhk">3 BHK</option>
+            <option value="pg">PG</option>
+            <option value="shared">Shared Room</option>
+            <option value="flatmate">Flatmate Needed</option>
+        </select>
+    </div>
+
+    <div class="rf-form-group">
+        <label>Rent Price (₹)</label>
+        <div style="display:flex; gap:12px; align-items:center;">
+            <input type="number" id="filterMinRent" class="rf-form-control" placeholder="Min">
+            <span>to</span>
+            <input type="number" id="filterMaxRent" class="rf-form-control" placeholder="Max">
+        </div>
+    </div>
+
+    <div class="rf-form-group">
+        <label>Gender Preference</label>
+        <select id="filterGender" class="rf-form-control">
+            <option value="">Any</option>
+            <option value="boys">Boys Only</option>
+            <option value="girls">Girls Only</option>
+        </select>
+    </div>
+
+    <button type="button" class="rf-submit-btn" onclick="applyFilters()">Apply Filters</button>
+</div>
+
+<!-- Post Modal -->
+<div class="rf-modal-overlay" id="postModalOverlay" onclick="closePostModal()"></div>
+<div class="rf-modal" id="postModal">
+    <div class="rf-modal-header">
+        <h2 class="rf-modal-title">Post a Room</h2>
+        <i class="fas fa-times" onclick="closePostModal()" style="font-size:20px; color:var(--rf-text-muted); cursor:pointer;"></i>
+    </div>
+    <form id="postRoomForm" onsubmit="submitRoom(event)">
+        <div class="rf-form-group">
+            <label>Images (Up to 5)</label>
+            <input type="file" id="roomImages" class="rf-form-control" multiple accept="image/*" required>
+        </div>
+        
+        <div style="display:flex; gap:12px;">
+            <div class="rf-form-group" style="flex:1;">
+                <label>Campus</label>
+                <select id="roomCampus" class="rf-form-control" required>
+                    <option value="KTR">KTR</option>
+                    <option value="RMP">RMP</option>
+                    <option value="VDP">VDP</option>
+                    <option value="NCR">NCR</option>
+                </select>
+            </div>
+            <div class="rf-form-group" style="flex:1;">
+                <label>Room Type</label>
+                <select id="roomType" class="rf-form-control" required>
+                    <option value="1bhk">1 BHK</option>
+                    <option value="2bhk">2 BHK</option>
+                    <option value="3bhk">3 BHK</option>
+                    <option value="pg">PG</option>
+                    <option value="shared">Shared Room</option>
+                    <option value="flatmate">Flatmate Needed</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="rf-form-group">
+            <label>Exact Location (e.g. Abode Valley, Potheri)</label>
+            <input type="text" id="roomLocation" class="rf-form-control" required>
+        </div>
+        
+        <div style="display:flex; gap:12px;">
+            <div class="rf-form-group" style="flex:1;">
+                <label>Rent (Per Month/Person)</label>
+                <input type="number" id="roomRent" class="rf-form-control" placeholder="₹" required>
+            </div>
+            <div class="rf-form-group" style="flex:1;">
+                <label>Deposit/Advance</label>
+                <input type="number" id="roomAdvance" class="rf-form-control" placeholder="₹">
+            </div>
+        </div>
+
+        <div style="display:flex; gap:12px;">
+            <div class="rf-form-group" style="flex:1;">
+                <label>Total Occupants</label>
+                <input type="number" id="roomNeededOccupants" class="rf-form-control" placeholder="1" min="1" required value="1">
+            </div>
+            <div class="rf-form-group" style="flex:1;">
+                <label>Current Occupants</label>
+                <input type="number" id="roomCurrentOccupants" class="rf-form-control" placeholder="0" min="0" required value="0">
+            </div>
+        </div>
+
+        <div style="display:flex; gap:12px;">
+            <div class="rf-form-group" style="flex:1;">
+                <label>Gender Pref</label>
+                <select id="roomGender" class="rf-form-control">
+                    <option value="any">Any</option>
+                    <option value="boys">Boys Only</option>
+                    <option value="girls">Girls Only</option>
+                </select>
+            </div>
+            <div class="rf-form-group" style="flex:1;">
+                <label>Furnishing</label>
+                <select id="roomFurnished" class="rf-form-control">
+                    <option value="fully">Fully</option>
+                    <option value="semi">Semi</option>
+                    <option value="unfurnished">Unfurnished</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="rf-form-group">
+            <label>Additional Notes (Rules, Vibe, Amenities)</label>
+            <textarea id="roomNote" class="rf-form-control" rows="3" placeholder="Chill roommates, looking for someone neat..."></textarea>
+        </div>
+        
+        <div class="rf-form-group">
+            <label>Contact Info (Visible to users)</label>
+            <input type="text" id="roomContact" class="rf-form-control" placeholder="Phone # or Instagram ID" required>
+        </div>
+        
+        <button type="submit" class="rf-submit-btn" id="submitBtn">Post Listing</button>
+    </form>
+</div>
+
+<script>
+    let showSavedOnly = false;
+
+    function toggleSavedFilter() {
+        showSavedOnly = !showSavedOnly;
+        const chip = document.getElementById("savedFilterChip");
+        if (showSavedOnly) {
+            chip.classList.add("active");
+            chip.innerHTML = '<i class="fas fa-bookmark"></i> Saved';
+        } else {
+            chip.classList.remove("active");
+            chip.innerHTML = '<i class="far fa-bookmark"></i> Saved';
+        }
+        fetchListings();
+    }
+
+    async function toggleSaveCard(listingId, btn) {
+        try {
+            const res = await fetch(`/api/roomfinder/${listingId}/save/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (data.saved) {
+                    btn.classList.add('saved');
+                    const icon = btn.querySelector('i');
+                    if (icon) icon.className = 'fas fa-bookmark';
+                    const textSpan = btn.querySelector('span');
+                    if (textSpan) textSpan.innerText = 'Saved';
+                    showGlobalToast("Listing saved to favorites!");
+                } else {
+                    btn.classList.remove('saved');
+                    const icon = btn.querySelector('i');
+                    if (icon) icon.className = 'far fa-bookmark';
+                    const textSpan = btn.querySelector('span');
+                    if (textSpan) textSpan.innerText = 'Save';
+                    showGlobalToast("Listing removed from favorites.");
+                    if (showSavedOnly) {
+                        fetchListings();
+                    }
+                }
+            } else {
+                showGlobalToast(data.error || "Failed to save listing.");
+            }
+        } catch (e) {
+            console.error(e);
+            showGlobalToast("Network error occurred.");
+        }
+    }
+
+    async function fetchListings() {
+        const feed = document.getElementById('rfFeed');
+        const search = document.getElementById('rfSearch').value;
+        
+        let params = new URLSearchParams(activeFilters);
+        if (search) params.append('q', search);
+        if (showSavedOnly) params.append('saved_only', 'true');
+        
+        let query = params.toString();
+        
+        try {
+            const res = await fetch(`/api/roomfinder/list/?${query}`);
+            const data = await res.json();
+            
+            if (data.success) {
+                if (data.listings.length === 0) {
+                    feed.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--rf-text-muted);"><i class="fas fa-ghost fa-2x"></i><p>No listings found.</p></div>`;
+                    return;
+                }
+                
+                feed.innerHTML = data.listings.map(l => {
+                    const imgHtml = l.images.length > 0 ? 
+                        l.images.map(img => `<img src="${img}" style="display:none; width:100%; height:100%; object-fit:cover;" class="carousel-img">`).join('') :
+                        `<img src="https://placehold.co/600x400/f1f5f9/94a3b8?text=No+Image" style="width:100%; height:100%; object-fit:cover;">`;
+                    
+                    return `
+                    <div class="rf-card" onclick="window.location.href='/roomfinder/${l.id}/'">
+                        <div class="rf-carousel" id="carousel-${l.id}" onclick="event.stopPropagation(); window.location.href='/roomfinder/${l.id}/'">
+                            ${imgHtml}
+                            ${l.images.length > 1 ? `
+                                <button type="button" class="rf-carousel-btn prev" onclick="event.stopPropagation(); changeImage(${l.id}, -1)"><i class="fas fa-chevron-left"></i></button>
+                                <button type="button" class="rf-carousel-btn next" onclick="event.stopPropagation(); changeImage(${l.id}, 1)"><i class="fas fa-chevron-right"></i></button>
+                            ` : ''}
+                        </div>
+                        <div class="rf-card-body">
+                            <div class="rf-price-row">
+                                <div class="rf-price">₹${l.rent}<span style="font-size:14px; font-weight:400; color:#94a3b8;">/mo</span></div>
+                                <div class="rf-type-badge">${l.room_type}</div>
+                            </div>
+                            <div class="rf-location"><i class="fas fa-map-marker-alt"></i> ${l.location} (${l.campus})</div>
+                            
+                            <div class="rf-tags">
+                                <div class="rf-tag"><i class="fas fa-couch"></i> ${l.furnished_status}</div>
+                                <div class="rf-tag" title="Total Occupants / Current Occupants"><i class="fas fa-user-friends"></i> ${l.needed_occupants}/${l.current_occupants} Occ.</div>
+                                ${l.gender_preference !== 'Any' ? `<div class="rf-tag"><i class="fas fa-venus-mars"></i> ${l.gender_preference}</div>` : ''}
+                            </div>
+                            
+                            <div class="rf-user-row">
+                                <img src="${l.poster.pic}" class="rf-user-pic">
+                                <div class="rf-user-info">
+                                    <p class="rf-user-name">Posted by ${l.poster.name}</p>
+                                    <p class="rf-user-course">${l.poster.course} • ${l.created_at}</p>
+                                </div>
+                                <button class="rf-card-save-btn ${l.is_saved ? 'saved' : ''}" onclick="event.stopPropagation(); toggleSaveCard(${l.id}, this)" title="Save Room">
+                                    <i class="${l.is_saved ? 'fas' : 'far'} fa-bookmark"></i>
+                                    <span>${l.is_saved ? 'Saved' : 'Save'}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            }
+        } catch (e) {
+            console.error(e);
+            feed.innerHTML = `<div style="color:red; text-align:center;">Failed to load listings.</div>`;
+        }
+    }
+
+    async function submitRoom(e) {
+        e.preventDefault();
+        
+        const contactVal = document.getElementById('roomContact').value.trim();
+        const isPhone = /[0-9]/.test(contactVal) && contactVal.replace(/\D/g, '').length >= 7;
+        const isInsta = contactVal.indexOf(' ') === -1 && (contactVal.startsWith('@') || contactVal.length >= 3);
+        if (!contactVal || (!isPhone && !isInsta)) {
+            customAlert("Please enter a valid Phone Number (at least 7 digits) or an Instagram ID (no spaces).", "Invalid Contact");
+            return;
+        }
+
+        const btn = document.getElementById('submitBtn');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+
+        btn.disabled = true;
+
+        const formData = new FormData();
+        const files = document.getElementById('roomImages').files;
+        
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Compressing Images...';
+        for(let i=0; i<files.length; i++) {
+            try {
+                const compressedFile = await compressImage(files[i], 0.6, 800);
+                formData.append('images', compressedFile);
+            } catch (err) {
+                console.error("Compression error:", err);
+                formData.append('images', files[i]);
+            }
+        }
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+        
+        formData.append('campus', document.getElementById('roomCampus').value);
+        formData.append('room_type', document.getElementById('roomType').value);
+        formData.append('location', document.getElementById('roomLocation').value);
+        formData.append('rent', document.getElementById('roomRent').value);
+        formData.append('advance', document.getElementById('roomAdvance').value);
+        formData.append('current_occupants', document.getElementById('roomCurrentOccupants').value);
+        formData.append('needed_occupants', document.getElementById('roomNeededOccupants').value);
+        formData.append('gender_preference', document.getElementById('roomGender').value);
+        formData.append('furnished_status', document.getElementById('roomFurnished').value);
+        formData.append('custom_note', document.getElementById('roomNote').value);
+        formData.append('contact_info', document.getElementById('roomContact').value);
+        
+        try {
+            const res = await fetch('/api/roomfinder/create/', {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                body: formData
+            });
+            const data = await res.json();
+            if (data.success) {
+                closePostModal();
+                showGlobalToast("Listing created successfully!");
+                document.getElementById('postRoomForm').reset();
+                fetchListings();
+            } else {
+                customAlert(data.error || "Failed to post listing.", "Error");
+            }
+        } catch (e) {
+            console.error(e);
+            customAlert("Network error occurred.", "Error");
+        }
+        
+        btn.innerHTML = 'Post Listing';
+        btn.disabled = false;
+    }
+
+    function changeImage(id, dir) {
+        const container = document.getElementById(`carousel-${id}`);
+        if (!container) return;
+        const images = container.querySelectorAll('.carousel-img');
+        if (images.length <= 1) return;
+        
+        let currentIndex = 0;
+        images.forEach((img, idx) => {
+            if (img.style.display !== 'none') currentIndex = idx;
+        });
+        
+        images[currentIndex].style.display = 'none';
+        let newIndex = (currentIndex + dir + images.length) % images.length;
+        images[newIndex].style.display = 'block';
+    }
+
+    // Modal Logic
+    function openPostModal() {
+        document.getElementById('postModalOverlay').classList.add('active');
+        document.getElementById('postModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closePostModal() {
+        document.getElementById('postModalOverlay').classList.remove('active');
+        document.getElementById('postModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    
+    function openFilterModal() {
+        document.getElementById('filterModalOverlay').classList.add('active');
+        document.getElementById('filterModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeFilterModal() {
+        document.getElementById('filterModalOverlay').classList.remove('active');
+        document.getElementById('filterModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    let activeFilters = {};
+
+    function applyFilters() {
+        activeFilters = {};
+        const campus = document.getElementById('filterCampus').value;
+        const type = document.getElementById('filterType').value;
+        const gender = document.getElementById('filterGender').value;
+        const minRent = document.getElementById('filterMinRent').value;
+        const maxRent = document.getElementById('filterMaxRent').value;
+
+        if (campus) activeFilters['campus'] = campus;
+        if (type) activeFilters['room_type'] = type;
+        if (gender) activeFilters['gender'] = gender;
+        if (minRent) activeFilters['min_rent'] = minRent;
+        if (maxRent) activeFilters['max_rent'] = maxRent;
+
+        let count = Object.keys(activeFilters).length;
+        const countBadge = document.getElementById('activeFilterCount');
+        if (count > 0) {
+            countBadge.style.display = 'inline-flex';
+            countBadge.innerText = count + ' Active';
+            countBadge.style.background = '#e0f2fe';
+            countBadge.style.color = '#0284c7';
+        } else {
+            countBadge.style.display = 'none';
+        }
+        
+        closeFilterModal();
+        fetchListings();
+    }
+
+    function compressImage(file, quality = 0.6, maxWidth = 800) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    canvas.toBlob((blob) => {
+                        resolve(new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        }));
+                    }, 'image/jpeg', quality);
+                };
+                img.onerror = () => resolve(file);
+                img.src = e.target.result;
+            };
+            reader.onerror = () => resolve(file);
+        });
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchListings().then(() => {
+            // Initialize first images
+            document.querySelectorAll('.rf-carousel').forEach(car => {
+                const imgs = car.querySelectorAll('.carousel-img');
+                if (imgs.length > 0) imgs[0].style.display = 'block';
+            });
+        });
+    });
+</script>
+{% endblock %}

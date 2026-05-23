@@ -1236,6 +1236,17 @@ document.addEventListener('DOMContentLoaded', () => {
         'Got it!',
         null
     );
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const fromParam = urlParams.get('from');
+    const backBtn = document.querySelector('.chat-back');
+    if (backBtn && fromParam) {
+        if (fromParam === 'connections') {
+            backBtn.href = "{% url 'connections' %}";
+        } else {
+            backBtn.href = "{% url 'chat_list' %}?from=" + fromParam;
+        }
+    }
 });
 </script>
 {% endblock %}
