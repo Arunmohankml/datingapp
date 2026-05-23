@@ -901,9 +901,11 @@
       <div class="ep-avatar-container">
         <div class="ep-avatar-border">
           <img src="{{ profile.get_profile_pic_url }}" alt="" class="ep-hero-avatar" id="preview-pfp">
+          {% if profile.is_face_verified %}
           <label for="id_pfp_instant" class="ep-avatar-edit-icon" aria-label="Change photo">
             <i class="fas fa-camera"></i>
           </label>
+          {% endif %}
           {% if profile.is_face_verified %}
           <div class="ep-verification-medal" title="Face Verified">
             <i class="fas fa-bolt"></i>
