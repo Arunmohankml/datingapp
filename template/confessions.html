@@ -2,6 +2,16 @@
 
 {% block head %}
 <style>
+    /* Hide visible scrollbars */
+    html::-webkit-scrollbar, body::-webkit-scrollbar, 
+    .modal-content::-webkit-scrollbar, textarea::-webkit-scrollbar {
+        display: none;
+    }
+    html, body, .modal-content, textarea {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
     .container {
         padding-top: 18px !important;
     }

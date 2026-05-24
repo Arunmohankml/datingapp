@@ -28,10 +28,13 @@
     .conn-wrapper {
         display: flex;
         flex-direction: column;
-        height: 100%;
-        max-width: 600px;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%;
+        max-width: 560px;
         margin: 0 auto;
-        position: relative;
+        background: linear-gradient(180deg, #fbfcff 0%, #f7f9fb 58%, #eff4fb 100%);
+        z-index: 10;
     }
 
     /* ---- Header ---- */
@@ -266,9 +269,9 @@
     <!-- Header -->
     <div class="conn-header">
         <div class="conn-header-main">
-            <button onclick="window.location.href='{% url 'home' %}'" class="conn-back">
+            <a href="{% url 'home' %}" class="conn-back">
                 <span class="material-symbols-outlined" style="font-size:22px;">arrow_back</span>
-            </button>
+            </a>
             <h2>Connections</h2>
         </div>
     </div>
