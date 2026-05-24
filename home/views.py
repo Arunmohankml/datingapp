@@ -2448,9 +2448,19 @@ def api_get_rooms(request):
             listings = listings.filter(id__in=saved_ids)
 
         campus = request.GET.get('campus')
-
         if campus:
             listings = listings.filter(campus=campus)
+
+        search_q = request.GET.get('search')
+        if search_q:
+            from django.db.models import Q
+            listings = listings.filter(
+                Q(location__icontains=search_q) |
+                Q(room_type__icontains=search_q) |
+                Q(campus__icontains=search_q) |
+                Q(custom_note__icontains=search_q) |
+                Q(gender_preference__icontains=search_q)
+            )
             
         gender = request.GET.get('gender')
         if gender:
@@ -2677,6 +2687,19 @@ def api_get_room_requests(request):
         campus = request.GET.get('campus')
         if campus:
             reqs = reqs.filter(campus=campus)
+
+        search_q = request.GET.get('search')
+        if search_q:
+            from django.db.models import Q
+            reqs = reqs.filter(
+                Q(title__icontains=search_q) |
+                Q(looking_near__icontains=search_q) |
+                Q(campus__icontains=search_q) |
+                Q(preferred_room_type__icontains=search_q) |
+                Q(sharing_preference__icontains=search_q) |
+                Q(extra_note__icontains=search_q) |
+                Q(needed_amenities__icontains=search_q)
+            )
             
         min_rent = request.GET.get('min_rent')
         if min_rent:

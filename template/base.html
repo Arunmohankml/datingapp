@@ -11,7 +11,7 @@
     <link rel="apple-touch-icon" href="/favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#6366f1">
@@ -72,31 +72,34 @@
     
     <style>
         :root {
-            --bg-color: #f0f7ff;
-            --bg-gradient: linear-gradient(135deg, #f0f7ff 0%, #e0f2fe 100%);
-            --text-main: #1e3a8a;
-            --text-muted: #64748b;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
-            --accent: #ef4444;
+            --bg-color: #f7f9fb;
+            --bg-gradient: radial-gradient(circle at top left, rgba(180, 197, 255, 0.35), transparent 28%), radial-gradient(circle at top right, rgba(111, 251, 190, 0.12), transparent 22%), linear-gradient(180deg, #fbfcff 0%, #f7f9fb 52%, #eff4fb 100%);
+            --text-main: #191c1e;
+            --text-muted: #5e6777;
+            --primary: #004ac6;
+            --primary-strong: #0053db;
+            --primary-soft: #dbe7ff;
+            --accent: #ba1a1a;
             --surface: #ffffff;
-            --glass-bg: rgba(255, 255, 255, 0.8);
-            --glass-border: rgba(37, 99, 235, 0.1);
-            --border: #e0f2fe;
-            --shadow-sm: 0 1px 2px 0 rgba(37, 99, 235, 0.05);
-            --shadow-md: 0 4px 12px -1px rgba(37, 99, 235, 0.08);
-            --shadow-lg: 0 10px 25px -3px rgba(37, 99, 235, 0.1);
-            --radius-md: 14px;
-            --radius-lg: 28px;
+            --surface-soft: rgba(255, 255, 255, 0.78);
+            --surface-muted: #eef2f7;
+            --glass-bg: rgba(255, 255, 255, 0.72);
+            --glass-border: rgba(0, 74, 198, 0.08);
+            --border: #d8e0eb;
+            --shadow-sm: 0 8px 24px rgba(15, 23, 42, 0.04);
+            --shadow-md: 0 18px 40px rgba(15, 23, 42, 0.08);
+            --shadow-lg: 0 32px 80px rgba(15, 23, 42, 0.12);
+            --radius-md: 18px;
+            --radius-lg: 32px;
+            --shell-width: 560px;
         }
 
-        html { overflow-x: hidden; }
-
-        /* Remove default mobile tap flash (blue/grey overlay) — app-like touch */
         html {
+            overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
             tap-highlight-color: transparent;
         }
+
         a, button, label, summary,
         input:not([type="text"]):not([type="search"]):not([type="email"]):not([type="password"]):not([type="number"]):not([type="tel"]):not([type="url"]),
         select, textarea,
@@ -104,23 +107,22 @@
             -webkit-tap-highlight-color: transparent;
             tap-highlight-color: transparent;
         }
+
         button:focus, a:focus, .nav-link:focus, label:focus {
             outline: none;
         }
+
         button:focus-visible, a:focus-visible, .nav-link:focus-visible {
-            outline: 2px solid rgba(37, 99, 235, 0.35);
-            outline-offset: 2px;
+            outline: 2px solid rgba(0, 83, 219, 0.3);
+            outline-offset: 3px;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: var(--bg-gradient);
             color: var(--text-main);
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
             min-height: 100vh;
             -webkit-font-smoothing: antialiased;
             overflow-x: hidden;
@@ -128,87 +130,165 @@
             tap-highlight-color: transparent;
         }
 
-        .container {
-            width: 100%;
-            max-width: 500px;
-            padding: 20px;
-            margin-top: 20px;
-            padding-bottom: 90px;
-            box-sizing: border-box;
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 22%);
+            z-index: -2;
         }
 
-        /* Navigation Bar */
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+            line-height: 1;
+        }
+
+        .container {
+            width: min(100%, var(--shell-width));
+            max-width: var(--shell-width);
+            padding: 24px 20px 120px;
+            margin: 0 auto;
+            box-sizing: border-box;
+            position: relative;
+        }
+
         nav {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            z-index: 1000; display: flex; justify-content: center;
-            padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border-top: 1px solid rgba(37, 99, 235, 0.06);
-            box-shadow: 0 -8px 30px rgba(0,0,0,0.03);
+            position: fixed;
+            left: 50%;
+            bottom: 0;
+            transform: translateX(-50%);
+            z-index: 1000;
+            width: min(calc(100% - 20px), calc(var(--shell-width) - 16px));
+            padding: 10px;
+            padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+            background: var(--glass-bg);
+            backdrop-filter: blur(26px);
+            -webkit-backdrop-filter: blur(26px);
+            border: 1px solid var(--glass-border);
+            border-bottom: none;
+            border-radius: 24px 24px 0 0;
+            box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.1), 0 4px 20px rgba(15, 23, 42, 0.04);
             transition: transform 0.3s ease;
         }
 
         .nav-inner {
-            display: flex; align-items: center; justify-content: space-around;
-            width: 100%; max-width: 500px; padding: 0 16px;
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 8px;
+            align-items: center;
         }
-        
+
         .nav-link {
-            color: #64748b; text-decoration: none;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 6px; font-size: 11px; font-weight: 600; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 4px 0; border-radius: 16px; flex: 1; position: relative;
-            -webkit-tap-highlight-color: transparent;
-            tap-highlight-color: transparent;
-            outline: none;
+            color: var(--text-muted);
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            padding: 6px 2px;
+            border-radius: 999px;
+            position: relative;
+            transition: color 0.22s ease, transform 0.22s ease;
         }
-        
+
+        .nav-link span:last-child {
+            white-space: nowrap;
+        }
+
         .nav-icon-wrapper {
             position: relative;
-            width: 60px; height: 32px;
-            border-radius: 16px;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 54px;
+            height: 34px;
+            border-radius: 999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.22s ease, color 0.22s ease, transform 0.22s ease;
             background: transparent;
-            color: #64748b;
+            color: currentColor;
         }
-        .nav-icon-wrapper i {
-            font-size: 18px;
-            transition: transform 0.2s ease;
+
+        .nav-icon-wrapper .material-symbols-outlined {
+            font-size: 22px;
         }
-        
+
         .nav-link.active {
-            color: #2563eb;
-            font-weight: 700;
+            color: var(--primary);
         }
+
         .nav-link.active .nav-icon-wrapper {
-            background: #e0f2fe;
-            color: #2563eb;
+            background: var(--primary-soft);
         }
-        
+
+        .nav-link.active .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .nav-link:active {
+            transform: scale(0.98);
+        }
+
         .nav-link:active .nav-icon-wrapper {
-            transform: scale(0.92);
+            transform: scale(0.94);
         }
 
         .badge-dot {
             position: absolute;
             top: 2px;
-            right: 14px;
-            width: 8px;
-            height: 8px;
+            right: 10px;
+            width: 10px;
+            height: 10px;
             background: #ef4444;
             border-radius: 50%;
             border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+            box-shadow: 0 4px 8px rgba(239, 68, 68, 0.18);
         }
 
-        /* Forms & Cards */
-        .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-md); }
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+        }
+
         input[type="text"], input[type="number"], input[type="email"], input[type="password"], input[type="tel"], input[type="url"], textarea {
-            width: 100%; padding: 12px 16px; border-radius: var(--radius-md);
-            border: 1px solid var(--border); margin-bottom: 16px; box-sizing: border-box;
-            font-family: inherit; font-size: 15px; color: var(--text-main);
+            width: 100%;
+            padding: 13px 16px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            margin-bottom: 16px;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 15px;
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.84);
+        }
+
+        @media (min-width: 720px) {
+            body {
+                display: flex;
+                justify-content: center;
+                padding: 0;
+            }
+
+            .container {
+                min-height: 100vh;
+                background: rgba(255, 255, 255, 0.38);
+                border: 1px solid rgba(255, 255, 255, 0.65);
+                border-radius: 0;
+                box-shadow: 0 32px 90px rgba(15, 23, 42, 0.08);
+            }
+
+            nav {
+                width: min(calc(100% - 40px), 520px);
+                border-radius: 24px 24px 0 0;
+            }
         }
 
         /* ── App-style custom selects (see static/js/app-select.js) ── */
@@ -379,32 +459,32 @@
         <div class="nav-inner">
             <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
                 <div class="nav-icon-wrapper">
-                    <i class="{% if request.resolver_match.url_name == 'home' %}fas fa-home{% else %}fas fa-home{% endif %}"></i>
+                    <span class="material-symbols-outlined">home</span>
                 </div>
                 <span>Home</span>
             </a>
             <a id="nav-chat-link" href="{% url 'chat_list' %}" class="nav-link {% if request.resolver_match.url_name == 'chat_list' or 'chat_view' in request.resolver_match.url_name %}active{% endif %}">
                 <div class="nav-icon-wrapper">
-                    <i class="{% if request.resolver_match.url_name == 'chat_list' or 'chat_view' in request.resolver_match.url_name %}fas fa-comment{% else %}far fa-comment{% endif %}"></i>
+                    <span class="material-symbols-outlined">chat_bubble</span>
                     <span id="chat-badge" class="badge-dot" style="{% if global_unread_count == 0 %}display: none;{% endif %}; background: #ef4444;"></span>
                 </div>
                 <span>Chat</span>
             </a>
             <a href="{% url 'confessions_feed' %}" class="nav-link {% if 'confession' in request.resolver_match.url_name %}active{% endif %}">
                 <div class="nav-icon-wrapper">
-                    <i class="fas fa-mask"></i>
+                    <span class="material-symbols-outlined">campaign</span>
                 </div>
                 <span>Confess</span>
             </a>
             <a href="{% url 'edit_profile' %}" class="nav-link {% if request.resolver_match.url_name == 'edit_profile' %}active{% endif %}">
                 <div class="nav-icon-wrapper">
-                    <i class="{% if request.resolver_match.url_name == 'edit_profile' %}fas fa-user{% else %}far fa-user{% endif %}"></i>
+                    <span class="material-symbols-outlined">person</span>
                 </div>
                 <span>Profile</span>
             </a>
             <a href="{% url 'more_menu' %}" class="nav-link {% if request.resolver_match.url_name == 'more_menu' %}active{% endif %}">
                 <div class="nav-icon-wrapper">
-                    <i class="fas fa-ellipsis-h"></i>
+                    <span class="material-symbols-outlined">hub</span>
                 </div>
                 <span>More</span>
             </a>
@@ -670,13 +750,13 @@
         import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-messaging.js";
 
         const firebaseConfig = {
-          apiKey: "{{ firebase_api_key }}",
-          authDomain: "{{ firebase_auth_domain }}",
-          projectId: "{{ firebase_project_id }}",
-          storageBucket: "{{ firebase_storage_bucket }}",
-          messagingSenderId: "{{ firebase_messaging_sender_id }}",
-          appId: "{{ firebase_app_id }}",
-          measurementId: "{{ firebase_measurement_id }}"
+          apiKey: "AIzaSyDNiJROEM1-oa2kidoUorjFPS4FvP_et0M",
+          authDomain: "datingapp-636fa.firebaseapp.com",
+          projectId: "datingapp-636fa",
+          storageBucket: "datingapp-636fa.firebasestorage.app",
+          messagingSenderId: "848138254029",
+          appId: "1:848138254029:web:db606ec479cc1220805b84",
+          measurementId: "G-VVG7199H45"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -821,13 +901,13 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
 
         const firebaseConfig = {
-          apiKey: "{{ firebase_api_key }}",
-          authDomain: "{{ firebase_auth_domain }}",
-          projectId: "{{ firebase_project_id }}",
-          storageBucket: "{{ firebase_storage_bucket }}",
-          messagingSenderId: "{{ firebase_messaging_sender_id }}",
-          appId: "{{ firebase_app_id }}",
-          measurementId: "{{ firebase_measurement_id }}"
+          apiKey: "AIzaSyDNiJROEM1-oa2kidoUorjFPS4FvP_et0M",
+          authDomain: "datingapp-636fa.firebaseapp.com",
+          projectId: "datingapp-636fa",
+          storageBucket: "datingapp-636fa.firebasestorage.app",
+          messagingSenderId: "848138254029",
+          appId: "1:848138254029:web:db606ec479cc1220805b84",
+          measurementId: "G-VVG7199H45"
         };
 
         const app = initializeApp(firebaseConfig);

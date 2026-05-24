@@ -5,484 +5,497 @@
 
 {% block head %}
 <style>
-    :root {
-        --rf-bg: #f8fafc;
-        --rf-card: #ffffff;
-        --rf-glass: rgba(255, 255, 255, 0.95);
-        --rf-border: #f1f5f9;
-        --rf-text: #0f172a;
-        --rf-text-muted: #64748b;
-        --rf-primary: #2563eb;
-        --rf-primary-hover: #1d4ed8;
-        --rf-primary-light: #eff6ff;
-        --rf-accent: #ef4444;
-        --rf-success: #10b981;
-        --rf-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-    }
+body > .container {
+    padding: 0 !important;
+    position: static !important;
+}
 
-    body {
-        background: var(--rf-bg);
-        color: var(--rf-text);
-        padding-bottom: 100px;
-        font-family: 'Inter', system-ui, sans-serif;
-    }
+body {
+    background: var(--bg, #f4f6fb);
+    padding-bottom: 100px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    padding-top: 56px;
+}
 
-    .container {
-        max-width: 600px !important;
-        margin: 0 auto !important;
-        padding: 0 !important;
-        min-height: 100vh;
-        background: var(--rf-bg);
-    }
+/* ---- Sticky Header ---- */
+.rr-header {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 640px;
+    z-index: 100;
+    background: rgba(255,255,255,0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 16px;
+    box-sizing: border-box;
+}
+.rr-back-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #0f172a;
+    font-size: 16px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+.rr-back-btn:hover { background: #e2e8f0; }
+.rr-header h2 {
+    font-size: 17px;
+    font-weight: 800;
+    margin: 0;
+    flex: 1;
+    letter-spacing: -0.3px;
+}
+.rr-header-actions {
+    display: flex;
+    gap: 4px;
+}
+.rr-header-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 15px;
+    transition: all 0.2s;
+}
+.rr-header-btn:hover { background: #f1f5f9; }
+.rr-header-btn.edit:hover { color: #2563eb; }
+.rr-header-btn.delete:hover { color: #ef4444; }
 
-    .rf-nav-header {
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        background: var(--rf-glass);
-        backdrop-filter: blur(20px);
-        border-bottom: 1px solid var(--rf-border);
-        padding: 16px 20px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
+/* ---- Detail Body ---- */
+.rr-body {
+    padding: 16px;
+}
 
-    .rf-back-btn {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: #f1f5f9;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-        color: var(--rf-text);
-        transition: all 0.2s;
-    }
-    .rf-back-btn:hover { background: #e2e8f0; }
+/* Title + Campus Badge */
+.rr-title-section {
+    margin-bottom: 16px;
+}
+.rr-title {
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0 0 8px;
+    line-height: 1.3;
+    letter-spacing: -0.4px;
+    color: #0f172a;
+}
+.rr-campus {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(37,99,235,0.1);
+    color: #2563eb;
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 700;
+}
 
-    .rf-nav-title {
-        font-size: 18px;
-        font-weight: 800;
-        margin: 0;
-        flex: 1;
-    }
+/* Meta Card */
+.rr-meta {
+    background: #ffffff;
+    border: 1px solid #eef2f6;
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+.rr-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.rr-meta-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: #94a3b8;
+}
+.rr-meta-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+}
 
-    .rf-detail-body {
-        padding: 20px;
-    }
+/* Section Cards */
+.rr-section {
+    background: #ffffff;
+    border: 1px solid #eef2f6;
+    border-radius: 20px;
+    padding: 16px;
+    margin-bottom: 12px;
+}
+.rr-section-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.rr-section-title i { font-size: 14px; color: #2563eb; }
 
-    .rf-title-section {
-        margin-bottom: 20px;
-    }
+/* Amenity Tags */
+.rr-amenity-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.rr-amenity-tag {
+    background: rgba(16,185,129,0.1);
+    color: #059669;
+    border: 1px solid rgba(16,185,129,0.15);
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.rr-amenity-tag i { font-size: 9px; }
 
-    .rf-request-title {
-        font-size: 22px;
-        font-weight: 850;
-        margin: 0 0 8px;
-        line-height: 1.3;
-        color: var(--rf-text);
-    }
+/* Note */
+.rr-note {
+    background: rgba(37,99,235,0.04);
+    border-left: 3px solid #2563eb;
+    padding: 12px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.5;
+    font-style: italic;
+}
 
-    .rf-campus-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: var(--rf-primary-light);
-        color: var(--rf-primary);
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 13px;
-        font-weight: 700;
-    }
+/* User Card */
+.rr-user-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: #ffffff;
+    border: 1px solid #eef2f6;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.rr-user-card:hover { border-color: #e2e8f0; }
+.rr-user-pic {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.rr-user-info { flex: 1; }
+.rr-user-info h4 {
+    margin: 0 0 2px;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.rr-user-info h4 i { font-size: 13px; }
+.rr-user-info p {
+    margin: 0;
+    font-size: 11px;
+    color: #94a3b8;
+}
+.rr-chevron { color: #cbd5e1; font-size: 14px; }
 
-    .rf-meta-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        background: #ffffff;
-        border: 1px solid var(--rf-border);
-        border-radius: 16px;
-        padding: 16px;
-        margin-bottom: 20px;
-    }
+.rr-btn {
+    padding: 11px 14px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.rr-btn:active { transform: scale(0.97); }
+.rr-btn-primary {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+}
+.rr-btn-primary:hover { box-shadow: 0 4px 16px rgba(37,99,235,0.3); }
 
-    .rf-meta-item {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
+/* ---- Edit Modal ---- */
+.rr-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15,23,42,0.5);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: flex-end;
+    justify-content: center;
+}
+.rr-modal-overlay.active { display: flex; }
+.rr-modal {
+    background: #ffffff;
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: 500px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 20px 18px 100px;
+    animation: rr-slideUp 0.3s ease;
+}
+@keyframes rr-slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+.rr-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+.rr-modal-header h2 {
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.4px;
+}
+.rr-modal-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #64748b;
+    font-size: 16px;
+    transition: all 0.2s;
+}
+.rr-modal-close:hover { background: #e2e8f0; }
 
-    .rf-meta-label {
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        color: var(--rf-text-muted);
-    }
+/* Form */
+.rr-fg {
+    margin-bottom: 14px;
+}
+.rr-fg label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.rr-fg input,
+.rr-fg select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+    font-size: 13px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+.rr-fg input:focus,
+.rr-fg select:focus { border-color: #2563eb; }
 
-    .rf-meta-value {
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--rf-text);
-    }
+/* Amenity grid in edit */
+.rr-amenity-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+.rr-amenity-grid input[type="checkbox"] { display: none; }
+.rr-amenity-grid label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    background: #f1f5f9;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: normal;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.rr-amenity-grid input:checked + label,
+.rr-amenity-grid label:has(input:checked) {
+    background: rgba(37,99,235,0.1);
+    color: #2563eb;
+}
 
-    .rf-section {
-        background: #ffffff;
-        border: 1px solid var(--rf-border);
-        border-radius: 16px;
-        padding: 16px;
-        margin-bottom: 16px;
-    }
+.rr-submit-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    border: none;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.rr-submit-btn:hover { box-shadow: 0 4px 16px rgba(37,99,235,0.3); }
+.rr-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-    .rf-section-title {
-        font-size: 14px;
-        font-weight: 800;
-        color: var(--rf-text);
-        margin: 0 0 10px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .rf-amenity-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-    }
-
-    .rf-amenity-tag {
-        background: #f0fdf4;
-        color: #15803d;
-        border: 1px solid #dcfce7;
-        padding: 4px 10px;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: 600;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .rf-note {
-        background: var(--rf-primary-light);
-        border-left: 3px solid var(--rf-primary);
-        padding: 12px 16px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-style: italic;
-        color: var(--rf-text);
-        line-height: 1.5;
-    }
-
-    .rf-user-card {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 16px;
-        background: #ffffff;
-        border: 1px solid var(--rf-border);
-        border-radius: 16px;
-        cursor: pointer;
-        transition: all 0.2s;
-        margin-bottom: 20px;
-    }
-    .rf-user-card:hover { border-color: var(--rf-border-hover); }
-
-    .rf-user-pic {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-
-    .rf-user-info { flex: 1; }
-    .rf-user-info h4 {
-        margin: 0 0 2px;
-        font-size: 15px;
-        font-weight: 750;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-    .rf-user-info p {
-        margin: 0;
-        font-size: 12px;
-        color: var(--rf-text-muted);
-    }
-
-    .rf-action-bar {
-        position: fixed;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100%;
-        max-width: 600px;
-        box-sizing: border-box;
-        padding: 12px 20px;
-        background: var(--rf-glass);
-        backdrop-filter: blur(20px);
-        border-top: 1px solid var(--rf-border);
-        display: flex;
-        gap: 8px;
-        z-index: 50;
-    }
-
-    .rf-btn {
-        flex: 1;
-        padding: 12px 16px;
-        border-radius: 12px;
-        font-size: 14px;
-        font-weight: 700;
-        border: none;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        transition: all 0.2s;
-    }
-    .rf-btn:active { transform: scale(0.96); }
-    .rf-btn-primary { background: var(--rf-primary); color: white; }
-    .rf-btn-secondary { background: #f1f5f9; color: var(--rf-text); }
-    .rf-btn-danger { background: rgba(239,68,68,0.1); color: var(--rf-accent); }
-
-    /* Edit Modal */
-    .rf-modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(15,23,42,0.4);
-        backdrop-filter: blur(8px);
-        z-index: 1000;
-        display: none;
-        opacity: 0;
-        transition: opacity 0.3s;
-    }
-    .rf-modal-overlay.active { display: block; opacity: 1; }
-
-    .rf-modal {
-        position: fixed;
-        bottom: -100%;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100%;
-        max-width: 600px;
-        background: #ffffff;
-        border-top-left-radius: 28px;
-        border-top-right-radius: 28px;
-        padding: 24px 20px 30px;
-        z-index: 1001;
-        transition: bottom 0.4s cubic-bezier(0.1, 1, 0.2, 1);
-        max-height: 88vh;
-        overflow-y: auto;
-        box-sizing: border-box;
-        box-shadow: 0 -10px 40px rgba(0,0,0,0.06);
-    }
-    .rf-modal.active { bottom: 0; }
-
-    .rf-modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-
-    .rf-modal-title { font-size: 18px; font-weight: 850; margin: 0; }
-
-    .rf-form-group { margin-bottom: 16px; }
-    .rf-form-group label {
-        display: block;
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--rf-text-muted);
-        margin-bottom: 6px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .rf-form-control {
-        width: 100%;
-        background: #f8fafc;
-        border: 1px solid var(--rf-border);
-        color: var(--rf-text);
-        padding: 10px 14px;
-        border-radius: 12px;
-        font-size: 14px;
-        outline: none;
-        box-sizing: border-box;
-        transition: border 0.2s;
-    }
-    .rf-form-control:focus { border-color: var(--rf-primary); background: #ffffff; }
-
-    .rf-amenity-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 6px;
-    }
-
-    .rf-amenity-checkbox {
-        display: none;
-    }
-
-    .rf-amenity-pill {
-        background: #f1f5f9;
-        color: var(--rf-text-muted);
-        border: 1px solid #e2e8f0;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        transition: all 0.2s ease;
-    }
-
-    .rf-amenity-checkbox:checked + .rf-amenity-pill {
-        background: var(--rf-primary-light);
-        color: var(--rf-primary);
-        border-color: var(--rf-primary);
-    }
-
-    .rf-submit-btn {
-        width: 100%;
-        padding: 14px;
-        background: var(--rf-primary);
-        color: white;
-        border: none;
-        border-radius: 14px;
-        font-size: 15px;
-        font-weight: 800;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .rf-submit-btn:hover { background: var(--rf-primary-hover); }
-
-    @media (min-width: 600px) {
-        .container {
-            border-left: 1px solid var(--rf-border);
-            border-right: 1px solid var(--rf-border);
-            box-shadow: 0 0 60px rgba(0, 0, 0, 0.03);
-        }
-        .rf-action-bar { width: 600px; }
-    }
+/* Responsive */
+@media (min-width: 768px) {
+    .rr-body { max-width: 640px; margin: 0 auto; }
+    .rr-header { max-width: 640px; margin: 0 auto; }
+}
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="rf-nav-header">
-    <a href="{% url 'roomfinder_feed' %}" class="rf-back-btn"><i class="fas fa-arrow-left"></i></a>
-    <h2 class="rf-nav-title">Room Request</h2>
+<!-- Sticky Header -->
+<div class="rr-header">
+    <button onclick="history.back()" class="rr-back-btn" style="border:none; cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
+    <h2>Room Request</h2>
     {% if is_owner or is_admin %}
-    <div style="display:flex; gap:4px;">
-        {% if is_owner or is_admin %}
-        <button type="button" onclick="openEditModal()" style="background:none; border:none; color:var(--rf-primary); cursor:pointer; font-size:16px; padding:4px; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;" title="Edit Request">
-            <i class="fas fa-edit"></i>
-        </button>
-        {% endif %}
-        <button type="button" onclick="deleteRequest()" style="background:none; border:none; color:var(--rf-accent); cursor:pointer; font-size:16px; padding:4px; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;" title="Delete Request">
-            <i class="fas fa-trash-alt"></i>
-        </button>
+    <div class="rr-header-actions">
+        <button type="button" class="rr-header-btn edit" onclick="openEditModal()" title="Edit"><i class="fas fa-edit"></i></button>
+        <button type="button" class="rr-header-btn delete" onclick="deleteRequest()" title="Delete"><i class="fas fa-trash-alt"></i></button>
     </div>
     {% endif %}
 </div>
 
-<div class="rf-detail-body">
-    <div class="rf-title-section">
-        <h1 class="rf-request-title">{{ req.title }}</h1>
-        <span class="rf-campus-badge"><i class="fas fa-map-marker-alt"></i> {{ req.campus }}</span>
+<div class="rr-body">
+    <!-- Title -->
+    <div class="rr-title-section">
+        <h1 class="rr-title">{{ req.title }}</h1>
+        <span class="rr-campus"><i class="fas fa-map-marker-alt" style="font-size:11px;"></i> {{ req.campus }}</span>
     </div>
 
-    <div class="rf-meta-grid">
-        <div class="rf-meta-item">
-            <span class="rf-meta-label">Looking Near</span>
-            <span class="rf-meta-value">{{ req.looking_near }}</span>
+    <!-- Meta Grid -->
+    <div class="rr-meta">
+        <div class="rr-meta-item">
+            <span class="rr-meta-label">Looking Near</span>
+            <span class="rr-meta-value">{{ req.looking_near }}</span>
         </div>
-        <div class="rf-meta-item">
-            <span class="rf-meta-label">Room Type</span>
-            <span class="rf-meta-value">{{ req.preferred_room_type }}</span>
+        <div class="rr-meta-item">
+            <span class="rr-meta-label">Room Type</span>
+            <span class="rr-meta-value">{{ req.preferred_room_type }}</span>
         </div>
-        <div class="rf-meta-item">
-            <span class="rf-meta-label">Budget</span>
-            <span class="rf-meta-value">₹{{ req.min_rent }} - ₹{{ req.max_rent }}</span>
+        <div class="rr-meta-item">
+            <span class="rr-meta-label">Budget</span>
+            <span class="rr-meta-value">₹{{ req.min_rent }} - ₹{{ req.max_rent }}</span>
         </div>
-        <div class="rf-meta-item">
-            <span class="rf-meta-label">Sharing</span>
-            <span class="rf-meta-value">{{ req.sharing_preference }}</span>
+        <div class="rr-meta-item">
+            <span class="rr-meta-label">Sharing</span>
+            <span class="rr-meta-value">{{ req.sharing_preference }}</span>
         </div>
-        <div class="rf-meta-item">
-            <span class="rf-meta-label">Move-in Date</span>
-            <span class="rf-meta-value">{{ req.move_in_date|date:"M d, Y" }}</span>
+        <div class="rr-meta-item">
+            <span class="rr-meta-label">Move-in Date</span>
+            <span class="rr-meta-value">{{ req.move_in_date|date:"M d, Y" }}</span>
         </div>
-        <div class="rf-meta-item">
-            <span class="rf-meta-label">Posted</span>
-            <span class="rf-meta-value">{{ req.created_at|date:"M d, Y" }}</span>
+        <div class="rr-meta-item">
+            <span class="rr-meta-label">Posted</span>
+            <span class="rr-meta-value">{{ req.created_at|date:"M d, Y" }}</span>
         </div>
     </div>
 
     {% if req.needed_amenities %}
-    <div class="rf-section">
-        <h3 class="rf-section-title"><i class="fas fa-check-circle" style="color:var(--rf-success)"></i> Needed Amenities</h3>
-        <div class="rf-amenity-tags" id="amenityTags"></div>
+    <div class="rr-section">
+        <h3 class="rr-section-title"><i class="fas fa-check-circle"></i> Needed Amenities</h3>
+        <div class="rr-amenity-wrap" id="amenityTags"></div>
     </div>
     {% endif %}
 
     {% if req.extra_note %}
-    <div class="rf-section">
-        <h3 class="rf-section-title"><i class="fas fa-quote-left" style="color:var(--rf-primary)"></i> Note</h3>
-        <div class="rf-note">"{{ req.extra_note }}"</div>
+    <div class="rr-section">
+        <h3 class="rr-section-title"><i class="fas fa-quote-left"></i> Note</h3>
+        <div class="rr-note">"{{ req.extra_note }}"</div>
     </div>
     {% endif %}
 
-    <div class="rf-section" style="border:none; padding:0;">
-        <h3 class="rf-section-title"><i class="fas fa-user-circle"></i> Requested By</h3>
-        <div class="rf-user-card" onclick="window.location.href='{% url 'view_profile' req.user.id %}'">
-            <img src="{{ req.user.profile.get_profile_pic_url }}" class="rf-user-pic">
-            <div class="rf-user-info">
+    <div style="margin-bottom:12px;">
+        <h3 class="rr-section-title" style="margin-bottom:8px;"><i class="fas fa-user-circle"></i> Requested By</h3>
+        <div class="rr-user-card" style="margin-bottom:10px;" onclick="window.location.href='{% url 'view_profile' req.user.id %}'">
+            <img src="{{ req.user.profile.get_profile_pic_url }}" class="rr-user-pic" onerror="this.src='https://placehold.co/100x100/e2e8f0/94a3b8?text=User'">
+            <div class="rr-user-info">
                 <h4>
                     {{ profile.name }}
                     {% if profile.is_face_verified %}
-                        <i class="fas fa-check-circle" style="color:var(--rf-primary); font-size:13px;" title="Verified Account"></i>
+                        <i class="fas fa-check-circle" style="color:#2563eb;" title="Verified"></i>
                     {% else %}
-                        <i class="fas fa-check-circle" style="color:#cbd5e1; font-size:13px;" title="Unverified Account"></i>
+                        <i class="fas fa-check-circle" style="color:#cbd5e1;" title="Unverified"></i>
                     {% endif %}
                 </h4>
                 <p>{{ profile.mother_tongues }} • {{ profile.native_place }} • {{ profile.languages }}</p>
             </div>
-            <i class="fas fa-chevron-right" style="color:var(--rf-text-muted);"></i>
+            <i class="fas fa-chevron-right rr-chevron"></i>
         </div>
+        <button class="rr-btn rr-btn-primary" onclick="initiateChat()" style="width:100%;"><i class="fas fa-comments"></i> Chat with {{ profile.name }}</button>
     </div>
 </div>
 
 <!-- Edit Modal -->
 {% if is_owner or is_admin %}
-<div class="rf-modal-overlay" id="editModalOverlay" onclick="closeEditModal()"></div>
-<div class="rf-modal" id="editModal">
-    <div class="rf-modal-header">
-        <h2 class="rf-modal-title">Edit Request</h2>
-        <i class="fas fa-times" onclick="closeEditModal()" style="font-size:18px; color:var(--rf-text-muted); cursor:pointer;"></i>
+<div class="rr-modal-overlay" id="editModalOverlay" onclick="if(event.target===this)closeEditModal()">
+<div class="rr-modal" id="editModal">
+    <div class="rr-modal-header">
+        <h2>Edit Request</h2>
+        <button class="rr-modal-close" onclick="closeEditModal()"><i class="fas fa-times"></i></button>
     </div>
     <form id="editRequestForm" onsubmit="submitEditRequest(event)">
-        <div class="rf-form-group">
+        <div class="rr-fg">
             <label>Title (Max 70 chars)</label>
-            <input type="text" id="editTitle" class="rf-form-control" value="{{ req.title }}" maxlength="70" required>
+            <input type="text" id="editTitle" value="{{ req.title }}" maxlength="70" required>
         </div>
-        <div style="display:flex; gap:12px;">
-            <div class="rf-form-group" style="flex:1;">
+        <div style="display:flex; gap:10px;">
+            <div class="rr-fg" style="flex:1;">
                 <label>Campus</label>
-                <select id="editCampus" class="rf-form-control" required>
+                <select id="editCampus" required>
                     <option value="KTR" {% if req.campus == 'KTR' %}selected{% endif %}>KTR</option>
                     <option value="RMP" {% if req.campus == 'RMP' %}selected{% endif %}>RMP</option>
                     <option value="VDP" {% if req.campus == 'VDP' %}selected{% endif %}>VDP</option>
                     <option value="NCR" {% if req.campus == 'NCR' %}selected{% endif %}>NCR</option>
                 </select>
             </div>
-            <div class="rf-form-group" style="flex:1;">
+            <div class="rr-fg" style="flex:1;">
                 <label>Room Type</label>
-                <select id="editRoomType" class="rf-form-control" required>
+                <select id="editRoomType" required>
                     <option value="PG" {% if req.preferred_room_type == 'PG' %}selected{% endif %}>PG</option>
                     <option value="flat" {% if req.preferred_room_type == 'flat' %}selected{% endif %}>Flat</option>
                     <option value="hostel" {% if req.preferred_room_type == 'hostel' %}selected{% endif %}>Hostel</option>
@@ -491,60 +504,56 @@
                 </select>
             </div>
         </div>
-        <div class="rf-form-group">
+        <div class="rr-fg">
             <label>Looking Near</label>
-            <input type="text" id="editLookingNear" class="rf-form-control" value="{{ req.looking_near }}" required>
+            <input type="text" id="editLookingNear" value="{{ req.looking_near }}" required>
         </div>
-        <div style="display:flex; gap:12px;">
-            <div class="rf-form-group" style="flex:1;">
+        <div style="display:flex; gap:10px;">
+            <div class="rr-fg" style="flex:1;">
                 <label>Min Budget</label>
-                <input type="number" id="editMinRent" class="rf-form-control" value="{{ req.min_rent }}" required>
+                <input type="number" id="editMinRent" value="{{ req.min_rent }}" required>
             </div>
-            <div class="rf-form-group" style="flex:1;">
+            <div class="rr-fg" style="flex:1;">
                 <label>Max Budget</label>
-                <input type="number" id="editMaxRent" class="rf-form-control" value="{{ req.max_rent }}" required>
+                <input type="number" id="editMaxRent" value="{{ req.max_rent }}" required>
             </div>
         </div>
-        <div style="display:flex; gap:12px;">
-            <div class="rf-form-group" style="flex:1;">
+        <div style="display:flex; gap:10px;">
+            <div class="rr-fg" style="flex:1;">
                 <label>Sharing</label>
-                <select id="editSharing" class="rf-form-control" required>
+                <select id="editSharing" required>
                     <option value="single" {% if req.sharing_preference == 'single' %}selected{% endif %}>Single Room</option>
                     <option value="2 sharing" {% if req.sharing_preference == '2 sharing' %}selected{% endif %}>2 Sharing</option>
                     <option value="3 sharing" {% if req.sharing_preference == '3 sharing' %}selected{% endif %}>3 Sharing</option>
                     <option value="any" {% if req.sharing_preference == 'any' %}selected{% endif %}>Any</option>
                 </select>
             </div>
-            <div class="rf-form-group" style="flex:1;">
+            <div class="rr-fg" style="flex:1;">
                 <label>Move-in Date</label>
-                <input type="date" id="editMoveIn" class="rf-form-control" value="{{ req.move_in_date|date:'Y-m-d' }}" required>
+                <input type="date" id="editMoveIn" value="{{ req.move_in_date|date:'Y-m-d' }}" required>
             </div>
         </div>
-        <div class="rf-form-group">
+        <div class="rr-fg">
             <label>Needed Amenities</label>
-            <div class="rf-amenity-grid">
-                <label><input type="checkbox" name="editAmenity" value="WiFi" class="rf-amenity-checkbox"><span class="rf-amenity-pill">WiFi</span></label>
-                <label><input type="checkbox" name="editAmenity" value="AC" class="rf-amenity-checkbox"><span class="rf-amenity-pill">AC</span></label>
-                <label><input type="checkbox" name="editAmenity" value="Food" class="rf-amenity-checkbox"><span class="rf-amenity-pill">Food</span></label>
-                <label><input type="checkbox" name="editAmenity" value="Washing Machine" class="rf-amenity-checkbox"><span class="rf-amenity-pill">Washing Machine</span></label>
-                <label><input type="checkbox" name="editAmenity" value="Attached Bathroom" class="rf-amenity-checkbox"><span class="rf-amenity-pill">Attached Bathroom</span></label>
+            <div class="rr-amenity-grid">
+                <label><input type="checkbox" name="editAmenity" value="WiFi" class="rr-amenity-cb"><span>WiFi</span></label>
+                <label><input type="checkbox" name="editAmenity" value="AC" class="rr-amenity-cb"><span>AC</span></label>
+                <label><input type="checkbox" name="editAmenity" value="Food" class="rr-amenity-cb"><span>Food</span></label>
+                <label><input type="checkbox" name="editAmenity" value="Washing Machine" class="rr-amenity-cb"><span>Washing Machine</span></label>
+                <label><input type="checkbox" name="editAmenity" value="Attached Bathroom" class="rr-amenity-cb"><span>Attached Bathroom</span></label>
             </div>
         </div>
-        <div class="rf-form-group">
+        <div class="rr-fg">
             <label>Extra Note (Max 110 chars)</label>
-            <input type="text" id="editNote" class="rf-form-control" value="{{ req.extra_note }}" maxlength="110">
+            <input type="text" id="editNote" value="{{ req.extra_note }}" maxlength="110">
         </div>
-        <button type="submit" class="rf-submit-btn" id="editSubmitBtn">Save Changes</button>
+        <button type="submit" class="rr-submit-btn" id="editSubmitBtn">Save Changes</button>
     </form>
+</div>
 </div>
 {% endif %}
 
-<!-- Bottom Action Bar -->
-{% if not is_owner %}
-<div class="rf-action-bar">
-    <button class="rf-btn rf-btn-primary" onclick="initiateChat()"><i class="fas fa-comments"></i> Chat with {{ profile.name }}</button>
-</div>
-{% endif %}
+
 
 <script>
     // Parse and display needed amenities as tags
@@ -555,19 +564,16 @@
             if (container) {
                 amenitiesRaw.split(',').forEach(function(a) {
                     const tag = document.createElement('span');
-                    tag.className = 'rf-amenity-tag';
-                    tag.innerHTML = '<i class="fas fa-check" style="font-size:9px;"></i> ' + a.trim();
+                    tag.className = 'rr-amenity-tag';
+                    tag.innerHTML = '<i class="fas fa-check"></i> ' + a.trim();
                     container.appendChild(tag);
                 });
             }
         }
-
-        // Pre-check amenity checkboxes in edit modal based on current values
+        // Pre-check amenity checkboxes in edit modal
         const currentAmenities = amenitiesRaw.split(',').map(function(a) { return a.trim(); });
         document.querySelectorAll('input[name="editAmenity"]').forEach(function(cb) {
-            if (currentAmenities.indexOf(cb.value) !== -1) {
-                cb.checked = true;
-            }
+            if (currentAmenities.indexOf(cb.value) !== -1) { cb.checked = true; }
         });
     });
 
@@ -587,7 +593,6 @@
         const btn = document.getElementById('editSubmitBtn');
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
         btn.disabled = true;
-
         try {
             const res = await fetch('/api/roomrequests/{{ req.id }}/edit/', {
                 method: 'POST',
@@ -620,7 +625,6 @@
             console.error(e);
             customAlert("Network error occurred.", "Error");
         }
-
         btn.innerHTML = 'Save Changes';
         btn.disabled = false;
     }
@@ -637,9 +641,7 @@
                     const data = await response.json();
                     if (data.success) {
                         showGlobalToast("Request deleted successfully.");
-                        setTimeout(() => {
-                            window.location.href = "{% url 'roomfinder_feed' %}";
-                        }, 1000);
+                        setTimeout(() => { window.location.href = "{% url 'roomfinder_feed' %}"; }, 1000);
                     } else {
                         customAlert(data.error || "Failed to delete request.", "Error");
                     }

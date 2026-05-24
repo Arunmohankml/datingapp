@@ -1,0 +1,668 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block head %}
+<style>
+    /* ── Full Screen Lock ── */
+    html, body { 
+        height: 100%; 
+        height: 100dvh; 
+        overflow: hidden; 
+        position: fixed; 
+        width: 100%; 
+        background: #f0f7ff; /* Cool Blue White */
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    .container {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100%;
+        box-sizing: border-box;
+    }
+
+    /* ── Match Feed Shell ── */
+    .feed-wrapper {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        background: #f0f7ff;
+        z-index: 10;
+    }
+
+    /* ── Fixed Header ── */
+    .feed-header {
+        flex-shrink: 0;
+        padding: 16px 20px;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(0, 102, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 20;
+    }
+    .feed-header h2 {
+        margin: 0;
+        font-size: 24px;
+        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        letter-spacing: -1px;
+    }
+
+    .match-back-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.95);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-decoration: none;
+        color: #2563eb;
+        border: 1px solid rgba(0, 102, 255, 0.1);
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.04);
+        transition: 0.2s ease;
+        flex-shrink: 0;
+    }
+    .match-back-btn:active {
+        transform: scale(0.9);
+    }
+
+    .feed-body {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 10px 14px 80px; 
+        background: #f0f7ff;
+    }
+
+    .conn-link {
+        background: white;
+        padding: 10px 16px;
+        border-radius: 14px;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        color: #2563eb;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-weight: 700;
+        font-size: 13px;
+    }
+    .conn-link:active { transform: scale(0.92); }
+
+    /* Quiz Card */
+    .quiz-card {
+        padding: 28px;
+        background: white;
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        border-radius: 30px;
+        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.05);
+        margin-bottom: 24px;
+        min-height: 360px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .profile-mini {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px dashed rgba(37, 99, 235, 0.15);
+    }
+    .profile-mini img {
+        width: 44px; height: 44px;
+        border-radius: 14px;
+        object-fit: cover;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.1);
+    }
+    .profile-mini h3 { margin: 0; font-size: 16px; color: #1e3a8a; font-weight: 700; }
+    .profile-mini p { margin: 0; font-size: 13px; color: #64748b; }
+
+    /* Progress UI */
+    .progress-container {
+        margin-bottom: 28px;
+    }
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 11px;
+        font-weight: 800;
+        color: #3b82f6;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+    .progress-track {
+        height: 8px;
+        background: #e0f2fe;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #2563eb, #60a5fa);
+        border-radius: 10px;
+        transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Question Box */
+    #question-area {
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .q-fade-out { opacity: 0; transform: translateY(-15px) scale(0.98); }
+    .q-fade-in { opacity: 0; transform: translateY(15px) scale(0.98); }
+
+    .question-box h2 {
+        font-size: 22px;
+        margin-bottom: 24px;
+        color: #1e3a8a;
+        line-height: 1.4;
+        font-weight: 800;
+        letter-spacing: -0.3px;
+    }
+    .options-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .option-btn {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 16px 20px;
+        border: 1px solid #e0f2fe;
+        border-radius: 18px;
+        background: white;
+        font-size: 15px;
+        font-weight: 600;
+        color: #475569;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    .option-btn::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(37, 99, 235, 0.03);
+        opacity: 0;
+        transition: 0.2s;
+    }
+    .option-btn:hover { 
+        background: #f0f9ff; 
+        border-color: #3b82f6; 
+        color: #2563eb;
+        transform: translateX(4px);
+    }
+    .option-btn:hover::after { opacity: 1; }
+    
+    .option-btn.selected { 
+        background: #2563eb; 
+        color: white; 
+        border-color: #2563eb;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+        transform: scale(1.02);
+    }
+
+    /* Loading Overlay */
+    .quiz-loading {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(240, 247, 255, 0.95);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        border-radius: 30px;
+        display: none;
+    }
+
+    /* Match Cards */
+    .match-card {
+        background: white;
+        border: 1px solid rgba(37, 99, 235, 0.08);
+        border-radius: 24px;
+        padding: 18px;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.04);
+        transition: 0.3s;
+    }
+    .match-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.08);
+        border-color: rgba(37, 99, 235, 0.2);
+    }
+    .match-info {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .match-avatar {
+        width: 54px; height: 54px;
+        border-radius: 18px;
+        object-fit: cover;
+        border: 2px solid #e0f2fe;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.1);
+    }
+    .match-score {
+        background: #e0f2fe;
+        color: #2563eb;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 3px 10px;
+        border-radius: 12px;
+        margin-top: 4px;
+        display: inline-block;
+    }
+
+    .btn-view {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        color: white !important;
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        transition: 0.2s;
+    }
+    .btn-view:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.3);
+    }
+
+    .all-done { 
+        text-align: center; 
+        padding: 60px 30px; 
+        background: white; 
+        border-radius: 30px;
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.05);
+    }
+    .all-done .icon { 
+        font-size: 48px; 
+        background: linear-gradient(135deg, #2563eb, #60a5fa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 20px; 
+    }
+    .all-done h2 {
+        color: #1e3a8a;
+        font-weight: 800;
+        margin-bottom: 12px;
+    }
+
+    /* Discovery Hidden Card & Button styling */
+    .discovery-hidden-card {
+        text-align: center;
+        padding: 20px 16px;
+        background: white;
+        border-radius: 20px;
+        border: 1px solid rgba(37, 99, 235, 0.12);
+        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.04);
+        margin: 4px 0;
+    }
+    .discovery-icon-wrapper {
+        width: 50px; height: 50px;
+        border-radius: 50%;
+        background: rgba(37, 99, 235, 0.08);
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 12px;
+        font-size: 20px; color: #2563eb;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.04);
+    }
+    .discovery-hidden-card h2 {
+        color: #1e3a8a; font-size: 16px; font-weight: 800;
+        margin-bottom: 6px; letter-spacing: -0.3px;
+    }
+    .discovery-hidden-card > p {
+        color: #64748b; font-size: 12px; font-weight: 550;
+        line-height: 1.4; margin-bottom: 14px;
+    }
+    /* Checklist */
+    .disc-checklist {
+        list-style: none; padding: 0; margin: 0 0 16px;
+        text-align: left;
+        background: #f8faff;
+        border-radius: 12px;
+        border: 1px solid rgba(37,99,235,0.08);
+        overflow: hidden;
+    }
+    .disc-checklist li {
+        display: flex; align-items: center; gap: 8px;
+        padding: 8px 12px;
+        font-size: 11.5px; font-weight: 600;
+        border-bottom: 1px solid rgba(37,99,235,0.06);
+        color: #334155;
+    }
+    .disc-checklist li:last-child { border-bottom: none; }
+    .disc-check-icon { width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; }
+    .disc-check-icon.done { background: #d1fae5; color: #059669; }
+    .disc-check-icon.miss { background: #fee2e2; color: #ef4444; }
+    /* CTA Buttons */
+    .btn-discover {
+        width: 100%; min-height: 42px; border: none; border-radius: 12px;
+        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        color: #fff; font-family: inherit; font-size: 13px; font-weight: 700;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        gap: 8px; box-shadow: 0 6px 18px rgba(37, 99, 235, 0.15);
+        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+        -webkit-tap-highlight-color: transparent; text-decoration: none;
+        margin-bottom: 8px;
+    }
+    .btn-discover:active { transform: scale(0.97); }
+    .btn-discover.secondary {
+        background: white; color: #2563eb;
+        border: 2px solid rgba(37,99,235,0.2);
+        box-shadow: 0 4px 12px rgba(37,99,235,0.08);
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="feed-wrapper">
+    <!-- Header -->
+    <div class="feed-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <a href="{% url 'home' %}" class="match-back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <h2>Match</h2>
+        </div>
+        <a href="{% url 'connections' %}" class="conn-link">
+            <i class="fas fa-user-friends" style="color: var(--primary);"></i>
+            <span style="font-size: 13px; font-weight: 700;">Connections</span>
+            {% if pending_connections_count > 0 %}
+            <span style="background: #ef4444; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 10px;">{{ pending_connections_count }}</span>
+            {% endif %}
+        </a>
+    </div>
+
+    <!-- Scrollable Feed -->
+    <div class="feed-body">
+        {% if not_discoverable %}
+            <div class="discovery-hidden-card">
+                <div class="discovery-icon-wrapper">
+                    <i class="fas {% if profile_complete and not is_verified %}fa-user-shield{% elif not profile_complete %}fa-list-check{% else %}fa-eye-slash{% endif %}"></i>
+                </div>
+                <h2>
+                    {% if not profile_complete and not is_verified %}
+                        Complete &amp; Verify to Match
+                    {% elif not profile_complete %}
+                        Complete Your Profile
+                    {% elif not is_verified %}
+                        Verify Your Account
+                    {% else %}
+                        Discovery is Off
+                    {% endif %}
+                </h2>
+                <p>
+                    {% if not profile_complete and not is_verified %}
+                        Fill in the missing details and verify your account to start finding matches.
+                    {% elif not profile_complete %}
+                        You're almost there! Fill in the missing details to enable discovery.
+                    {% elif not is_verified %}
+                        Your profile is complete! Verify your face to start matching with others.
+                    {% else %}
+                        Turn on discoverability to start matching with others!
+                    {% endif %}
+                </p>
+
+                {% if checklist %}
+                <ul class="disc-checklist">
+                    {% for item in checklist %}
+                        {% if not item.done %}
+                        <li>
+                            <span class="disc-check-icon miss">
+                                <i class="fas fa-times"></i>
+                            </span>
+                            {{ item.name }}
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+                {% endif %}
+
+
+                {% if not profile_complete %}
+                <a href="{% url 'edit_profile' %}" class="btn-discover">
+                    <i class="fas fa-user-edit"></i>
+                    <span>Complete Profile</span>
+                </a>
+                {% endif %}
+                {% if not is_verified %}
+                <a href="{% url 'verify' %}" class="btn-discover {% if not profile_complete %}secondary{% endif %}">
+                    <i class="fas fa-user-check"></i>
+                    <span>Verify Account</span>
+                </a>
+                {% endif %}
+                {% if profile_complete and is_verified %}
+                <form id="discover-form" method="POST" action="{% url 'toggle_discoverable' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-discover">
+                        <i class="fas fa-compass"></i>
+                        <span>Enable Discovery</span>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        {% else %}
+            
+            <!-- Quiz Mode UI -->
+            {% if question %}
+                <div class="quiz-card" id="quiz-container">
+                    <div class="quiz-loading" id="quiz-loader">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: var(--primary); margin-bottom: 12px;"></i>
+                        <p style="font-weight: 700; color: var(--text-muted);">Finding Matches...</p>
+                    </div>
+
+                    <div class="profile-mini">
+                        <img src="{{ request.user.profile.get_profile_pic_url }}" alt="User">
+                        <div>
+                            <h3>Answer the questions to find connection</h3>
+                            <p id="round-status">Round in progress...</p>
+                        </div>
+                    </div>
+
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span id="progress-text">0 / 10 answered</span>
+                            <span id="progress-percent">0%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" id="progress-bar"></div>
+                        </div>
+                    </div>
+
+                    <div id="question-area" class="question-box">
+                        <h2 id="q-text">Loading question...</h2>
+                        <div class="options-list" id="options-container">
+                            <!-- Options injected here -->
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Discovery Feed (Matches) -->
+            {% if matches %}
+                <h3 style="font-size: 14px; text-transform: uppercase; color: var(--text-muted); margin: 20px 4px 12px; font-weight: 800; letter-spacing: 0.05em;">Recommended Matches</h3>
+                {% for m in matches %}
+                <div class="match-card">
+                    <div class="match-info">
+                        <img src="{{ m.profile.get_profile_pic_url }}" class="match-avatar" alt="Avatar">
+                        <div>
+                            <h4 style="margin:0; font-size: 15px;">{{ m.profile.name|default:m.profile.user.username }}</h4>
+                            <div class="match-score">{{ m.score }}% Match</div>
+                        </div>
+                    </div>
+                    <a href="{% url 'view_profile' m.profile.user.id %}" class="btn-view">View</a>
+                </div>
+                {% endfor %}
+            {% elif not question %}
+                <div class="all-done">
+                    <div class="icon"><i class="fas fa-sparkles"></i></div>
+                    <h2>All caught up!</h2>
+                    <p style="color: var(--text-muted);">Check back later for new profiles.</p>
+                </div>
+            {% endif %}
+
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const discoverForm = document.getElementById("discover-form");
+    if (discoverForm) {
+        discoverForm.addEventListener("submit", function(e) {
+            const isVerified = "{{ request.user.profile.is_face_verified|yesno:'true,false' }}" === "true";
+            if (!isVerified) {
+                e.preventDefault();
+                customConfirm(
+                    "You need to verify your account to turn on discovery and match with others. Would you like to verify now?",
+                    "Verification Required",
+                    "Verify Now",
+                    "Later"
+                ).then((confirmed) => {
+                    if (confirmed) {
+                        window.location.href = "{% url 'verify' %}";
+                    }
+                });
+            }
+        });
+    }
+});
+
+let quizBatch = [];
+let currentIndex = 0;
+let answers = [];
+
+async function initQuiz() {
+    const container = document.getElementById('quiz-container');
+    if (!container) return;
+
+    try {
+        const res = await fetch("{% url 'get_quiz_batch' %}");
+        const data = await res.json();
+        quizBatch = data.questions;
+        if (quizBatch && quizBatch.length > 0) {
+            renderQuestion();
+        } else {
+            // No questions left, maybe show matches
+            container.style.display = 'none';
+        }
+    } catch (e) { console.error("Batch load error:", e); }
+}
+
+function renderQuestion() {
+    const q = quizBatch[currentIndex];
+    const qArea = document.getElementById('question-area');
+    const qText = document.getElementById('q-text');
+    const optContainer = document.getElementById('options-container');
+
+    // Update Progress
+    const progress = Math.round((currentIndex / 10) * 100);
+    document.getElementById('progress-bar').style.width = `${progress}%`;
+    document.getElementById('progress-text').innerText = `${currentIndex} / 10 answered`;
+    document.getElementById('progress-percent').innerText = `${progress}%`;
+
+    // Animation
+    qArea.style.opacity = '1';
+    qArea.style.transform = 'translateX(0)';
+    
+    qText.innerText = q.text;
+    optContainer.innerHTML = q.options.map(opt => `
+        <button type="button" class="option-btn" onclick="handleOptionSelect(${q.id}, ${opt.id}, this)">
+            ${opt.text}
+        </button>
+    `).join('');
+}
+
+async function handleOptionSelect(qId, optId, btn) {
+    // 1. Mark selected
+    const allBtns = document.querySelectorAll('.option-btn');
+    allBtns.forEach(b => b.disabled = true);
+    btn.classList.add('selected');
+
+    // 2. Save answer locally
+    answers.push({ question_id: qId, option_id: optId });
+    currentIndex++;
+
+    // 3. Update progress immediately for feedback
+    const progress = Math.round((currentIndex / 10) * 100);
+    document.getElementById('progress-bar').style.width = `${progress}%`;
+    document.getElementById('progress-text').innerText = `${currentIndex} / 10 answered`;
+    document.getElementById('progress-percent').innerText = `${progress}%`;
+
+    // 4. Wait 1 second (per user request)
+    await new Promise(r => setTimeout(r, 800)); // slightly less than 1s for better feel
+
+    // 5. Transition
+    const qArea = document.getElementById('question-area');
+    qArea.classList.add('q-fade-out');
+
+    setTimeout(async () => {
+        if (currentIndex < quizBatch.length && currentIndex < 10) {
+            qArea.classList.remove('q-fade-out');
+            qArea.style.opacity = '0';
+            qArea.style.transform = 'translateX(10px)';
+            renderQuestion();
+        } else {
+            // FINISHED BATCH
+            submitBatch();
+        }
+    }, 300);
+}
+
+async function submitBatch() {
+    const loader = document.getElementById('quiz-loader');
+    if (loader) loader.style.display = 'flex';
+
+    try {
+        const res = await fetch("{% url 'save_quiz_batch' %}", {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ answers: answers })
+        });
+        const data = await res.json();
+        if (data.success) {
+            // Reload to show the new match popup
+            window.location.reload();
+        }
+    } catch (e) { 
+        console.error("Save error:", e);
+        customAlert("Saving failed. Please refresh.", "Error");
+    }
+}
+
+// Start
+initQuiz();
+</script>
+{% endblock %}

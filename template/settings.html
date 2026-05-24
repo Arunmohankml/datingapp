@@ -63,16 +63,16 @@
           },
           "borderRadius": {
                   "DEFAULT": "1rem",
-                  "lg": "2rem",
-                  "xl": "3rem",
+                  "lg": "1.5rem",
+                  "xl": "2rem",
                   "full": "9999px"
           },
           "spacing": {
-                  "card-padding": "24px",
-                  "section-gap": "40px",
-                  "stack-gap": "20px",
-                  "gutter": "16px",
-                  "container-margin": "24px"
+                  "card-padding": "16px",
+                  "section-gap": "20px",
+                  "stack-gap": "14px",
+                  "gutter": "12px",
+                  "container-margin": "16px"
           },
           "fontFamily": {
                   "label-bold": ["Plus Jakarta Sans"],
@@ -84,13 +84,13 @@
                   "body-lg": ["Plus Jakarta Sans"]
           },
           "fontSize": {
-                  "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
-                  "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
-                  "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
-                  "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
-                  "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
-                  "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
-                  "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                  "label-bold": ["11px", {"lineHeight": "14px", "fontWeight": "700"}],
+                  "headline-lg": ["26px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                  "headline-lg-mobile": ["20px", {"lineHeight": "26px", "fontWeight": "700"}],
+                  "title-md": ["15px", {"lineHeight": "20px", "fontWeight": "600"}],
+                  "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                  "display-lg": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                  "body-lg": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
           }
         },
       },
@@ -120,196 +120,214 @@
 {% block body %}
 <body class="bg-background text-on-surface min-h-screen pb-24">
 <!-- TopAppBar -->
-<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 flex items-center justify-between px-container-margin h-16">
-<div class="flex items-center gap-4">
-<button class="p-2 rounded-full hover:bg-surface-container-high/50 active:scale-95 transition-all text-primary border-0 bg-none cursor-pointer" onclick="window.history.back()">
-<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 flex items-center justify-between px-container-margin h-12">
+<div class="flex items-center gap-3">
+<button class="p-1.5 rounded-full hover:bg-surface-container-high/50 active:scale-95 transition-all text-primary border-0 bg-none cursor-pointer" onclick="window.history.back()">
+<span class="material-symbols-outlined" style="font-size:20px;">arrow_back</span>
 </button>
 <h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary tracking-tight">Settings</h1>
 </div>
-<div class="flex items-center gap-2">
-<button class="p-2 rounded-full hover:bg-surface-container-high/50 active:scale-95 transition-all text-on-surface-variant border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+<div class="flex items-center gap-1">
+<button class="p-1.5 rounded-full hover:bg-surface-container-high/50 active:scale-95 transition-all text-on-surface-variant border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined" style="font-size:20px;">help_outline</span>
 </button>
 </div>
 </header>
 
-<!-- Main Content Area -->
-<main class="pt-24 px-container-margin max-w-2xl mx-auto space-y-stack-gap">
-<!-- Hero Promo Card: Install SRM Match -->
-<section class="relative overflow-hidden bg-primary-container rounded-lg p-card-padding shadow-lg group">
-<!-- Decorative background element -->
-<div class="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+<!-- Main Content -->
+<main class="pt-16 px-container-margin max-w-2xl mx-auto space-y-3">
+
+<!-- Install App Card -->
+<section id="install-app-card" class="relative overflow-hidden bg-primary-container rounded-[20px] p-4 shadow-lg group" style="display:none;">
+<div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
 <div class="flex items-center justify-between relative z-10">
-<div class="flex items-center gap-4">
-<div class="bg-white/20 p-3 rounded-2xl">
-<span class="material-symbols-outlined text-white text-[32px]" data-icon="smartphone">smartphone</span>
+<div class="flex items-center gap-3">
+<div class="bg-white/20 p-2 rounded-xl">
+<span class="material-symbols-outlined text-white text-[24px]">smartphone</span>
 </div>
 <div>
-<h2 class="font-title-md text-title-md text-on-primary-container">Install SRM Match</h2>
-<p class="font-body-sm text-body-sm text-on-primary-container/80">Get the full app experience</p>
+<h2 class="font-title-md text-title-md text-on-primary-container" style="font-size:15px;font-weight:700;">Install SRM Match</h2>
+<p class="font-body-sm text-body-sm text-on-primary-container/80" style="font-size:13px;">Get the full app experience</p>
 </div>
 </div>
-<button class="bg-white text-primary px-6 py-2 rounded-full font-label-bold text-label-bold hover:bg-surface-container-lowest transition-colors active:scale-95 border-0 cursor-pointer">
-Install
-</button>
+<button onclick="triggerPwaInstall()" class="bg-white text-primary px-5 py-1.5 rounded-full font-label-bold text-label-bold hover:bg-surface-container-lowest transition-colors active:scale-95 border-0 cursor-pointer" style="font-size:12px;">Install</button>
 </div>
 </section>
 
 <!-- Settings List -->
-<div class="space-y-stack-gap">
-<!-- Push Notifications Toggle Card -->
-<div class="bg-surface-container-lowest rounded-lg p-card-padding shadow-card border border-outline-variant/10 flex items-center justify-between group cursor-pointer hover:bg-surface-container-low transition-colors">
-<div class="flex items-center gap-4">
-<div class="w-12 h-12 rounded-2xl bg-tertiary-fixed-dim/20 flex items-center justify-center">
-<span class="material-symbols-outlined text-tertiary" data-icon="notifications" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<div class="space-y-3">
+
+<!-- Push Notifications -->
+<div class="bg-surface-container-lowest rounded-[20px] p-4 shadow-card border border-outline-variant/10">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-[14px] bg-tertiary-fixed-dim/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" style="font-size:20px; font-variation-settings:'FILL' 1;">notifications</span>
 </div>
 <div>
-<h3 class="font-title-md text-title-md">Push Notifications</h3>
-<p class="font-body-sm text-body-sm text-tertiary font-semibold">Enabled</p>
+<h3 class="font-title-md text-title-md" style="font-size:15px;font-weight:600;">Push Notifications</h3>
+<p id="notif-status" class="font-body-sm text-body-sm text-tertiary font-semibold" style="font-size:13px;">Checking...</p>
 </div>
 </div>
-<div class="w-12 h-6 bg-primary-container rounded-full relative flex items-center px-1">
-<div class="w-4 h-4 bg-white rounded-full translate-x-6 transition-transform"></div>
+<button onclick="forceAskPushPermission()" class="bg-primary text-white px-4 py-1.5 rounded-full font-label-bold text-label-bold active:scale-95 border-0 cursor-pointer" style="font-size:11px;">Request</button>
 </div>
 </div>
 
-<!-- Request Permissions Card -->
-<div class="bg-surface-container-lowest rounded-lg p-card-padding shadow-card border border-outline-variant/10 flex items-center justify-between group cursor-pointer hover:bg-surface-container-low transition-colors">
-<div class="flex items-center gap-4">
-<div class="w-12 h-12 rounded-2xl bg-secondary-container/40 flex items-center justify-center">
-<span class="material-symbols-outlined text-primary" data-icon="key">key</span>
+<!-- Latest Updates -->
+<a href="{% url 'announcements' %}" class="block bg-surface-container-lowest rounded-[20px] p-4 shadow-card border border-outline-variant/10 hover:bg-surface-container-low transition-colors no-underline">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-[14px] bg-secondary-container/40 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" style="font-size:20px;">campaign</span>
 </div>
 <div>
-<h3 class="font-title-md text-title-md">Request Notification Permissions</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Force prompt to enable notification settings</p>
+<h3 class="font-title-md text-title-md" style="font-size:15px;font-weight:600;color:var(--text-main);">Latest Updates</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant" style="font-size:13px;">See news and announcements</p>
 </div>
 </div>
-<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+<span class="material-symbols-outlined text-outline" style="font-size:18px;">chevron_right</span>
 </div>
+</a>
 
-<!-- Latest Updates Card -->
-<div class="bg-surface-container-lowest rounded-lg p-card-padding shadow-card border border-outline-variant/10 flex items-center justify-between group cursor-pointer hover:bg-surface-container-low transition-colors">
-<div class="flex items-center gap-4">
-<div class="w-12 h-12 rounded-2xl bg-secondary-container/40 flex items-center justify-center">
-<span class="material-symbols-outlined text-primary" data-icon="campaign">campaign</span>
+<!-- Policy & Terms -->
+<button onclick="openPolicyModal()" class="w-full bg-surface-container-lowest rounded-[20px] p-4 shadow-card border border-outline-variant/10 hover:bg-surface-container-low transition-colors text-left border-0 cursor-pointer">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-[14px] bg-secondary-container/40 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" style="font-size:20px;">description</span>
 </div>
 <div>
-<h3 class="font-title-md text-title-md">Latest Updates</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant">See news and announcements</p>
+<h3 class="font-title-md text-title-md" style="font-size:15px;font-weight:600;color:var(--text-main);">Policy & Terms</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant" style="font-size:13px;">View community guidelines</p>
 </div>
 </div>
-<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+<span class="material-symbols-outlined text-outline" style="font-size:18px;">chevron_right</span>
 </div>
+</button>
 
-<!-- Policy & Terms Card -->
-<div class="bg-surface-container-lowest rounded-lg p-card-padding shadow-card border border-outline-variant/10 flex items-center justify-between group cursor-pointer hover:bg-surface-container-low transition-colors">
-<div class="flex items-center gap-4">
-<div class="w-12 h-12 rounded-2xl bg-secondary-container/40 flex items-center justify-center">
-<span class="material-symbols-outlined text-primary" data-icon="description">description</span>
+<!-- Logout -->
+<button onclick="handleLogout()" class="w-full bg-surface-container-lowest rounded-[20px] p-4 shadow-card border border-outline-variant/10 hover:bg-surface-container-low transition-colors text-left border-0 cursor-pointer">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-[14px] bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-size:20px;">logout</span>
 </div>
 <div>
-<h3 class="font-title-md text-title-md">Policy & Terms</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant">View community guidelines</p>
+<h3 class="font-title-md text-title-md" style="font-size:15px;font-weight:600;color:var(--text-main);">Logout</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant" style="font-size:13px;">Sign out of your account</p>
 </div>
 </div>
-<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+<span class="material-symbols-outlined text-outline" style="font-size:18px;">chevron_right</span>
 </div>
+</button>
 
-<!-- Logout Card -->
-<form id="logout-form" method="POST" action="{% url 'logout' %}">
-{% csrf_token %}
-<div class="bg-surface-container-lowest rounded-lg p-card-padding shadow-card border border-outline-variant/10 flex items-center justify-between group cursor-pointer hover:bg-surface-container-low transition-colors">
-<div class="flex items-center gap-4">
-<div class="w-12 h-12 rounded-2xl bg-surface-container-high flex items-center justify-center">
-<span class="material-symbols-outlined text-on-surface-variant" data-icon="logout">logout</span>
+</div><!-- /settings-list -->
+
+<!-- Delete Account -->
+<div class="pt-6">
+<button onclick="handleDeleteAccount()" class="w-full bg-error-container/20 rounded-[20px] p-4 shadow-card border border-error/10 hover:bg-error-container/30 transition-colors text-left border-0 cursor-pointer">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-[14px] bg-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-error" style="font-size:20px; font-variation-settings:'FILL' 1;">delete</span>
 </div>
 <div>
-<h3 class="font-title-md text-title-md">Logout</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant">Sign out of your account</p>
+<h3 class="font-title-md text-title-md" style="font-size:15px;font-weight:700;color:#dc2626;">Delete Account</h3>
+<p class="font-body-sm text-body-sm" style="font-size:13px;color:#ef4444;">Permanently remove your data</p>
 </div>
 </div>
-<button type="submit" style="border: none; background: none;" class="border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+<span class="material-symbols-outlined text-error" style="font-size:18px;">chevron_right</span>
+</div>
 </button>
 </div>
-</form>
-</div>
 
-<!-- Danger Zone Spacer -->
-<div class="pt-8">
-<!-- Delete Account Card -->
-<form id="delete-account-form" method="POST" action="{% url 'delete_account' %}">
-{% csrf_token %}
-<div class="bg-error-container/20 rounded-lg p-card-padding shadow-card border border-error/10 flex items-center justify-between group cursor-pointer hover:bg-error-container/30 transition-colors">
-<div class="flex items-center gap-4">
-<div class="w-12 h-12 rounded-2xl bg-error-container flex items-center justify-center">
-<span class="material-symbols-outlined text-error" data-icon="delete" style="font-variation-settings: 'FILL' 1;">delete</span>
-</div>
-<div>
-<h3 class="font-title-md text-title-md text-error">Delete Account</h3>
-<p class="font-body-sm text-body-sm text-error/80">Permanently remove your data</p>
-</div>
-</div>
-<button type="submit" style="border: none; background: none;" class="border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined text-error" data-icon="chevron_right">chevron_right</span>
-</button>
-</div>
-</form>
-</div>
-
-<!-- App Version Info -->
-<div class="text-center pt-8 pb-12">
-<p class="font-label-bold text-label-bold text-on-surface-variant/40 uppercase tracking-widest">CampusPulse v2.4.0</p>
+<!-- App Version -->
+<div class="text-center pt-6 pb-8">
+<p class="font-label-bold text-label-bold text-on-surface-variant/40 uppercase tracking-widest" style="font-size:11px;">CampusPulse v2.4.0</p>
 </div>
 </main>
 
-<script>
-document.querySelector('.w-12.h-6').parentElement.addEventListener('click', function() {
-  const dot = this.querySelector('.translate-x-6') || this.querySelector('.translate-x-1');
-  const bg = this.querySelector('.bg-primary-container') || this.querySelector('.bg-surface-variant');
-  const statusText = this.querySelector('p');
+<!-- Policy Modal -->
+<div id="policy-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;padding:20px;align-items:center;justify-content:center;">
+<div class="bg-surface-container-lowest rounded-[20px] p-6 shadow-lg" style="width:100%;max-width:500px;max-height:80vh;overflow-y:auto;position:relative;">
+<button onclick="closePolicyModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;cursor:pointer;padding:4px;">
+<span class="material-symbols-outlined text-outline" style="font-size:20px;">close</span>
+</button>
+<h3 style="margin:0 0 16px;font-size:18px;font-weight:800;color:#191c1e;">SRM Match Policy</h3>
+<ul style="margin:0;padding-left:18px;font-size:13px;color:#64748b;line-height:1.6;display:flex;flex-direction:column;gap:8px;">
+<li>You must be 18 years or older to use this app.</li>
+<li>You must use your own SRM email/account. Fake accounts or impersonation are not allowed.</li>
+<li>Your profile photo, bio, confessions, and messages must not contain abuse, hate, threats, or harassment.</li>
+<li>Face verification is used to reduce fake profiles and keep the app safer.</li>
+<li>Your face verification image will be stored privately and will not be shown publicly on your profile.</li>
+<li>Face verification images may be reviewed by admins only for verification, safety, or moderation purposes.</li>
+<li>Anonymous confessions are hidden from the public, but admins may review them if there is abuse, spam, or reports.</li>
+<li>Do not post real names, phone numbers, hostel/room details, private chats, or personal information of others.</li>
+<li>Confessions containing names, abusive words, repeated spam, or sensitive content may be sent for admin approval or removed.</li>
+<li>Users can report profiles, confessions, or messages that feel unsafe or inappropriate.</li>
+<li>We may ban accounts, devices, fingerprints, or IP addresses if users spam, harass others, create fake profiles, or break rules.</li>
+<li>Your data is used only to run the app, verify users, improve safety, and prevent misuse.</li>
+<li>We do not sell your personal data.</li>
+<li>You can request account/data deletion by contacting the admin.</li>
+<li>By using this app, you agree to follow these rules and use the platform respectfully.</li>
+</ul>
+</div>
+</div>
 
-  if (dot.classList.contains('translate-x-6')) {
-    dot.classList.replace('translate-x-6', 'translate-x-1');
-    dot.parentElement.classList.replace('bg-primary-container', 'bg-surface-variant');
-    statusText.textContent = 'Disabled';
-    statusText.classList.replace('text-tertiary', 'text-on-surface-variant');
+<!-- Hidden form for logout -->
+<form id="logout-form" method="POST" action="{% url 'logout' %}" style="display:none;">{% csrf_token %}</form>
+<!-- Hidden form for delete account -->
+<form id="delete-account-form" method="POST" action="{% url 'delete_account' %}" style="display:none;">{% csrf_token %}</form>
+
+<script>
+function openPolicyModal() {
+  const m = document.getElementById('policy-modal');
+  m.style.display = 'flex';
+  setTimeout(() => { m.style.opacity = '1'; }, 10);
+}
+function closePolicyModal() {
+  const m = document.getElementById('policy-modal');
+  m.style.opacity = '0';
+  setTimeout(() => { m.style.display = 'none'; }, 200);
+}
+async function handleLogout() {
+  const c = await customConfirm("Are you sure you want to logout?", "Logout", "Logout", "Stay");
+  if (c) document.getElementById('logout-form').submit();
+}
+async function handleDeleteAccount() {
+  const c = await customConfirm(
+    "This action CANNOT be undone. All your matches, chats, and confessions will be lost forever.",
+    "Delete Account?", "Permanently Delete", "Keep Account"
+  );
+  if (c) document.getElementById('delete-account-form').submit();
+}
+function forceAskPushPermission() {
+  if (window.showCustomNotificationPrompt) {
+    window.showCustomNotificationPrompt(true);
   } else {
-    dot.classList.replace('translate-x-1', 'translate-x-6');
-    dot.parentElement.classList.replace('bg-surface-variant', 'bg-primary-container');
-    statusText.textContent = 'Enabled';
-    statusText.classList.replace('text-on-surface-variant', 'text-tertiary');
+    customAlert("Push notification system is loading. Please try again in a moment.", "System Loading");
+  }
+}
+function updateNotifStatus() {
+  const el = document.getElementById('notif-status');
+  if (!el) return;
+  if ('Notification' in window) {
+    if (Notification.permission === 'granted') { el.innerText = 'Enabled'; el.style.color = '#22c55e'; }
+    else if (Notification.permission === 'denied') { el.innerText = 'Blocked in settings'; el.style.color = '#ef4444'; }
+    else { el.innerText = 'Not yet granted'; el.style.color = '#64748b'; }
+  } else {
+    el.innerText = 'Not supported'; el.style.color = '#ef4444';
+  }
+}
+document.addEventListener('DOMContentLoaded', function() {
+  updateNotifStatus();
+  window.addEventListener('notificationPermissionChanged', updateNotifStatus);
+  // Show install card if PWA not installed
+  if (typeof isAppInstalled === 'function' && !isAppInstalled()) {
+    var card = document.getElementById('install-app-card');
+    if (card) card.style.display = 'block';
   }
 });
-
-document.querySelectorAll('.cursor-pointer').forEach(card => {
-  card.addEventListener('mousedown', () => card.classList.add('scale-[0.98]'));
-  card.addEventListener('mouseup', () => card.classList.remove('scale-[0.98]'));
-  card.addEventListener('mouseleave', () => card.classList.remove('scale-[0.98]'));
-});
-    }
-
-    function updateNotifStatus() {
-        const statusEl = document.getElementById('notif-status');
-        if (!statusEl) return;
-        
-        if ('Notification' in window) {
-            if (Notification.permission === 'granted') {
-                statusEl.innerText = "Enabled";
-                statusEl.style.color = "#22c55e";
-            } else if (Notification.permission === 'denied') {
-                statusEl.innerText = "Blocked in settings";
-                statusEl.style.color = "#ef4444";
-            } else {
-                statusEl.innerText = "Not yet granted";
-                statusEl.style.color = "var(--text-muted)";
-            }
-        } else {
-            statusEl.innerText = "Not supported in this browser";
-            statusEl.style.color = "#ef4444";
-        }
-    }
 </script>
 </body>
 {% endblock %}

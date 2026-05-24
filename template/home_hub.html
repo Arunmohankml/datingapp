@@ -5,515 +5,499 @@
 
 {% block head %}
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Outfit:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
-
-    /* Force a gorgeous light screen blue background for the entire page */
-    body {
-        background: #f0f6ff !important;
+    .container {
+        padding-top: 18px !important;
     }
 
-    .top-nav-bar {
-        position: fixed;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100%;
-        max-width: 500px;
-        z-index: 1000;
-        background: #ffffff; /* pure bright white */
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(59, 130, 246, 0.08);
-        padding: 13px 18px; /* Taller padding for a premium, solid presence */
+    .hub-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .hub-topbar {
         display: flex;
         align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.04);
-        box-sizing: border-box;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 8px 2px 4px;
     }
 
-    .nav-brand {
-        font-family: 'Outfit', 'Montserrat', 'Inter', sans-serif;
-        font-size: 21px; /* Slightly larger text size */
-        font-weight: 900;
-        letter-spacing: -0.8px;
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); /* solid blue premium gradient */
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-transform: uppercase;
-        display: flex;
+    .hub-brand-kicker {
+        display: inline-flex;
         align-items: center;
-        gap: 5px;
-    }
-
-    .brand-hub-badge {
-        font-family: 'Inter', sans-serif;
-        font-size: 9px; /* Slightly larger badge text */
-        font-weight: 850;
-        letter-spacing: 0.5px;
+        gap: 8px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
-        color: #3b82f6;
-        background: rgba(59, 130, 246, 0.07);
-        border: 1px solid rgba(59, 130, 246, 0.12);
-        padding: 2px 5px;
-        border-radius: 5px;
-        vertical-align: middle;
-        text-fill-color: initial;
-        -webkit-text-fill-color: initial;
+        color: #5a6a80;
     }
 
-    .hub-container {
+    .hub-brand-kicker .material-symbols-outlined {
+        font-size: 18px;
+        color: var(--primary);
+    }
+
+    .hub-title {
+        margin: 6px 0 0;
+        font-size: clamp(28px, 6vw, 34px);
+        line-height: 1.1;
+        letter-spacing: -0.04em;
+        font-weight: 800;
+        color: #151b27;
+    }
+
+    .hub-subtitle {
+        margin: 8px 0 0;
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-muted);
+        max-width: 28rem;
+    }
+
+    .hub-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 14px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        border-radius: 999px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+        font-size: 12px;
+        font-weight: 700;
+        color: #17305f;
+        white-space: nowrap;
+    }
+
+    .hub-chip .metric {
+        color: var(--primary);
+    }
+
+    .hero-card {
         position: relative;
-        padding: 6px 8px;
-        max-width: 500px;
-        margin: 12px auto 0; /* Reduced from 38px to bring the content grid closer and eliminate empty gap */
-        padding-bottom: 80px;
-        box-sizing: border-box;
+        overflow: hidden;
+        border-radius: 32px;
+        padding: 24px;
+        background: linear-gradient(135deg, #004ac6 0%, #3f7dff 100%);
+        color: #ffffff;
+        box-shadow: 0 22px 45px rgba(0, 74, 198, 0.2);
     }
 
-    /* Soft floating blue auras */
-    .mesh-glow {
+    .hero-card::before {
+        content: "";
         position: absolute;
+        width: 190px;
+        height: 190px;
+        top: -70px;
+        right: -52px;
         border-radius: 50%;
-        filter: blur(50px);
-        z-index: -1;
-        pointer-events: none;
-        opacity: 0.45;
-    }
-    .mesh-glow-1 {
-        top: 2%;
-        left: -10%;
-        width: 180px;
-        height: 180px;
-        background: radial-gradient(circle, rgba(37, 99, 235, 0.22) 0%, rgba(255,255,255,0) 70%);
-    }
-    .mesh-glow-2 {
-        top: 40%;
-        right: -10%;
-        width: 200px;
-        height: 200px;
-        background: radial-gradient(circle, rgba(79, 70, 229, 0.18) 0%, rgba(255,255,255,0) 70%);
+        background: rgba(255, 255, 255, 0.14);
+        filter: blur(2px);
     }
 
-    /* 2-Column Grid Layout with enhanced spacing */
+    .hero-card::after {
+        content: "";
+        position: absolute;
+        inset: auto auto -44px -20px;
+        width: 170px;
+        height: 170px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .hero-label {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    .hero-card h2 {
+        position: relative;
+        z-index: 1;
+        margin: 16px 0 10px;
+        font-size: clamp(24px, 6vw, 31px);
+        line-height: 1.12;
+        letter-spacing: -0.04em;
+        font-weight: 800;
+    }
+
+    .hero-card p {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        max-width: 24rem;
+        font-size: 14px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.84);
+    }
+
     .hub-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 16px;
-        margin-bottom: 16px;
     }
 
     .hub-card {
-        position: relative;
-        background: #ffffff;
-        border-radius: 18px;
-        padding: 24px 14px 20px;
-        text-decoration: none;
-        border: 1px solid rgba(59, 130, 246, 0.08); /* light blue subtle borders */
-        box-shadow: 0 2px 12px rgba(37, 99, 235, 0.01);
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         display: flex;
         flex-direction: column;
-        align-items: center;
-        text-align: center;
-        box-sizing: border-box;
+        gap: 12px;
+        min-height: 196px;
+        padding: 20px;
+        text-decoration: none;
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        border-radius: 28px;
+        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+        transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
     }
 
     .hub-card:hover {
-        transform: translateY(-2px);
-        border-color: rgba(37, 99, 235, 0.2);
-        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.025);
-    }
-
-    .hub-card.match:hover {
-        border-color: rgba(79, 70, 229, 0.2);
+        transform: translateY(-3px);
+        box-shadow: 0 22px 40px rgba(15, 23, 42, 0.08);
+        border-color: rgba(0, 74, 198, 0.14);
     }
 
     .hub-card:active {
-        transform: scale(0.98);
-    }
-
-    .hub-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        margin-bottom: 12px;
-        transition: all 0.3s ease;
-    }
-
-    .hub-card.match .hub-icon {
-        background: #e0e7ff;
-        color: #4f46e5;
-    }
-
-    .hub-card.room .hub-icon {
-        background: #e0f2fe;
-        color: #0284c7;
-    }
-
-    .hub-card h2 {
-        font-family: 'Outfit', 'Inter', sans-serif;
-        font-size: 16px;
-        font-weight: 800;
-        color: #0f172a;
-        margin: 0 0 6px;
-        letter-spacing: -0.3px;
-    }
-
-    .hub-card p {
-        font-family: 'Inter', sans-serif;
-        font-size: 11px;
-        color: #64748b;
-        margin: 0 0 12px;
-        line-height: 1.4;
-        font-weight: 500;
-        height: 42px;
-        overflow: hidden;
-    }
-
-    .hub-action-btn {
-        margin-top: auto;
-        padding: 6px 14px;
-        border-radius: 12px;
-        font-family: 'Inter', sans-serif;
-        font-size: 10px;
-        font-weight: 750;
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
-        transition: all 0.2s ease;
-    }
-
-    .hub-card.match .hub-action-btn {
-        background: #e0e7ff;
-        color: #4f46e5;
-    }
-
-    .hub-card.room .hub-action-btn {
-        background: #e0f2fe;
-        color: #0284c7;
-    }
-
-    .hub-card.match:hover .hub-action-btn {
-        background: #4f46e5;
-        color: #ffffff;
-    }
-
-    .hub-card.room:hover .hub-action-btn {
-        background: #0284c7;
-        color: #ffffff;
-    }
-
-    /* Modern Blue-Themed Accent Sections */
-    .hub-section {
-        position: relative;
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 16px 16px;
-        margin-bottom: 16px;
-        border: 1px solid rgba(59, 130, 246, 0.08); /* light blue border */
-        box-shadow: 0 2px 14px rgba(37, 99, 235, 0.01);
-        box-sizing: border-box;
-    }
-
-    .hub-section h3 {
-        font-family: 'Outfit', 'Inter', sans-serif;
-        font-size: 13.5px;
-        font-weight: 800;
-        color: #0f172a;
-        margin: 0 0 10px;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        letter-spacing: -0.2px;
-    }
-
-    /* Red accent left-border for confessions, blue accent left-border for updates */
-    .hub-section.confession-section {
-        border-left: 3px solid #4f46e5;
-        background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
-    }
-
-    .hub-section.updates-section {
-        border-left: 3px solid #3b82f6; /* premium blue accent left line */
-        background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%); /* blue tinted background gradient */
-    }
-
-    /* Modern Clickable Speech Confession Card */
-    a.top-confession-link {
-        display: block;
-        text-decoration: none;
-        outline: none;
-    }
-
-    .top-confession {
-        position: relative;
-        background: rgba(238, 242, 255, 0.45); /* soft periwinkle-blue quote card background tint */
-        border-radius: 14px;
-        padding: 10px 12px 6px;
-        border: 1px solid rgba(79, 70, 229, 0.06);
-        overflow: hidden;
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    a.top-confession-link:hover .top-confession {
-        transform: translateY(-1px);
-        background: rgba(238, 242, 255, 0.75);
-        border-color: rgba(79, 70, 229, 0.15);
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.02);
-    }
-
-    a.top-confession-link:active .top-confession {
         transform: scale(0.985);
     }
 
-    .confession-body-wrapper {
-        max-height: 40px;
-        overflow: hidden;
-        position: relative;
+    .hub-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #e4ecff;
+        color: var(--primary);
     }
 
-    .confession-body-wrapper p {
-        font-family: 'Inter', sans-serif;
-        font-size: 11.5px;
-        color: #334155;
-        line-height: 1.4;
+    .hub-card.room .hub-icon {
+        background: #dcf5e7;
+        color: #006242;
+    }
+
+    .hub-icon .material-symbols-outlined {
+        font-size: 26px;
+        font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .hub-card h3 {
+        margin: 2px 0 0;
+        font-size: 19px;
+        line-height: 1.2;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        color: #151b27;
+    }
+
+    .hub-card p {
         margin: 0;
-        font-weight: 550;
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--text-muted);
+    }
+
+    .hub-action {
+        margin-top: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--primary);
+    }
+
+    .hub-card.room .hub-action {
+        color: #006242;
+    }
+
+    .panel {
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        border-radius: 28px;
+        padding: 20px;
+        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+    }
+
+    .panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .panel-title {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        color: #151b27;
+    }
+
+    .panel-title .material-symbols-outlined {
+        font-size: 22px;
+        color: var(--primary);
+    }
+
+    .panel-badge {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #eef3fb;
+        color: #496179;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+
+    .featured-confession {
+        display: block;
+        text-decoration: none;
+        border-radius: 24px;
+        padding: 18px;
+        background: linear-gradient(180deg, rgba(225, 235, 255, 0.8), rgba(255, 255, 255, 0.96));
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .featured-confession:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .quote-mark {
+        font-size: 30px;
+        line-height: 1;
+        color: #7b95cf;
+    }
+
+    .featured-confession p {
+        margin: 10px 0 16px;
+        font-size: 14px;
+        line-height: 1.65;
+        color: #2d405e;
         font-style: italic;
     }
 
-    /* Static fade overlay inside quotes */
-    .fade-overlay {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 20px;
-        background: linear-gradient(to bottom, rgba(238, 242, 255, 0) 0%, rgba(238, 242, 255, 1) 100%);
-        pointer-events: none;
-        z-index: 2;
-    }
-
-    .top-confession .meta {
-        position: relative;
-        z-index: 2;
+    .meta-row {
         display: flex;
-        align-items: center;
-        gap: 5px;
-        margin-top: 8px;
-        padding-top: 6px;
-        border-top: 1px solid rgba(79, 70, 229, 0.15);
+        gap: 10px;
+        flex-wrap: wrap;
     }
 
     .meta-pill {
-        background: #ffffff;
-        border: 1px solid rgba(59, 130, 246, 0.12); /* blue border for badges */
-        padding: 2px 6px;
-        border-radius: 6px;
-        font-size: 9.5px;
-        font-weight: 700;
         display: inline-flex;
         align-items: center;
-        gap: 3px;
-        color: #3b82f6; /* blue text for meta labels */
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #ffffff;
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        color: #284879;
+        font-size: 12px;
+        font-weight: 700;
     }
 
-    .confession-section .meta-pill {
-        color: #4f46e5;
-        border-color: rgba(79, 70, 229, 0.15);
+    .meta-pill .material-symbols-outlined {
+        font-size: 16px;
     }
 
-    /* Campus Updates list item with soft blue theme */
-    .update-item {
+    .update-card {
         display: flex;
-        gap: 8px;
-        padding: 8px 10px;
-        border-radius: 14px;
-        background: rgba(239, 246, 255, 0.45); /* light blue updates card */
-        border: 1px solid rgba(59, 130, 246, 0.06);
-        align-items: center;
+        gap: 14px;
+        align-items: flex-start;
+        padding: 16px;
+        border-radius: 22px;
+        background: #f5f8fd;
+        border: 1px solid rgba(0, 74, 198, 0.06);
     }
 
     .update-icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 8px;
-        background: #dbeafe; /* gorgeous sky blue megaphone background */
-        color: #2563eb; /* royal blue icon color */
-        display: flex;
+        width: 44px;
+        height: 44px;
+        border-radius: 16px;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
+        background: #dbe7ff;
+        color: var(--primary);
         flex-shrink: 0;
-        font-size: 11px;
     }
 
-    .update-text p {
-        margin: 0 0 1px;
-        font-family: 'Inter', sans-serif;
-        font-size: 11.5px;
-        color: #0f172a;
+    .update-icon .material-symbols-outlined {
+        font-size: 22px;
+        font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .update-card h4 {
+        margin: 0 0 4px;
+        font-size: 14px;
+        line-height: 1.45;
         font-weight: 700;
-        line-height: 1.25;
+        color: #151b27;
     }
 
-    .update-text span {
-        font-family: 'Inter', sans-serif;
-        font-size: 9px;
-        color: #2563eb; /* blue dates label */
-        font-weight: 650;
+    .update-card span {
+        font-size: 12px;
+        font-weight: 700;
+        color: #5d7aa8;
     }
 
-    /* Campus Pulse compact horizontal capsule with soft blue glass */
     .pulse-widget {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(219, 234, 254, 0.7) 100%); /* blue frosted glass background */
-        border: 1px solid rgba(59, 130, 246, 0.15);
-        border-radius: 14px;
-        padding: 12px 16px;
-        margin-top: 12px;
-        margin-bottom: 12px;
-        box-shadow: 0 1px 10px rgba(59, 130, 246, 0.01);
-        box-sizing: border-box;
+        gap: 12px;
+        padding: 18px 20px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.74);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
     }
 
     .pulse-left {
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 10px;
     }
 
-    .pulse-dot {
-        width: 5px;
-        height: 5px;
-        background-color: #22c55e;
-        border-radius: 50%;
-        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
-        animation: pulse-ring 2s infinite cubic-bezier(0.66, 0, 0, 1);
+    .pulse-left .material-symbols-outlined {
+        font-size: 21px;
+        color: #006242;
+        font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
     }
 
-    @keyframes pulse-ring {
-        0% {
-            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
-        }
-        70% {
-            box-shadow: 0 0 0 5px rgba(34, 197, 94, 0);
-        }
-        100% {
-            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
-        }
-    }
-
-    .pulse-left span {
-        font-family: 'Inter', sans-serif;
-        font-size: 9.5px;
-        font-weight: 850;
-        color: #16a34a;
+    .pulse-label {
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        color: #4d6b58;
     }
 
     .pulse-right {
-        font-family: 'Outfit', 'Inter', sans-serif;
-        font-size: 11px;
-        font-weight: 800;
-        color: #0f172a;
+        font-size: 15px;
+        font-weight: 700;
+        color: #151b27;
+        text-align: right;
     }
 
     .pulse-right span {
-        color: #2563eb; /* royal blue counter color */
+        color: var(--primary);
     }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="top-nav-bar">
-    <span class="nav-brand">
-        SRM Match
-        <span class="brand-hub-badge">HUB</span>
-    </span>
-</div>
+<section class="hub-shell">
+    <div class="hub-topbar">
+        <div>
+            <div class="hub-brand-kicker">
+                <span class="material-symbols-outlined">favorite</span>
+                Campus Connection
+            </div>
+            <h1 class="hub-title">Welcome back to SRM Match</h1>
+            <p class="hub-subtitle">Find your campus tribe — match, room, and connect at SRM.</p>
+        </div>
+        <div class="hub-chip">
+            <span class="material-symbols-outlined">groups</span>
+            <span><span class="metric">{{ total_users }}</span> active</span>
+        </div>
+    </div>
 
-<div class="hub-container">
-    <!-- Soft backdrop blue glows -->
-    <div class="mesh-glow mesh-glow-1"></div>
-    <div class="mesh-glow mesh-glow-2"></div>
-
-    <!-- 2-Column Grid Layout with compressed margins/padding -->
     <div class="hub-grid">
         <a href="{% url 'match_feed' %}" class="hub-card match">
-            <div class="hub-icon"><i class="fas fa-heart"></i></div>
-            <h2>Match</h2>
-            <p>Find friends, connect and match with your campus mates.</p>
-            <span class="hub-action-btn">Enter Match <i class="fas fa-arrow-right" style="font-size: 7px;"></i></span>
+            <div class="hub-icon"><span class="material-symbols-outlined">favorite</span></div>
+            <h3>Match</h3>
+            <p>Find people with shared vibe, clean compatibility flow, and faster access to new connections.</p>
+            <span class="hub-action">Enter Match <span class="material-symbols-outlined">chevron_right</span></span>
         </a>
 
         <a href="{% url 'roomfinder_feed' %}" class="hub-card room">
-            <div class="hub-icon"><i class="fas fa-home"></i></div>
-            <h2>Roomie</h2>
-            <p>Find verified roommates and premium rooms near campus.</p>
-            <span class="hub-action-btn">Find Rooms <i class="fas fa-arrow-right" style="font-size: 7px;"></i></span>
+            <div class="hub-icon"><span class="material-symbols-outlined">bed</span></div>
+            <h3>Roomie</h3>
+            <p>Browse verified room options and roommate requests in a calmer, easier-to-scan layout.</p>
+            <span class="hub-action">Find Rooms <span class="material-symbols-outlined">chevron_right</span></span>
         </a>
     </div>
 
-    <!-- Latest Confession Section (Clickable block card) -->
-    <div class="hub-section confession-section">
-        <h3><i class="fas fa-fire" style="color: #4f46e5;"></i> Latest Confession</h3>
+    <div class="hero-card">
+        <span class="hero-label">
+            <span class="material-symbols-outlined">auto_awesome</span>
+            Daily hub
+        </span>
+        <h2>Jump into matching, room-finding, and campus updates from one polished space.</h2>
+        <p>Check confessions, find rooms, and friends at a glance below.</p>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2 class="panel-title"><span class="material-symbols-outlined">chat_bubble</span>Latest confession</h2>
+            <span class="panel-badge">Social</span>
+        </div>
         {% if latest_confession %}
-        <a href="{% url 'confessions_feed' %}" class="top-confession-link">
-            <div class="top-confession">
-                <div class="confession-body-wrapper">
-                    <p>"{{ latest_confession.content }}"</p>
-                    <div class="fade-overlay"></div>
-                </div>
-                <div class="meta">
-                    <span class="meta-pill"><i class="fas fa-heart" style="color:#4f46e5;"></i> {{ latest_confession.likes_count }}</span>
-                    <span class="meta-pill"><i class="fas fa-comment" style="color:#2563eb;"></i> {{ latest_confession.comments.count }}</span>
-                </div>
+        <a href="{% url 'confessions_feed' %}" class="featured-confession">
+            <div class="quote-mark">"</div>
+            <p>{{ latest_confession.content|truncatechars:180 }}</p>
+            <div class="meta-row">
+                <span class="meta-pill"><span class="material-symbols-outlined">favorite</span>{{ latest_confession.likes_count }}</span>
+                <span class="meta-pill"><span class="material-symbols-outlined">chat_bubble</span>{{ latest_confession.comments.count }}</span>
             </div>
         </a>
         {% else %}
-        <p style="color: #64748b; font-size: 11.5px; margin: 0; font-family: 'Inter', sans-serif;">No confessions yet. Be the first to express yourself!</p>
+        <div class="featured-confession">
+            <div class="quote-mark">"</div>
+            <p>No confessions yet. Be the first to post something and set the mood on campus.</p>
+        </div>
         {% endif %}
     </div>
 
-    <!-- Updates Section -->
-    <div class="hub-section updates-section">
-        <h3><i class="fas fa-bell" style="color: #2563eb;"></i> Updates</h3>
+    <div class="panel">
+        <div class="panel-head">
+            <h2 class="panel-title"><span class="material-symbols-outlined">notifications</span>Updates</h2>
+            <span class="panel-badge">Campus</span>
+        </div>
         {% if latest_update %}
-        <div class="update-item">
-            <div class="update-icon"><i class="fas fa-bullhorn"></i></div>
-            <div class="update-text">
-                <p>{{ latest_update.text|truncatechars:50 }}</p>
+        <div class="update-card">
+            <div class="update-icon"><span class="material-symbols-outlined">campaign</span></div>
+            <div>
+                <h4>{{ latest_update.text|truncatechars:80 }}</h4>
                 <span>{{ latest_update.created_at|date:"M d, Y" }}</span>
             </div>
         </div>
         {% else %}
-        <div class="update-item" style="border: 1px dashed rgba(59, 130, 246, 0.15); background: rgba(239, 246, 255, 0.25); padding: 6px 10px;">
-            <div class="update-icon" style="background: #eff6ff; color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.08); width: 24px; height: 24px; font-size: 10px;"><i class="fas fa-check"></i></div>
-            <div class="update-text">
-                <p style="font-size: 11px;">All caught up!</p>
-                <span style="font-size: 8.5px; color: #2563eb;">No new updates at the moment.</span>
+        <div class="update-card">
+            <div class="update-icon"><span class="material-symbols-outlined">done</span></div>
+            <div>
+                <h4>All caught up for now.</h4>
+                <span>No new announcements at the moment.</span>
             </div>
         </div>
         {% endif %}
     </div>
 
-    <!-- Compact horizontal Campus Pulse widget -->
     <div class="pulse-widget">
         <div class="pulse-left">
-            <div class="pulse-dot"></div>
-            <span>Campus Pulse</span>
+            <span class="material-symbols-outlined">verified_user</span>
+            <div class="pulse-label">Campus Pulse</div>
         </div>
-        <div class="pulse-right">
-            <span>{{ total_users }}</span> campus members
-        </div>
+        <div class="pulse-right"><span>{{ total_users }}</span> members live in the network</div>
     </div>
-</div>
+</section>
 {% endblock %}

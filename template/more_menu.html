@@ -5,191 +5,232 @@
 
 {% block head %}
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Outfit:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
-
-    body {
-        background: #f0f6ff !important;
+    .container {
+        padding-top: 18px !important;
     }
 
-    .top-nav-bar {
-        position: fixed;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100%;
-        max-width: 500px;
-        z-index: 1000;
-        background: #ffffff; /* pure bright white */
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(59, 130, 246, 0.08);
-        padding: 14px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.04);
-        box-sizing: border-box;
-    }
-
-    .nav-brand {
-        font-family: 'Outfit', 'Montserrat', 'Inter', sans-serif;
-        font-size: 22px;
-        font-weight: 900;
-        letter-spacing: -0.8px;
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); /* solid blue premium gradient */
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-transform: uppercase;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .brand-hub-badge {
-        font-family: 'Inter', sans-serif;
-        font-size: 10px;
-        font-weight: 850;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        color: #3b82f6;
-        background: rgba(59, 130, 246, 0.07);
-        border: 1px solid rgba(59, 130, 246, 0.12);
-        padding: 1px 5px;
-        border-radius: 6px;
-        vertical-align: middle;
-        text-fill-color: initial;
-        -webkit-text-fill-color: initial;
-    }
-
-    .more-container {
-        position: relative;
-        padding: 16px 12px;
-        max-width: 500px;
-        margin: 62px auto 0;
-        padding-bottom: 80px;
-        box-sizing: border-box;
-    }
-
-    /* Soft floating blue auras */
-    .mesh-glow {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(50px);
-        z-index: -1;
-        pointer-events: none;
-        opacity: 0.45;
-    }
-    .mesh-glow-1 {
-        top: 2%;
-        left: -10%;
-        width: 180px;
-        height: 180px;
-        background: radial-gradient(circle, rgba(37, 99, 235, 0.22) 0%, rgba(255,255,255,0) 70%);
-    }
-
-    /* Premium card styled like home screen cards */
-    .hub-card {
-        position: relative;
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 28px 20px 24px;
-        text-decoration: none;
-        border: 1px solid rgba(59, 130, 246, 0.08); /* light blue subtle borders */
-        box-shadow: 0 2px 12px rgba(37, 99, 235, 0.01);
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    .more-shell {
         display: flex;
         flex-direction: column;
-        align-items: center;
-        text-align: center;
-        box-sizing: border-box;
-        margin-top: 10px;
-    }
-    
-    .hub-card:hover {
-        transform: translateY(-2px);
-        border-color: rgba(147, 51, 234, 0.2);
-        box-shadow: 0 6px 18px rgba(147, 51, 234, 0.025);
-    }
-    
-    .hub-card:active {
-        transform: scale(0.98);
+        gap: 18px;
     }
 
-    .hub-icon {
-        width: 54px;
-        height: 54px;
-        border-radius: 16px;
+    .more-header {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        margin-bottom: 14px;
-        transition: all 0.3s ease;
-        background: #f3e8ff;
-        color: #9333ea;
-    }
-    
-    .hub-card:hover .hub-icon {
-        transform: scale(1.05);
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
     }
 
-    .hub-card h2 {
-        font-family: 'Outfit', 'Inter', sans-serif;
-        font-size: 18px;
-        font-weight: 800;
-        color: #0f172a;
-        margin: 0 0 8px;
-        letter-spacing: -0.3px;
-    }
-    
-    .hub-card p {
-        font-family: 'Inter', sans-serif;
-        font-size: 12px;
-        color: #64748b;
-        margin: 0 0 16px;
-        line-height: 1.45;
-        font-weight: 500;
-        max-width: 320px;
-    }
-
-    .hub-action-btn {
-        padding: 8px 18px;
-        border-radius: 12px;
-        font-family: 'Inter', sans-serif;
-        font-size: 11px;
-        font-weight: 750;
+    .more-label {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        transition: all 0.2s ease;
-        background: #f3e8ff;
-        color: #9333ea;
+        gap: 8px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #627087;
     }
-    
-    .hub-card:hover .hub-action-btn {
-        background: #9333ea;
-        color: #ffffff;
+
+    .more-label .material-symbols-outlined {
+        font-size: 18px;
+        color: var(--primary);
+    }
+
+    .more-header h1 {
+        margin: 8px 0 0;
+        font-size: clamp(28px, 6vw, 34px);
+        line-height: 1.1;
+        letter-spacing: -0.04em;
+        color: #151b27;
+    }
+
+    .more-header p {
+        margin: 10px 0 0;
+        max-width: 30rem;
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-muted);
+    }
+
+    .more-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 14px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        border-radius: 999px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+        font-size: 12px;
+        font-weight: 700;
+        color: #17305f;
+        white-space: nowrap;
+    }
+
+    .more-hero {
+        position: relative;
+        overflow: hidden;
+        padding: 22px;
+        border-radius: 32px;
+        background: linear-gradient(135deg, #ffffff 0%, #f3f7ff 100%);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+    }
+
+    .more-hero::after {
+        content: "";
+        position: absolute;
+        top: -48px;
+        right: -42px;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background: rgba(0, 74, 198, 0.08);
+    }
+
+    .more-hero h2 {
+        position: relative;
+        z-index: 1;
+        margin: 0 0 8px;
+        font-size: 24px;
+        line-height: 1.2;
+        letter-spacing: -0.04em;
+        color: #151b27;
+    }
+
+    .more-hero p {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.6;
+        color: var(--text-muted);
+    }
+
+    .more-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .menu-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 18px;
+        text-decoration: none;
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        border-radius: 28px;
+        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+        transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    }
+
+    .menu-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 22px 40px rgba(15, 23, 42, 0.08);
+        border-color: rgba(0, 74, 198, 0.14);
+    }
+
+    .menu-card:active {
+        transform: scale(0.985);
+    }
+
+    .menu-main {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+    }
+
+    .menu-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 18px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #e4ecff;
+        color: var(--primary);
+        flex-shrink: 0;
+    }
+
+    .menu-icon.alt {
+        background: #efe6ff;
+        color: #7b2ee6;
+    }
+
+    .menu-icon .material-symbols-outlined {
+        font-size: 24px;
+        font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .menu-copy h3 {
+        margin: 0 0 4px;
+        font-size: 17px;
+        line-height: 1.25;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+        color: #151b27;
+    }
+
+    .menu-copy p {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.55;
+        color: var(--text-muted);
+    }
+
+    .menu-card .material-symbols-outlined.chevron {
+        font-size: 22px;
+        color: #6a7b95;
+        flex-shrink: 0;
     }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="top-nav-bar">
-    <span class="nav-brand">
-        More
-        <span class="brand-hub-badge">EXTRA</span>
-    </span>
-</div>
+<section class="more-shell">
+    <div class="more-header">
+        <div>
+            <div class="more-label">
+                <span class="material-symbols-outlined">hub</span>
+                Explore more
+            </div>
+            <h1>More from the app</h1>
+        </div>
+    </div>
 
-<div class="more-container">
-    <!-- Soft backdrop blue glow -->
-    <div class="mesh-glow mesh-glow-1"></div>
-
-    <a href="{% url 'wall' %}" class="hub-card">
-        <div class="hub-icon"><i class="fas fa-palette"></i></div>
-        <h2>Public Drawing Wall</h2>
-        <p>Express your creativity anonymously! Draw, paint, and collaborate on a shared digital canvas with other SRMites.</p>
-        <span class="hub-action-btn">Open Wall <i class="fas fa-arrow-right" style="font-size: 8px;"></i></span>
-    </a>
-</div>
+    <div class="more-list">
+        {% if user.is_staff or user.is_superuser or user.email == 'arunmohankml@gmail.com' %}
+        <a href="{% url 'admin_dashboard' %}" class="menu-card">
+            <div class="menu-main">
+                <div class="menu-icon">
+                    <span class="material-symbols-outlined">admin_panel_settings</span>
+                </div>
+                <div class="menu-copy">
+                    <h3>Admin Panel</h3>
+                    <p>Manage users, content, and app settings.</p>
+                </div>
+            </div>
+            <span class="material-symbols-outlined chevron">chevron_right</span>
+        </a>
+        {% endif %}
+        <a href="{% url 'wall' %}" class="menu-card">
+            <div class="menu-main">
+                <div class="menu-icon alt">
+                    <span class="material-symbols-outlined">palette</span>
+                </div>
+                <div class="menu-copy">
+                    <h3>Public Drawing Wall</h3>
+                    <p>Draw, paint, and leave something creative on the shared campus canvas.</p>
+                </div>
+            </div>
+            <span class="material-symbols-outlined chevron">chevron_right</span>
+        </a>
+    </div>
+</section>
 {% endblock %}

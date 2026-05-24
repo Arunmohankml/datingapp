@@ -1,304 +1,277 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SRM Wall</title>
-    <link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <style>
-        :root {
-            --primary: #6366f1;
-            --bg: #f8fafc;
-            --border: #e2e8f0;
-            --text-muted: #64748b;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
-            touch-action: none;
-        }
 
-        #drawCanvas {
-            position: absolute;
-            top: 0; left: 0;
-            cursor: crosshair;
-            background: #f1f5f9;
-        }
+{% block title %}Drawing Wall | SRM Match{% endblock %}
 
-        /* Toolbar — matches app style */
-        .toolbar {
-            position: fixed;
-            top: 14px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            background: rgba(255,255,255,0.88);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border);
-            padding: 8px 14px;
-            border-radius: 22px;
-            z-index: 100;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        }
-        .color-dot {
-            width: 22px; height: 22px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: 0.2s;
-            flex-shrink: 0;
-        }
-        .color-dot:hover { transform: scale(1.15); }
-        .color-dot.active { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(99,102,241,0.3); }
+{% block head %}
+<link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+<style>
+:root {
+    --wall-grid: #eef2f6;
+}
 
-        .sep { width: 1px; height: 18px; background: var(--border); margin: 0 4px; }
+body > .container {
+    padding: 0 !important;
+    position: static !important;
+}
 
-        .size-btn {
-            width: 26px; height: 26px;
-            border-radius: 8px;
-            background: #f1f5f9;
-            border: 1px solid var(--border);
-            color: #334155;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 9px;
-            font-weight: 800;
-            transition: 0.2s;
-        }
-        .size-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+body {
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    touch-action: none;
+}
 
-        .zoom-indicator {
-            position: fixed;
-            top: 64px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255,255,255,0.8);
-            backdrop-filter: blur(8px);
-            color: var(--text-muted);
-            padding: 3px 12px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: 600;
-            z-index: 100;
-            pointer-events: none;
-            border: 1px solid var(--border);
-        }
+#drawCanvas {
+    position: absolute;
+    top: 0; left: 0;
+    cursor: crosshair;
+    background: #f1f5f9;
+}
 
-        /* Premium Navigation Bar matching the master layout */
-        nav {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            z-index: 1000; display: flex; justify-content: center;
-            padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border-top: 1px solid rgba(37, 99, 235, 0.06);
-            box-shadow: 0 -8px 30px rgba(0,0,0,0.03);
-            transition: transform 0.3s ease;
-        }
+/* Premium Header */
+.wall-header {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: var(--shell-width, 560px);
+    z-index: 100;
+    background: rgba(247,249,251,0.78);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid rgba(0,74,198,0.08);
+    padding: calc(10px + env(safe-area-inset-top)) 16px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-sizing: border-box;
+}
+.wall-header-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+.wall-back-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.88);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    color: var(--primary, #2563eb);
+    border: 1px solid rgba(0,74,198,0.08);
+    box-shadow: 0 10px 24px rgba(15,23,42,0.06);
+    transition: 0.2s ease;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.wall-back-btn:active {
+    transform: scale(0.94);
+}
+.wall-header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+    color: #151b27;
+    letter-spacing: -0.04em;
+}
+.wall-header .wall-subtitle {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #6d7b8f;
+    display: block;
+    margin: 0 0 1px;
+}
 
-        .nav-inner {
-            display: flex; align-items: center; justify-content: space-around;
-            width: 100%; max-width: 500px; padding: 0 16px;
-        }
-        
-        .nav-link {
-            color: #64748b; text-decoration: none;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 6px; font-size: 11px; font-weight: 600; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            padding: 4px 0; border-radius: 16px; flex: 1; position: relative;
-            -webkit-tap-highlight-color: transparent;
-            tap-highlight-color: transparent;
-            outline: none;
-        }
-        
-        .nav-icon-wrapper {
-            position: relative;
-            width: 60px; height: 32px;
-            border-radius: 16px;
-            display: flex; align-items: center; justify-content: center;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            background: transparent;
-            color: #64748b;
-        }
-        .nav-icon-wrapper i {
-            font-size: 18px;
-            transition: transform 0.2s ease;
-        }
-        
-        .nav-link.active {
-            color: #2563eb;
-            font-weight: 700;
-        }
-        .nav-link.active .nav-icon-wrapper {
-            background: #e0f2fe;
-            color: #2563eb;
-        }
-        
-        .nav-link:active .nav-icon-wrapper {
-            transform: scale(0.92);
-        }
+/* Toolbar */
+.toolbar {
+    position: fixed;
+    top: calc(72px + env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(255,255,255,0.88);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border, rgba(0,74,198,0.08));
+    padding: 8px 14px;
+    border-radius: 22px;
+    z-index: 99;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+.color-dot {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: 0.2s;
+    flex-shrink: 0;
+}
+.color-dot:hover { transform: scale(1.15); }
+.color-dot.active { border-color: var(--primary, #6366f1); box-shadow: 0 0 0 2px rgba(99,102,241,0.3); }
 
-        .badge-dot {
-            position: absolute;
-            top: 2px;
-            right: 14px;
-            width: 8px;
-            height: 8px;
-            background: #ef4444;
-            border-radius: 50%;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
-        }
+.sep { width: 1px; height: 18px; background: var(--border, #e2e8f0); margin: 0 4px; }
 
-        /* Loading */
-        .loading-overlay {
-            position: fixed; inset: 0;
-            background: var(--bg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 14px;
-            z-index: 9999;
-            transition: opacity 0.4s;
-        }
-        .loading-overlay.hidden { opacity: 0; pointer-events: none; }
-        .loading-spinner {
-            width: 32px; height: 32px;
-            border: 3px solid var(--border);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 0.7s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-overlay p { color: var(--text-muted); font-size: 13px; }
-    </style>
-</head>
-<body>
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-spinner"></div>
-        <p>Loading wall...</p>
-    </div>
+.size-btn {
+    width: 26px; height: 26px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    border: 1px solid var(--border, #e2e8f0);
+    color: #334155;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 9px;
+    font-weight: 800;
+    transition: 0.2s;
+}
+.size-btn.active { background: var(--primary, #6366f1); color: white; border-color: var(--primary, #6366f1); }
 
-    <canvas id="drawCanvas"></canvas>
+.zoom-indicator {
+    position: fixed;
+    top: calc(118px + env(safe-area-inset-top));
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.8);
+    backdrop-filter: blur(8px);
+    color: var(--text-muted, #64748b);
+    padding: 3px 12px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    z-index: 99;
+    pointer-events: none;
+    border: 1px solid var(--border, #e2e8f0);
+}
 
-    <div class="toolbar">
-        <div class="color-dot active" data-color="#0f172a" style="background:#0f172a;"></div>
-        <div class="color-dot" data-color="#ef4444" style="background:#ef4444;"></div>
-        <div class="color-dot" data-color="#22c55e" style="background:#22c55e;"></div>
-        <div class="color-dot" data-color="#3b82f6" style="background:#3b82f6;"></div>
-        <div class="color-dot" data-color="#ec4899" style="background:#ec4899;"></div>
-        
-        <input type="color" id="customColor" style="width: 24px; height: 24px; border: none; border-radius: 50%; padding: 0; cursor: pointer; background: none;" title="Custom Color">
+/* Loading */
+.loading-overlay {
+    position: fixed; inset: 0;
+    background: var(--bg-gradient, #f7f9fb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 9999;
+    transition: opacity 0.4s;
+}
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.loading-spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border, #e2e8f0);
+    border-top-color: var(--primary, #6366f1);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-overlay p { color: var(--text-muted, #64748b); font-size: 13px; }
 
-        <div class="sep"></div>
-        <div class="size-btn active" data-size="1">1x</div>
-        <div class="size-btn" data-size="2">2x</div>
-        <div class="size-btn" data-size="3">3x</div>
+/* Responsive */
+@media (min-width: 768px) {
+    .wall-header { max-width: 640px; }
+}
+</style>
+{% endblock %}
 
-        {% if request.user.email == 'arunmohankml@gmail.com' %}
-        <div class="sep"></div>
-        <button class="size-btn" style="width: auto; padding: 0 8px;" onclick="document.getElementById('adminImageInput').click()" title="Admin: Upload Image">
-            <i class="fas fa-image"></i>
+{% block body %}
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <p>Loading wall...</p>
+</div>
+
+<canvas id="drawCanvas"></canvas>
+
+<div class="wall-header">
+    <div class="wall-header-main">
+        <button onclick="history.back()" class="wall-back-btn">
+            <span class="material-symbols-outlined" style="font-size:22px;">arrow_back</span>
         </button>
-        <button class="size-btn" id="eraserBtn" onclick="toggleEraser()" title="Admin: Eraser">
-            <i class="fas fa-eraser"></i>
-        </button>
-        <div class="sep"></div>
-        <div class="size-btn admin-size" data-size="10">10</div>
-        <div class="size-btn admin-size" data-size="50">50</div>
-        <div class="size-btn admin-size" data-size="150">150</div>
-        <div class="size-btn admin-size" data-size="400">400</div>
-        <input type="file" id="adminImageInput" accept="image/*" style="display: none;" onchange="handleAdminImageUpload(this)">
-        {% endif %}
-    </div>
-
-    <div id="placementToolbar" class="toolbar" style="display: none; top: auto; bottom: 80px; background: rgba(15, 23, 42, 0.9); color: white; border: none; padding: 12px 20px; gap: 15px; flex-direction: row; flex-wrap: wrap; justify-content: center;">
-        <div style="width: 100%; text-align: center; font-size: 11px; font-weight: 700; color: var(--primary); margin-bottom: -5px;">DRAG MOUSE TO MOVE • USE SLIDER TO RESIZE</div>
-        <span style="font-size: 13px; font-weight: 700;">Placement Mode</span>
-        <div class="sep" style="background: rgba(255,255,255,0.2);"></div>
-        <label style="font-size: 11px; font-weight: 700;">SIZE</label>
-        <input type="range" id="imageSizeSlider" min="50" max="5000" value="400" style="width: 100px; accent-color: var(--primary);">
-        <button onclick="cancelPlacement()" style="background: none; border: none; color: #f87171; font-weight: 800; cursor: pointer; font-size: 12px;">CANCEL</button>
-        <button onclick="finalizePlacement()" style="background: var(--primary); border: none; color: white; padding: 6px 14px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 12px;">PLACE</button>
-    </div>
-
-    <div class="zoom-indicator" id="zoomLabel">100%</div>
-
-    <nav>
-        <div class="nav-inner">
-            <a href="{% url 'home' %}" class="nav-link">
-                <div class="nav-icon-wrapper">
-                    <i class="fas fa-home"></i>
-                </div>
-                <span>Home</span>
-            </a>
-            <a id="nav-chat-link" href="{% url 'chat_list' %}" class="nav-link">
-                <div class="nav-icon-wrapper">
-                    <i class="far fa-comment"></i>
-                    <span id="chat-badge" class="badge-dot" style="{% if global_unread_count == 0 %}display: none;{% endif %}; background: #ef4444;"></span>
-                </div>
-                <span>Chat</span>
-            </a>
-            <a href="{% url 'confessions_feed' %}" class="nav-link">
-                <div class="nav-icon-wrapper">
-                    <i class="fas fa-mask"></i>
-                </div>
-                <span>Confess</span>
-            </a>
-            <a href="{% url 'edit_profile' %}" class="nav-link">
-                <div class="nav-icon-wrapper">
-                    <i class="far fa-user"></i>
-                </div>
-                <span>Profile</span>
-            </a>
-            <a href="{% url 'more_menu' %}" class="nav-link active">
-                <div class="nav-icon-wrapper">
-                    <i class="fas fa-ellipsis-h"></i>
-                </div>
-                <span>More</span>
-            </a>
+        <div>
+            <span class="wall-subtitle">Public Canvas</span>
+            <h1>Drawing Wall</h1>
         </div>
-    </nav>
-
-    <!-- Bottom Sheet Modal for Wall -->
-    <div id="global-warning-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; opacity: 0; transition: opacity 0.3s ease;"></div>
-    <div id="global-warning-modal" style="display: none; position: fixed; bottom: -100%; left: 0; width: 100%; background: white; border-radius: 24px 24px 0 0; padding: 30px 24px 40px; box-shadow: 0 -10px 40px rgba(0,0,0,0.15); z-index: 10001; transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-sizing: border-box; font-family: 'Inter', sans-serif;">
-        <div style="width: 40px; height: 5px; background: #cbd5e1; border-radius: 3px; margin: 0 auto 24px;"></div>
-        <h2 id="gwm-title" style="font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 12px; text-align: center;"></h2>
-        <div id="gwm-content" style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 32px;"></div>
-        <div id="gwm-actions" style="display: flex; gap: 12px;"></div>
     </div>
+</div>
+
+<div class="toolbar">
+    <div class="color-dot active" data-color="#0f172a" style="background:#0f172a;"></div>
+    <div class="color-dot" data-color="#ef4444" style="background:#ef4444;"></div>
+    <div class="color-dot" data-color="#22c55e" style="background:#22c55e;"></div>
+    <div class="color-dot" data-color="#3b82f6" style="background:#3b82f6;"></div>
+    <div class="color-dot" data-color="#ec4899" style="background:#ec4899;"></div>
+    
+    <input type="color" id="customColor" style="width: 24px; height: 24px; border: none; border-radius: 50%; padding: 0; cursor: pointer; background: none;" title="Custom Color">
+
+    <div class="sep"></div>
+    <div class="size-btn active" data-size="1">1x</div>
+    <div class="size-btn" data-size="2">2x</div>
+    <div class="size-btn" data-size="3">3x</div>
+
+    {% if request.user.email == 'arunmohankml@gmail.com' %}
+    <div class="sep"></div>
+    <button class="size-btn" style="width: auto; padding: 0 8px;" onclick="document.getElementById('adminImageInput').click()" title="Admin: Upload Image">
+        <i class="fas fa-image"></i>
+    </button>
+    <button class="size-btn" id="eraserBtn" onclick="toggleEraser()" title="Admin: Eraser">
+        <i class="fas fa-eraser"></i>
+    </button>
+    <div class="sep"></div>
+    <div class="size-btn admin-size" data-size="10">10</div>
+    <div class="size-btn admin-size" data-size="50">50</div>
+    <div class="size-btn admin-size" data-size="150">150</div>
+    <div class="size-btn admin-size" data-size="400">400</div>
+    <input type="file" id="adminImageInput" accept="image/*" style="display: none;" onchange="handleAdminImageUpload(this)">
+    {% endif %}
+</div>
+
+<div id="placementToolbar" class="toolbar" style="display: none; top: auto; bottom: 80px; background: rgba(15, 23, 42, 0.9); color: white; border: none; padding: 12px 20px; gap: 15px; flex-direction: row; flex-wrap: wrap; justify-content: center;">
+    <div style="width: 100%; text-align: center; font-size: 11px; font-weight: 700; color: var(--primary, #6366f1); margin-bottom: -5px;">DRAG MOUSE TO MOVE • USE SLIDER TO RESIZE</div>
+    <span style="font-size: 13px; font-weight: 700;">Placement Mode</span>
+    <div class="sep" style="background: rgba(255,255,255,0.2);"></div>
+    <label style="font-size: 11px; font-weight: 700;">SIZE</label>
+    <input type="range" id="imageSizeSlider" min="50" max="5000" value="400" style="width: 100px; accent-color: var(--primary, #6366f1);">
+    <button onclick="cancelPlacement()" style="background: none; border: none; color: #f87171; font-weight: 800; cursor: pointer; font-size: 12px;">CANCEL</button>
+    <button onclick="finalizePlacement()" style="background: var(--primary, #6366f1); border: none; color: white; padding: 6px 14px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 12px;">PLACE</button>
+</div>
+
+<div class="zoom-indicator" id="zoomLabel">100%</div>
+
+<!-- Bottom Sheet Modal for Wall -->
+<div id="global-warning-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; opacity: 0; transition: opacity 0.3s ease;"></div>
+<div id="global-warning-modal" style="display: none; position: fixed; bottom: -100%; left: 0; width: 100%; background: white; border-radius: 24px 24px 0 0; padding: 30px 24px 40px; box-shadow: 0 -10px 40px rgba(0,0,0,0.15); z-index: 10001; transition: bottom 0.4s cubic-bezier(0.16, 1, 0.3, 1); box-sizing: border-box;">
+    <div style="width: 40px; height: 5px; background: #cbd5e1; border-radius: 3px; margin: 0 auto 24px;"></div>
+    <h2 id="gwm-title" style="font-size: 22px; font-weight: 800; color: #0f172a; margin-bottom: 12px; text-align: center;"></h2>
+    <div id="gwm-content" style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 32px;"></div>
+    <div id="gwm-actions" style="display: flex; gap: 12px;"></div>
+</div>
 
 <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 <script>
-// Pusher Setup
-const pusherKey = "{{ PUSHER_KEY|default:'' }}";
-const pusherCluster = "{{ PUSHER_CLUSTER|default:'ap2' }}";
+// Pusher Setup — use wallPusher to avoid conflict with base.html
+const wallPusherKey = "{{ PUSHER_KEY|default:'' }}";
+const wallPusherCluster = "{{ PUSHER_CLUSTER|default:'ap2' }}";
 
-if (pusherKey) {
-    const pusher = new Pusher(pusherKey, { cluster: pusherCluster });
-    const channel = pusher.subscribe('wall');
-    channel.bind('new_stroke', (data) => {
-        // Only draw if it's not our own stroke (though we check ID just in case)
+if (wallPusherKey) {
+    const wallPusher = new Pusher(wallPusherKey, { cluster: wallPusherCluster });
+    const wallChannel = wallPusher.subscribe('wall');
+    wallChannel.bind('new_stroke', (data) => {
         if (!allStrokes.some(s => s.id === data.id)) {
             allStrokes.push(data);
             redraw();
         }
     });
-    channel.bind('new_image', (data) => {
+    wallChannel.bind('new_image', (data) => {
         if (!allImages.some(img => img.id === data.id)) {
             const imgObj = new Image();
             imgObj.src = data.image_url;
@@ -309,11 +282,11 @@ if (pusherKey) {
             };
         }
     });
-    channel.bind('delete_strokes', (data) => {
+    wallChannel.bind('delete_strokes', (data) => {
         allStrokes = allStrokes.filter(s => !data.ids.includes(s.id));
         redraw();
     });
-    channel.bind('delete_images', (data) => {
+    wallChannel.bind('delete_images', (data) => {
         allImages = allImages.filter(img => !data.ids.includes(img.id));
         redraw();
     });
@@ -374,31 +347,28 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 });
 const VIRTUAL_W = 8000, VIRTUAL_H = 8000;
-const PIXEL_SIZE = 10; // Smaller wall pixels for better detail
+const PIXEL_SIZE = 10;
 const canvas = document.getElementById('drawCanvas');
 const ctx = canvas.getContext('2d');
 
 let scale = 1;
-// Everyone starts at center of the virtual canvas
 let offsetX = 0, offsetY = 0;
 let drawing = false, panning = false;
 let currentColor = '#0f172a';
-let brushSize = 1; // Now represents number of pixels
+let brushSize = 1;
 let isEraser = false;
 let currentStroke = [];
 let allStrokes = [];
-let allImages = []; // Stores {id, image_url, x, y, width, height, imgElement}
+let allImages = [];
 let panStart = { x: 0, y: 0 };
 let spaceDown = false;
 
-// Placement Mode State
-let pendingImage = null; // { imgElement, url, width, height, x, y }
+let pendingImage = null;
 let mouseWorldPos = { x: 0, y: 0 };
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    // Center on virtual canvas center
     if (offsetX === 0 && offsetY === 0) {
         offsetX = canvas.width / 2 - (VIRTUAL_W / 2) * scale;
         offsetY = canvas.height / 2 - (VIRTUAL_H / 2) * scale;
@@ -412,7 +382,6 @@ resizeCanvas();
 function screenToWorld(sx, sy) {
     const worldX = (sx - offsetX) / scale;
     const worldY = (sy - offsetY) / scale;
-    // Snap to pixel grid
     return {
         x: Math.floor(worldX / PIXEL_SIZE) * PIXEL_SIZE,
         y: Math.floor(worldY / PIXEL_SIZE) * PIXEL_SIZE
@@ -436,7 +405,7 @@ function drawStroke(s) {
 
 function drawGrid() {
     const gridSize = PIXEL_SIZE * scale;
-    if (gridSize < 4) return; // Don't draw grid if too small
+    if (gridSize < 4) return;
     ctx.strokeStyle = 'rgba(0,0,0,0.05)';
     ctx.lineWidth = 0.5;
     
@@ -451,11 +420,10 @@ function drawGrid() {
 
 function redraw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#ffffff'; // White wall for pixel art
+    ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawGrid();
     
-    // Draw Images first
     for (const imgData of allImages) {
         if (imgData.imgElement) {
             ctx.drawImage(
@@ -471,7 +439,6 @@ function redraw() {
     for (const s of allStrokes) drawStroke(s);
     if (currentStroke.length > 0) drawStroke({ points: currentStroke, color: currentColor, brush_size: brushSize });
 
-    // Draw Pending Image in Placement Mode
     if (pendingImage) {
         ctx.globalAlpha = 0.6;
         ctx.drawImage(
@@ -482,8 +449,7 @@ function redraw() {
             pendingImage.height * scale
         );
         ctx.globalAlpha = 1.0;
-        // Draw a border around it
-        ctx.strokeStyle = 'var(--primary)';
+        ctx.strokeStyle = 'var(--primary, #6366f1)';
         ctx.setLineDash([5, 5]);
         ctx.strokeRect(
             mouseWorldPos.x * scale + offsetX - (pendingImage.width * scale / 2),
@@ -495,7 +461,6 @@ function redraw() {
     }
 }
 
-// Drawing
 canvas.addEventListener('pointerdown', e => {
     if (e.button === 2 || spaceDown) { 
         panning = true; 
@@ -526,7 +491,6 @@ canvas.addEventListener('pointermove', e => {
         return;
     }
 
-    // Only add if it's a new pixel
     const last = currentStroke[currentStroke.length - 1];
     if (last.x !== pos.x || last.y !== pos.y) {
         currentStroke.push(pos);
@@ -548,10 +512,9 @@ canvas.addEventListener('pointerup', e => {
 let lastDeleteTime = 0;
 async function deleteWallPixel(x, y) {
     const now = Date.now();
-    if (now - lastDeleteTime < 100) return; // Throttle 10Hz
+    if (now - lastDeleteTime < 100) return;
     lastDeleteTime = now;
 
-    // Visual feedback (immediate)
     const area = brushSize * PIXEL_SIZE;
     const half = area / 2;
     allStrokes = allStrokes.filter(s => {
@@ -574,7 +537,6 @@ window.addEventListener('keydown', e => {
 });
 window.addEventListener('keyup', e => { if (e.code === 'Space') { spaceDown = false; canvas.style.cursor = 'crosshair'; } });
 
-// Zoom
 canvas.addEventListener('wheel', e => {
     e.preventDefault();
     const f = e.deltaY < 0 ? 1.12 : 0.88;
@@ -586,7 +548,6 @@ canvas.addEventListener('wheel', e => {
     redraw();
 }, { passive: false });
 
-// Pinch
 let lastDist = 0, lastCenter = {x:0,y:0};
 canvas.addEventListener('touchstart', e => {
     if (e.touches.length === 2) {
@@ -611,7 +572,6 @@ canvas.addEventListener('touchmove', e => {
     }
 }, {passive:false});
 
-// Toolbar
 document.querySelectorAll('.color-dot').forEach(d => {
     d.addEventListener('click', () => {
         document.querySelectorAll('.color-dot').forEach(x => x.classList.remove('active'));
@@ -629,7 +589,6 @@ document.querySelectorAll('.size-btn').forEach(b => {
         b.classList.add('active'); 
         brushSize = parseFloat(b.dataset.size);
         
-        // If they chose a size, turn off eraser (unless it's the eraser btn itself)
         if (isEraser) toggleEraser(false);
     });
 });
@@ -639,11 +598,10 @@ function toggleEraser(force) {
     const btn = document.getElementById('eraserBtn');
     if (isEraser) {
         btn.classList.add('active');
-        currentColor = '#ffffff'; // Canvas BG (White for Pixel Wall)
+        currentColor = '#ffffff';
         document.querySelectorAll('.color-dot').forEach(x => x.classList.remove('active'));
     } else {
         btn.classList.remove('active');
-        // Restore previous color or default to black
         const firstColor = document.querySelector('.color-dot');
         if (firstColor) firstColor.click();
     }
@@ -658,7 +616,6 @@ async function handleAdminImageUpload(input) {
     if (!input.files || !input.files[0]) return;
     const file = input.files[0];
     
-    // Show loading state or something?
     try {
         const compressedBase64 = await compressImage(file);
         const res = await fetch('/api/upload/base64/', {
@@ -723,7 +680,6 @@ async function finalizePlacement() {
         });
         const data = await res.json();
         if (data.success) {
-            // It will be added via Pusher naturally
             pendingImage = null;
             document.getElementById('placementToolbar').style.display = 'none';
             redraw();
@@ -741,7 +697,7 @@ function compressImage(file) {
             const img = new Image();
             img.src = e.target.result;
             img.onload = () => {
-                const canvas = document.createElement('canvas');
+                const c = document.createElement('canvas');
                 const MAX_SIZE = 800;
                 let width = img.width, height = img.height;
                 
@@ -751,16 +707,15 @@ function compressImage(file) {
                     if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
                 }
                 
-                canvas.width = width; canvas.height = height;
-                const ctx = canvas.getContext('2d');
+                c.width = width; c.height = height;
+                const ctx = c.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', 0.7)); // 70% quality
+                resolve(c.toDataURL('image/jpeg', 0.7));
             };
         };
     });
 }
 
-// Persistence
 async function saveStroke(s) {
     try { await fetch('/api/wall/', { method:'POST', headers:{'Content-Type':'application/json', 'X-CSRFToken': '{{ csrf_token }}'}, body:JSON.stringify(s) }); } catch(e) {}
 }
@@ -770,7 +725,6 @@ async function loadStrokes() {
         const d = await r.json(); 
         allStrokes = d.strokes||[]; 
         
-        // Load images
         for (const imgData of (d.images || [])) {
             const imgObj = new Image();
             imgObj.src = imgData.image_url;
@@ -786,5 +740,4 @@ async function loadStrokes() {
 }
 loadStrokes();
 </script>
-</body>
-</html>
+{% endblock %}

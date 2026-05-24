@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CampusPulse | Confessions</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed-dim": "#b4c5ff",
+                    "primary-container": "#2563eb",
+                    "tertiary-container": "#007d55",
+                    "outline-variant": "#c3c6d7",
+                    "surface-dim": "#d8dadc",
+                    "background": "#f7f9fb",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface": "#191c1e",
+                    "error": "#ba1a1a",
+                    "on-tertiary": "#ffffff",
+                    "surface-container": "#eceef0",
+                    "on-secondary": "#ffffff",
+                    "surface-bright": "#f7f9fb",
+                    "on-secondary-fixed": "#0e1d2b",
+                    "surface-variant": "#e0e3e5",
+                    "surface-container-high": "#e6e8ea",
+                    "surface": "#f7f9fb",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-tertiary-container": "#bdffdb",
+                    "on-primary-container": "#eeefff",
+                    "secondary-fixed": "#d5e4f8",
+                    "primary-fixed": "#dbe1ff",
+                    "tertiary-fixed": "#6ffbbe",
+                    "on-surface-variant": "#434655",
+                    "inverse-surface": "#2d3133",
+                    "inverse-on-surface": "#eff1f3",
+                    "on-background": "#191c1e",
+                    "surface-tint": "#0053db",
+                    "surface-container-highest": "#e0e3e5",
+                    "inverse-primary": "#b4c5ff",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "on-primary-fixed": "#00174b",
+                    "secondary-fixed-dim": "#b9c8db",
+                    "primary": "#004ac6",
+                    "on-secondary-fixed-variant": "#3a4858",
+                    "on-error-container": "#93000a",
+                    "tertiary": "#006242",
+                    "outline": "#737686",
+                    "surface-container-low": "#f2f4f6",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "error-container": "#ffdad6",
+                    "secondary-container": "#d5e4f8",
+                    "on-tertiary-fixed": "#002113",
+                    "on-secondary-container": "#576676",
+                    "secondary": "#516070",
+                    "on-primary": "#ffffff",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-gap": "20px",
+                    "gutter": "16px",
+                    "card-padding": "24px",
+                    "section-gap": "40px",
+                    "container-margin": "24px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "title-md": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "label-bold": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-sm": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            user-select: none;
+        }
+        .filled-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f7f9fb;
+        }
+        .shadow-soft {
+            box-shadow: 0 10px 30px -5px rgba(37, 99, 235, 0.04);
+        }
+        .card-accent {
+            border-left: 4px solid #004ac6;
+        }
+        /* Hide scrollbar for clean look */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 h-16 flex items-center justify-between px-container-margin">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional close-up portrait of a cheerful university student with a warm smile, set against a blurred academic background with soft natural lighting and a minimalist, high-end feel consistent with a premium social app." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbdWLvR0UlSKEOsacPCyC0oSWZaVK3Q-Qlg-JytIAYEhUxVGN_x9Xw1wq_OZcJ7uzI3gUDsRuCJt7TJYqvi4hdJos6qGuI5uUE84CV3wt_iR6B15HhYI9UjnZJNsj9YfZGd9ZwBYh_J2fsagmUa6b5tb4gewclQNLf4oyCm2NmMf-tFCtPE9x0X4ECi1H1cu2t3KyjoVZkGl14Ozt_LpyrP8YD0qAPyDYeNQFPB10jk7QlS1t3hXCmq6h6jzgfshaxk8ZwRAcJbD8"/>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary tracking-tight">CampusPulse</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-surface-container-high/50 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined text-primary" data-icon="notifications">notifications</span>
+</button>
+</div>
+</header>
+<main class="mt-20 px-container-margin max-w-2xl mx-auto">
+<!-- Section Header & Filters -->
+<div class="mb-8">
+<div class="flex items-center justify-between mb-6">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Confessions</h2>
+<div class="flex gap-2">
+<div class="bg-secondary-container px-3 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px] text-primary" data-icon="auto_awesome">auto_awesome</span>
+<span class="text-label-bold font-label-bold text-primary uppercase tracking-wider">Trending</span>
+</div>
+</div>
+</div>
+<!-- Filters Grid -->
+<div class="grid grid-cols-2 gap-3">
+<div class="relative">
+<select class="w-full appearance-none bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 font-body-sm text-body-sm text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+<option>Latest</option>
+<option>Top Voted</option>
+<option>Most Discussed</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" data-icon="expand_more">expand_more</span>
+</div>
+<div class="relative">
+<select class="w-full appearance-none bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 font-body-sm text-body-sm text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+<option>All Campuses</option>
+<option>Main Campus (KTR)</option>
+<option>West Campus (RMP)</option>
+<option>North Square (VDP)</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Confessions Feed -->
+<div class="space-y-stack-gap">
+<!-- Confession Card 1 -->
+<article class="bg-surface-container-lowest p-card-padding rounded-lg shadow-soft border border-outline-variant/20 card-accent transition-transform hover:scale-[1.01] duration-300">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-title-md">
+                            A
+                        </div>
+<div>
+<p class="font-label-bold text-on-surface">Anonymous</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant/60">9 hours ago</p>
+</div>
+</div>
+<span class="px-3 py-1 rounded-full bg-secondary-container text-primary font-label-bold text-[10px] uppercase tracking-widest">KTR</span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-6">
+                    Any female in KTR campus who's taking a PG (first year, any branch), please consider me too, lemme know the available options and rents for sharing. I know the food is shit, but I could cook, that's my superpower! 🍳
+                </p>
+<div class="flex items-center gap-6 pt-4 border-t border-outline-variant/10">
+<button class="flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors group">
+<span class="material-symbols-outlined group-active:scale-125 transition-transform" data-icon="favorite">favorite</span>
+<span class="font-label-bold text-label-bold">124</span>
+</button>
+<button class="flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors group">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-bold text-label-bold">12</span>
+</button>
+<button class="ml-auto flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="share">share</span>
+</button>
+</div>
+</article>
+<!-- Confession Card 2 -->
+<article class="bg-surface-container-lowest p-card-padding rounded-lg shadow-soft border border-outline-variant/20 transition-transform hover:scale-[1.01] duration-300">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-title-md">
+                            S
+                        </div>
+<div>
+<p class="font-label-bold text-on-surface">Anonymous</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant/60">12 hours ago</p>
+</div>
+</div>
+<span class="px-3 py-1 rounded-full bg-secondary-container text-primary font-label-bold text-[10px] uppercase tracking-widest">RMP</span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-6">
+                    18F here, This happened during the starting days of college, when everyone was trying to make new friends and talk to random new people. There was this one guy kinda cute with a moustache, not too tall, but he literally saved my library spot for 3 hours while I was stuck in a lab. If you're reading this, coffee is on me! ☕️
+                </p>
+<div class="flex items-center gap-6 pt-4 border-t border-outline-variant/10">
+<button class="flex items-center gap-2 text-primary group">
+<span class="material-symbols-outlined filled-icon" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-label-bold text-label-bold">482</span>
+</button>
+<button class="flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-bold text-label-bold">56</span>
+</button>
+<button class="ml-auto flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="share">share</span>
+</button>
+</div>
+</article>
+<!-- Confession Card 3 -->
+<article class="bg-surface-container-lowest p-card-padding rounded-lg shadow-soft border border-outline-variant/20 transition-transform hover:scale-[1.01] duration-300">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-title-md">
+                            M
+                        </div>
+<div>
+<p class="font-label-bold text-on-surface">Anonymous</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant/60">1 day ago</p>
+</div>
+</div>
+<span class="px-3 py-1 rounded-full bg-secondary-container text-primary font-label-bold text-[10px] uppercase tracking-widest">GLOBAL</span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-6">
+                    I have selfish shitty friends, idkk what to do like one shit is hella toxic idk what to do the whole gang listens to her. Is it better to just be alone for a semester? Feeling really drained by all the drama lately. 🥀
+                </p>
+<div class="flex items-center gap-6 pt-4 border-t border-outline-variant/10">
+<button class="flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors group">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+<span class="font-label-bold text-label-bold">92</span>
+</button>
+<button class="flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-bold text-label-bold">104</span>
+</button>
+<button class="ml-auto flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="share">share</span>
+</button>
+</div>
+</article>
+</div>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-90 transition-all duration-300 z-50">
+<span class="material-symbols-outlined text-[28px]" data-icon="add">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full bg-surface/90 backdrop-blur-xl border-t border-outline-variant/20 shadow-[0_-4px_30px_rgba(37,99,235,0.04)] px-4 pt-3 pb-6 flex justify-around items-center z-50 rounded-t-lg">
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 transition-all active:scale-90">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-bold text-label-bold mt-1">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 transition-all active:scale-90">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span class="font-label-bold text-label-bold mt-1">Matches</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary font-bold active:scale-90 transition-all">
+<span class="material-symbols-outlined filled-icon" data-icon="add_circle" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+<span class="font-label-bold text-label-bold mt-1">Post</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 transition-all active:scale-90">
+<span class="material-symbols-outlined" data-icon="bed">bed</span>
+<span class="font-label-bold text-label-bold mt-1">Rooms</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 transition-all active:scale-90">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span class="font-label-bold text-label-bold mt-1">Updates</span>
+</button>
+</nav>
+<script>
+        // Simple Micro-interactions for buttons
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const icon = this.querySelector('.material-symbols-outlined');
+                if (icon && icon.textContent === 'favorite') {
+                    const isFilled = icon.style.fontVariationSettings.includes("'FILL' 1");
+                    icon.style.fontVariationSettings = isFilled ? "'FILL' 0" : "'FILL' 1";
+                    this.classList.toggle('text-primary');
+                    
+                    // Ripple or scale effect would go here
+                }
+            });
+        });
+
+        // Sticky Header Effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 10) {
+                header.classList.add('shadow-sm');
+            } else {
+                header.classList.remove('shadow-sm');
+            }
+        });
+    </script>
+</body></html>

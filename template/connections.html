@@ -3,29 +3,20 @@
 
 {% block head %}
 <style>
-    /* ── Root & Page Lock ── */
-    :root {
-        --primary-blue: #2563eb;
-        --secondary-blue: #3b82f6;
-        --soft-blue: #f8fbff;
-        --glass-white: rgba(255, 255, 255, 0.75);
-        --text-dark: #1e3a8a;
-        --text-muted: #64748b;
-    }
-
     nav { display: none !important; }
     html, body { 
         height: 100dvh; 
         overflow: hidden; 
         position: fixed; 
         width: 100%; 
-        background: #f8fbff;
-        padding: 0 !important;
         margin: 0 !important;
-        font-family: 'Inter', sans-serif;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    body {
+        background: var(--bg, #f4f6fb);
+        padding: 0 !important;
     }
 
-    /* Reset global container for this page */
     .container {
         padding: 0 !important;
         margin: 0 !important;
@@ -40,99 +31,105 @@
         height: 100%;
         max-width: 600px;
         margin: 0 auto;
-        background: #f8fbff;
         position: relative;
     }
 
-    /* ── Premium Glass Header ── */
+    /* ---- Header ---- */
     .conn-header {
         flex-shrink: 0;
-        padding: 20px 20px;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
-        border-bottom: 1px solid rgba(37, 99, 235, 0.08);
+        padding: calc(10px + env(safe-area-inset-top)) 20px 16px;
+        background: rgba(247,249,251,0.78);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-bottom: 1px solid rgba(0,74,198,0.08);
         display: flex;
         align-items: center;
-        gap: 18px;
-        z-index: 100;
+        gap: 12px;
         position: sticky;
         top: 0;
+        z-index: 100;
+    }
+    .conn-header-main {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
     }
     .conn-back {
-        width: 46px; height: 46px;
-        background: white;
-        border-radius: 18px;
+        width: 44px; height: 44px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.88);
         display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-        color: var(--text-muted);
         text-decoration: none;
-        transition: 0.3s;
+        color: var(--primary, #2563eb);
+        border: 1px solid rgba(0,74,198,0.08);
+        box-shadow: 0 10px 24px rgba(15,23,42,0.06);
+        transition: 0.2s ease;
+        flex-shrink: 0;
+        cursor: pointer;
     }
-    .conn-back:hover { transform: translateX(-4px); color: var(--primary-blue); }
-    
-    .conn-header-info h2 {
+    .conn-back:active { transform: scale(0.94); }
+    .conn-header h2 {
         font-size: 24px;
-        font-weight: 900;
-        letter-spacing: -1px;
-        background: linear-gradient(135deg, #1e3a8a, #2563eb);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        font-weight: 800;
         margin: 0;
+        color: #151b27;
+        letter-spacing: -0.04em;
     }
 
-    /* ── Segmented Tab Switcher ── */
+    /* ---- Segmented Tab ---- */
     .tabs-container {
         flex-shrink: 0;
-        padding: 10px 20px 15px;
-        background: rgba(255, 255, 255, 0.95);
+        padding: 12px 20px 14px;
+        background: rgba(247,249,251,0.78);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
         position: sticky;
-        top: 86px; /* Below header */
-        z-index: 90;
-        border-bottom: 1px solid rgba(37, 99, 235, 0.05);
+        top: 72px;
+        z-index: 99;
+        border-bottom: 1px solid rgba(0,0,0,0.04);
     }
     .tabs-wrapper {
         display: flex;
-        background: rgba(37, 99, 235, 0.05);
-        padding: 6px;
-        border-radius: 24px;
-        gap: 8px;
-        border: 1px solid rgba(37, 99, 235, 0.03);
+        background: #f1f5f9;
+        padding: 4px;
+        border-radius: 100px;
+        gap: 4px;
     }
     .tab-btn {
         flex: 1;
         border: none;
         background: none;
-        padding: 14px;
-        border-radius: 18px;
-        font-size: 14px;
-        font-weight: 800;
-        color: var(--text-muted);
+        padding: 10px 16px;
+        border-radius: 100px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #64748b;
         cursor: pointer;
-        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-        display: flex; align-items: center; justify-content: center; gap: 10px;
+        transition: all 0.3s;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
     }
     .tab-btn.active {
-        background: white;
-        color: var(--primary-blue);
-        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.12);
-        transform: scale(1.02);
+        background: #ffffff;
+        color: #2563eb;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
     .tab-badge {
-        background: var(--primary-blue);
+        background: #2563eb;
         color: white;
         font-size: 10px;
-        padding: 2px 8px;
+        padding: 2px 7px;
         border-radius: 10px;
-        font-weight: 900;
+        font-weight: 800;
     }
 
-    /* ── Scrollable Body ── */
+    /* ---- Scrollable Body ---- */
     .conn-body {
         flex: 1;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        padding: 20px 20px 120px;
+        padding: 16px 20px 120px;
         background: transparent;
     }
 
@@ -143,125 +140,123 @@
         display: block;
     }
 
-    /* ── Experimental Staggered Cards ── */
-    .user-row {
+    /* ---- User Cards ---- */
+    .user-card {
+        background: #ffffff;
+        border: 1px solid #eef2f6;
+        border-radius: 24px;
+        padding: 16px 18px;
+        margin-bottom: 12px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 20px;
-        background: var(--glass-white);
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        border-radius: 32px;
-        margin-bottom: 20px;
-        box-shadow: 0 15px 40px rgba(37, 99, 235, 0.06);
-        transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        animation: cardAppear 0.6s cubic-bezier(0.23, 1, 0.32, 1) backwards;
+        gap: 12px;
+        transition: all 0.2s;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.02);
+        animation: cardIn 0.4s ease backwards;
     }
-    
-    /* Alternate rotation for "crazy" feel */
-    .user-row:nth-child(even) { transform: rotate(1deg); }
-    .user-row:nth-child(odd) { transform: rotate(-1deg); }
-
-    @keyframes cardAppear {
-        from { opacity: 0; transform: translateY(40px) scale(0.9); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
+    .user-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.06);
     }
-
-    .user-row:hover {
-        transform: translateY(-8px) scale(1.02) rotate(0deg);
-        box-shadow: 0 25px 60px rgba(37, 99, 235, 0.15);
-        border-color: var(--primary-blue);
-        z-index: 10;
+    @keyframes cardIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     .user-info {
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 14px;
         flex: 1;
+        min-width: 0;
+        cursor: pointer;
     }
     .user-info img {
-        width: 60px; height: 60px;
-        border-radius: 20px;
+        width: 52px; height: 52px;
+        border-radius: 50%;
         object-fit: cover;
-        border: 3px solid white;
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.1);
-        transition: 0.4s;
+        border: 2px solid #ffffff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        flex-shrink: 0;
     }
-    .user-row:hover .user-info img { transform: rotate(-5deg) scale(1.1); }
-
     .user-info h4 {
-        margin: 0;
-        font-size: 18px;
-        font-weight: 900;
-        color: var(--text-dark);
-        letter-spacing: -0.5px;
+        margin: 0 0 2px;
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
+    .user-info h4 i { font-size: 13px; }
     .user-info span {
-        font-size: 13px;
-        color: var(--text-muted);
-        font-weight: 600;
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 500;
+        display: block;
     }
 
-    /* ── Actions ── */
+    /* ---- Action Buttons ---- */
     .row-actions {
         display: flex;
-        gap: 12px;
+        gap: 8px;
+        flex-shrink: 0;
     }
 
     .btn-icon {
-        width: 48px; height: 48px;
+        width: 42px; height: 42px;
         display: flex; align-items: center; justify-content: center;
-        border-radius: 18px;
+        border-radius: 50%;
         border: none;
         cursor: pointer;
-        color: white;
-        font-size: 18px;
-        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-size: 16px;
+        transition: all 0.2s;
+        flex-shrink: 0;
     }
+    .btn-icon:active { transform: scale(0.92); }
     .btn-accept { 
-        background: linear-gradient(135deg, #10b981, #059669);
-        box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
+        background: rgba(16,185,129,0.12);
+        color: #059669;
     }
+    .btn-accept:hover { background: rgba(16,185,129,0.2); }
     .btn-reject { 
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        box-shadow: 0 10px 20px rgba(239, 68, 68, 0.2);
+        background: rgba(239,68,68,0.12);
+        color: #ef4444;
     }
-    .btn-icon:hover { transform: scale(1.15) rotate(5deg); }
+    .btn-reject:hover { background: rgba(239,68,68,0.2); }
 
     .btn-chat {
-        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #ffffff;
         text-decoration: none;
-        padding: 12px 24px;
-        border-radius: 18px;
-        font-size: 14px;
-        font-weight: 800;
-        color: white !important;
-        display: flex; align-items: center; gap: 10px;
-        box-shadow: 0 12px 30px rgba(37, 99, 235, 0.25);
-        transition: 0.4s;
+        padding: 9px 18px;
+        border-radius: 100px;
+        font-size: 12px;
+        font-weight: 700;
+        display: flex; align-items: center; gap: 6px;
+        transition: all 0.2s;
+        font-family: 'Plus Jakarta Sans', sans-serif;
     }
-    .btn-chat:hover { transform: translateY(-3px) scale(1.05); }
+    .btn-chat:hover { box-shadow: 0 4px 16px rgba(37,99,235,0.3); }
+    .btn-chat:active { transform: scale(0.97); }
 
-    /* Empty States */
+    /* ---- Empty States ---- */
     .empty-state {
         text-align: center;
-        padding: 100px 40px;
-        animation: fadeIn 1s ease;
+        padding: 80px 40px;
     }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .empty-state i {
-        font-size: 64px;
-        background: linear-gradient(135deg, #2563eb, #60a5fa);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 25px;
-        opacity: 0.4;
+        font-size: 48px;
+        color: #cbd5e1;
+        margin-bottom: 14px;
     }
-    .empty-state p { font-size: 18px; font-weight: 700; color: var(--text-muted); }
-</style>
+    .empty-state p {
+        font-size: 15px;
+        font-weight: 600;
+        color: #94a3b8;
+        margin: 0;
+    }
 </style>
 {% endblock %}
 
@@ -269,9 +264,11 @@
 <div class="conn-wrapper">
     <!-- Header -->
     <div class="conn-header">
-        <a href="{% url 'match_feed' %}" class="conn-back"><i class="fas fa-arrow-left"></i></a>
-        <div class="conn-header-info">
-            <h2>Your Connections</h2>
+        <div class="conn-header-main">
+            <button onclick="window.location.href='{% url 'home' %}'" class="conn-back">
+                <span class="material-symbols-outlined" style="font-size:22px;">arrow_back</span>
+            </button>
+            <h2>Connections</h2>
         </div>
     </div>
 
@@ -279,13 +276,13 @@
     <div class="tabs-container">
         <div class="tabs-wrapper">
             <button class="tab-btn active" onclick="switchTab('requests')">
-                <i class="fas fa-bell"></i> Requests
+                <span class="material-symbols-outlined" style="font-size:16px;">notifications</span> Requests
                 {% if incoming_requests.count > 0 %}
                 <span class="tab-badge">{{ incoming_requests.count }}</span>
                 {% endif %}
             </button>
             <button class="tab-btn" onclick="switchTab('matches')">
-                <i class="fas fa-heart"></i> Matches
+                <span class="material-symbols-outlined" style="font-size:16px;">favorite</span> Matches
                 {% if connections.count > 0 %}
                 <span class="tab-badge">{{ connections.count }}</span>
                 {% endif %}
@@ -299,11 +296,16 @@
         <div id="tab-requests" class="conn-tab-content active">
             {% if incoming_requests %}
                 {% for req in incoming_requests %}
-                <div class="user-row">
-                    <div class="user-info">
-                        <img src="{{ req.sender.profile.get_profile_pic_url }}" alt="Avatar">
+                <div class="user-card" style="animation-delay:{{ forloop.counter0|divisibleby:1|yesno:'0.05,0.1' }}s;">
+                    <div class="user-info" onclick="window.location.href='{% url 'view_profile' req.sender.id %}'">
+                        <img src="{{ req.sender.profile.get_profile_pic_url }}" alt="Avatar" onerror="this.src='https://placehold.co/100x100/e2e8f0/94a3b8?text=User'">
                         <div>
-                            <h4>{{ req.sender.profile.name|default:req.sender.username }}</h4>
+                            <h4>
+                                {{ req.sender.profile.name|default:req.sender.username }}
+                                {% if req.sender.profile.is_face_verified %}
+                                <span class="material-symbols-outlined" style="font-size:13px; color:#2563eb; vertical-align:middle; font-variation-settings:'FILL' 1;">verified</span>
+                                {% endif %}
+                            </h4>
                             <span>Wants to connect</span>
                         </div>
                     </div>
@@ -321,7 +323,7 @@
                 {% endfor %}
             {% else %}
                 <div class="empty-state">
-                    <i class="fas fa-inbox" style="font-size: 40px; margin-bottom: 16px; opacity: 0.2;"></i>
+                    <span class="material-symbols-outlined" style="font-size:48px; color:#cbd5e1; margin-bottom:14px;">inbox</span>
                     <p>No pending requests.</p>
                 </div>
             {% endif %}
@@ -331,22 +333,27 @@
         <div id="tab-matches" class="conn-tab-content">
             {% if connections %}
                 {% for conn in connections %}
-                <div class="user-row">
-                    <div class="user-info">
-                        <img src="{{ conn.profile.get_profile_pic_url }}" alt="Avatar">
+                <div class="user-card" style="animation-delay:{{ forloop.counter0|divisibleby:1|yesno:'0.05,0.1' }}s;">
+                    <div class="user-info" onclick="window.location.href='{% url 'view_profile' conn.id %}'">
+                        <img src="{{ conn.profile.get_profile_pic_url }}" alt="Avatar" onerror="this.src='https://placehold.co/100x100/e2e8f0/94a3b8?text=User'">
                         <div>
-                            <h4>{{ conn.profile.name|default:conn.username }}</h4>
+                            <h4>
+                                {{ conn.profile.name|default:conn.username }}
+                                {% if conn.profile.is_face_verified %}
+                                <span class="material-symbols-outlined" style="font-size:13px; color:#2563eb; vertical-align:middle; font-variation-settings:'FILL' 1;">verified</span>
+                                {% endif %}
+                            </h4>
                             <span>You matched!</span>
                         </div>
                     </div>
                     <a href="{% url 'chat_view' conn.id %}?from=connections" class="btn-chat">
-                        <i class="fas fa-comment"></i> Chat
+                        <span class="material-symbols-outlined" style="font-size:14px;">chat_bubble</span> Chat
                     </a>
                 </div>
                 {% endfor %}
             {% else %}
                 <div class="empty-state">
-                    <i class="fas fa-heart-broken" style="font-size: 40px; margin-bottom: 16px; opacity: 0.2;"></i>
+                    <span class="material-symbols-outlined" style="font-size:48px; color:#cbd5e1; margin-bottom:14px;">favorite</span>
                     <p>No matches yet.</p>
                 </div>
             {% endif %}
@@ -361,16 +368,13 @@ function switchTab(tab) {
     document.querySelectorAll('.conn-tab-content').forEach(content => content.classList.remove('active'));
     document.getElementById('tab-' + tab).classList.add('active');
     document.querySelector('.conn-body').scrollTop = 0;
-    applyStagger();
 }
 
-function applyStagger() {
-    const rows = document.querySelectorAll('.conn-tab-content.active .user-row');
-    rows.forEach((row, index) => {
-        row.style.animationDelay = `${index * 0.1}s`;
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.user-card');
+    cards.forEach((card, i) => {
+        card.style.animationDelay = (i * 0.08) + 's';
     });
-}
-
-document.addEventListener('DOMContentLoaded', applyStagger);
+});
 </script>
 {% endblock %}

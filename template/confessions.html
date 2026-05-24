@@ -1,249 +1,814 @@
 {% extends 'base.html' %}
-{% load static %}
-
-{% block title %}Confessions | SRM Match{% endblock %}
 
 {% block head %}
-<!-- Material Design Fonts & Icons -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <style>
-    /* Material Design 3 Variables - Applied to original structure */
-    :root {
-        --md-primary: #004ac6;
-        --md-primary-container: #dbe1ff;
-        --md-on-primary: #ffffff;
-        --md-surface: #f7f9fb;
-        --md-surface-container: #eceef0;
-        --md-surface-container-lowest: #ffffff;
-        --md-on-surface: #191c1e;
-        --md-on-surface-variant: #434655;
-        --md-outline-variant: #c3c6d7;
-        --md-secondary-container: #d5e4f8;
-        --md-tertiary: #006242;
-        --md-tertiary-container: #6ffbbe;
-        --md-shadow: 0 10px 30px -5px rgba(37, 99, 235, 0.04);
+    .container {
+        padding-top: 18px !important;
     }
 
-    * { box-sizing: border-box; }
-    body {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-        background: var(--md-surface);
-        color: var(--md-on-surface);
-        -webkit-font-smoothing: antialiased;
+    .conf-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
     }
 
-    .material-symbols-outlined {
-        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    /* ── Hero card matching home_hub ── */
+    .conf-hero {
+        position: relative;
+        overflow: hidden;
+        border-radius: 32px;
+        padding: 24px;
+        background: linear-gradient(135deg, #004ac6 0%, #3f7dff 100%);
+        color: #ffffff;
+        box-shadow: 0 22px 45px rgba(0, 74, 198, 0.2);
     }
 
-    /* Original style overrides with Material Design */
-    .container { max-width: 500px !important; padding: 0 16px !important; margin-top: 0 !important; }
+    .conf-hero::before {
+        content: "";
+        position: absolute;
+        width: 190px;
+        height: 190px;
+        top: -70px;
+        right: -52px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.14);
+        filter: blur(2px);
+    }
+
+    .conf-hero::after {
+        content: "";
+        position: absolute;
+        inset: auto auto -44px -20px;
+        width: 170px;
+        height: 170px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .conf-hero-label {
+        position: relative;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    .conf-hero h1 {
+        position: relative;
+        z-index: 1;
+        margin: 16px 0 10px;
+        font-size: clamp(24px, 6vw, 31px);
+        line-height: 1.12;
+        letter-spacing: -0.04em;
+        font-weight: 800;
+    }
+
+    .conf-hero p {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        max-width: 24rem;
+        font-size: 14px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.84);
+    }
+
+    /* ── Filter bar (no panel bg, floats on base) ── */
+    .conf-filter-row {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+    }
+
+    .filter-field {
+        flex: 1;
+        min-width: 0;
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1.5px solid rgba(0, 74, 198, 0.15);
+        background: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e3a8a;
+        cursor: pointer;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+
+    .filter-field:focus {
+        border-color: #004ac6;
+        box-shadow: 0 0 0 3px rgba(0, 74, 198, 0.1);
+    }
+
+    .btn-gradient {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: none;
+        color: #ffffff;
+        background: linear-gradient(135deg, #004ac6 0%, #3f7dff 100%);
+        box-shadow: 0 8px 20px rgba(0, 74, 198, 0.18);
+        padding: 12px 20px;
+        border-radius: 999px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        text-decoration: none;
+    }
+
+    .btn-gradient:active {
+        transform: scale(0.98);
+    }
+
+    .btn-ghost {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 1px solid rgba(0, 74, 198, 0.1);
+        background: #ffffff;
+        color: var(--primary);
+        padding: 10px 16px;
+        border-radius: 999px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+        text-decoration: none;
+    }
+
+    .btn-ghost:active {
+        transform: scale(0.98);
+    }
+
+    /* ── Confession cards matching home_hub card style ── */
+    .conf-card {
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        border-radius: 28px;
+        padding: 20px;
+        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+        transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+        text-decoration: none;
+        display: block;
+        color: inherit;
+    }
+
+    .conf-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 22px 40px rgba(15, 23, 42, 0.08);
+        border-color: rgba(0, 74, 198, 0.14);
+    }
+
+    .conf-card:active {
+        transform: scale(0.985);
+    }
+
+    .conf-card-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .conf-identity {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .conf-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 18px;
+        object-fit: cover;
+        flex-shrink: 0;
+        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+    }
+
+    .conf-name {
+        margin: 0 0 3px;
+        font-size: 15px;
+        font-weight: 700;
+        color: #151b27;
+    }
+
+    .conf-meta {
+        font-size: 12px;
+        font-weight: 600;
+        color: #6b7a90;
+    }
+
+    .campus-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        padding: 9px 12px;
+        border-radius: 999px;
+        background: #eef3fb;
+        color: #4d6485;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        flex-shrink: 0;
+    }
+
+    .conf-content {
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.7;
+        color: #2a3b56;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .conf-image {
+        width: 100%;
+        border-radius: 22px;
+        margin-top: 14px;
+        border: 1px solid rgba(0, 74, 198, 0.08);
+    }
+
+    .conf-footer {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+        padding-top: 14px;
+        border-top: 1px solid rgba(0, 74, 198, 0.06);
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: none;
+        background: #f6f9fd;
+        color: #4b5f7a;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        text-decoration: none;
+    }
+
+    .action-btn:hover,
+    .action-btn.is-liked {
+        background: #e4ecff;
+        color: var(--primary);
+    }
+
+    .action-btn:active {
+        transform: scale(0.98);
+    }
+
+    .card-link {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* ── FAB: circular pen icon, bottom-right above nav ── */
+    .c-fab {
+        position: fixed;
+        bottom: {% if user.is_authenticated %}98px{% else %}24px{% endif %};
+        right: max(20px, calc((100vw - var(--shell-width, 560px)) / 2 + 20px));
+        z-index: 950;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #004ac6 0%, #3f7dff 100%);
+        color: white;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 10px 25px rgba(0, 74, 198, 0.35);
+        transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s;
+    }
+
+    .c-fab:active {
+        transform: scale(0.95);
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.3);
+        backdrop-filter: blur(12px);
+        z-index: 2000;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-content {
+        background: #ffffff;
+        width: 100%;
+        max-width: 500px;
+        border-radius: 40px 40px 0 0;
+        padding: 35px 25px 60px;
+        box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.1);
+        animation: modalSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalSlideUp {
+        from { transform: translateY(100%); }
+        to { transform: translateY(0); }
+    }
+
+    .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .modal-header h3 {
+        font-size: 24px;
+        font-weight: 800;
+        color: #151b27;
+        margin: 0;
+        flex: 1;
+    }
+
+    .close-modal {
+        background: #f1f5f9;
+        border: none;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background 0.2s;
+    }
+
+    .close-modal:hover {
+        background: #e2e8f0;
+    }
+
+    #createConfessionForm {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    #createConfessionForm textarea {
+        width: 100%;
+        padding: 20px;
+        border-radius: 24px;
+        border: 2px solid rgba(0, 74, 198, 0.1);
+        background: #f8fafc;
+        font-size: 16px;
+        font-weight: 600;
+        font-family: inherit;
+        margin: 0;
+        outline: none;
+        transition: 0.3s;
+        color: #1e293b;
+        resize: vertical;
+    }
+
+    #createConfessionForm textarea:focus {
+        border-color: #004ac6;
+        box-shadow: 0 0 0 4px rgba(0, 74, 198, 0.08);
+        background: #ffffff;
+    }
+
+    .toggle-row {
+        background: #f8fafc;
+        padding: 16px 20px;
+        border-radius: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .toggle-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 800;
+        color: #151b27;
+    }
+
+    .switch {
+        width: 54px;
+        height: 30px;
+        position: relative;
+    }
+
+    .switch input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background: #e2e8f0;
+        border-radius: 30px;
+        transition: 0.4s;
+    }
+
+    .slider:before {
+        content: "";
+        position: absolute;
+        height: 22px;
+        width: 22px;
+        left: 4px;
+        bottom: 4px;
+        background: white;
+        border-radius: 50%;
+        transition: 0.4s;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    input:checked+.slider { background: #004ac6; }
+    input:checked+.slider:before { transform: translateX(24px); }
+
+    .form-field {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .campus-select {
+        width: 100%;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 2px solid rgba(0, 74, 198, 0.1);
+        background: #f8fafc;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+        outline: none;
+        transition: 0.3s;
+    }
+
+    .campus-select:focus {
+        border-color: #004ac6;
+        box-shadow: 0 0 0 4px rgba(0, 74, 198, 0.08);
+        background: #ffffff;
+    }
+
+    /* ── Login banner ── */
+    .login-banner {
+        background: linear-gradient(135deg, #004ac6, #1e40af);
+        border-radius: 24px;
+        padding: 16px 24px;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 20px 40px rgba(0, 74, 198, 0.3);
+        margin: 10px 0;
+    }
+
+    /* ── Pagination ── */
+    .paginator {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin-top: 6px;
+    }
+
+    .paginator-status {
+        font-size: 13px;
+        font-weight: 700;
+        color: #607289;
+    }
+
+    /* ── Empty state ── */
+    .empty-feed {
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .empty-feed .material-symbols-outlined {
+        font-size: 48px;
+        color: var(--primary);
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    .empty-feed strong {
+        display: block;
+        color: #151b27;
+        font-size: 18px;
+    }
+
+    .empty-feed p {
+        color: #6b7a90;
+        margin-top: 8px;
+        font-size: 14px;
+    }
+
+    .admin-del {
+        color: #ef4444;
+        cursor: pointer;
+        padding: 8px;
+        transition: transform 0.2s;
+    }
+
+    .admin-del:active {
+        transform: scale(0.9);
+    }
+
+    .feed-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    @media (max-width: 640px) {
+        .filter-field {
+            padding: 8px 10px;
+            font-size: 11px;
+        }
+
+        .card-link {
+            margin-left: 0;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block body %}
-<body class="bg-background text-on-surface min-h-screen pb-24">
-<!-- TopAppBar -->
-<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 h-16 flex items-center justify-between px-container-margin">
-<div class="flex items-center gap-3">
-<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden">
-<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbdWLvR0UlSKEOsacPCyC0oSWZaVK3Q-Qlg-JytIAYEhUxVGN_x9Xw1wq_OZcJ7uzI3gUDsRuCJt7TJYqvi4hdJos6qGuI5uUE84CV3wt_iR6B15HhYI9UjnZJNsj9YfZGd9ZwBYh_J2fsagmUa6b5tb4gewclQNLf4oyCm2NmMf-tFCtPE9x0X4ECi1H1cu2t3KyjoVZkGl14Ozt_LpyrP8YD0qAPyDYeNQFPB10jk7QlS1t3hXCmq6h6jzgfshaxk8ZwRAcJbD8">
-</div>
-<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary tracking-tight">CampusPulse</h1>
-</div>
-<div class="flex items-center gap-2">
-<button class="p-2 rounded-full hover:bg-surface-container-high/50 transition-colors active:scale-95 duration-200">
-<span class="material-symbols-outlined text-primary" data-icon="notifications">notifications</span>
-</button>
-</div>
-</header>
+<div class="conf-shell">
 
-<main class="mt-20 px-container-margin max-w-2xl mx-auto">
-<!-- Section Header & Filters -->
-<div class="mb-8">
-<div class="flex items-center justify-between mb-6">
-<h2 class="font-headline-lg text-headline-lg text-on-surface">Confessions</h2>
-<div class="flex gap-2">
-<div class="bg-secondary-container px-3 py-1 rounded-full flex items-center gap-1">
-<span class="material-symbols-outlined text-[18px] text-primary" data-icon="auto_awesome">auto_awesome</span>
-<span class="text-label-bold font-label-bold text-primary uppercase tracking-wider">Trending</span>
-</div>
-</div>
-</div>
-<!-- Filters Grid -->
-<div class="grid grid-cols-2 gap-3">
-<div class="relative">
-<select class="w-full appearance-none bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 font-body-sm text-body-sm text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all">
-<option>Latest</option>
-<option>Top Voted</option>
-<option>Most Discussed</option>
-</select>
-<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" data-icon="expand_more">expand_more</span>
-</div>
-<div class="relative">
-<select class="w-full appearance-none bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 font-body-sm text-body-sm text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all">
-<option>All Campuses</option>
-<option>Main Campus</option>
-<option>West Campus</option>
-<option>North Square</option>
-</select>
-<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" data-icon="expand_more">expand_more</span>
-</div>
-</div>
+    <!-- Hero -->
+    <div class="conf-hero">
+        <span class="conf-hero-label">
+            {% if not user.is_authenticated %}
+            <button onclick="window.location.href='{% url 'login' %}'" style="width:28px; height:28px; border-radius:8px; background:rgba(255,255,255,0.2); border:none; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; color:#fff; margin-right:6px; vertical-align:middle;">
+                <span class="material-symbols-outlined" style="font-size:16px;">arrow_back</span>
+            </button>
+            {% endif %}
+            <i class="fas fa-mask" style="font-size:14px;"></i>
+            Anonymous campus feed
+        </span>
+        <h1>Confessions</h1>
+        <p>Share your secrets, experiences, and confessions anonymously with the campus.</p>
+    </div>
+
+    <!-- Filters (no panel bg, floats on base) -->
+    <form method="GET" action="{% url 'confessions_feed' %}" class="conf-filter-row">
+        <select name="sort" class="filter-field" onchange="this.form.submit()">
+            <option value="latest" {% if current_sort == 'latest' %}selected{% endif %}>Latest</option>
+            <option value="top" {% if current_sort == 'top' %}selected{% endif %}>Top Rated</option>
+        </select>
+        <select name="campus" class="filter-field" onchange="this.form.submit()">
+            <option value="">All Campuses</option>
+            <option value="KTR" {% if current_campus == 'KTR' %}selected{% endif %}>KTR</option>
+            <option value="RMP" {% if current_campus == 'RMP' %}selected{% endif %}>RMP</option>
+            <option value="VDP" {% if current_campus == 'VDP' %}selected{% endif %}>VDP</option>
+            <option value="ESW" {% if current_campus == 'ESW' %}selected{% endif %}>ESW</option>
+            <option value="NCR" {% if current_campus == 'NCR' %}selected{% endif %}>NCR</option>
+            <option value="TCY" {% if current_campus == 'TCY' %}selected{% endif %}>TCY</option>
+            <option value="AMT" {% if current_campus == 'AMT' %}selected{% endif %}>AMT</option>
+            <option value="SKM" {% if current_campus == 'SKM' %}selected{% endif %}>SKM</option>
+            <option value="SPT" {% if current_campus == 'SPT' %}selected{% endif %}>SPT</option>
+        </select>
+    </form>
+
+    <!-- Feed (no panel wrapper — cards float directly on base bg) -->
+    {% if confessions %}
+    <div class="feed-list">
+        {% for c in confessions %}
+        <a href="{% url 'confession_detail' c.id %}" class="conf-card">
+            <div class="conf-card-header">
+                <div class="conf-identity">
+                    <img src="{{ c.display_pic }}" alt="Avatar" class="conf-avatar">
+                    <div>
+                        <p class="conf-name">{{ c.display_name }}</p>
+                        <p class="conf-meta">{{ c.created_at|timesince }} ago</p>
+                    </div>
+                </div>
+                {% if c.campus %}
+                <span class="campus-pill">
+                    <span class="material-symbols-outlined" style="font-size:14px;">location_on</span>
+                    {{ c.campus }}
+                </span>
+                {% endif %}
+                {% if is_admin %}
+                <span class="admin-del" onclick="deleteConfession(event, {{ c.id }}, this)" title="Delete">
+                    <span class="material-symbols-outlined">delete</span>
+                </span>
+                {% endif %}
+            </div>
+
+            <p class="conf-content">{{ c.content|truncatechars:200|linebreaksbr }}</p>
+
+            {% if c.image %}
+            <img src="{{ c.image }}" alt="Attachment" class="conf-image">
+            {% endif %}
+
+            <div class="conf-footer">
+                <button type="button" class="action-btn like-btn" onclick="likeConfession(event, {{ c.id }}, this)">
+                    <span class="material-symbols-outlined">favorite</span>
+                    <span class="like-count">{{ c.likes_count }}</span>
+                </button>
+                <span class="action-btn">
+                    <span class="material-symbols-outlined">chat_bubble</span>
+                    {{ c.comments.count }}
+                </span>
+                <span class="action-btn card-link">
+                    Open post
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    {% if confessions.has_other_pages %}
+    <div class="paginator">
+        <div class="paginator-status">Page {{ confessions.number }} of {{ confessions.paginator.num_pages }}</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            {% if confessions.has_previous %}
+            <a class="btn-ghost" href="?page={{ confessions.previous_page_number }}&sort={{ current_sort }}&campus={{ current_campus|urlencode }}">Previous</a>
+            {% endif %}
+            {% if confessions.has_next %}
+            <a class="btn-ghost" href="?page={{ confessions.next_page_number }}&sort={{ current_sort }}&campus={{ current_campus|urlencode }}">Next</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="empty-feed">
+        <span class="material-symbols-outlined">forum</span>
+        <strong>No confessions yet.</strong>
+        <p>Be the first to post something to the feed.</p>
+    </div>
+    {% endif %}
+
+    {% if not user.is_authenticated %}
+    <div class="login-banner">
+        <p style="font-weight:700; margin:0;">Login to unlock SRM Match and more features!</p>
+        <button onclick="triggerGoogleLogin()" style="background:white; color:#004ac6; border:none; padding:8px 16px; border-radius:999px; font-weight:800; font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px; flex-shrink:0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+            Login/Sign Up
+        </button>
+    </div>
+    {% endif %}
+
 </div>
 
-<!-- Confessions Feed -->
-<div class="space-y-stack-gap">
-<!-- Confession Card 1 -->
-<article class="bg-surface-container-lowest p-card-padding rounded-lg shadow-soft border border-outline-variant/20 card-accent transition-transform hover:scale-[1.01] duration-300">
-<div class="flex items-center justify-between mb-4">
-<div class="flex items-center gap-3">
-<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-title-md">
-A
-</div>
-<div>
-<p class="font-label-bold text-on-surface">Anonymous</p>
-<p class="text-body-sm font-body-sm text-on-surface-variant/60">9 hours ago</p>
-</div>
-</div>
-<span class="px-3 py-1 rounded-full bg-secondary-container text-primary font-label-bold text-[10px] uppercase tracking-widest">Main Campus</span>
-</div>
-<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-6">
-Any female in KTR campus who's taking a PG (first year, any branch), please consider me too. Lemme know the available options and costs for sharing. I know the food is bad, but I could really use a friendly roommate!
-</p>
-<div class="flex items-center gap-6 pt-4 border-t border-outline-variant/10">
-<button class="flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors group border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined group-active:scale-125 transition-transform" data-icon="favorite">favorite</span>
-<span class="font-label-bold text-label-bold">124</span>
-</button>
-<button class="flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
-<span class="font-label-bold text-label-bold">12</span>
-</button>
-<button class="ml-auto flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined" data-icon="share">share</span>
-</button>
-</div>
-</article>
-
-<!-- Confession Card 2 -->
-<article class="bg-surface-container-lowest p-card-padding rounded-lg shadow-soft border border-outline-variant/20 transition-transform hover:scale-[1.01] duration-300">
-<div class="flex items-center justify-between mb-4">
-<div class="flex items-center gap-3">
-<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-title-md">
-S
-</div>
-<div>
-<p class="font-label-bold text-on-surface">Anonymous</p>
-<p class="text-body-sm font-body-sm text-on-surface-variant/60">12 hours ago</p>
-</div>
-</div>
-<span class="px-3 py-1 rounded-full bg-secondary-container text-primary font-label-bold text-[10px] uppercase tracking-widest">West Campus</span>
-</div>
-<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-6">
-18F here. This happened during the starting days of college, when everyone was trying to make new friends. There was this one guy, kinda cute with a moustache, not too tall, but he literally saved my library spot for 3 hours while I was stuck in a lab. If you're reading this, coffee is on me!
-</p>
-<div class="flex items-center gap-6 pt-4 border-t border-outline-variant/10">
-<button class="flex items-center gap-2 text-primary group border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined filled-icon" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
-<span class="font-label-bold text-label-bold">482</span>
-</button>
-<button class="flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
-<span class="font-label-bold text-label-bold">56</span>
-</button>
-<button class="ml-auto flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined" data-icon="share">share</span>
-</button>
-</div>
-</article>
-
-<!-- Confession Card 3 -->
-<article class="bg-surface-container-lowest p-card-padding rounded-lg shadow-soft border border-outline-variant/20 transition-transform hover:scale-[1.01] duration-300">
-<div class="flex items-center justify-between mb-4">
-<div class="flex items-center gap-3">
-<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-title-md">
-M
-</div>
-<div>
-<p class="font-label-bold text-on-surface">Anonymous</p>
-<p class="text-body-sm font-body-sm text-on-surface-variant/60">1 day ago</p>
-</div>
-</div>
-<span class="px-3 py-1 rounded-full bg-secondary-container text-primary font-label-bold text-[10px] uppercase tracking-widest">Global</span>
-</div>
-<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-6">
-I have selfish shitty friends, idkk what to do like one shit is hella toxic. The whole gang listens to her. Is it better to just be alone for a semester? Feeling really drained by all the drama lately.
-</p>
-<div class="flex items-center gap-6 pt-4 border-t border-outline-variant/10">
-<button class="flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors group border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
-<span class="font-label-bold text-label-bold">92</span>
-</button>
-<button class="flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
-<span class="font-label-bold text-label-bold">104</span>
-</button>
-<button class="ml-auto flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined" data-icon="share">share</span>
-</button>
-</div>
-</article>
-</div>
-</main>
-
-<!-- Floating Action Button -->
-<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-90 transition-all duration-300 z-50 border-0 cursor-pointer">
-<span class="material-symbols-outlined text-[28px]" data-icon="add">add</span>
+<!-- FAB: circular pen icon fixed high-right -->
+<button class="c-fab" onclick="openCreateModal()" aria-label="Write confession">
+    <span class="material-symbols-outlined">edit</span>
 </button>
 
-<!-- BottomNavBar -->
-<nav class="fixed bottom-0 left-0 w-full bg-surface/90 backdrop-blur-xl border-t border-outline-variant/20 shadow-[0_-4px_30px_rgba(37,99,235,0.04)] px-4 pt-3 pb-6 flex justify-around items-center z-50 rounded-t-lg">
-<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 transition-all active:scale-90 border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined" data-icon="home">home</span>
-<span class="font-label-bold text-label-bold mt-1">Home</span>
-</button>
-<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 transition-all active:scale-90 border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined" data-icon="hub">hub</span>
-<span class="font-label-bold text-label-bold mt-1">Matches</span>
-</button>
-<button class="flex flex-col items-center justify-center text-primary font-bold active:scale-90 transition-all border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined filled-icon" data-icon="add_circle" style="font-variation-settings: 'FILL' 1;">add_circle</span>
-<span class="font-label-bold text-label-bold mt-1">Post</span>
-</button>
-<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 transition-all active:scale-90 border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined" data-icon="bed">bed</span>
-<span class="font-label-bold text-label-bold mt-1">Rooms</span>
-</button>
-<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 transition-all active:scale-90 border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
-<span class="font-label-bold text-label-bold mt-1">Updates</span>
-</button>
-</nav>
+<!-- Create Modal -->
+<div class="modal-overlay" id="createModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>New Confession</h3>
+            <button class="close-modal" onclick="closeCreateModal()">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <form method="POST" action="{% url 'create_confession' %}" enctype="multipart/form-data" id="createConfessionForm">
+            {% csrf_token %}
+            <input type="hidden" name="fingerprint" id="fingerprintInput">
+
+            <textarea name="content" rows="6" placeholder="What's on your mind?..."></textarea>
+
+            <div class="toggle-row">
+                <div class="toggle-label">
+                    <i class="fas fa-user-secret" style="color:#004ac6; font-size:18px;"></i>
+                    Post Anonymously
+                </div>
+                <label class="switch">
+                    <input type="checkbox" name="is_anonymous" value="true" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="form-field">
+                <label style="font-weight:800; color:#151b27; font-size:14px;">Select Campus (Optional)</label>
+                <select name="campus" class="campus-select">
+                    <option value="">Global Feed</option>
+                    <option value="KTR">SRM KTR</option>
+                    <option value="RMP">SRM Ramapuram</option>
+                    <option value="VDP">SRM Vadapalani</option>
+                    <option value="ESW">SRM Eswari</option>
+                    <option value="NCR">SRM Delhi NCR</option>
+                    <option value="TCY">SRM Tiruchirappalli</option>
+                    <option value="AMT">SRM Amaravati</option>
+                    <option value="SKM">SRM Sikkim</option>
+                    <option value="SPT">SRM Sonepat</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-gradient" style="width:100%; justify-content:center; padding:16px; font-size:16px;">
+                <span class="material-symbols-outlined">send</span>
+                Post
+            </button>
+        </form>
+    </div>
+</div>
 
 <script>
-document.querySelectorAll('button').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const icon = this.querySelector('.material-symbols-outlined');
-    if (icon && icon.textContent === 'favorite') {
-      const isFilled = icon.style.fontVariationSettings.includes("'FILL' 1");
-      icon.style.fontVariationSettings = isFilled ? "'FILL' 0" : "'FILL' 1";
-      this.classList.toggle('text-primary');
+    function openCreateModal() {
+        document.getElementById('createModal').classList.add('active');
+        document.getElementById('fingerprintInput').value = getFingerprint();
     }
-  });
-});
 
-window.addEventListener('scroll', () => {
-  const header = document.querySelector('header');
-  if (window.scrollY > 10) {
-    header.classList.add('shadow-sm');
-  } else {
-    header.classList.remove('shadow-sm');
-  }
-});
+    function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
+
+    async function likeConfession(e, id, btn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        try {
+            const res = await fetch(`/confessions/${id}/like/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                }
+            });
+            const data = await res.json();
+            if (data.success) {
+                btn.classList.add('is-liked');
+                btn.querySelector('.like-count').textContent = data.likes_count;
+            }
+        } catch (err) { }
+    }
+
+    async function deleteConfession(e, id, btn) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!(await customConfirm('Are you sure you want to delete this confession permanently?', 'Delete Confession', 'Delete', 'Cancel'))) return;
+
+        try {
+            const res = await fetch(`/confessions/${id}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await res.json();
+            if (data.success) {
+                const card = btn.closest('.conf-card');
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.95)';
+                setTimeout(() => card.remove(), 300);
+            }
+        } catch (err) {
+            location.reload();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        checkAndShowWarning(
+            'confessions_warning',
+            'The Vault of Confessions',
+            `<div style="text-align:left;">
+                <p>This is a space for secrets, stories, and crushes—not for attacks.</p>
+                <ul style="margin-top:12px; padding-left:20px; display:flex; flex-direction:column; gap:8px;">
+                    <li><b>Zero Defamation:</b> Do not use full names to spread rumors or hurt reputations.</li>
+                    <li><b>Mental Health:</b> If you are struggling, please use the "Help" resources instead of posting.</li>
+                </ul>
+                <p style="margin-top:12px; font-size:12px; font-weight:600;">Disclaimer: Mods reserve the right to delete any post that borders on bullying or NSFW territory.</p>
+            </div>`,
+            'Enter Respectfully',
+            null
+        );
+    });
 </script>
-</body>
+
 {% endblock %}

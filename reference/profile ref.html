@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Profile - CampusPulse</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .profile-gradient {
+            background: linear-gradient(180deg, rgba(0, 74, 198, 0.05) 0%, rgba(247, 249, 251, 1) 100%);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e0e3e5;
+            border-radius: 10px;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-surface": "#2d3133",
+                        "on-surface": "#191c1e",
+                        "surface-tint": "#0053db",
+                        "primary-container": "#2563eb",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed": "#00174b",
+                        "outline": "#737686",
+                        "on-tertiary-container": "#bdffdb",
+                        "on-secondary": "#ffffff",
+                        "on-surface-variant": "#434655",
+                        "secondary-fixed": "#d5e4f8",
+                        "on-tertiary-fixed": "#002113",
+                        "surface": "#f7f9fb",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "secondary-container": "#d5e4f8",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "outline-variant": "#c3c6d7",
+                        "primary-fixed": "#dbe1ff",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "inverse-primary": "#b4c5ff",
+                        "on-background": "#191c1e",
+                        "surface-container-low": "#f2f4f6",
+                        "error": "#ba1a1a",
+                        "background": "#f7f9fb",
+                        "secondary": "#516070",
+                        "on-primary-container": "#eeefff",
+                        "surface-variant": "#e0e3e5",
+                        "on-error": "#ffffff",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "surface-bright": "#f7f9fb",
+                        "error-container": "#ffdad6",
+                        "surface-container-high": "#e6e8ea",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed-variant": "#3a4858",
+                        "tertiary-fixed": "#6ffbbe",
+                        "tertiary-container": "#007d55",
+                        "surface-dim": "#d8dadc",
+                        "tertiary": "#006242",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-container": "#eceef0",
+                        "secondary-fixed-dim": "#b9c8db",
+                        "on-secondary-fixed": "#0e1d2b",
+                        "primary": "#004ac6",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#576676"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "section-gap": "40px",
+                        "gutter": "16px",
+                        "card-padding": "24px",
+                        "container-margin": "24px",
+                        "stack-gap": "20px"
+                    },
+                    "fontFamily": {
+                        "label-bold": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "body-sm": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "title-md": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface min-h-screen font-body-lg text-body-lg pb-32">
+<!-- Top AppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 flex items-center justify-between px-container-margin h-16">
+<div class="flex items-center gap-3">
+<button class="p-2 -ml-2 rounded-full hover:bg-surface-container-high/50 transition-colors active:scale-95">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary tracking-tight">Edit Profile</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="material-symbols-outlined text-on-surface-variant p-2 hover:bg-surface-container-high/50 rounded-full transition-colors active:scale-95">notifications</button>
+<div class="w-8 h-8 rounded-full bg-primary-container overflow-hidden ring-2 ring-primary/10">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWdOS53sh02lpmcVLlpFzvit-6S7wzl3yOHYlcXGp4cz8HSHrTlsvoOrLwS9y887dri34jq0_4R-5_Hc16pDNsF9EpjiPx3t-gzn5N6y3qjTqowJrDMN-br9iHoM0mbXzYGuDL1zhcSQBkIopPetoN9n87aU39T2dwcMNb8EDsCkbtRvIw42Mab_5Y8vxKnAWUdJPN5wJjA2QAJqLh13wy_9D6_dlNisXeZ4tJtC_fswtLiKoASkZn8ttkSFtOPtIbx-B5RJTPxVQ"/>
+</div>
+</div>
+</header>
+<main class="pt-16 max-w-2xl mx-auto px-4">
+<!-- Persistent Profile Header -->
+<section class="profile-gradient pt-8 pb-4 flex flex-col items-center">
+<div class="relative group">
+<div class="w-32 h-32 rounded-full border-4 border-white shadow-lg overflow-hidden relative">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWdOS53sh02lpmcVLlpFzvit-6S7wzl3yOHYlcXGp4cz8HSHrTlsvoOrLwS9y887dri34jq0_4R-5_Hc16pDNsF9EpjiPx3t-gzn5N6y3qjTqowJrDMN-br9iHoM0mbXzYGuDL1zhcSQBkIopPetoN9n87aU39T2dwcMNb8EDsCkbtRvIw42Mab_5Y8vxKnAWUdJPN5wJjA2QAJqLh13wy_9D6_dlNisXeZ4tJtC_fswtLiKoASkZn8ttkSFtOPtIbx-B5RJTPxVQ"/>
+</div>
+<div class="absolute -top-1 -right-1 w-8 h-8 bg-tertiary rounded-full border-2 border-white flex items-center justify-center shadow-md">
+<span class="material-symbols-outlined text-white text-[16px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div class="absolute -bottom-1 -right-1 w-10 h-10 bg-primary rounded-full border-2 border-white flex items-center justify-center shadow-md cursor-pointer active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-white text-[20px]">add_a_photo</span>
+</div>
+</div>
+<div class="mt-4 text-center">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Arun</h2>
+<p class="text-on-surface-variant text-body-sm mt-1">VDP • 19 yrs</p>
+</div>
+<!-- View/Settings Switcher -->
+<div class="mt-6 flex bg-surface-container-lowest border border-outline-variant/30 rounded-full p-1 shadow-sm">
+<button class="px-8 py-2.5 rounded-full flex items-center gap-2 text-on-surface-variant hover:bg-surface-container-high/50 transition-all font-label-bold text-label-bold">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+                    View
+                </button>
+<div class="w-px bg-outline-variant/30 my-2"></div>
+<button class="px-8 py-2.5 rounded-full flex items-center gap-2 bg-primary-container text-on-primary-container shadow-md transition-all font-label-bold text-label-bold">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">settings</span>
+                    Settings
+                </button>
+</div>
+</section>
+<!-- Secondary Navigation Tab Bar (Persistent) -->
+<nav class="sticky top-[72px] z-40 bg-surface-container/50 backdrop-blur-lg rounded-full p-1.5 flex gap-1 overflow-x-auto custom-scrollbar no-scrollbar mt-4 shadow-sm">
+<button class="tab-btn flex-none min-w-[90px] flex flex-col items-center py-2 px-3 rounded-full bg-surface-container-lowest shadow-sm text-primary transition-all duration-300" onclick="switchTab('basic', this)">
+<span class="material-symbols-outlined text-[20px] mb-0.5">person</span>
+<span class="text-label-bold">Basic</span>
+</button>
+<button class="tab-btn flex-none min-w-[90px] flex flex-col items-center py-2 px-3 rounded-full text-on-surface-variant/60 hover:text-primary transition-all duration-300" onclick="switchTab('gallery', this)">
+<span class="material-symbols-outlined text-[20px] mb-0.5">image</span>
+<span class="text-label-bold">Gallery</span>
+</button>
+<button class="tab-btn flex-none min-w-[90px] flex flex-col items-center py-2 px-3 rounded-full text-on-surface-variant/60 hover:text-primary transition-all duration-300" onclick="switchTab('academy', this)">
+<span class="material-symbols-outlined text-[20px] mb-0.5">school</span>
+<span class="text-label-bold">Academy</span>
+</button>
+<button class="tab-btn flex-none min-w-[90px] flex flex-col items-center py-2 px-3 rounded-full text-on-surface-variant/60 hover:text-primary transition-all duration-300" onclick="switchTab('vibe', this)">
+<span class="material-symbols-outlined text-[20px] mb-0.5">music_note</span>
+<span class="text-label-bold">Vibe</span>
+</button>
+<button class="tab-btn flex-none min-w-[90px] flex flex-col items-center py-2 px-3 rounded-full text-on-surface-variant/60 hover:text-primary transition-all duration-300" onclick="switchTab('discovery', this)">
+<span class="material-symbols-outlined text-[20px] mb-0.5">favorite</span>
+<span class="text-label-bold">Discovery</span>
+</button>
+</nav>
+<div class="mt-stack-gap">
+<!-- Section: Basic -->
+<div class="tab-content active space-y-6" id="basic-tab">
+<div class="bg-surface-container-lowest rounded-lg p-card-padding border border-outline-variant/20 shadow-sm">
+<h3 class="font-title-md text-title-md text-on-surface mb-6">About you</h3>
+<div class="space-y-5">
+<div>
+<div class="flex justify-between items-center mb-2">
+<label class="font-label-bold text-label-bold text-on-surface-variant">Full name</label>
+<span class="px-2 py-0.5 bg-surface-variant text-[10px] font-bold uppercase rounded-sm text-on-surface-variant">Locked</span>
+</div>
+<input class="w-full bg-surface-container-low border-transparent rounded-[1rem] px-4 py-3 text-body-lg text-on-surface/70" readonly="" type="text" value="Arun"/>
+</div>
+<div>
+<label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Bio</label>
+<textarea class="w-full bg-surface-container-low border-transparent rounded-[1rem] px-4 py-3 text-body-lg min-h-[100px] outline-none focus:ring-2 focus:ring-primary" placeholder="Write something about yourself...">Finding new friends....</textarea>
+</div>
+<div>
+<label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Your age</label>
+<div class="flex items-center justify-center bg-surface-container-low rounded-[1rem] p-2 max-w-[240px] mx-auto">
+<button class="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm active:scale-95" onclick="decrementAge()">
+<span class="material-symbols-outlined text-primary">remove</span>
+</button>
+<div class="flex-1 text-center font-bold text-on-surface">
+<span class="text-headline-lg-mobile" id="age-display">19</span>
+<span class="text-body-sm text-on-surface-variant ml-1 font-normal">years</span>
+</div>
+<button class="w-10 h-10 flex items-center justify-center bg-white rounded-lg shadow-sm active:scale-95" onclick="incrementAge()">
+<span class="material-symbols-outlined text-primary">add</span>
+</button>
+</div>
+</div>
+<div>
+<label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Living place</label>
+<div class="bg-surface-container-low rounded-[1rem] p-3 space-y-2">
+<span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-outline-variant/30 rounded-full text-body-sm text-primary font-semibold">
+                                    Chennai, Tamil Nadu <span class="material-symbols-outlined text-[16px]">close</span>
+</span>
+<input class="w-full px-4 py-2 bg-white border border-outline-variant/30 rounded-[12px] text-body-sm" placeholder="Search city..." type="text"/>
+</div>
+</div>
+<div>
+<div class="flex justify-between items-center mb-2">
+<label class="font-label-bold text-label-bold text-on-surface-variant">Mother tongue</label>
+<span class="px-2 py-0.5 bg-surface-variant text-[10px] font-bold uppercase rounded-sm text-on-surface-variant">Locked</span>
+</div>
+<span class="inline-block px-4 py-2 bg-secondary-container/50 text-on-secondary-container border border-primary/10 rounded-full text-body-sm font-bold">Malayalam</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Gallery -->
+<div class="tab-content space-y-6" id="gallery-tab">
+<div class="bg-surface-container-lowest rounded-lg p-card-padding border border-outline-variant/20 shadow-sm">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-title-md text-title-md text-on-surface">Photos</h3>
+<span class="text-primary font-bold text-body-sm">3/6</span>
+</div>
+<div class="bg-primary/5 rounded-xl p-4 mb-6 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">security</span>
+<p class="text-body-sm text-primary/80 font-medium">AI safety check &amp; auto-compression on every upload.</p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="aspect-[3/4] rounded-2xl overflow-hidden relative group">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxGPAh6ntnV72UwNluj_oftXFIjsGEmMu7oPe9hvEMGa1SnimkasG52Z_B_Car_jajtESN5rBlXQkptraj58i3fJiGW8uAlJ9VHaR7PhdsUtwVjJEeNpYbdlFNGfco9dWCwLOtP1YhWAzEI5oiOuU-P-QMska-JPnHwo7f6OGJyQJIEVMY0cPMmf_acHoUH0uEO32SsjzJinJou1MQ8QSE3hkP-hb9_YqhKDbITSBGqSt6EWEqNS2p65NcJCqSnuUyzzg2Z9xQKxQ"/>
+<button class="absolute top-2 right-2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full text-white flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<div class="aspect-[3/4] rounded-2xl overflow-hidden relative group">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAezC6BMr_HZ2mzvnS1dS_CYURcWqYYNDWUx-Ja-2_cEkgXxD3IPZXp_In1ecz3B3-owLs_Z2SZoeO6Ta60mYgNHOcvuJ1ljQg_u_qC0NJuMMRDf78wHFWYsmkFvlu_BATsaEyb9V1PVIq3n--hzjL3rkr325udmZE0qBbnUqeKIuNJDBsZTYyfw5KaoTaw6qfgQ5nWUw2V7LJd5p5jvZTVyIQl-mBxbZjJ34WTuxhYvt_n-RP6-yAix6GZDoPZKWde4etpYaOMqKY"/>
+<button class="absolute top-2 right-2 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full text-white flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<div class="aspect-[3/4] border-2 border-dashed border-outline-variant/50 rounded-2xl flex flex-col items-center justify-center text-outline-variant gap-2 bg-surface-container-low hover:border-primary/50 transition-colors">
+<span class="material-symbols-outlined text-[32px]">add</span>
+<span class="text-label-bold">Add</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Academy -->
+<div class="tab-content space-y-6" id="academy-tab">
+<div class="bg-surface-container-lowest rounded-lg p-card-padding border border-outline-variant/20 shadow-sm">
+<h3 class="font-title-md text-title-md text-on-surface mb-6">Education</h3>
+<div class="space-y-5">
+<div>
+<div class="flex justify-between items-center mb-2">
+<label class="font-label-bold text-label-bold text-on-surface-variant">Campus</label>
+<span class="px-2 py-0.5 bg-surface-variant text-[10px] font-bold uppercase rounded-sm text-on-surface-variant">Locked</span>
+</div>
+<input class="w-full bg-surface-container-low border-transparent rounded-[1rem] px-4 py-3 text-body-lg text-on-surface/70" readonly="" value="VDP"/>
+</div>
+<div>
+<label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Course</label>
+<select class="w-full bg-surface-container-low border-transparent rounded-[1rem] px-4 py-3 text-body-lg appearance-none">
+<option>B.Tech</option>
+<option>B.Arch</option>
+<option>MBBS</option>
+</select>
+</div>
+<div>
+<label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Year of study</label>
+<select class="w-full bg-surface-container-low border-transparent rounded-[1rem] px-4 py-3 text-body-lg appearance-none">
+<option>1</option>
+<option>2</option>
+<option selected="">3</option>
+<option>4</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Vibe -->
+<div class="tab-content space-y-6" id="vibe-tab">
+<div class="bg-surface-container-lowest rounded-lg p-card-padding border border-outline-variant/20 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<h3 class="font-title-md text-title-md text-on-surface">Interests</h3>
+<button class="text-primary font-label-bold text-label-bold">Edit All</button>
+</div>
+<div class="flex flex-wrap gap-2">
+<div class="px-4 py-2 rounded-full bg-tertiary/10 text-tertiary border border-tertiary/20 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">sports_soccer</span>
+<span class="text-body-sm font-semibold">Football</span>
+</div>
+<div class="px-4 py-2 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">music_note</span>
+<span class="text-body-sm font-semibold">Music</span>
+</div>
+<div class="px-4 py-2 rounded-full bg-secondary/10 text-secondary border border-secondary/20 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">code</span>
+<span class="text-body-sm font-semibold">Coding</span>
+</div>
+<button class="w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-outline-variant border border-dashed border-outline-variant">
+<span class="material-symbols-outlined">add</span>
+</button>
+</div>
+<div class="mt-8 border-t border-outline-variant/20 pt-6">
+<div class="flex items-center gap-2 text-primary mb-2">
+<span class="material-symbols-outlined">music_note</span>
+<h4 class="font-bold">My vibe</h4>
+</div>
+<p class="text-body-sm text-on-surface-variant mb-6">Up to 3 movies &amp; 3 songs shown on your profile.</p>
+<div class="space-y-6">
+<div>
+<div class="flex items-center justify-between mb-4">
+<h5 class="text-label-bold text-on-surface-variant">Movies [ 3/3 ]</h5>
+</div>
+<div class="grid grid-cols-3 gap-3">
+<div class="flex flex-col items-center gap-2">
+<div class="w-full aspect-[2/3] rounded-lg overflow-hidden relative shadow-md">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUD7Xyljf0lR1hF2M8ElkO95Ly6WPcyyGSB0XoFiw6nMU7wtP_A0Gxotz6AM_wb8Dfj2cDM9JFE5IeFdXrX-y7SWQ7myAcUcKraIysFFLAcUy0iIE2p5Z8PWqMIMmHKNp4Itq3kQCm9RyMrKPNWgxAO_LKm4pV09dUX4R_4ko2oKr-X-GvGjKvNLKanoezNljABJs0-wDi9kNR5oCT9DcICk8ngMxRUOluSlBjvdE4hHBZuTI6ql520xBzkkv8UIFN2PZM2SSluks"/>
+<button class="absolute top-1 right-1 bg-error rounded-full p-0.5 text-white"><span class="material-symbols-outlined text-[14px]">close</span></button>
+</div>
+<span class="text-[10px] font-bold text-center truncate w-full">3 Idiots</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-full aspect-[2/3] rounded-lg overflow-hidden relative shadow-md">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBEzsWMEaAoq6VKdquQr8vs-RVp4qyg8hpKw76p2zcgTm-3yscppQh6bjq0Lg_f4yjlKAZALXOQ-4OlKyZyg8jENwIw_z5Uoq9c8y048K8AyeTXW9oH67KA7T0T5H-MdAvGQHmM8Dd7NS5Mgk2Oe-90-jPg41wB-AcaLFXX-t5yafO77rpKncw_jRIJ1_aF-ZbrijafRWz8d1E2Gky3_nBwtWPePC1mHsaqgroZMaDlCZOnmcGvmXw5CMhkUeyP1O1JLo04GJEsrwM"/>
+<button class="absolute top-1 right-1 bg-error rounded-full p-0.5 text-white"><span class="material-symbols-outlined text-[14px]">close</span></button>
+</div>
+<span class="text-[10px] font-bold text-center truncate w-full">Kaithi</span>
+</div>
+<div class="flex flex-col items-center gap-2">
+<div class="w-full aspect-[2/3] rounded-lg overflow-hidden relative shadow-md">
+<img class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAEqRK2MTmlUB-Rf9sX0wuDanAEKuAarLyu-2AsiRfYIsXqGAZNioMNixbP6a4af-9TxPzqyXDepGxMbS0zUvyvXoNKkrpyc4cXJU51e2z5MDByM-G_kpyTk4gpWiU8T8OtPp_NOFjitp7aePpuybCH3R2_CAc16fA-fdgvBAxQFxDMyWyMSkW42D-pDKeldO5H1dWO1bBwoxMtyzDemRZjQD90vaBxl82MIAVrc4AB1X3DqWZ0W_YcKmat0OlkBOnfRI47cPnvjGw"/>
+<button class="absolute top-1 right-1 bg-error rounded-full p-0.5 text-white"><span class="material-symbols-outlined text-[14px]">close</span></button>
+</div>
+<span class="text-[10px] font-bold text-center truncate w-full">Jack Ryan</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Section: Discovery -->
+<div class="tab-content space-y-6" id="discovery-tab">
+<div class="bg-surface-container-lowest rounded-lg p-card-padding border border-outline-variant/20 shadow-sm">
+<h3 class="font-title-md text-title-md text-on-surface mb-6">Discovery</h3>
+<div class="space-y-6">
+<div>
+<label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Looking for</label>
+<select class="w-full bg-surface-container-low border-transparent rounded-[1rem] px-4 py-3 text-body-lg">
+<option>Just vibing</option>
+<option>Something serious</option>
+</select>
+</div>
+<div>
+<label class="block font-label-bold text-label-bold text-on-surface-variant mb-2">Age range</label>
+<div class="flex items-center gap-4 justify-between bg-surface-container-low p-4 rounded-2xl">
+<div class="flex flex-col items-center">
+<span class="text-[10px] text-on-surface-variant font-bold uppercase mb-1">Min</span>
+<div class="flex items-center gap-2">
+<button class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-primary shadow-sm"><span class="material-symbols-outlined text-[18px]">remove</span></button>
+<span class="font-bold text-lg">18</span>
+<button class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-primary shadow-sm"><span class="material-symbols-outlined text-[18px]">add</span></button>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant">sync_alt</span>
+<div class="flex flex-col items-center">
+<span class="text-[10px] text-on-surface-variant font-bold uppercase mb-1">Max</span>
+<div class="flex items-center gap-2">
+<button class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-primary shadow-sm"><span class="material-symbols-outlined text-[18px]">remove</span></button>
+<span class="font-bold text-lg">24</span>
+<button class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-primary shadow-sm"><span class="material-symbols-outlined text-[18px]">add</span></button>
+</div>
+</div>
+</div>
+</div>
+<div class="flex items-center justify-between py-4 border-t border-outline-variant/10">
+<div>
+<h4 class="font-label-bold text-on-surface">Show me in match feed</h4>
+<p class="text-body-sm text-on-surface-variant">When on, others can discover your profile.</p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-tertiary"></div>
+</label>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pt-3 pb-6 bg-surface/90 backdrop-blur-xl border-t border-outline-variant/20 shadow-[0_-4px_30px_rgba(37,99,235,0.04)] z-50 rounded-t-lg">
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all duration-300 active:scale-90" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label-bold text-label-bold">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all duration-300 active:scale-90" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span class="font-label-bold text-label-bold">Matches</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all duration-300 active:scale-90" href="#">
+<span class="material-symbols-outlined text-4xl">add_circle</span>
+<span class="font-label-bold text-label-bold">Post</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary transition-all duration-300 active:scale-90" href="#">
+<span class="material-symbols-outlined">bed</span>
+<span class="font-label-bold text-label-bold">Rooms</span>
+</a>
+<a class="flex flex-col items-center justify-center text-primary font-bold transition-all duration-300 active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-label-bold text-label-bold">Profile</span>
+</a>
+</nav>
+<script>
+        function switchTab(tabId, btn) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show the selected tab content
+            document.getElementById(tabId + '-tab').classList.add('active');
+            
+            // Update button styles
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.classList.remove('bg-surface-container-lowest', 'shadow-sm', 'text-primary');
+                button.classList.add('text-on-surface-variant/60');
+            });
+            
+            btn.classList.add('bg-surface-container-lowest', 'shadow-sm', 'text-primary');
+            btn.classList.remove('text-on-surface-variant/60');
+
+            // Scroll button into view if overflowed
+            btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+
+        let currentAge = 19;
+        const ageDisplay = document.getElementById('age-display');
+
+        function incrementAge() {
+            currentAge++;
+            ageDisplay.innerText = currentAge;
+            ageDisplay.classList.add('scale-110', 'text-primary');
+            setTimeout(() => {
+                ageDisplay.classList.remove('scale-110', 'text-primary');
+            }, 200);
+        }
+
+        function decrementAge() {
+            if(currentAge > 16) {
+                currentAge--;
+                ageDisplay.innerText = currentAge;
+                ageDisplay.classList.add('scale-90', 'text-error');
+                setTimeout(() => {
+                    ageDisplay.classList.remove('scale-90', 'text-error');
+                }, 200);
+            }
+        }
+    </script>
+</body></html>

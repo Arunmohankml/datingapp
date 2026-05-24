@@ -5,668 +5,941 @@
 
 {% block head %}
 <style>
-    /* Light Theme Styling */
-    :root {
-        --rf-bg: #f8fafc;
-        --rf-card: #ffffff;
-        --rf-glass: rgba(255, 255, 255, 0.95);
-        --rf-border: #f1f5f9;
-        --rf-border-hover: #e2e8f0;
-        --rf-text: #0f172a;
-        --rf-text-muted: #64748b;
-        --rf-primary: #2563eb;
-        --rf-primary-hover: #1d4ed8;
-        --rf-primary-light: #eff6ff;
-        --rf-accent: #ef4444;
-        --rf-success: #10b981;
-        --rf-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-        --rf-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
-    }
+/* ============================================
+   Roomfinder - Premium UI Theme
+   Plus Jakarta Sans + Material Symbols
+   ============================================ */
+:root {
+    --rf-page-padding: 16px;
+}
 
-    body {
-        background: var(--rf-bg);
-        color: var(--rf-text);
-        padding-bottom: 90px;
-        font-family: 'Inter', system-ui, sans-serif;
-    }
+/* Force container to be static so sticky works to top */
+body > .container {
+    padding: 0 !important;
+    position: static !important;
+}
 
-    .container {
-        max-width: 100% !important;
-        padding: 0 !important;
-        margin-top: 0 !important;
-    }
+/* ---- Sticky Header (matching reference) ---- */
+.rf-header {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: var(--shell-width, 560px);
+    z-index: 100;
+    background: rgba(247,249,251,0.78);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid rgba(0,74,198,0.08);
+    padding: calc(10px + env(safe-area-inset-top)) var(--rf-page-padding) 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-sizing: border-box;
+}
+.rf-header-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+.rf-back-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.88);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    color: var(--primary, #2563eb);
+    border: 1px solid rgba(0,74,198,0.08);
+    box-shadow: 0 10px 24px rgba(15,23,42,0.06);
+    transition: 0.2s ease;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.rf-back-btn:active {
+    transform: scale(0.94);
+}
+.rf-header h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+    color: #151b27;
+    letter-spacing: -0.04em;
+}
+.rf-header .rf-subtitle {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #6d7b8f;
+    display: block;
+    margin: 0 0 1px;
+}
 
-    /* Premium Header */
-    .rf-header {
-        width: 100%;
-        box-sizing: border-box;
-        padding: 16px 20px 16px;
-        background: #ffffff;
-        border-bottom: 1px solid var(--rf-border);
-        transition: all 0.3s ease;
-    }
+/* ---- Segmented Control (Tab Bar) ---- */
+.rf-segmented {
+    display: flex;
+    background: var(--surface-container-low, #f1f5f9);
+    padding: 4px;
+    border-radius: 100px;
+    margin: 12px var(--rf-page-padding) 12px;
+    margin-top: calc(68px + env(safe-area-inset-top));
+    position: relative;
+}
+.rf-segmented .rf-tab {
+    flex: 1;
+    padding: 10px 0;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--on-surface-variant, #64748b);
+    border: none;
+    background: transparent;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 2;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.rf-segmented .rf-tab.active {
+    background: #ffffff;
+    color: var(--primary, #2563eb);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
 
-    .rf-header-top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 12px;
-    }
+/* ---- Search & Filter Row ---- */
+.rf-search-row {
+    display: flex;
+    gap: 8px;
+    padding: 0 var(--rf-page-padding);
+    margin-bottom: 12px;
+}
+.rf-search-wrap {
+    flex: 1;
+    position: relative;
+}
+.rf-search-wrap .material-symbols-outlined {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 19px;
+    color: var(--on-surface-variant, #94a3b8);
+}
+.rf-search-wrap input {
+    width: 100%;
+    padding: 11px 14px 11px 44px;
+    border: 1px solid var(--surface-container, #e2e8f0);
+    border-radius: 100px;
+    background: var(--surface-container-lowest, #ffffff);
+    font-size: 14px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.3s;
+}
+.rf-search-wrap input:focus {
+    border-color: var(--primary, #2563eb);
+}
+.rf-filter-btn {
+    width: 42px;
+    height: 42px;
+    background: var(--surface-container-lowest, #ffffff);
+    border: 1px solid var(--surface-container, #e2e8f0);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--on-surface-variant, #475569);
+    cursor: pointer;
+    transition: all 0.3s;
+    flex-shrink: 0;
+    position: relative;
+}
+.rf-filter-btn:hover {
+    border-color: var(--primary, #2563eb);
+    color: var(--primary, #2563eb);
+}
+.rf-filter-btn .material-symbols-outlined {
+    font-size: 20px;
+}
 
-    .rf-title-area {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
+/* ---- Feed Container ---- */
+.rf-feed {
+    padding: 0 var(--rf-page-padding) 120px;
+}
 
-    .rf-title {
-        font-size: 20px;
-        font-weight: 850;
-        margin: 0;
-        color: var(--rf-primary);
-        letter-spacing: -0.5px;
-    }
+/* ---------- LISTING CARDS (glass-style, like reference) ---------- */
+.rf-card {
+    background: #ffffff;
+    border: 1px solid #eef2f6;
+    border-radius: 24px;
+    overflow: hidden;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.02);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.rf-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+}
 
-    .rf-back-btn {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        background: #f1f5f9;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-decoration: none;
-        color: var(--rf-text);
-        transition: all 0.2s ease;
-        font-size: 13px;
-    }
-    .rf-back-btn:hover {
-        background: #e2e8f0;
-    }
-    .rf-back-btn:active {
-        transform: scale(0.92);
-    }
+/* Card Image Carousel */
+.rf-card-img-wrap {
+    height: 220px;
+    position: relative;
+    overflow: hidden;
+    background: #f1f5f9;
+}
+.rf-card-img-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.rf-card-img-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.88);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    z-index: 3;
+    transition: all 0.2s;
+}
+.rf-card-img-nav .material-symbols-outlined {
+    font-size: 17px;
+    color: #0f172a;
+}
+.rf-card-img-prev { left: 8px; }
+.rf-card-img-next { right: 8px; }
 
-    /* Page Navigation Floating Pills */
-    .rf-float-nav {
-        display: flex;
-        gap: 6px;
-        background: #f1f5f9;
-        padding: 4px;
-        border-radius: 12px;
-    }
+/* Image Counter Badge */
+.rf-card-img-count {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: rgba(15,23,42,0.72);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 100px;
+    z-index: 3;
+    letter-spacing: 0.3px;
+    backdrop-filter: blur(4px);
+}
 
-    .rf-nav-pill {
-        padding: 6px 12px;
-        border-radius: 9px;
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--rf-text-muted);
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border: none;
-        background: transparent;
-    }
+/* Card Body */
+.rf-card-body {
+    padding: 16px 18px 18px;
+}
 
-    .rf-nav-pill.active {
-        background: #ffffff;
-        color: var(--rf-primary);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
+.rf-card-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+.rf-card-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--on-surface, #0f172a);
+    letter-spacing: -0.3px;
+    line-height: 1.3;
+}
 
-    .rf-header-subtitle {
-        font-size: 13px;
-        color: var(--rf-text-muted);
-        margin: 0 0 16px;
-        line-height: 1.4;
-    }
+/* Bookmark Button */
+.rf-save-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 3px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.rf-save-btn .material-symbols-outlined {
+    font-size: 20px;
+    color: var(--on-surface-variant, #94a3b8);
+    transition: color 0.2s;
+}
+.rf-save-btn.saved .material-symbols-outlined {
+    color: var(--primary, #2563eb);
+    font-variation-settings: 'FILL' 1;
+}
+.rf-save-btn:not(.saved):hover .material-symbols-outlined {
+    color: var(--primary, #2563eb);
+}
 
-    /* Double Tabs Container */
-    .rf-tabs-container {
-        display: flex;
-        border-bottom: 2px solid #e2e8f0;
-        margin-bottom: 12px;
-    }
+/* Tags Row */
+.rf-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 8px;
+}
+.rf-tag {
+    padding: 3px 10px;
+    background: var(--surface-container, #f1f5f9);
+    color: var(--on-surface-variant, #475569);
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 100px;
+    letter-spacing: 0.2px;
+}
+.rf-tag.rf-tag-rent {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary, #2563eb);
+    font-weight: 700;
+}
+.rf-tag.rf-tag-occupants {
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+.rf-tag.rf-tag-gender {
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+}
+.rf-tag.rf-tag-furnished {
+    background: rgba(139, 92, 246, 0.1);
+    color: #7c3aed;
+}
 
-    .rf-tab-btn {
-        flex: 1;
-        text-align: center;
-        padding: 12px 6px;
-        font-size: 14px;
-        font-weight: 800;
-        color: var(--rf-text-muted);
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        position: relative;
-        transition: all 0.3s ease;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 2px;
-    }
+/* Details Row */
+.rf-detail {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #475569;
+    line-height: 1.3;
+}
 
-    .rf-tab-btn.active {
-        color: var(--rf-primary);
-    }
+.rf-detail .material-symbols-outlined {
+    font-size: 16px;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+.rf-detail {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: var(--on-surface-variant, #64748b);
+    font-weight: 500;
+}
+.rf-detail .material-symbols-outlined {
+    font-size: 15px;
+    color: var(--on-surface-variant, #94a3b8);
+}
 
-    .rf-tab-btn::after {
-        content: '';
-        position: absolute;
-        bottom: -2px;
-        left: 0;
-        width: 100%;
-        height: 2px;
-        background: var(--rf-primary);
-        transform: scaleX(0);
-        transition: transform 0.3s ease;
-    }
+/* Note */
+.rf-note {
+    font-size: 12px;
+    color: var(--on-surface-variant, #64748b);
+    line-height: 1.5;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    background: var(--surface-container, #f8fafc);
+    border-radius: 12px;
+    border-left: 3px solid var(--primary, #2563eb);
+}
 
-    .rf-tab-btn.active::after {
-        transform: scaleX(1);
-    }
+/* Card Footer (User + Chat) */
+.rf-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 12px;
+    border-top: 1px solid var(--surface-container, #eef2f6);
+}
+.rf-card-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.rf-card-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.rf-card-avatar-placeholder {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface-container-high, #e2e8f0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.rf-card-avatar-placeholder .material-symbols-outlined {
+    font-size: 18px;
+    color: var(--on-surface-variant, #94a3b8);
+}
+.rf-card-username {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--on-surface, #0f172a);
+}
+.rf-card-date {
+    font-size: 10px;
+    color: var(--on-surface-variant, #94a3b8);
+}
 
-    .rf-tab-badge {
-        font-size: 10px;
-        font-weight: 500;
-        color: var(--rf-text-muted);
-        margin-top: 1px;
-    }
+/* Chat Button */
+.rf-chat-btn {
+    background: var(--primary, #2563eb);
+    color: #ffffff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.rf-chat-btn:hover {
+    background: var(--primary-container, #1d4ed8);
+    transform: scale(1.02);
+}
+.rf-chat-btn .material-symbols-outlined {
+    font-size: 15px;
+}
 
-    /* Search & Filters chips row */
-    .rf-search-filter-row {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 8px;
-        align-items: center;
-    }
+/* Card Actions (edit/delete) */
+.rf-card-actions {
+    display: flex;
+    gap: 5px;
+}
+.rf-action-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: var(--surface-container, #f1f5f9);
+    color: var(--on-surface-variant, #475569);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.rf-action-btn:hover {
+    background: var(--primary, #2563eb);
+    color: #ffffff;
+}
+.rf-action-btn.rf-action-delete:hover {
+    background: #ef4444;
+}
+.rf-action-btn .material-symbols-outlined {
+    font-size: 15px;
+}
 
-    .rf-search-input-wrapper {
-        flex: 1;
-        background: #f1f5f9;
-        border-radius: 12px;
-        padding: 0 14px;
-        height: 42px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        box-sizing: border-box;
-    }
+/* ---- Empty State ---- */
+.rf-empty {
+    text-align: center;
+    padding: 50px 20px;
+}
+.rf-empty .material-symbols-outlined {
+    font-size: 56px;
+    color: var(--surface-container-high, #cbd5e1);
+    margin-bottom: 14px;
+}
+.rf-empty h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--on-surface, #0f172a);
+    margin-bottom: 4px;
+}
+.rf-empty p {
+    font-size: 13px;
+    color: var(--on-surface-variant, #64748b);
+}
 
-    .rf-search-input-wrapper input {
-        border: none;
-        background: transparent;
-        outline: none;
-        color: var(--rf-text);
-        font-size: 13.5px;
-        width: 100%;
-        height: 100%;
-        padding: 0;
-        margin: 0;
-    }
+/* ---- Loading Skeleton ---- */
+.rf-skeleton {
+    background: #ffffff;
+    border-radius: 24px;
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+.rf-skeleton-img {
+    height: 180px;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: rf-shimmer 1.5s infinite;
+}
+.rf-skeleton-body {
+    padding: 14px 16px;
+}
+.rf-skeleton-line {
+    height: 12px;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: rf-shimmer 1.5s infinite;
+    border-radius: 100px;
+    margin-bottom: 8px;
+}
+.rf-skeleton-line:last-child { width: 55%; }
+@keyframes rf-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
 
-    .rf-filter-btn {
-        background: #f1f5f9;
-        border: none;
-        border-radius: 12px;
-        height: 42px;
-        padding: 0 16px;
-        font-size: 13.5px;
-        font-weight: 700;
-        color: var(--rf-text);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        transition: all 0.2s ease;
-        box-sizing: border-box;
-    }
-    .rf-filter-btn:hover { background: #e2e8f0; }
+/* ---- FAB ---- */
+.rf-fab {
+    position: fixed;
+    bottom: 90px;
+    right: 16px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary, #2563eb), #1d4ed8);
+    color: #ffffff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(37,99,235,0.4);
+    transition: all 0.3s;
+    z-index: 40;
+}
+.rf-fab:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 28px rgba(37,99,235,0.5);
+}
+.rf-fab .material-symbols-outlined {
+    font-size: 26px;
+}
+.rf-fab-menu {
+    position: fixed;
+    bottom: 150px;
+    right: 16px;
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 41;
+}
+.rf-fab-menu.open {
+    display: flex;
+}
+.rf-fab-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: #ffffff;
+    border: 1px solid var(--surface-container, #e2e8f0);
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--on-surface, #0f172a);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    transition: all 0.2s;
+}
+.rf-fab-option:hover {
+    background: var(--surface-container, #f1f5f9);
+    transform: translateX(-4px);
+}
+.rf-fab-option .material-symbols-outlined {
+    font-size: 18px;
+    color: var(--primary, #2563eb);
+}
 
-    .rf-filter-btn.active {
-        background: var(--rf-primary-light);
-        color: var(--rf-primary);
-        border: 1px solid rgba(37, 130, 246, 0.2);
-    }
+/* ---- Modals (Slide Up) ---- */
+.rf-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15,23,42,0.5);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    align-items: flex-end;
+    justify-content: center;
+}
+.rf-modal-overlay.open,
+.rf-modal-overlay.active {
+    display: flex;
+}
+.rf-modal {
+    background: #ffffff;
+    border-radius: 24px 24px 0 0;
+    width: 100%;
+    max-width: 500px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 20px 18px 100px;
+    animation: rf-slideUp 0.3s ease;
+}
+@keyframes rf-slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+.rf-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+.rf-modal-header h2 {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--on-surface, #0f172a);
+    letter-spacing: -0.4px;
+}
+.rf-modal-close {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: var(--surface-container, #f1f5f9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.rf-modal-close:hover {
+    background: var(--surface-container-high, #e2e8f0);
+}
+.rf-modal-close .material-symbols-outlined {
+    font-size: 18px;
+    color: var(--on-surface-variant, #64748b);
+}
 
-    .rf-active-filter-badge {
-        background: var(--rf-primary);
-        color: #ffffff;
-        border-radius: 50%;
-        width: 16px;
-        height: 16px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 9px;
-        font-weight: 800;
-    }
+/* ---- Form Styles ---- */
+.rf-form-group {
+    margin-bottom: 14px;
+}
+.rf-form-group label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--on-surface-variant, #475569);
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+.rf-form-group input,
+.rf-form-group select,
+.rf-form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--surface-container, #e2e8f0);
+    border-radius: 12px;
+    background: var(--surface-container-lowest, #ffffff);
+    font-size: 13px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.3s;
+}
+.rf-form-group input:focus,
+.rf-form-group select:focus,
+.rf-form-group textarea:focus {
+    border-color: var(--primary, #2563eb);
+}
+.rf-form-group textarea {
+    resize: vertical;
+    min-height: 70px;
+}
+.rf-form-group input[type="file"] {
+    padding: 9px;
+    border: 1px dashed var(--surface-container, #cbd5e1);
+    border-radius: 12px;
+    background: var(--surface-container, #f8fafc);
+    cursor: pointer;
+}
+.rf-amenity-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.rf-amenity-grid input[type="checkbox"] { display: none; }
+.rf-amenity-grid label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    background: var(--surface-container, #f1f5f9);
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--on-surface-variant, #475569);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.rf-amenity-grid input:checked + label,
+.rf-amenity-grid label:has(input:checked) {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary, #2563eb);
+}
 
-    /* Feed Layout */
-    .rf-feed {
-        padding: 16px 20px 40px;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-        margin-top: 8px;
-    }
+/* Image Upload Preview */
+.rf-img-preview {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+}
+.rf-img-preview-item {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.rf-img-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.rf-img-preview-item .rf-img-del {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(15,23,42,0.8);
+    color: #ffffff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 9px;
+}
 
-    /* Modern Rounded Cards */
-    .rf-card {
-        background: var(--rf-card);
-        border-radius: 20px;
-        border: 1px solid var(--rf-border);
-        overflow: hidden;
-        box-shadow: var(--rf-shadow);
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-    }
-    .rf-card:hover {
-        transform: translateY(-2px);
-        box-shadow: var(--rf-shadow-lg);
-        border-color: var(--rf-border-hover);
-    }
+/* ---- Submit Button ---- */
+.rf-submit-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--primary, #2563eb), #1d4ed8);
+    color: #ffffff;
+    border: none;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.rf-submit-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(37,99,235,0.3);
+}
+.rf-submit-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
 
-    .rf-carousel {
-        position: relative;
-        width: 100%;
-        aspect-ratio: 16/10;
-        background: #f8fafc;
-        overflow: hidden;
-    }
+/* ---- Filter Modal Grid ---- */
+.rf-filter-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.rf-filter-full {
+    grid-column: 1 / -1;
+}
+.rf-filter-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+}
+.rf-filter-actions button {
+    flex: 1;
+    padding: 11px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.rf-filter-clear {
+    background: var(--surface-container, #f1f5f9);
+    color: var(--on-surface-variant, #475569);
+    border: none;
+}
+.rf-filter-apply {
+    background: linear-gradient(135deg, var(--primary, #2563eb), #1d4ed8);
+    color: #ffffff;
+    border: none;
+}
+.rf-filter-apply:hover {
+    box-shadow: 0 4px 16px rgba(37,99,235,0.3);
+}
 
-    .rf-carousel img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
+/* ---- Toast ---- */
+.rf-toast {
+    position: fixed;
+    bottom: 150px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--on-surface, #0f172a);
+    color: #ffffff;
+    padding: 10px 22px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+}
+.rf-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-8px);
+}
 
-    .rf-carousel-btn {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        background: rgba(255, 255, 255, 0.9);
-        border: none;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        color: var(--rf-text);
-        z-index: 10;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        transition: all 0.2s ease;
-    }
-    .rf-carousel-btn:hover { background: #ffffff; transform: translateY(-50%) scale(1.05); }
-    .rf-carousel-btn.prev { left: 10px; }
-    .rf-carousel-btn.next { right: 10px; }
+/* ---- Spinner (for button loading state) ---- */
+.rf-spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    animation: rf-spin 0.6s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+@keyframes rf-spin {
+    to { transform: rotate(360deg); }
+}
 
-    .rf-card-body {
-        padding: 16px 18px;
-    }
+/* ---- Legacy classes (compat) ---- */
+.rf-form-control { 
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.rf-warning-banner {
+    background: rgba(217,119,6,0.1);
+    border: 1px solid rgba(217,119,6,0.2);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #92400e;
+    line-height: 1.5;
+}
+.rf-active-filter-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 100px;
+    background: var(--primary, #2563eb);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 0 5px;
+    margin-left: 4px;
+}
 
-    .rf-price-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-    }
+/* ---- Scrollbar ---- */
+.rf-modal::-webkit-scrollbar { width: 4px; }
+.rf-modal::-webkit-scrollbar-track { background: transparent; }
+.rf-modal::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 100px; }
 
-    .rf-price {
-        font-size: 20px;
-        font-weight: 850;
-        color: var(--rf-text);
-    }
-
-    .rf-type-badge {
-        background: var(--rf-primary-light);
-        color: var(--rf-primary);
-        padding: 4px 10px;
-        border-radius: 8px;
-        font-size: 11px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .rf-location {
-        font-size: 13.5px;
-        color: var(--rf-text-muted);
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .rf-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-bottom: 14px;
-    }
-
-    .rf-tag {
-        background: #f8fafc;
-        border: 1px solid var(--rf-border);
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-size: 11px;
-        font-weight: 500;
-        color: var(--rf-text-muted);
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .rf-user-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding-top: 14px;
-        border-top: 1px solid var(--rf-border);
-        margin-top: 4px;
-    }
-
-    .rf-user-pic {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 1px solid #f1f5f9;
-    }
-
-    .rf-user-info {
-        flex: 1;
-    }
-
-    .rf-user-name {
-        font-size: 13px;
-        font-weight: 750;
-        margin: 0 0 2px;
-        color: var(--rf-text);
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .rf-user-course {
-        font-size: 11px;
-        color: var(--rf-text-muted);
-        margin: 0;
-    }
-
-    .rf-card-save-btn {
-        background: #f1f5f9;
-        border: 1px solid #e2e8f0;
-        color: var(--rf-text-muted);
-        padding: 8px 12px;
-        border-radius: 10px;
-        font-size: 12px;
-        font-weight: 700;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .rf-card-save-btn.saved {
-        background: var(--rf-primary);
-        border-color: var(--rf-primary);
-        color: #ffffff;
-        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
-    }
-    .rf-card-save-btn:active { transform: scale(0.94); }
-
-    /* Dynamic FAB button */
-    .rf-fab {
-        position: fixed;
-        bottom: 85px;
-        right: 20px;
-        background: var(--rf-primary);
-        color: white;
-        padding: 12px 20px;
-        border-radius: 30px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        font-weight: 800;
-        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
-        cursor: pointer;
-        z-index: 100;
-        transition: all 0.25s cubic-bezier(0.1, 1, 0.2, 1);
-        border: none;
-    }
-    .rf-fab:active { transform: scale(0.95); }
-
-    /* Modals & Overlays */
-    .rf-modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.4);
-        backdrop-filter: blur(8px);
-        z-index: 1000;
-        display: none;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    .rf-modal-overlay.active { display: block; opacity: 1; }
-
-    .rf-modal {
-        position: fixed;
-        bottom: -100%;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100%;
-        max-width: 600px;
-        background: #ffffff;
-        border-top-left-radius: 28px;
-        border-top-right-radius: 28px;
-        padding: 24px 20px 30px;
-        z-index: 1001;
-        transition: bottom 0.4s cubic-bezier(0.1, 1, 0.2, 1);
-        max-height: 88vh;
-        overflow-y: auto;
-        box-sizing: border-box;
-        box-shadow: 0 -10px 40px rgba(0,0,0,0.06);
-    }
-    .rf-modal.active { bottom: 0; }
-
-    .rf-modal-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-
-    .rf-modal-title { font-size: 18px; font-weight: 850; margin: 0; color: var(--rf-text); }
-
-    .rf-form-group { margin-bottom: 16px; }
-    .rf-form-group label {
-        display: block;
-        font-size: 12px;
-        font-weight: 700;
-        color: var(--rf-text-muted);
-        margin-bottom: 6px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .rf-form-control {
-        width: 100%;
-        background: #f8fafc;
-        border: 1px solid var(--rf-border);
-        color: var(--rf-text);
-        padding: 10px 14px;
-        border-radius: 12px;
-        font-size: 14px;
-        outline: none;
-        box-sizing: border-box;
-        transition: border 0.2s ease;
-    }
-    .rf-form-control:focus { border-color: var(--rf-primary); background: #ffffff; }
-
-    /* Amenity checkbox pills style */
-    .rf-amenity-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 6px;
-    }
-
-    .rf-amenity-checkbox {
-        display: none;
-    }
-
-    .rf-amenity-pill {
-        background: #f1f5f9;
-        color: var(--rf-text-muted);
-        border: 1px solid #e2e8f0;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        transition: all 0.2s ease;
-    }
-
-    .rf-amenity-checkbox:checked + .rf-amenity-pill {
-        background: var(--rf-primary-light);
-        color: var(--rf-primary);
-        border-color: var(--rf-primary);
-    }
-
-    .rf-submit-btn {
-        width: 100%;
-        padding: 14px;
-        background: var(--rf-primary);
-        color: white;
-        border: none;
-        border-radius: 14px;
-        font-size: 15px;
-        font-weight: 800;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-    .rf-submit-btn:hover { background: var(--rf-primary-hover); }
-
-    /* Empty state card style */
-    .rf-empty-state {
-        text-align: center;
-        padding: 40px 20px;
-        background: #ffffff;
-        border-radius: 20px;
-        border: 1px solid var(--rf-border);
-        color: var(--rf-text-muted);
-        box-shadow: var(--rf-shadow);
-    }
-    .rf-empty-state-title {
-        font-size: 16px;
-        font-weight: 800;
-        color: var(--rf-text);
-        margin: 12px 0 8px;
-    }
-
-    /* Warning/Profile Complete Banner style */
-    .rf-warning-banner {
-        background: #fffbeb;
-        border: 1px solid #fef3c7;
-        border-left: 4px solid #f59e0b;
-        border-radius: 12px;
-        padding: 14px;
-        margin-bottom: 18px;
-        color: #b45309;
-        font-size: 13px;
-        line-height: 1.5;
-        text-align: left;
-    }
-
-    @media (min-width: 600px) {
-        .container {
-            max-width: 600px !important;
-            margin: 0 auto !important;
-            border-left: 1px solid var(--rf-border);
-            border-right: 1px solid var(--rf-border);
-            box-shadow: 0 0 60px rgba(0, 0, 0, 0.03);
-            background: var(--rf-bg);
-            min-height: 100vh;
-            position: relative;
-        }
-        .rf-header { width: 600px; }
-        .rf-fab { right: calc(50% - 300px + 20px); }
-        .rf-modal {
-            max-width: 600px;
-            left: 50% !important;
-            right: auto !important;
-            width: 100%;
-            transform: translateX(-50%);
-        }
-    }
+/* ---- Responsive ---- */
+@media (min-width: 768px) {
+    .rf-feed { max-width: 640px; margin: 0 auto; }
+    .rf-search-row { max-width: 640px; margin: 0 auto 12px; }
+    .rf-segmented { max-width: 640px; margin-right: auto; margin-left: auto; }
+    .rf-header { max-width: 640px; }
+    .rf-modal { border-radius: 24px; margin-bottom: 40px; }
+    .rf-modal-overlay { align-items: center; }
+}
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="rf-header">
-    <div class="rf-header-top">
-        <div class="rf-title-area">
-            <a href="{% url 'home' %}" class="rf-back-btn"><i class="fas fa-arrow-left"></i></a>
-            <h1 class="rf-title">Roomie</h1>
-        </div>
-    </div>
-    
-    <p class="rf-header-subtitle">Find rooms, roommates, PGs, and flatmates around your campus.</p>
-    
-    <!-- Tab buttons with clear explanation markers -->
-    <div class="rf-tabs-container">
-        <button class="rf-tab-btn active" id="tabAvailable" onclick="switchTab('available')">
-            Available Rooms
-            <span class="rf-tab-badge" id="tabAvailableSub">"I have a room / PG / flat"</span>
+    <div class="rf-header-main">
+        <button onclick="window.location.href='{% url 'home' %}'" class="rf-back-btn">
+            <span class="material-symbols-outlined" style="font-size:22px;">arrow_back</span>
         </button>
-        <button class="rf-tab-btn" id="tabRequests" onclick="switchTab('requests')">
-            Room Requests
-            <span class="rf-tab-badge" id="tabRequestsSub">"I need a room"</span>
-        </button>
-    </div>
-
-    <!-- Search and Unified Filter row -->
-    <div class="rf-search-filter-row">
-        <div class="rf-search-input-wrapper">
-            <i class="fas fa-search" style="color:var(--rf-text-muted)"></i>
-            <input type="text" id="rfSearch" placeholder="Search area, college, or tags..." oninput="handleSearch()">
-        </div>
-        <button class="rf-filter-btn" onclick="openFilterModal()" id="filterToggleBtn">
-            <i class="fas fa-filter"></i> Filters
-            <span class="rf-active-filter-badge" id="filterCountBadge" style="display:none;">0</span>
-        </button>
+        <h1>Roomie</h1>
     </div>
 </div>
 
+<div class="rf-segmented">
+    <button class="rf-tab active" id="tabAvailable" onclick="switchTab('available')">
+        <i class="fas fa-door-open" style="font-size:13px; vertical-align:middle; margin-right:4px;"></i> Available Rooms
+    </button>
+    <button class="rf-tab" id="tabRequests" onclick="switchTab('requests')">
+        <i class="fas fa-file-signature" style="font-size:13px; vertical-align:middle; margin-right:4px;"></i> Room Requests
+    </button>
+</div>
+
+<div class="rf-search-row">
+    <div class="rf-search-wrap">
+        <span class="material-symbols-outlined">search</span>
+        <input type="text" id="rfSearch" placeholder="Search area, college, or tags..." oninput="handleSearch()">
+    </div>
+    <button class="rf-filter-btn" onclick="openFilterModal()" id="filterToggleBtn">
+        <span class="material-symbols-outlined">tune</span>
+        <span class="rf-active-filter-badge" id="filterCountBadge" style="display:none;">0</span>
+    </button>
+</div>
+
 <div class="rf-feed" id="rfFeed">
-    <!-- Content injected via JavaScript -->
-    <div style="text-align:center; padding: 40px; color: var(--rf-text-muted);">
-        <i class="fas fa-spinner fa-spin fa-2x" style="color:var(--rf-primary)"></i>
-        <p style="margin-top:12px;">Loading roomie listings...</p>
+    <div style="text-align:center; padding: 40px; color: #94a3b8;">
+        <div class="rf-spinner" style="width:24px; height:24px; border-color:rgba(37,99,235,0.2); border-top-color:#2563eb; margin:0 auto 12px;"></div>
+        <p style="font-size:14px; font-weight:500;">Loading roomie listings...</p>
     </div>
 </div>
 
 <!-- Dynamic FAB Action Button -->
 <button class="rf-fab" onclick="handleFabClick()" id="rfFabBtn">
-    <i class="fas fa-plus"></i> <span id="rfFabText">List a Room</span>
+    <span class="material-symbols-outlined">edit</span>
 </button>
 
 <!-- Unified Filters Modal -->
-<div class="rf-modal-overlay" id="filterModalOverlay" onclick="closeFilterModal()"></div>
+<div class="rf-modal-overlay" id="filterModalOverlay" onclick="if(event.target===this)closeFilterModal()">
 <div class="rf-modal" id="filterModal">
     <div class="rf-modal-header">
-        <h2 class="rf-modal-title">Filters</h2>
-        <i class="fas fa-times" onclick="closeFilterModal()" style="font-size:18px; color:var(--rf-text-muted); cursor:pointer;"></i>
+        <h2>Filters</h2>
+        <button class="rf-modal-close" onclick="closeFilterModal()">
+            <span class="material-symbols-outlined">close</span>
+        </button>
     </div>
     
     <div class="rf-form-group">
@@ -743,13 +1016,16 @@
 
     <button type="button" class="rf-submit-btn" onclick="applyFilters()" style="margin-top:10px;">Apply Active Filters</button>
 </div>
+</div>
 
 <!-- Modal 1: Post Available Room Listing -->
-<div class="rf-modal-overlay" id="postModalOverlay" onclick="closePostModal()"></div>
+<div class="rf-modal-overlay" id="postModalOverlay" onclick="if(event.target===this)closePostModal()">
 <div class="rf-modal" id="postModal">
     <div class="rf-modal-header">
-        <h2 class="rf-modal-title">List an Available Room</h2>
-        <i class="fas fa-times" onclick="closePostModal()" style="font-size:18px; color:var(--rf-text-muted); cursor:pointer;"></i>
+        <h2>List an Available Room</h2>
+        <button class="rf-modal-close" onclick="closePostModal()">
+            <span class="material-symbols-outlined">close</span>
+        </button>
     </div>
     <form id="postRoomForm" onsubmit="submitRoomListing(event)">
         <div class="rf-form-group">
@@ -840,18 +1116,21 @@
         <button type="submit" class="rf-submit-btn" id="submitBtn">Post Listing</button>
     </form>
 </div>
+</div>
 
 <!-- Modal 2: Post Room Request -->
-<div class="rf-modal-overlay" id="requestModalOverlay" onclick="closeRequestModal()"></div>
+<div class="rf-modal-overlay" id="requestModalOverlay" onclick="if(event.target===this)closeRequestModal()">
 <div class="rf-modal" id="requestModal">
     <div class="rf-modal-header">
-        <h2 class="rf-modal-title">Post Room Request</h2>
-        <i class="fas fa-times" onclick="closeRequestModal()" style="font-size:18px; color:var(--rf-text-muted); cursor:pointer;"></i>
+        <h2>Post Room Request</h2>
+        <button class="rf-modal-close" onclick="closeRequestModal()">
+            <span class="material-symbols-outlined">close</span>
+        </button>
     </div>
     
     <!-- Profile Completion Validation Banner -->
     <div id="profileWarningBanner" class="rf-warning-banner" style="display:none;">
-        <i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>
+        <span class="material-symbols-outlined" style="font-size:18px; vertical-align:middle; margin-right:6px; color:#d97706;">warning</span>
         <strong>Profile Incomplete:</strong> You must fill out your **Mother Tongue**, **Languages Spoken**, and **Native Place** in your profile before posting a Room Request.
         <div style="margin-top:10px;">
             <a href="{% url 'edit_profile' %}" class="rf-submit-btn" style="display:inline-block; width:auto; text-decoration:none; font-size:12px; padding:6px 12px; background:#b45309; text-align:center;">Edit Profile Now</a>
@@ -945,6 +1224,7 @@
         <button type="submit" class="rf-submit-btn" id="reqSubmitBtn">Post Room Request</button>
     </form>
 </div>
+</div>
 
 <script>
     let currentTab = 'available'; // 'available' or 'requests'
@@ -966,8 +1246,6 @@
         document.getElementById('tabAvailable').classList.toggle('active', tab === 'available');
         document.getElementById('tabRequests').classList.toggle('active', tab === 'requests');
         
-        // Update FAB Label
-        document.getElementById('rfFabText').innerText = tab === 'available' ? 'List a Room' : 'Post Request';
         
         // Refresh Content
         fetchContent();
@@ -1090,7 +1368,7 @@
         const search = document.getElementById('rfSearch').value;
         
         let params = new URLSearchParams(activeFilters);
-        if (search) params.append('campus', search); // Search by campus/location
+        if (search) params.append('search', search); // Search across all fields
         
         try {
             const res = await fetch(`/api/roomfinder/list/?${params.toString()}`);
@@ -1099,11 +1377,11 @@
             if (data.success) {
                 if (data.listings.length === 0) {
                     feed.innerHTML = `
-                    <div class="rf-empty-state">
-                        <i class="fas fa-bed fa-2x" style="color:var(--rf-primary-hover)"></i>
-                        <h3 class="rf-empty-state-title">No rooms listed yet.</h3>
-                        <p style="font-size:12.5px; margin:0 0 16px;">Be the first to list a room near your campus.</p>
-                        <button class="rf-submit-btn" onclick="openPostModal()" style="display:inline-block; width:auto; padding:8px 18px;">List a Room</button>
+                    <div class="rf-empty">
+                        <i class="fas fa-door-open" style="font-size:48px; color:#cbd5e1; margin-bottom:14px;"></i>
+                        <h3>No rooms listed yet.</h3>
+                        <p>Be the first to list a room near your campus.</p>
+                        <button class="rf-submit-btn" onclick="openPostModal()" style="display:inline-block; width:auto; padding:8px 18px; margin-top:16px;">List a Room</button>
                     </div>`;
                     return;
                 }
@@ -1111,56 +1389,61 @@
                 feed.innerHTML = data.listings.map(l => {
                     const imgHtml = l.images.length > 0 ? 
                         l.images.map((img, idx) => `<img src="${img}" style="display:${idx===0?'block':'none'}; width:100%; height:100%; object-fit:cover;" class="carousel-img">`).join('') :
-                        `<img src="https://placehold.co/600x400/f8fafc/94a3b8?text=No+Image" style="width:100%; height:100%; object-fit:cover;">`;
+                        `<div class="rf-card-img-wrap"><div style="display:flex; align-items:center; justify-content:center; height:100%; color:#cbd5e1;"><i class="fas fa-image" style="font-size:40px;"></i></div></div>`;
                     
                     return `
-                    <div class="rf-card" onclick="window.location.href='/roomfinder/${l.id}/'">
-                        <div class="rf-carousel" id="carousel-${l.id}" onclick="event.stopPropagation(); window.location.href='/roomfinder/${l.id}/'">
+                    <div class="rf-card" onclick="window.location.href='/roomfinder/${l.id}/'" style="cursor:pointer;">
+                        <div class="rf-card-img-wrap" id="carousel-${l.id}">
                             ${imgHtml}
                             ${l.images.length > 1 ? `
-                                <button type="button" class="rf-carousel-btn prev" onclick="event.stopPropagation(); changeImage(${l.id}, -1)"><i class="fas fa-chevron-left"></i></button>
-                                <button type="button" class="rf-carousel-btn next" onclick="event.stopPropagation(); changeImage(${l.id}, 1)"><i class="fas fa-chevron-right"></i></button>
+                                <button type="button" class="rf-card-img-nav rf-card-img-prev" onclick="event.stopPropagation(); changeImage(${l.id}, -1)"><span class="material-symbols-outlined">chevron_left</span></button>
+                                <div class="rf-card-img-count">1/${l.images.length}</div>
+                                <button type="button" class="rf-card-img-nav rf-card-img-next" onclick="event.stopPropagation(); changeImage(${l.id}, 1)"><span class="material-symbols-outlined">chevron_right</span></button>
                             ` : ''}
                         </div>
                         <div class="rf-card-body">
-                            <div class="rf-price-row">
-                                <div class="rf-price">₹${l.rent}<span style="font-size:13px; font-weight:400; color:var(--rf-text-muted);">/mo</span></div>
-                                <div class="rf-type-badge">${l.room_type}</div>
+                            <div class="rf-card-title-row">
+                                <div class="rf-card-title">₹${l.rent}<span style="font-size:13px; font-weight:500; color:#94a3b8;">/mo</span></div>
+                                <button class="rf-save-btn ${l.is_saved ? 'saved' : ''}" onclick="event.stopPropagation(); toggleSaveCard(${l.id}, this)" title="Save Room">
+                                    <span class="material-symbols-outlined">bookmark</span>
+                                </button>
                             </div>
-                            <div class="rf-location"><i class="fas fa-map-marker-alt" style="color:var(--rf-primary)"></i> ${l.location} (${l.campus})</div>
                             
                             <div class="rf-tags">
-                                <div class="rf-tag"><i class="fas fa-couch"></i> ${l.furnished_status}</div>
-                                <div class="rf-tag" title="Total Occupants / Current Occupants"><i class="fas fa-user-friends"></i> ${l.needed_occupants}/${l.current_occupants} Occ.</div>
-                                ${l.gender_preference !== 'Any' ? `<div class="rf-tag"><i class="fas fa-venus-mars"></i> ${l.gender_preference}</div>` : ''}
+                                <span class="rf-tag rf-tag-rent">${l.room_type}</span>
+                                <span class="rf-tag rf-tag-furnished">${l.furnished_status}</span>
+                                <span class="rf-tag rf-tag-occupants">${l.needed_occupants}/${l.current_occupants} Occ.</span>
+                                ${l.gender_preference !== 'any' ? `<span class="rf-tag rf-tag-gender">${l.gender_preference}</span>` : ''}
                             </div>
-                            
-                            <div class="rf-user-row" style="flex-wrap: wrap; gap: 8px;">
-                                <img src="${l.poster.pic}" class="rf-user-pic">
-                                <div class="rf-user-info" style="min-width: 100px;">
-                                    <p class="rf-user-name">
-                                        ${l.poster.name}
-                                        ${l.poster.is_verified ? 
-                                            `<i class="fas fa-check-circle" style="color:var(--rf-primary); font-size:13px;" title="Verified Account"></i>` : 
-                                            `<i class="fas fa-check-circle" style="color:#cbd5e1; font-size:13px;" title="Unverified Account"></i>`
-                                        }
-                                    </p>
-                                    <p class="rf-user-course">${l.poster.course} • ${l.created_at}</p>
+
+                            <div class="rf-details">
+                                <div class="rf-detail">
+                                    <span class="material-symbols-outlined">location_on</span>
+                                    <span>${l.location} (${l.campus})</span>
                                 </div>
-                                <div style="display:flex; gap:6px; margin-left:auto;">
-                                    <button class="rf-card-save-btn ${l.is_saved ? 'saved' : ''}" onclick="event.stopPropagation(); toggleSaveCard(${l.id}, this)" title="Save Room">
-                                        <i class="${l.is_saved ? 'fas' : 'far'} fa-bookmark"></i>
-                                    </button>
-                                    ${l.is_owner ? `
-                                        <button class="rf-card-save-btn" onclick="event.stopPropagation(); window.location.href='/roomfinder/${l.id}/'" style="background:rgba(59,130,246,0.06); border-color:rgba(59,130,246,0.12); color:var(--rf-primary);">
-                                            <i class="fas fa-eye"></i> View
-                                        </button>
-                                    ` : `
-                                        <button class="rf-card-save-btn saved" onclick="event.stopPropagation(); initiateChat(${l.poster.id}, 'roomie_available_room', ${l.id})">
-                                            <i class="fas fa-comments"></i> Chat
-                                        </button>
-                                    `}
+                                ${l.advance ? `<div class="rf-detail"><span class="material-symbols-outlined">payments</span><span>Advance: ₹${l.advance}</span></div>` : ''}
+                            </div>
+
+                            ${l.custom_note ? `<div class="rf-note">${l.custom_note}</div>` : ''}
+
+                            <div class="rf-card-footer">
+                                <div class="rf-card-user">
+                                    ${l.poster.pic ? 
+                                        `<img src="${l.poster.pic}" class="rf-card-avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="rf-card-avatar-placeholder" style="display:none;"><span class="material-symbols-outlined">person</span></div>` :
+                                        `<div class="rf-card-avatar-placeholder"><span class="material-symbols-outlined">person</span></div>`
+                                    }
+                                    <div>
+                                        <div class="rf-card-username">
+                                            ${l.poster.name}
+                                            ${l.poster.is_verified ? 
+                                                `<span class="material-symbols-outlined" style="font-size:14px; color:#2563eb; vertical-align:middle; font-variation-settings:'FILL' 1;">verified</span>` : 
+                                                `<span class="material-symbols-outlined" style="font-size:14px; color:#cbd5e1; vertical-align:middle;">verified</span>`
+                                            }
+                                        </div>
+                                        <div class="rf-card-date">${l.created_at}</div>
+                                    </div>
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -1179,7 +1462,7 @@
         const search = document.getElementById('rfSearch').value;
         
         let params = new URLSearchParams(activeFilters);
-        if (search) params.append('campus', search);
+        if (search) params.append('search', search);
         
         try {
             const res = await fetch(`/api/roomrequests/list/?${params.toString()}`);
@@ -1188,11 +1471,11 @@
             if (data.success) {
                 if (data.requests.length === 0) {
                     feed.innerHTML = `
-                    <div class="rf-empty-state">
-                        <i class="fas fa-bullhorn fa-2x" style="color:var(--rf-primary-hover)"></i>
-                        <h3 class="rf-empty-state-title">No room requests yet.</h3>
-                        <p style="font-size:12.5px; margin:0 0 16px;">Post what you need and let others contact you.</p>
-                        <button class="rf-submit-btn" onclick="openRequestModal()" style="display:inline-block; width:auto; padding:8px 18px;">Post Room Request</button>
+                    <div class="rf-empty">
+                        <i class="fas fa-file-signature" style="font-size:48px; color:#cbd5e1; margin-bottom:14px;"></i>
+                        <h3>No room requests yet.</h3>
+                        <p>Post what you need and let others contact you.</p>
+                        <button class="rf-submit-btn" onclick="openRequestModal()" style="display:inline-block; width:auto; padding:8px 18px; margin-top:16px;">Post Room Request</button>
                     </div>`;
                     return;
                 }
@@ -1201,40 +1484,63 @@
                     const canEdit = r.is_owner;
                     const canDelete = r.is_owner || r.is_admin;
                     return `
-                    <div class="rf-card" style="cursor:pointer;" onclick="window.location.href='/roomrequest/${r.id}/'">
+                    <div class="rf-card" onclick="window.location.href='/roomrequest/${r.id}/'" style="cursor:pointer;">
                         <div class="rf-card-body">
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-                                <h3 style="font-size:16px; font-weight:850; margin:0; line-height:1.3; color:var(--rf-text); flex:1; padding-right:10px;">${r.title}</h3>
-                                <span class="rf-type-badge">${r.campus}</span>
+                            <div class="rf-card-title-row" style="margin-bottom:12px;">
+                                <div class="rf-card-title" style="font-size:16px; flex:1; padding-right:10px;">${r.title}</div>
+                                <span class="rf-tag rf-tag-rent" style="font-size:11px; flex-shrink:0;">${r.campus}</span>
                             </div>
-                            
-                            <div class="rf-user-row" style="border:none; padding-top:0; margin-top:0;">
-                                <img src="${r.user.pic}" class="rf-user-pic">
-                                <div class="rf-user-info">
-                                    <p class="rf-user-name">
-                                        ${r.user.name}
-                                        ${r.user.is_verified ? 
-                                            `<i class="fas fa-check-circle" style="color:var(--rf-primary); font-size:13px;" title="Verified Account"></i>` : 
-                                            `<i class="fas fa-check-circle" style="color:#cbd5e1; font-size:13px;" title="Unverified Account"></i>`
-                                        }
-                                    </p>
-                                    <p class="rf-user-course">${r.created_at}</p>
+
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; margin-bottom:${r.extra_note ? '10px' : '14px'};">
+                                <div style="display:flex; align-items:center; gap:7px; font-size:13px; color:#475569; font-weight:500;">
+                                    <span class="material-symbols-outlined" style="font-size:16px; color:#94a3b8;">location_on</span>
+                                    <span style="line-height:1.3;">${r.looking_near}</span>
                                 </div>
-                                <div style="display:flex; gap:6px; margin-left:auto;" onclick="event.stopPropagation();">
+                                <div style="display:flex; align-items:center; gap:7px; font-size:13px; color:#475569; font-weight:500;">
+                                    <span class="material-symbols-outlined" style="font-size:16px; color:#94a3b8;">payments</span>
+                                    <span>₹${r.min_rent} - ₹${r.max_rent}</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:7px; font-size:13px; color:#475569; font-weight:500;">
+                                    <span class="material-symbols-outlined" style="font-size:16px; color:#94a3b8;">group</span>
+                                    <span style="line-height:1.3;">${r.sharing_preference} • ${r.preferred_room_type}</span>
+                                </div>
+                                ${r.move_in_date ? `
+                                <div style="display:flex; align-items:center; gap:7px; font-size:13px; color:#475569; font-weight:500;">
+                                    <span class="material-symbols-outlined" style="font-size:16px; color:#94a3b8;">calendar_today</span>
+                                    <span>${r.move_in_date}</span>
+                                </div>` : `<div></div>`}
+                            </div>
+
+                            ${r.extra_note ? `<div class="rf-note" style="margin-bottom:14px; padding:10px 12px; font-size:12px;">${r.extra_note}</div>` : ''}
+
+                            <div class="rf-card-footer">
+                                <div class="rf-card-user" onclick="event.stopPropagation();">
+                                    ${r.user.pic ? 
+                                        `<img src="${r.user.pic}" class="rf-card-avatar" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="rf-card-avatar-placeholder" style="display:none;"><span class="material-symbols-outlined">person</span></div>` :
+                                        `<div class="rf-card-avatar-placeholder"><span class="material-symbols-outlined">person</span></div>`
+                                    }
+                                    <div>
+                                        <div class="rf-card-username">
+                                            ${r.user.name}
+                                            ${r.user.is_verified ? 
+                                                `<span class="material-symbols-outlined" style="font-size:13px; color:#2563eb; vertical-align:middle; font-variation-settings:'FILL' 1;">verified</span>` : 
+                                                `<span class="material-symbols-outlined" style="font-size:13px; color:#cbd5e1; vertical-align:middle;">verified</span>`
+                                            }
+                                        </div>
+                                        <div class="rf-card-date">${r.created_at}</div>
+                                    </div>
+                                </div>
+                                <div style="display:flex; gap:6px;" onclick="event.stopPropagation();">
                                     ${canEdit ? `
-                                        <button class="rf-card-save-btn" onclick="window.location.href='/roomrequest/${r.id}/'" style="background:rgba(59,130,246,0.06); border-color:rgba(59,130,246,0.12); color:var(--rf-primary);">
-                                            <i class="fas fa-edit"></i>
+                                        <button class="rf-action-btn" onclick="event.stopPropagation(); window.location.href='/roomrequest/${r.id}/'">
+                                            <span class="material-symbols-outlined">edit</span>
                                         </button>
                                     ` : ''}
                                     ${canDelete ? `
-                                        <button class="rf-card-save-btn" onclick="deleteRequest(${r.id})" style="background: rgba(239, 68, 68, 0.06); border-color: rgba(239, 68, 68, 0.12); color: var(--rf-accent);">
-                                            <i class="fas fa-trash"></i>
+                                        <button class="rf-action-btn rf-action-delete" onclick="event.stopPropagation(); deleteRequest(${r.id})">
+                                            <span class="material-symbols-outlined">delete</span>
                                         </button>
-                                    ` : `
-                                        <button class="rf-card-save-btn saved" onclick="initiateChat(${r.user.id}, 'roomie_room_request', ${r.id})">
-                                            <i class="fas fa-comments"></i> Chat
-                                        </button>
-                                    `}
+                                    ` : ''}
                                 </div>
                             </div>
                         </div>
@@ -1320,7 +1626,7 @@
         }
 
         const btn = document.getElementById('submitBtn');
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+        btn.innerHTML = '<div class="rf-spinner"></div> Posting...';
         btn.disabled = true;
 
         const formData = new FormData();
@@ -1377,7 +1683,7 @@
         e.preventDefault();
         
         const btn = document.getElementById('reqSubmitBtn');
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+        btn.innerHTML = '<div class="rf-spinner"></div> Posting...';
         btn.disabled = true;
         
         const amenities = Array.from(document.querySelectorAll('input[name="reqAmenity"]:checked')).map(el => el.value).join(', ');
@@ -1433,13 +1739,9 @@
             if (data.success) {
                 if (data.saved) {
                     btn.classList.add('saved');
-                    const icon = btn.querySelector('i');
-                    if (icon) icon.className = 'fas fa-bookmark';
                     showGlobalToast("Listing saved to favorites!");
                 } else {
                     btn.classList.remove('saved');
-                    const icon = btn.querySelector('i');
-                    if (icon) icon.className = 'far fa-bookmark';
                     showGlobalToast("Listing removed from favorites.");
                 }
             } else {
@@ -1488,7 +1790,7 @@
                     
                     const delBtn = document.createElement('button');
                     delBtn.type = 'button';
-                    delBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    delBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:12px;">close</span>';
                     delBtn.style.position = 'absolute';
                     delBtn.style.top = '2px';
                     delBtn.style.right = '2px';

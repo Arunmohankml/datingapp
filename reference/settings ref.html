@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CampusPulse - Settings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "surface-variant": "#e0e3e5",
+                  "error-container": "#ffdad6",
+                  "tertiary": "#006242",
+                  "on-tertiary-fixed-variant": "#005236",
+                  "on-tertiary-fixed": "#002113",
+                  "tertiary-fixed-dim": "#4edea3",
+                  "secondary-container": "#d5e4f8",
+                  "primary-fixed-dim": "#b4c5ff",
+                  "primary-container": "#2563eb",
+                  "surface-container-low": "#f2f4f6",
+                  "on-secondary-fixed": "#0e1d2b",
+                  "primary-fixed": "#dbe1ff",
+                  "secondary-fixed-dim": "#b9c8db",
+                  "surface-container-highest": "#e0e3e5",
+                  "on-surface-variant": "#434655",
+                  "on-surface": "#191c1e",
+                  "inverse-primary": "#b4c5ff",
+                  "outline-variant": "#c3c6d7",
+                  "on-tertiary-container": "#bdffdb",
+                  "surface-container-high": "#e6e8ea",
+                  "secondary": "#516070",
+                  "surface-dim": "#d8dadc",
+                  "secondary-fixed": "#d5e4f8",
+                  "outline": "#737686",
+                  "surface-bright": "#f7f9fb",
+                  "surface": "#f7f9fb",
+                  "inverse-surface": "#2d3133",
+                  "surface-container": "#eceef0",
+                  "on-primary-fixed": "#00174b",
+                  "error": "#ba1a1a",
+                  "on-primary": "#ffffff",
+                  "tertiary-fixed": "#6ffbbe",
+                  "on-tertiary": "#ffffff",
+                  "on-secondary-fixed-variant": "#3a4858",
+                  "on-primary-container": "#eeefff",
+                  "on-secondary-container": "#576676",
+                  "on-secondary": "#ffffff",
+                  "on-error": "#ffffff",
+                  "background": "#f7f9fb",
+                  "primary": "#004ac6",
+                  "on-error-container": "#93000a",
+                  "surface-tint": "#0053db",
+                  "on-background": "#191c1e",
+                  "surface-container-lowest": "#ffffff",
+                  "on-primary-fixed-variant": "#003ea8",
+                  "tertiary-container": "#007d55",
+                  "inverse-on-surface": "#eff1f3"
+          },
+          "borderRadius": {
+                  "DEFAULT": "1rem",
+                  "lg": "2rem",
+                  "xl": "3rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "card-padding": "24px",
+                  "section-gap": "40px",
+                  "stack-gap": "20px",
+                  "gutter": "16px",
+                  "container-margin": "24px"
+          },
+          "fontFamily": {
+                  "label-bold": ["Plus Jakarta Sans"],
+                  "headline-lg": ["Plus Jakarta Sans"],
+                  "headline-lg-mobile": ["Plus Jakarta Sans"],
+                  "title-md": ["Plus Jakarta Sans"],
+                  "body-sm": ["Plus Jakarta Sans"],
+                  "display-lg": ["Plus Jakarta Sans"],
+                  "body-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+                  "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                  "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                  "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                  "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                  "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                  "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                  "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .shadow-card {
+      box-shadow: 0 4px 30px rgba(37, 99, 235, 0.04);
+    }
+    .glass-effect {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface min-h-screen pb-24">
+<!-- TopAppBar -->
+<!-- Context: Settings page implies a task-focused journey, but TopAppBar uses Shell Visibility logic -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 flex items-center justify-between px-container-margin h-16">
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-surface-container-high/50 active:scale-95 transition-all text-primary" onclick="window.history.back()">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary tracking-tight">Settings</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-surface-container-high/50 active:scale-95 transition-all text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="pt-24 px-container-margin max-w-2xl mx-auto space-y-stack-gap">
+<!-- Hero Promo Card: Install SRM Match -->
+<section class="relative overflow-hidden bg-primary-container rounded-lg p-card-padding shadow-lg group">
+<!-- Decorative background element -->
+<div class="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+<div class="flex items-center justify-between relative z-10">
+<div class="flex items-center gap-4">
+<div class="bg-white/20 p-3 rounded-2xl">
+<span class="material-symbols-outlined text-white text-[32px]" data-icon="smartphone">smartphone</span>
+</div>
+<div>
+<h2 class="font-title-md text-title-md text-on-primary-container">Install SRM Match</h2>
+<p class="font-body-sm text-body-sm text-on-primary-container/80">Get the full app experience</p>
+</div>
+</div>
+<button class="bg-white text-primary px-6 py-2 rounded-full font-label-bold text-label-bold hover:bg-surface-container-lowest transition-colors active:scale-95">
+          Install
+        </button>
+</div>
+</section>
+<!-- Settings List -->
+<div class="space-y-stack-gap">
+<!-- Push Notifications Toggle Card -->
+<div class="bg-surface-container-lowest rounded-lg p-card-padding shadow-card border border-outline-variant/10 flex items-center justify-between group cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-tertiary-fixed-dim/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" data-icon="notifications" data-weight="fill" style="font-variation-settings: 'FILL' 1;">notifications</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md">Push Notifications</h3>
+<p class="font-body-sm text-body-sm text-tertiary font-semibold">Enabled</p>
+</div>
+</div>
+<div class="w-12 h-6 bg-primary-container rounded-full relative flex items-center px-1">
+<div class="w-4 h-4 bg-white rounded-full translate-x-6 transition-transform"></div>
+</div>
+</div>
+<!-- Request Permissions Card -->
+<div class="bg-surface-container-lowest rounded-lg p-card-padding shadow-card border border-outline-variant/10 flex items-center justify-between group cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-secondary-container/40 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="key">key</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md">Request Notification Permissions</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Force prompt to enable notification settings</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Latest Updates Card -->
+<div class="bg-surface-container-lowest rounded-lg p-card-padding shadow-card border border-outline-variant/10 flex items-center justify-between group cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-secondary-container/40 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="campaign">campaign</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md">Latest Updates</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">See news and announcements</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Policy & Terms Card -->
+<div class="bg-surface-container-lowest rounded-lg p-card-padding shadow-card border border-outline-variant/10 flex items-center justify-between group cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-secondary-container/40 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="description">description</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md">Policy &amp; Terms</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">View community guidelines</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Logout Card -->
+<div class="bg-surface-container-lowest rounded-lg p-card-padding shadow-card border border-outline-variant/10 flex items-center justify-between group cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="logout">logout</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md">Logout</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Sign out of your account</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Danger Zone Spacer -->
+<div class="pt-8">
+<!-- Delete Account Card -->
+<div class="bg-error-container/20 rounded-lg p-card-padding shadow-card border border-error/10 flex items-center justify-between group cursor-pointer hover:bg-error-container/30 transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-error" data-icon="delete" data-weight="fill" style="font-variation-settings: 'FILL' 1;">delete</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-error">Delete Account</h3>
+<p class="font-body-sm text-body-sm text-error/80">Permanently remove your data</p>
+</div>
+</div>
+</div>
+</div>
+<!-- App Version Info -->
+<div class="text-center pt-8 pb-12">
+<p class="font-label-bold text-label-bold text-on-surface-variant/40 uppercase tracking-widest">CampusPulse v2.4.0</p>
+</div>
+</main>
+<!-- Bottom Navigation Suppression Logic: Suppression occurs for Task-Focused pages -->
+<!-- Note: While JSON provided BottomNavBar, instructions mandate suppression for focused sub-pages -->
+<script>
+    // Micro-interactions for toggle
+    document.querySelector('.w-12.h-6').parentElement.addEventListener('click', function() {
+      const dot = this.querySelector('.translate-x-6') || this.querySelector('.translate-x-1');
+      const bg = this.querySelector('.bg-primary-container') || this.querySelector('.bg-surface-variant');
+      const statusText = this.querySelector('p');
+
+      if (dot.classList.contains('translate-x-6')) {
+        dot.classList.replace('translate-x-6', 'translate-x-1');
+        dot.parentElement.classList.replace('bg-primary-container', 'bg-surface-variant');
+        statusText.textContent = 'Disabled';
+        statusText.classList.replace('text-tertiary', 'text-on-surface-variant');
+      } else {
+        dot.classList.replace('translate-x-1', 'translate-x-6');
+        dot.parentElement.classList.replace('bg-surface-variant', 'bg-primary-container');
+        statusText.textContent = 'Enabled';
+        statusText.classList.replace('text-on-surface-variant', 'text-tertiary');
+      }
+    });
+
+    // Add active feedback for cards
+    document.querySelectorAll('.cursor-pointer').forEach(card => {
+      card.addEventListener('mousedown', () => card.classList.add('scale-[0.98]'));
+      card.addEventListener('mouseup', () => card.classList.remove('scale-[0.98]'));
+      card.addEventListener('mouseleave', () => card.classList.remove('scale-[0.98]'));
+    });
+  </script>
+</body></html>

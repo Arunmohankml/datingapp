@@ -1,0 +1,290 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>CampusPulse - Your University Social Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed-dim": "#b4c5ff",
+                    "background": "#f7f9fb",
+                    "on-background": "#191c1e",
+                    "on-tertiary-fixed": "#002113",
+                    "inverse-primary": "#b4c5ff",
+                    "on-tertiary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-primary-container": "#eeefff",
+                    "inverse-surface": "#2d3133",
+                    "on-tertiary-container": "#bdffdb",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-on-surface": "#eff1f3",
+                    "surface-container-low": "#f2f4f6",
+                    "surface": "#f7f9fb",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-secondary": "#ffffff",
+                    "outline-variant": "#c3c6d7",
+                    "primary": "#004ac6",
+                    "on-primary": "#ffffff",
+                    "on-secondary-fixed-variant": "#3a4858",
+                    "surface-dim": "#d8dadc",
+                    "on-error-container": "#93000a",
+                    "secondary-fixed": "#d5e4f8",
+                    "tertiary": "#006242",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "primary-container": "#2563eb",
+                    "secondary-fixed-dim": "#b9c8db",
+                    "surface-bright": "#f7f9fb",
+                    "secondary-container": "#d5e4f8",
+                    "surface-container": "#eceef0",
+                    "tertiary-container": "#007d55",
+                    "primary-fixed": "#dbe1ff",
+                    "on-secondary-fixed": "#0e1d2b",
+                    "on-secondary-container": "#576676",
+                    "on-surface-variant": "#434655",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "error": "#ba1a1a",
+                    "surface-tint": "#0053db",
+                    "tertiary-fixed": "#6ffbbe",
+                    "surface-variant": "#e0e3e5",
+                    "outline": "#737686",
+                    "on-error": "#ffffff",
+                    "on-surface": "#191c1e",
+                    "surface-container-high": "#e6e8ea",
+                    "on-primary-fixed": "#00174b",
+                    "secondary": "#516070"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-gap": "20px",
+                    "card-padding": "24px",
+                    "container-margin": "24px",
+                    "gutter": "16px",
+                    "section-gap": "40px"
+            },
+            "fontFamily": {
+                    "body-sm": ["Plus Jakarta Sans"],
+                    "label-bold": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "title-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .soft-elevation {
+            box-shadow: 0 4px 30px rgba(37, 99, 235, 0.04);
+        }
+        .confession-glow {
+            border-left: 4px solid #004ac6;
+        }
+        ::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-lg antialiased min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 flex items-center justify-between px-container-margin h-16">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden active:scale-95 transition-transform duration-200">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional close-up portrait of a young college student with a friendly expression. He is wearing a clean, modern white hoodie against a blurred university campus background with soft sunlight filtering through autumn trees. The image style is bright, high-key, and airy, aligning with a premium minimalist aesthetic using soft blue and neutral white tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmota2Z67xU_Du2nlo5Vg2LlTGencGWxr8S4Tm0XaU1PIy9dx8PJiafRMmv38l1cVT_6a20rivlTGpo9RUX2AHC8yCsm3jQZXQXBkPuNlLy_TnTj4f-heunILuXjAZMW5dRtAjszn87HHVWMoagO09J5Ja_dpDtmctT6VJBHtabM2_L5Ww4fR-E1DW4QEILzQj90QHncBgM27tnDvIr8QcIs_cb84bfe4sj-_HWzYcgjc4NDK31qrhr0nkmW61RNioaej_QRl1j2E">
+</div>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary tracking-tight">CampusPulse</h1>
+<button class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container-high/50 transition-colors active:scale-95">
+<span class="material-symbols-outlined text-primary" data-icon="notifications">notifications</span>
+</button>
+</header>
+<!-- Main Content -->
+<main class="pt-24 pb-32 px-container-margin max-w-2xl mx-auto space-y-section-gap">
+<!-- Quick Access Feature Cards -->
+<section class="grid grid-cols-2 gap-stack-gap">
+<!-- Match Card -->
+<div class="bg-surface-container-lowest rounded-lg p-card-padding soft-elevation border border-outline-variant/20 flex flex-col items-center text-center group hover:scale-[1.02] transition-all duration-300">
+<div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+<h2 class="font-title-md text-title-md text-on-surface mb-2">Match</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4">Find friends and connect with mates.</p>
+<button class="bg-primary-fixed-dim/30 text-primary px-4 py-2 rounded-full font-label-bold text-label-bold active:scale-95 transition-transform">
+                    Enter Match →
+                </button>
+</div>
+<!-- Roomie Card -->
+<div class="bg-surface-container-lowest rounded-lg p-card-padding soft-elevation border border-outline-variant/20 flex flex-col items-center text-center group hover:scale-[1.02] transition-all duration-300">
+<div class="w-14 h-14 rounded-2xl bg-tertiary/10 flex items-center justify-center mb-4 group-hover:bg-tertiary/20 transition-colors">
+<span class="material-symbols-outlined text-tertiary text-3xl" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+</div>
+<h2 class="font-title-md text-title-md text-on-surface mb-2">Roomie</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4">Verified roommates and premium rooms.</p>
+<button class="bg-tertiary/10 text-tertiary px-4 py-2 rounded-full font-label-bold text-label-bold active:scale-95 transition-transform">
+                    Find Rooms →
+                </button>
+</div>
+</section>
+<!-- Latest Confession Section -->
+<section class="space-y-4">
+<div class="flex items-center gap-2 px-2">
+<span class="material-symbols-outlined text-primary" data-icon="auto_awesome">auto_awesome</span>
+<h3 class="font-title-md text-title-md text-on-surface">Latest Confession</h3>
+</div>
+<div class="bg-surface-container-lowest rounded-lg p-card-padding soft-elevation border border-outline-variant/20 confession-glow relative overflow-hidden">
+<div class="relative z-10">
+<p class="font-body-lg text-body-lg italic text-on-surface-variant leading-relaxed mb-6">
+                        "Any female in KTR campus who's taking a PG (first year, any branch), please consider me too, lemme know the available options and costs for sharing. I know the food is bad, but I could really use a friendly roommate!"
+                    </p>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 rounded-full text-primary hover:bg-primary/10 transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-label-bold text-label-bold">124</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-high/50 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-bold text-label-bold">42</span>
+</div>
+<span class="ml-auto font-label-bold text-label-bold text-on-surface-variant/40">2 mins ago</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Updates Section -->
+<section class="space-y-4">
+<div class="flex items-center gap-2 px-2">
+<span class="material-symbols-outlined text-primary" data-icon="campaign">campaign</span>
+<h3 class="font-title-md text-title-md text-on-surface">Campus Updates</h3>
+</div>
+<div class="space-y-stack-gap">
+<!-- Update Item 1 -->
+<div class="bg-surface-container-low rounded-lg p-4 border border-outline-variant/20 flex items-start gap-4 hover:bg-surface-container transition-colors">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary" data-icon="celebration">celebration</span>
+</div>
+<div>
+<h4 class="font-label-bold text-body-lg text-on-surface">Roomie feature is now live!</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Find rooms and roommates near campus more easily than ever.</p>
+<span class="font-label-bold text-label-bold text-primary mt-2 block">May 23, 2026</span>
+</div>
+</div>
+<!-- Update Item 2 -->
+<div class="bg-surface-container-low rounded-lg p-4 border border-outline-variant/20 flex items-start gap-4 hover:bg-surface-container transition-colors">
+<div class="w-10 h-10 rounded-full bg-tertiary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-tertiary" data-icon="event">event</span>
+</div>
+<div>
+<h4 class="font-label-bold text-body-lg text-on-surface">Tech Symposium Registration</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Early bird registrations for 'HackTheCampus' are now open.</p>
+<span class="font-label-bold text-label-bold text-tertiary mt-2 block">May 21, 2026</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Campus Pulse Badge -->
+<div class="flex justify-center pt-4">
+<div class="inline-flex items-center gap-2 px-6 py-3 bg-primary-container text-on-primary-container rounded-full soft-elevation animate-pulse">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed shadow-[0_0_8px_rgba(78,222,163,0.8)]"></span>
+<span class="font-label-bold text-label-bold tracking-widest uppercase">CAMPUS PULSE</span>
+<span class="w-px h-4 bg-on-primary-container/20 mx-1"></span>
+<span class="font-label-bold text-label-bold">266 members active</span>
+</div>
+</div>
+</main>
+<!-- FAB for quick action -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center z-40 hover:scale-110 active:scale-95 transition-all duration-300 group">
+<span class="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300" data-icon="add">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full bg-surface/90 backdrop-blur-xl border-t border-outline-variant/20 rounded-t-lg z-50 flex justify-around items-center px-4 pt-3 pb-6 shadow-[0_-4px_30px_rgba(37,99,235,0.04)]">
+<a class="flex flex-col items-center justify-center text-primary font-bold active:scale-90 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-bold text-label-bold mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 active:scale-90 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span class="font-label-bold text-label-bold mt-1">Matches</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 active:scale-90 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined text-3xl" data-icon="add_circle">add_circle</span>
+<span class="font-label-bold text-label-bold mt-1">Post</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 active:scale-90 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="bed">bed</span>
+<span class="font-label-bold text-label-bold mt-1">Rooms</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 active:scale-90 transition-all duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span class="font-label-bold text-label-bold mt-1">Updates</span>
+</a>
+</nav>
+<script>
+        // Simple scroll reveal for cards
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = "1";
+                    entry.target.style.transform = "translateY(0)";
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section, .bg-surface-container-low').forEach(el => {
+            el.style.opacity = "0";
+            el.style.transform = "translateY(20px)";
+            el.style.transition = "all 0.6s cubic-bezier(0.16, 1, 0.3, 1)";
+            observer.observe(el);
+        });
+
+        // Toggle active states on nav click (UI demo only)
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('nav a').forEach(l => {
+                    l.classList.remove('text-primary', 'font-bold');
+                    l.classList.add('text-on-surface-variant/60');
+                    l.querySelector('span').style.fontVariationSettings = "'FILL' 0";
+                });
+                link.classList.remove('text-on-surface-variant/60');
+                link.classList.add('text-primary', 'font-bold');
+                link.querySelector('span').style.fontVariationSettings = "'FILL' 1";
+            });
+        });
+    </script>
+</body></html>

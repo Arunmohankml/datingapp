@@ -11,27 +11,25 @@
 <script src="https://cdn.jsdelivr.net/npm/@vladmandic/human/dist/human.js"></script>
 <style>
   :root {
-    --ep-bg: #f8fafc;
-    --ep-bg-accent: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     --ep-surface: #ffffff;
-    --ep-surface-dim: #f8fafc;
-    --ep-ink: #0f172a;
+    --ep-surface-dim: #f1f5f9;
+    --ep-ink: #191c1e;
     --ep-ink-2: #334155;
     --ep-ink-3: #64748b;
     --ep-ink-4: #94a3b8;
-    --ep-blue: #3b82f6;
+    --ep-blue: #004ac6;
     --ep-blue-2: #2563eb;
-    --ep-blue-glow: rgba(59, 130, 246, 0.15);
+    --ep-blue-glow: rgba(0, 74, 198, 0.15);
     --ep-pink: #ec4899;
     --ep-amber: #f59e0b;
     --ep-green: #10b981;
-    --ep-line: rgba(226, 232, 240, 0.8);
+    --ep-line: rgba(0, 74, 198, 0.08);
     --ep-r-xl: 20px;
     --ep-r-lg: 16px;
     --ep-r-md: 12px;
     --ep-r-sm: 8px;
-    --ep-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 10px 30px -10px rgba(15, 23, 42, 0.05);
-    --ep-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.02);
+    --ep-shadow: 0 8px 24px rgba(15, 23, 42, 0.04), 0 18px 40px rgba(15, 23, 42, 0.08);
+    --ep-shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.02);
     --ep-ease: cubic-bezier(0.22, 1, 0.36, 1);
     --ep-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
     --ep-nav: 66px;
@@ -42,7 +40,6 @@
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* No blue/grey tap flash — native-app touch feel */
   #ep-app, #ep-app * {
     -webkit-tap-highlight-color: transparent;
     tap-highlight-color: transparent;
@@ -80,12 +77,10 @@
     height: 100dvh; width: 100%;
     overflow: hidden !important;
     position: fixed; inset: 0;
-    background: var(--ep-bg-accent) !important;
+    background: #f7f9fb !important;
     font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     color: var(--ep-ink);
     -webkit-font-smoothing: antialiased;
-    -webkit-tap-highlight-color: transparent;
-    tap-highlight-color: transparent;
   }
 
   .container {
@@ -94,32 +89,51 @@
     display: flex; flex-direction: column; overflow: hidden;
   }
 
-  /* ─── App shell ─── */
   #ep-app {
     display: flex; flex-direction: column;
     height: 100dvh; width: 100%;
     position: relative;
   }
 
-  .ep-topbar {
+  .ep-mob-header {
     flex-shrink: 0;
-    height: calc(var(--ep-header) + env(safe-area-inset-top));
+    height: calc(56px + env(safe-area-inset-top));
     padding: env(safe-area-inset-top) 20px 0;
-    display: flex; align-items: center;
-    background: rgba(255, 255, 255, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1.5px solid rgba(30, 58, 138, 0.12);
-    border-radius: 0;
+    border-bottom: 1px solid rgba(0, 74, 198, 0.08);
     z-index: 300;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    position: sticky;
+    top: 0;
   }
-  .ep-topbar-title {
-    flex: 1; text-align: left;
-    font-size: 20px; font-weight: 700; letter-spacing: -0.5px;
-    color: #1e3a8a;
+  .ep-mob-header-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: #191c1e;
+    margin: 0;
   }
-  .ep-topbar-end { width: var(--ep-tap); }
+  .ep-mob-header-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    color: #64748b;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+  .ep-mob-header-btn:active {
+    background: #f1f5f9;
+  }
+  .ep-mob-header-btn .material-symbols-outlined {
+    font-size: 22px;
+  }
 
   .ep-scroll {
     flex: 1; overflow-y: auto; overflow-x: hidden;
@@ -130,192 +144,149 @@
   }
   .ep-scroll::-webkit-scrollbar { display: none; }
 
-  /* ─── Profile Hero & Banner ─── */
-  .ep-profile-hero {
-    position: relative;
-    height: 140px;
-    width: 100%;
+  /* ── Profile Section (matching reference) ── */
+  .ep-profile-section {
     display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    overflow: visible; /* Let the avatar container pop out! */
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 20px 24px;
   }
-  .ep-hero-blur-bg-wrap {
-    position: absolute;
-    inset: 0;
-    overflow: hidden; /* crop the blurred background edges here */
-    z-index: 1;
-  }
-  .ep-hero-blur-bg {
-    position: absolute;
-    inset: -12px;
-    background-size: cover;
-    background-position: center;
-    filter: blur(16px) saturate(1.15) brightness(0.95);
-  }
-  .ep-hero-blur-bg-wrap::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to bottom, transparent 40%, rgba(248,250,252,0.75) 75%, rgba(248,250,252,1) 100%);
-  }
-  .ep-avatar-container {
-    position: absolute;
-    bottom: -50px;
-    z-index: 10;
-  }
-  .ep-avatar-border {
+
+  .ep-avatar-wrap {
     position: relative;
-    width: 110px;
-    height: 110px;
-    border-radius: 50%;
-    background: #ffffff;
-    padding: 2px;
-    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
-    border: 2px solid #93c5fd; /* light blue border, thinner thickness */
+    margin-bottom: 20px;
   }
-  .ep-hero-avatar {
+
+  .ep-avatar-frame {
+    width: 128px;
+    height: 128px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 4px solid #ffffff;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    background: #f1f5f9;
+  }
+
+  .ep-avatar-img {
     width: 100%;
     height: 100%;
-    border-radius: 50%;
     object-fit: cover;
     display: block;
   }
-  .ep-avatar-edit-icon {
+
+  .ep-avatar-cam {
     position: absolute;
-    bottom: -2px;
-    right: -2px;
-    width: 34px;
-    height: 34px;
+    bottom: 0;
+    right: 0;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: linear-gradient(135deg, #004ac6, #3f7dff);
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 13px;
-    border: 2.5px solid #ffffff;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    box-shadow: 0 4px 12px rgba(0, 74, 198, 0.25);
+    border: 2.5px solid #ffffff;
     transition: transform 0.2s ease;
   }
-  .ep-avatar-edit-icon:active {
-    transform: scale(0.9);
-  }
-  .ep-verification-medal {
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    border: 2px solid #ffffff;
-    box-shadow: 0 3px 8px rgba(217, 119, 6, 0.3);
-    z-index: 5;
+  .ep-avatar-cam:active { transform: scale(0.9); }
+  .ep-avatar-cam .material-symbols-outlined {
+    font-size: 20px;
   }
 
-  .ep-profile-intro {
-    text-align: center;
-    margin-top: 60px;
-    margin-bottom: 20px;
-    padding: 0 20px;
-  }
-  .ep-profile-display-name {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+  .ep-profile-name {
     font-size: 24px;
     font-weight: 700;
-    color: #0f172a;
-    margin: 0 0 3px;
+    color: #191c1e;
+    margin: 0 0 6px;
     letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
-  .ep-profile-display-meta {
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
+
+  .ep-verified-badge {
+    font-size: 22px;
+    color: #004ac6;
+  }
+
+  .ep-profile-campus {
+    font-size: 14px;
     font-weight: 500;
     color: #64748b;
-    margin: 0;
-  }
-
-  /* Premium Actions Group */
-  .ep-actions-container {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 28px;
-    padding: 0 20px;
-  }
-  .ep-actions-pill {
+    margin: 0 0 24px;
     display: flex;
     align-items: center;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 99px;
-    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
-    overflow: hidden;
-    max-width: 280px;
-    width: 100%;
+    gap: 6px;
   }
-  .ep-pill-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    height: 40px;
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    color: #334155;
-    text-decoration: none;
-    transition: background 0.2s ease;
-  }
-  .ep-pill-btn i {
+  .ep-profile-campus .material-symbols-outlined {
+    font-size: 16px;
     color: #64748b;
-    font-size: 14px;
-  }
-  .ep-pill-btn:active {
-    background: #f8fafc;
-  }
-  .ep-pill-btn.verify-btn {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
-    color: #ffffff !important;
-  }
-  .ep-pill-btn.verify-btn i {
-    color: #ffffff !important;
-  }
-  .ep-pill-btn.verify-btn:active {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
-  }
-  .ep-pill-divider {
-    width: 1px;
-    height: 18px;
-    background: #e2e8f0;
   }
 
-  /* ─── Tabs ─── */
-  .ep-tabs-wrap {
+  .ep-profile-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .ep-btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 24px;
+    border-radius: 999px;
+    border: 1.5px solid #004ac6;
     background: transparent;
-    border-bottom: none;
+    color: #004ac6;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s ease, transform 0.2s ease;
+  }
+  .ep-btn-outline:active {
+    background: rgba(0, 74, 198, 0.04);
+    transform: scale(0.98);
+  }
+
+  .ep-btn-gradient {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 24px;
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(135deg, #004ac6, #3f7dff);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 8px 20px rgba(0, 74, 198, 0.18);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .ep-btn-gradient:active {
+    transform: scale(0.98);
+    box-shadow: 0 4px 12px rgba(0, 74, 198, 0.12);
+  }
+
+  .ep-tabs-wrap {
+    display: flex;
+    justify-content: center;
+    background: transparent;
     margin-bottom: 20px;
-    margin-top: 10px;
     padding: 0 16px;
   }
   .ep-tabs {
     display: flex;
     background: #f1f5f9;
     border-radius: 99px;
-    padding: 3px;
+    padding: 4px;
     gap: 2px;
+    width: 100%;
     max-width: 440px;
-    margin: 0 auto;
     position: relative;
-    border: none;
-    box-shadow: none;
   }
   .ep-tab {
     flex: 1;
@@ -325,11 +296,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
+    gap: 2px;
     cursor: pointer;
-    padding: 6px 4px;
+    padding: 8px 4px;
     position: relative;
-    font-family: 'Inter', sans-serif;
     font-size: 11px;
     font-weight: 600;
     color: #64748b;
@@ -338,40 +308,36 @@
     z-index: 2;
   }
   .ep-tab-icon-circle {
-    width: auto;
-    height: auto;
-    border-radius: 0;
-    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 15px;
+    font-size: 16px;
     color: inherit;
-    background: none !important;
-    transition: none;
+  }
+  .ep-tab-icon-circle .material-symbols-outlined {
+    font-size: 18px;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
   }
   .ep-tab-bg-pill {
     position: absolute;
-    top: 3px;
-    bottom: 3px;
+    top: 4px;
+    bottom: 4px;
     left: 0;
     width: 0;
-    background: #ffffff; /* White active capsule background */
+    background: #ffffff;
     border-radius: 99px;
-    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04); /* Sleek iOS elevation shadow */
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
     transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
     z-index: 1;
   }
-  .ep-tab.is-active {
-    color: #1e3a8a; /* Dark blue active text */
-  }
-  .ep-tab.is-active .ep-tab-icon-circle {
-    color: #1e3a8a; /* Dark blue active icon highlight */
+  .ep-tab.is-active { color: #004ac6; }
+  .ep-tab.is-active .ep-tab-icon-circle .material-symbols-outlined {
+    font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
   }
   .ep-tab-dot {
     position: absolute;
-    top: 6px;
-    right: 8px;
+    top: 4px;
+    right: 6px;
     width: 6px;
     height: 6px;
     background-color: #ef4444;
@@ -379,15 +345,9 @@
     display: none;
     box-shadow: 0 0 4px rgba(239, 68, 68, 0.5);
   }
-  .ep-tab-indicator {
-    display: none !important; /* Remove bottom blue bar */
-  }
-  .ep-tabs::after {
-    display: none;
-  }
+  .ep-tab-indicator { display: none !important; }
 
-  /* ─── Sections ─── */
-  .ep-panel { display: none; padding: 0 0 80px; animation: ep-fade 0.3s var(--ep-ease) both; }
+  .ep-panel { display: none; padding: 0 16px 80px; animation: ep-fade 0.3s var(--ep-ease) both; }
   .ep-panel.is-active { display: block; }
   @keyframes ep-fade {
     from { opacity: 0; transform: translateY(6px); }
@@ -395,48 +355,41 @@
   }
 
   .ep-group {
-    background: #ffffff;
-    border-radius: 16px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 2px 16px rgba(15, 23, 42, 0.02);
+    background: rgba(255, 255, 255, 0.84);
+    border: 1px solid rgba(0, 74, 198, 0.08);
+    border-radius: 28px;
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
     padding: 24px 20px;
-    margin: 0 16px 20px;
-    box-sizing: border-box;
-    overflow: visible;
-  }
-  .ep-panel .ep-group:first-child {
-    border-top: 1px solid #e2e8f0;
+    margin-bottom: 20px;
   }
   .ep-group-head {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 16.5px;
+    font-size: 16px;
     font-weight: 700;
-    color: #0f172a;
-    text-transform: none;
-    letter-spacing: -0.3px;
-    padding: 0;
+    color: #191c1e;
     margin-bottom: 20px;
     display: flex;
     align-items: center;
     gap: 8px;
   }
-  .ep-group-head i {
-    display: none;
+  .ep-group-head .material-symbols-outlined {
+    font-size: 20px;
+    color: #004ac6;
+    font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
   }
   .ep-group-head .ep-badge {
-    margin-left: auto; font-size: 12px; font-weight: 700;
-    color: var(--ep-blue); letter-spacing: 0; text-transform: none;
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 700;
+    color: #004ac6;
   }
 
   .ep-row {
-    padding: 0;
     border: none;
     margin-bottom: 20px;
   }
   .ep-row:last-child { margin-bottom: 0; }
 
   .ep-label {
-    font-family: 'Inter', sans-serif;
     font-size: 12.5px;
     font-weight: 600;
     color: #475569;
@@ -454,7 +407,7 @@
     border: 1px solid #e2e8f0;
     padding: 2px 7px;
     border-radius: 6px;
-    margin-left: auto; /* push locked badge to the far right */
+    margin-left: auto;
     vertical-align: middle;
   }
 
@@ -466,19 +419,24 @@
     width: 100%;
     min-height: 48px;
     padding: 12px 16px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: #f1f5f9;
+    border: 1px solid transparent;
     border-radius: 16px;
-    font-family: 'Inter', sans-serif;
+    font-family: inherit;
     font-size: 14.5px;
     font-weight: 500;
-    color: #0f172a;
+    color: #191c1e;
     outline: none;
     box-sizing: border-box;
     transition: all 0.2s ease;
     margin-bottom: 0 !important;
   }
-  #profile-edit-form textarea { min-height: 100px; resize: none; line-height: 1.55; }
+  #profile-edit-form textarea {
+    min-height: 100px;
+    resize: none;
+    line-height: 1.55;
+    border-radius: 20px;
+  }
   #profile-edit-form .app-select {
     margin-bottom: 0;
     width: 100%;
@@ -489,18 +447,18 @@
   }
   #profile-edit-form .app-select-trigger {
     min-height: 48px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: #f1f5f9;
+    border: 1px solid transparent;
     border-radius: 16px;
     font-size: 14.5px;
     font-weight: 500;
-    color: #0f172a;
+    color: #191c1e;
     box-shadow: none;
   }
   #profile-edit-form .app-select.is-open .app-select-trigger {
     background: #ffffff;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
+    border-color: #004ac6;
+    box-shadow: 0 0 0 3px rgba(0, 74, 198, 0.1);
   }
   #profile-edit-form .app-select-list { z-index: 9000; }
   .ep-input:focus,
@@ -508,77 +466,109 @@
   #profile-edit-form select:focus,
   #profile-edit-form textarea:focus {
     background: #ffffff;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
+    border-color: #004ac6;
+    box-shadow: 0 0 0 3px rgba(0, 74, 198, 0.1);
   }
   .ep-input--locked {
     background: #f1f5f9 !important;
     color: #475569 !important;
     border: 1px solid #cbd5e1 !important;
-    cursor: default; display: flex; align-items: center;
+    cursor: default;
+    display: flex;
+    align-items: center;
     font-weight: 500;
   }
 
-  /* Stepper */
   .ep-stepper {
-    display: flex; align-items: center; justify-content: space-between;
-    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px;
-    padding: 4px; min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f1f5f9;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    padding: 4px;
+    min-height: 48px;
     max-width: 240px;
     margin: 0 auto;
   }
   .ep-stepper-btn {
-    width: 38px; height: 38px; border: none; border-radius: 8px;
-    background: #ffffff; color: #475569;
-    font-size: 12px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    border: 1px solid #e2e8f0;
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #475569;
+    font-size: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(0, 74, 198, 0.08);
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.02);
     transition: all 0.2s ease;
   }
-  .ep-stepper-btn:hover { background: #f1f5f9; color: #0f172a; }
-  .ep-stepper-btn:active { transform: scale(0.95); background: #3b82f6; color: #ffffff; border-color: #3b82f6; }
+  .ep-stepper-btn:hover { background: #f1f5f9; }
+  .ep-stepper-btn:active { transform: scale(0.95); background: #004ac6; color: #ffffff; border-color: #004ac6; }
   .ep-stepper-val { text-align: center; }
-  .ep-stepper-num { font-size: 20px; font-weight: 700; color: #0f172a; }
+  .ep-stepper-num { font-size: 20px; font-weight: 700; color: #191c1e; }
   .ep-stepper-unit { font-size: 12px; font-weight: 500; color: #64748b; }
 
   .ep-range {
-    display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px;
-    align-items: center; padding: 4px 0;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    align-items: center;
+    padding: 4px 0;
   }
   .ep-range-box { text-align: center; }
-  .ep-range-label { font-size: 10px; font-weight: 800; color: var(--ep-ink-4); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+  .ep-range-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+  }
   .ep-range-controls { display: flex; align-items: center; justify-content: center; gap: 10px; }
-  .ep-range-num { font-size: 20px; font-weight: 700; min-width: 28px; }
-  .ep-range-sep { color: var(--ep-ink-4); font-size: 14px; padding-top: 18px; }
+  .ep-range-num { font-size: 20px; font-weight: 700; min-width: 28px; color: #191c1e; }
+  .ep-range-sep { color: #94a3b8; font-size: 14px; padding-top: 18px; }
 
-  /* Picker / chips */
   .ep-picker {
     position: relative;
-    background: var(--ep-surface-dim); border-radius: 16px;
+    background: #f1f5f9;
+    border-radius: 16px;
     padding: 10px 12px;
     transition: margin-bottom 0.28s var(--ep-ease);
   }
-  .ep-picker.is-open {
-    margin-bottom: 200px !important;
-  }
-  .ep-picker:focus-within { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08); }
+  .ep-picker.is-open { margin-bottom: 200px !important; }
+  .ep-picker:focus-within { box-shadow: 0 0 0 3px rgba(0, 74, 198, 0.08); }
   .ep-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
   .ep-chip {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 6px 12px; border-radius: 8px;
-    background: #f1f5f9; color: #334155;
-    font-size: 12px; font-weight: 600;
-    border: 1px solid #e2e8f0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(0, 74, 198, 0.08);
     transition: all 0.2s ease;
   }
   .ep-chip i { font-size: 10px; cursor: pointer; opacity: 0.6; }
-  .ep-chip i:hover { opacity: 1; color: var(--ep-pink); }
+  .ep-chip i:hover { opacity: 1; color: #ec4899; }
   .ep-picker-input {
-    width: 100%; border: none; background: var(--ep-surface);
-    border-radius: 12px; padding: 11px 12px;
-    font-family: inherit; font-size: 14px; font-weight: 500;
+    width: 100%;
+    border: none;
+    background: transparent;
+    border-radius: 12px;
+    padding: 11px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
     outline: none;
+    color: #191c1e;
   }
   .ep-picker-list {
     display: none;
@@ -589,137 +579,185 @@
     z-index: 9500;
     max-height: 200px;
     overflow-y: auto;
-    background: var(--ep-surface);
-    border-radius: var(--ep-r-md);
-    border: 1px solid var(--ep-line);
-    box-shadow: 0 20px 45px -5px rgba(12, 25, 41, 0.25), 0 8px 20px -3px rgba(37, 99, 235, 0.15);
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid rgba(0, 74, 198, 0.08);
+    box-shadow: 0 20px 45px -5px rgba(12, 25, 41, 0.25);
     animation: ep-dropdown-slide 0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     transform-origin: top center;
   }
   @keyframes ep-dropdown-slide {
-    from {
-      opacity: 0;
-      transform: translateY(-8px) scale(0.97);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
+    from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
   }
   .ep-picker-item {
-    padding: 12px 14px; font-size: 14px; font-weight: 500;
-    color: var(--ep-ink-2); cursor: pointer;
-    border-bottom: 1px solid var(--ep-line);
+    padding: 12px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #334155;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(0, 74, 198, 0.06);
     transition: background 0.15s;
   }
   .ep-picker-item:last-child { border-bottom: none; }
-  .ep-picker-item:active { background: rgba(59, 130, 246, 0.08); color: var(--ep-ink); transform: scale(0.98); }
+  .ep-picker-item:active { background: rgba(0, 74, 198, 0.06); color: #191c1e; }
   .ep-chip:active { opacity: 0.8; transform: scale(0.97); }
 
-  /* Toggle */
   .ep-toggle-row {
-    display: flex; align-items: center; gap: 14px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
     padding: 14px 16px;
   }
   .ep-toggle-text { flex: 1; }
-  .ep-toggle-text strong { display: block; font-size: 14px; font-weight: 700; margin-bottom: 2px; }
-  .ep-toggle-text span { font-size: 12px; color: var(--ep-ink-3); line-height: 1.4; }
+  .ep-toggle-text strong { display: block; font-size: 14px; font-weight: 700; margin-bottom: 2px; color: #191c1e; }
+  .ep-toggle-text span { font-size: 12px; color: #64748b; line-height: 1.4; }
   .ep-switch { position: relative; flex-shrink: 0; }
   .ep-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
   .ep-switch label {
-    display: block; width: 50px; height: 30px;
-    background: #e2e8f0; border-radius: 15px; cursor: pointer;
+    display: block;
+    width: 50px;
+    height: 30px;
+    background: #e2e8f0;
+    border-radius: 15px;
+    cursor: pointer;
     transition: background 0.25s;
   }
   .ep-switch label::after {
-    content: ''; position: absolute; top: 4px; left: 4px;
-    width: 22px; height: 22px; background: #fff; border-radius: 50%;
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 22px;
+    height: 22px;
+    background: #fff;
+    border-radius: 50%;
     box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     transition: transform 0.25s var(--ep-ease);
   }
-  .ep-switch input:checked + label { background: var(--ep-green); }
+  .ep-switch input:checked + label { background: #10b981; }
   .ep-switch input:checked + label::after { transform: translateX(20px); }
 
-  /* Vibe */
-  .ep-vibe-block { padding: 0 16px 16px; border-top: 1px solid var(--ep-line); }
-  .ep-vibe-title { font-size: 14px; font-weight: 700; padding: 14px 0 4px; display: flex; align-items: center; gap: 8px; }
-  .ep-vibe-title i { color: var(--ep-blue); }
-  .ep-vibe-hint { font-size: 12px; color: var(--ep-ink-3); margin-bottom: 14px; line-height: 1.45; }
-  .ep-search {
-    display: flex; gap: 8px; margin-bottom: 10px;
-  }
-  .ep-search .ep-picker-input { flex: 1; }
+  .ep-vibe-block { padding: 0 16px 16px; border-top: 1px solid rgba(0, 74, 198, 0.06); margin-top: 8px; }
+  .ep-vibe-title { font-size: 14px; font-weight: 700; padding: 14px 0 4px; display: flex; align-items: center; gap: 8px; color: #191c1e; }
+  .ep-vibe-title .material-symbols-outlined { color: #004ac6; font-size: 18px; }
+  .ep-vibe-hint { font-size: 12px; color: #64748b; margin-bottom: 14px; line-height: 1.45; }
+  .ep-search { display: flex; gap: 8px; margin-bottom: 10px; }
+  .ep-search .ep-picker-input { flex: 1; background: #ffffff; border-radius: 12px; }
   .ep-search-btn {
-    width: var(--ep-tap); height: var(--ep-tap); flex-shrink: 0;
-    border: none; border-radius: var(--ep-r-md);
-    background: linear-gradient(135deg, var(--ep-blue), var(--ep-blue-2));
-    color: #fff; font-size: 15px; cursor: pointer;
-    box-shadow: 0 4px 14px var(--ep-blue-glow);
+    width: var(--ep-tap);
+    height: var(--ep-tap);
+    flex-shrink: 0;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #004ac6, #3f7dff);
+    color: #fff;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 74, 198, 0.15);
     transition: transform 0.15s;
   }
   .ep-search-btn:active { transform: scale(0.94); }
   .ep-carousel {
-    display: flex; gap: 10px; overflow-x: auto;
-    padding: 4px 2px 12px; margin-bottom: 8px;
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 4px 2px 12px;
+    margin-bottom: 8px;
     scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
   }
   .ep-carousel::-webkit-scrollbar { display: none; }
-  .ep-carousel-label { font-size: 10px; font-weight: 700; color: var(--ep-ink-4); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .ep-carousel-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
   .ep-media {
-    flex: 0 0 72px; width: 72px; max-width: 72px;
+    flex: 0 0 72px;
+    width: 72px;
+    max-width: 72px;
     scroll-snap-align: start;
-    text-align: center; cursor: pointer; position: relative;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
   }
   .ep-media-pick { transition: transform 0.2s; }
   .ep-media-pick:active { transform: scale(0.95); }
   .ep-media-cover {
     width: 100%;
-    border-radius: 12px; overflow: hidden;
-    background: var(--ep-surface-dim); border: 1px solid var(--ep-line);
-    box-shadow: var(--ep-shadow-sm);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f1f5f9;
+    border: 1px solid rgba(0, 74, 198, 0.06);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
   }
   .ep-media-cover--poster { aspect-ratio: 2/3; }
   .ep-media-cover--sq { aspect-ratio: 1; }
   .ep-media-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .ep-media-name {
-    font-size: 10px; font-weight: 700; margin-top: 5px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-size: 10px;
+    font-weight: 700;
+    margin-top: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .ep-media-rm {
-    position: absolute; top: -5px; right: -5px;
-    width: 22px; height: 22px; border-radius: 50%;
-    background: #ef4444; color: #fff; border: 2px solid #fff;
-    font-size: 9px; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; z-index: 2;
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #ef4444;
+    color: #fff;
+    border: 2px solid #fff;
+    font-size: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
   }
-  .ep-media-empty { font-size: 12px; color: var(--ep-ink-4); font-style: italic; padding: 6px 0; }
+  .ep-media-empty { font-size: 12px; color: #94a3b8; font-style: italic; padding: 6px 0; }
   .ep-selected { display: flex; flex-wrap: wrap; gap: 10px; min-height: 44px; }
 
-  /* Gallery */
   .ep-gallery-note {
-    margin: 0 16px 12px; padding: 11px 13px;
-    background: rgba(37,99,235,0.06); border-radius: var(--ep-r-sm);
-    font-size: 12px; color: var(--ep-ink-2); line-height: 1.45;
-    display: flex; gap: 9px;
+    margin-bottom: 12px;
+    padding: 11px 13px;
+    background: rgba(0, 74, 198, 0.05);
+    border-radius: 12px;
+    font-size: 12px;
+    color: #334155;
+    line-height: 1.45;
+    display: flex;
+    gap: 9px;
   }
-  .ep-gallery-note i { color: var(--ep-blue); margin-top: 2px; }
+  .ep-gallery-note .material-symbols-outlined { color: #004ac6; font-size: 16px; }
   .ep-gallery-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 8px; padding: 0 16px 16px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
   }
   .ep-gallery-slot {
-    position: relative; aspect-ratio: 3/4;
-    border-radius: var(--ep-r-md); overflow: hidden;
-    background: var(--ep-surface-dim);
+    position: relative;
+    aspect-ratio: 3/4;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #f1f5f9;
   }
   .ep-gallery-slot img { width: 100%; height: 100%; object-fit: cover; }
   .ep-gallery-slot.is-loading {
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px dashed rgba(37,99,235,0.25);
-    background: rgba(37,99,235,0.03);
+    border: 2px dashed rgba(0, 74, 198, 0.2);
+    background: rgba(0, 74, 198, 0.03);
   }
   .ep-gallery-slot.is-deleting {
     display: flex;
@@ -728,76 +766,112 @@
     border: 2px dashed rgba(239,68,68,0.25);
     background: rgba(239,68,68,0.03);
   }
-  .ep-gallery-spinner {
-    font-size: 24px;
-    color: var(--ep-blue);
-  }
-  .ep-gallery-spinner.del {
-    color: #ef4444;
-  }
+  .ep-gallery-spinner { font-size: 24px; color: #004ac6; }
+  .ep-gallery-spinner.del { color: #ef4444; }
   .ep-gallery-del {
-    position: absolute; top: 6px; right: 6px;
-    width: 28px; height: 28px; border-radius: 9px;
-    background: rgba(255,255,255,0.92); color: var(--ep-ink-3);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; text-decoration: none;
-    backdrop-filter: blur(8px); transition: background 0.2s, color 0.2s;
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.92);
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    text-decoration: none;
+    backdrop-filter: blur(8px);
+    transition: background 0.2s, color 0.2s;
   }
   .ep-gallery-del:active { background: #ef4444; color: #fff; }
   .ep-gallery-add {
-    aspect-ratio: 3/4; border-radius: var(--ep-r-md);
-    border: 2px dashed rgba(37,99,235,0.2);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 6px; color: var(--ep-ink-4); font-size: 11px; font-weight: 700;
-    cursor: pointer; transition: border-color 0.2s, color 0.2s;
+    aspect-ratio: 3/4;
+    border-radius: 16px;
+    border: 2px dashed rgba(0, 74, 198, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
   }
-  .ep-gallery-add:active { border-color: var(--ep-blue); color: var(--ep-blue); }
-  .ep-gallery-add i { font-size: 22px; }
+  .ep-gallery-add:active { border-color: #004ac6; color: #004ac6; }
+  .ep-gallery-add .material-symbols-outlined { font-size: 22px; }
 
-  /* Admin */
-  .ep-admin { border-color: rgba(245,158,11,0.35); background: #fffbeb; }
+  .ep-admin { border-color: rgba(245,158,11,0.35) !important; background: #fffbeb !important; }
   .ep-admin .ep-group-head { color: #92400e; }
-  .ep-admin .ep-group-head i { background: rgba(245,158,11,0.15); color: #b45309; }
-  .ep-admin-img { width: 100%; border-radius: var(--ep-r-md); border: 2px solid #fcd34d; margin-bottom: 10px; }
+  .ep-admin .ep-group-head .material-symbols-outlined { color: #b45309; }
+  .ep-admin-img { width: 100%; border-radius: 16px; border: 2px solid #fcd34d; margin-bottom: 10px; }
   .ep-admin-tag {
-    position: absolute; top: 8px; right: 8px;
-    background: #92400e; color: #fff; font-size: 9px; font-weight: 800;
-    padding: 3px 8px; border-radius: 6px;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #92400e;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 6px;
   }
   .ep-admin-warn {
-    margin: 0 16px 16px; padding: 12px;
-    background: rgba(245,158,11,0.12); border-radius: var(--ep-r-sm);
-    font-size: 11px; color: #92400e; line-height: 1.5;
+    padding: 12px;
+    background: rgba(245,158,11,0.12);
+    border-radius: 12px;
+    font-size: 11px;
+    color: #92400e;
+    line-height: 1.5;
+  }
+
+  .ep-gallery-warning {
+    padding: 8px 12px;
+    background: rgba(239,68,68,0.08);
+    border-radius: 12px;
+    font-size: 11px;
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
   }
 
   .ep-savebar {
     position: fixed;
     right: 20px;
-    bottom: calc(var(--ep-nav) + 16px);
+    bottom: calc(var(--ep-nav) + 36px);
     z-index: 250;
     pointer-events: none;
     display: none;
   }
-  /* Show save bar only when app has unsaved changes */
-  #ep-app.has-unsaved .ep-savebar {
-    display: block;
-  }
+  #ep-app.has-unsaved .ep-savebar { display: block; }
   .ep-save-btn {
-    width: 54px; height: 54px;
-    border: none; border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    color: #fff; font-family: inherit;
-    font-size: 18px; font-weight: 700;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
+    width: 56px;
+    height: 56px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #004ac6, #3f7dff);
+    color: #fff;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(0, 74, 198, 0.3);
     transition: transform 0.2s var(--ep-spring), opacity 0.2s, box-shadow 0.2s;
-    -webkit-tap-highlight-color: transparent;
     pointer-events: all;
   }
-  .ep-save-btn:active { transform: scale(0.92); box-shadow: 0 4px 12px rgba(37,99,235,0.2); }
+  .ep-save-btn .material-symbols-outlined {
+    font-size: 24px;
+    font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+  }
+  .ep-save-btn:active { transform: scale(0.92); box-shadow: 0 4px 12px rgba(0,74,198,0.2); }
   .ep-save-btn.is-busy { opacity: 0.65; pointer-events: none; }
 
-  /* ─── Desktop: phone-in-center layout ─── */
   @media (min-width: 600px) {
     html, body {
       background: linear-gradient(165deg, #e8f1ff 0%, #f5f8ff 45%, #eef4fc 100%) !important;
@@ -806,7 +880,6 @@
       align-items: center;
       justify-content: center;
     }
-
     .container {
       width: 500px !important;
       max-width: 500px !important;
@@ -814,50 +887,57 @@
       margin: 0 auto !important;
       padding: 0 !important;
       position: relative;
-      border-left: 1px solid rgba(37,99,235,0.07);
-      border-right: 1px solid rgba(37,99,235,0.07);
-      box-shadow: 0 0 60px rgba(37,99,235,0.08);
+      border-left: 1px solid rgba(0, 74, 198, 0.07);
+      border-right: 1px solid rgba(0, 74, 198, 0.07);
+      box-shadow: 0 0 60px rgba(0, 74, 198, 0.08);
     }
-
-    #ep-app {
-      width: 500px;
-    }
-
-    /* FAB stays within the content column */
-    .ep-savebar {
-      right: calc(50% - 500px/2 + 20px);
-    }
+    #ep-app { width: 500px; }
+    .ep-savebar { right: calc(50% - 500px/2 + 20px); }
   }
 
-  /* Overlay & toast */
   .ep-overlay {
-    display: none; position: fixed; inset: 0; z-index: 9999;
-    background: rgba(238,244,252,0.92);
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(247, 249, 251, 0.92);
     backdrop-filter: blur(16px);
-    flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
   }
   .ep-overlay.is-show { display: flex; }
   .ep-spinner {
-    width: 40px; height: 40px;
-    border: 3px solid rgba(37,99,235,0.15);
-    border-top-color: var(--ep-blue); border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(0, 74, 198, 0.15);
+    border-top-color: #004ac6;
+    border-radius: 50%;
     animation: ep-spin 0.7s linear infinite;
   }
   @keyframes ep-spin { to { transform: rotate(360deg); } }
-  .ep-overlay-text { font-size: 14px; font-weight: 600; color: var(--ep-ink-2); }
+  .ep-overlay-text { font-size: 14px; font-weight: 600; color: #334155; }
 
   .ep-toast {
-    display: none; position: fixed;
+    display: none;
+    position: fixed;
     top: calc(var(--ep-header) + env(safe-area-inset-top) + 8px);
-    left: 50%; transform: translateX(-50%);
-    max-width: 90%; padding: 10px 16px;
-    background: #fef2f2; color: #b91c1c;
-    border: 1px solid #fecaca; border-radius: var(--ep-r-md);
-    font-size: 13px; font-weight: 600; z-index: 4000;
-    box-shadow: var(--ep-shadow);
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 90%;
+    padding: 10px 16px;
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 4000;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
   }
 
-  .ep-hint { font-size: 12px; color: var(--ep-ink-3); line-height: 1.45; margin-bottom: 10px; }
+  .ep-hint { font-size: 12px; color: #64748b; line-height: 1.45; margin-bottom: 10px; }
 
   .empty-indicator {
     background: #fef2f2;
@@ -872,13 +952,10 @@
     align-items: center;
     gap: 4px;
     vertical-align: middle;
-    text-transform: none;
-    letter-spacing: 0;
   }
 
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-    .ep-tab-indicator { transition-duration: 0.38s !important; }
   }
 </style>
 {% endblock %}
@@ -886,86 +963,74 @@
 {% block body %}
 <div id="ep-app">
 
-  <header class="ep-topbar">
-    <span class="ep-topbar-title">Edit Profile</span>
-    <span class="ep-topbar-end"></span>
+  <!-- Mobile Header -->
+  <header class="ep-mob-header">
+    <h1 class="ep-mob-header-title">Edit Profile</h1>
+    <a href="{% url 'settings' %}" class="ep-mob-header-btn"><span class="material-symbols-outlined">settings</span></a>
   </header>
 
   <div class="ep-scroll">
 
-    <!-- Profile Hero & Banner -->
-    <div class="ep-profile-hero">
-      <div class="ep-hero-blur-bg-wrap">
-        <div class="ep-hero-blur-bg" style="background-image: url('{{ profile.get_profile_pic_url }}');"></div>
-      </div>
-      <div class="ep-avatar-container">
-        <div class="ep-avatar-border">
-          <img src="{{ profile.get_profile_pic_url }}" alt="" class="ep-hero-avatar" id="preview-pfp">
-          {% if profile.is_face_verified %}
-          <label for="id_pfp_instant" class="ep-avatar-edit-icon" aria-label="Change photo">
-            <i class="fas fa-camera"></i>
-          </label>
-          {% endif %}
-          {% if profile.is_face_verified %}
-          <div class="ep-verification-medal" title="Face Verified">
-            <i class="fas fa-bolt"></i>
-          </div>
-          {% endif %}
+    <!-- Profile Header Section (matching reference) -->
+    <section class="ep-profile-section">
+      <div class="ep-avatar-wrap">
+        <div class="ep-avatar-frame">
+          <img src="{{ profile.get_profile_pic_url }}" alt="" class="ep-avatar-img" id="preview-pfp">
         </div>
-      </div>
-    </div>
-
-    <!-- User Name & Subtitle Info -->
-    <div class="ep-profile-intro">
-      <h1 class="ep-profile-display-name">{{ profile.name }}</h1>
-      <p class="ep-profile-display-meta">{{ profile.campus_display }} · {{ profile.age }} yrs</p>
-    </div>
-
-    <!-- Action Buttons Pill -->
-    <div class="ep-actions-container">
-      <div class="ep-actions-pill" {% if not profile.is_face_verified %}style="max-width: 360px;"{% endif %}>
-        <a href="{% url 'view_profile' profile.id %}" class="ep-pill-btn">
-          <i class="fas fa-eye"></i> View
-        </a>
-        <div class="ep-pill-divider"></div>
-        <a href="{% url 'settings' %}" class="ep-pill-btn">
-          <i class="fas fa-cog"></i> Settings
-        </a>
-        {% if not profile.is_face_verified %}
-        <div class="ep-pill-divider"></div>
-        <a href="{% url 'verify' %}" class="ep-pill-btn verify-btn">
-          <i class="fas fa-user-check"></i> Verify
-        </a>
+        {% if profile.is_face_verified %}
+        <label for="id_pfp_instant" class="ep-avatar-cam">
+          <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1;">photo_camera</span>
+        </label>
         {% endif %}
       </div>
-    </div>
+
+      <h2 class="ep-profile-name">
+        {{ profile.name }}
+        {% if profile.is_face_verified %}
+        <span class="material-symbols-outlined ep-verified-badge" style="font-variation-settings:'FILL' 1;">verified</span>
+        {% endif %}
+      </h2>
+
+      <p class="ep-profile-campus">
+        <span class="material-symbols-outlined">school</span>
+        {{ profile.campus_display }} · {{ profile.age }} yrs
+      </p>
+
+      <div class="ep-profile-actions">
+        {% if not profile.is_face_verified %}
+        <a href="{% url 'verify' %}" class="ep-btn-gradient">Verify</a>
+        {% else %}
+        <a href="{% url 'view_profile' profile.id %}" class="ep-btn-gradient">Preview</a>
+        {% endif %}
+      </div>
+    </section>
 
     <!-- Tabs -->
     <div class="ep-tabs-wrap">
       <nav class="ep-tabs" role="tablist" id="ep-tabs">
         <button type="button" class="ep-tab is-active" data-tab="basic" role="tab">
-          <div class="ep-tab-icon-circle"><i class="fas fa-user"></i></div>
+          <div class="ep-tab-icon-circle"><span class="material-symbols-outlined">person</span></div>
           <span>Basic</span>
           <span class="ep-tab-dot" id="dot-basic"></span>
         </button>
         <button type="button" class="ep-tab" data-tab="gallery" role="tab">
-          <div class="ep-tab-icon-circle"><i class="fas fa-images"></i></div>
+          <div class="ep-tab-icon-circle"><span class="material-symbols-outlined">image</span></div>
           <span>Gallery</span>
           <span class="ep-tab-dot" id="dot-gallery"></span>
         </button>
         <button type="button" class="ep-tab" data-tab="edu" role="tab">
-          <div class="ep-tab-icon-circle"><i class="fas fa-graduation-cap"></i></div>
+          <div class="ep-tab-icon-circle"><span class="material-symbols-outlined">school</span></div>
           <span>Academy</span>
           <span class="ep-tab-dot" id="dot-edu"></span>
         </button>
         <button type="button" class="ep-tab" data-tab="prefs" role="tab">
-          <div class="ep-tab-icon-circle"><i class="fas fa-heart"></i></div>
+          <div class="ep-tab-icon-circle"><span class="material-symbols-outlined">favorite</span></div>
           <span>Prefs</span>
           <span class="ep-tab-dot" id="dot-prefs"></span>
         </button>
         {% if is_admin_editing %}
         <button type="button" class="ep-tab" data-tab="moderation" role="tab">
-          <div class="ep-tab-icon-circle"><i class="fas fa-shield-alt"></i></div>
+          <div class="ep-tab-icon-circle"><span class="material-symbols-outlined">verified_user</span></div>
           <span>Verify</span>
         </button>
         {% endif %}
@@ -983,7 +1048,7 @@
       <!-- BASIC -->
       <div id="section-basic" class="ep-panel is-active" role="tabpanel">
         <div class="ep-group">
-          <div class="ep-group-head"><i class="fas fa-id-card"></i> About you</div>
+          <div class="ep-group-head"><span class="material-symbols-outlined">person</span> About you</div>
 
           <div class="ep-row">
             <label class="ep-label{% if not is_admin_editing %} ep-label--lock{% endif %}">Full name</label>
@@ -996,25 +1061,25 @@
           </div>
 
           <div class="ep-row">
-            <label class="ep-label">Bio<span class="empty-indicator" id="indicator-bio" {% if profile.bio %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
+            <label class="ep-label">Bio<span class="empty-indicator" id="indicator-bio" {% if profile.bio %}style="display: none;"{% endif %}><span class="material-symbols-outlined" style="font-size:12px;">error_outline</span> Not filled</span></label>
             {{ form.bio }}
           </div>
 
           <div class="ep-row">
             <label class="ep-label">Your age</label>
             <div class="ep-stepper">
-              <button type="button" class="ep-stepper-btn" onclick="stepAge(-1)"><i class="fas fa-minus"></i></button>
+              <button type="button" class="ep-stepper-btn" onclick="stepAge(-1)"><span class="material-symbols-outlined" style="font-size:14px;">remove</span></button>
               <div class="ep-stepper-val">
                 <span class="ep-stepper-num" id="age-display">{{ profile.age }}</span>
                 <span class="ep-stepper-unit"> years</span>
               </div>
-              <button type="button" class="ep-stepper-btn" onclick="stepAge(1)"><i class="fas fa-plus"></i></button>
+              <button type="button" class="ep-stepper-btn" onclick="stepAge(1)"><span class="material-symbols-outlined" style="font-size:14px;">add</span></button>
             </div>
             <input type="hidden" name="age" id="id_age" value="{{ profile.age }}">
           </div>
 
           <div class="ep-row">
-            <label class="ep-label">Living place<span class="empty-indicator" id="indicator-living_place" {% if profile.living_place %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
+            <label class="ep-label">Living place<span class="empty-indicator" id="indicator-living_place" {% if profile.living_place %}style="display: none;"{% endif %}><span class="material-symbols-outlined" style="font-size:12px;">error_outline</span> Not filled</span></label>
             <div class="ep-picker" id="drop-living">
               <div class="ep-chips" id="chips-living"></div>
               <input type="text" class="ep-picker-input" id="search-living" placeholder="Search city…" autocomplete="off">
@@ -1024,7 +1089,7 @@
           </div>
 
           <div class="ep-row">
-            <label class="ep-label">Native place<span class="empty-indicator" id="indicator-native_place" {% if profile.native_place %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
+            <label class="ep-label">Native place<span class="empty-indicator" id="indicator-native_place" {% if profile.native_place %}style="display: none;"{% endif %}><span class="material-symbols-outlined" style="font-size:12px;">error_outline</span> Not filled</span></label>
             <div class="ep-picker" id="drop-native">
               <div class="ep-chips" id="chips-native"></div>
               <input type="text" class="ep-picker-input" id="search-native" placeholder="Search city…" autocomplete="off">
@@ -1034,7 +1099,7 @@
           </div>
 
           <div class="ep-row">
-            <label class="ep-label{% if profile.mother_tongues and not is_admin_editing %} ep-label--lock{% endif %}">Mother tongue<span class="empty-indicator" id="indicator-mother_tongues" {% if profile.mother_tongues %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
+            <label class="ep-label{% if profile.mother_tongues and not is_admin_editing %} ep-label--lock{% endif %}">Mother tongue<span class="empty-indicator" id="indicator-mother_tongues" {% if profile.mother_tongues %}style="display: none;"{% endif %}><span class="material-symbols-outlined" style="font-size:12px;">error_outline</span> Not filled</span></label>
             {% if profile.mother_tongues and not is_admin_editing %}
               <div class="ep-chips">
                 {% for lang in profile.mother_tongues_list %}
@@ -1053,7 +1118,7 @@
           </div>
 
           <div class="ep-row">
-            <label class="ep-label">Languages<span class="empty-indicator" id="indicator-languages" {% if profile.languages %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
+            <label class="ep-label">Languages<span class="empty-indicator" id="indicator-languages" {% if profile.languages %}style="display: none;"{% endif %}><span class="material-symbols-outlined" style="font-size:12px;">error_outline</span> Not filled</span></label>
             <div class="ep-picker" id="drop-languages">
               <div class="ep-chips" id="chips-languages"></div>
               <input type="text" class="ep-picker-input" id="search-languages" placeholder="Add languages…" autocomplete="off">
@@ -1064,7 +1129,7 @@
         </div>
 
         <div class="ep-group">
-          <div class="ep-group-head"><i class="fas fa-star"></i> Interests<span class="empty-indicator" id="indicator-interest_tags" {% if profile.interest_tags %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></div>
+          <div class="ep-group-head"><span class="material-symbols-outlined">favorite</span> Interests<span class="empty-indicator" id="indicator-interest_tags" {% if profile.interest_tags %}style="display: none;"{% endif %}><span class="material-symbols-outlined" style="font-size:12px;">error_outline</span> Not filled</span></div>
           <div class="ep-row" style="border-top:none; padding-top:0;">
             <div class="ep-picker" id="drop-interests">
               <div class="ep-chips" id="chips-interests"></div>
@@ -1075,22 +1140,22 @@
           </div>
 
           <div class="ep-vibe-block">
-            <div class="ep-vibe-title"><i class="fas fa-music"></i> My vibe</div>
+            <div class="ep-vibe-title"><span class="material-symbols-outlined">favorite</span> My vibe</div>
             <p class="ep-vibe-hint">Up to 3 movies & 3 songs shown on your profile.</p>
 
-            <label class="ep-label"><i class="fas fa-film"></i> Movies (<span id="movie-count">0</span>/3)</label>
+            <label class="ep-label"><span class="material-symbols-outlined" style="font-size:14px;">movie</span> Movies (<span id="movie-count">0</span>/3)</label>
             <div class="ep-search">
               <input type="text" id="movie-search-input" class="ep-picker-input" placeholder="Search movies…" autocomplete="off">
-              <button type="button" class="ep-search-btn" onclick="searchMovies()" aria-label="Search"><i class="fas fa-search"></i></button>
+              <button type="button" class="ep-search-btn" onclick="searchMovies()" aria-label="Search"><span class="material-symbols-outlined">search</span></button>
             </div>
             <div id="movie-search-results" class="ep-carousel"></div>
             <div class="ep-carousel-label">Selected</div>
             <div id="selected-movies" class="ep-selected"><span class="ep-media-empty">No movies yet</span></div>
 
-            <label class="ep-label" style="margin-top:16px;"><i class="fas fa-headphones"></i> Songs (<span id="song-count">0</span>/3)</label>
+            <label class="ep-label" style="margin-top:16px;"><span class="material-symbols-outlined" style="font-size:14px;">music_note</span> Songs (<span id="song-count">0</span>/3)</label>
             <div class="ep-search">
               <input type="text" id="song-search-input" class="ep-picker-input" placeholder="Search songs…" autocomplete="off">
-              <button type="button" class="ep-search-btn" onclick="searchSongs()" aria-label="Search"><i class="fas fa-search"></i></button>
+              <button type="button" class="ep-search-btn" onclick="searchSongs()" aria-label="Search"><span class="material-symbols-outlined">search</span></button>
             </div>
             <div id="song-search-results" class="ep-carousel"></div>
             <div class="ep-carousel-label">Selected</div>
@@ -1102,7 +1167,7 @@
       <!-- ACADEMY -->
       <div id="section-edu" class="ep-panel" role="tabpanel">
         <div class="ep-group">
-          <div class="ep-group-head"><i class="fas fa-graduation-cap"></i> Education</div>
+          <div class="ep-group-head"><span class="material-symbols-outlined">school</span> Education</div>
           <div class="ep-row" style="border-top:none; padding-top:0;">
             <label class="ep-label{% if not is_admin_editing %} ep-label--lock{% endif %}">Campus</label>
             {% if is_admin_editing %}
@@ -1113,11 +1178,11 @@
             {% endif %}
           </div>
           <div class="ep-row">
-            <label class="ep-label">Course<span class="empty-indicator" id="indicator-course" {% if profile.course %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
+            <label class="ep-label">Course<span class="empty-indicator" id="indicator-course" {% if profile.course %}style="display: none;"{% endif %}><span class="material-symbols-outlined" style="font-size:12px;">error_outline</span> Not filled</span></label>
             {{ form.course }}
           </div>
           <div class="ep-row">
-            <label class="ep-label">Year of study<span class="empty-indicator" id="indicator-clg_year" {% if profile.clg_year %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
+            <label class="ep-label">Year of study<span class="empty-indicator" id="indicator-clg_year" {% if profile.clg_year %}style="display: none;"{% endif %}><span class="material-symbols-outlined" style="font-size:12px;">error_outline</span> Not filled</span></label>
             {{ form.clg_year }}
           </div>
         </div>
@@ -1126,13 +1191,13 @@
       <!-- PREFS -->
       <div id="section-prefs" class="ep-panel" role="tabpanel">
         <div class="ep-group">
-          <div class="ep-group-head"><i class="fas fa-search"></i> Discovery</div>
+          <div class="ep-group-head"><span class="material-symbols-outlined">search</span> Discovery</div>
           <div class="ep-row" style="border-top:none; padding-top:0;">
-            <label class="ep-label">Looking for<span class="empty-indicator" id="indicator-looking_for" {% if profile.looking_for %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
+            <label class="ep-label">Looking for<span class="empty-indicator" id="indicator-looking_for" {% if profile.looking_for %}style="display: none;"{% endif %}><span class="material-symbols-outlined" style="font-size:12px;">error_outline</span> Not filled</span></label>
             {{ form.looking_for }}
           </div>
           <div class="ep-row">
-            <label class="ep-label">Interested in<span class="empty-indicator" id="indicator-pref_gender" {% if profile.pref_gender %}style="display: none;"{% endif %}><i class="fas fa-exclamation-circle"></i> Not filled</span></label>
+            <label class="ep-label">Interested in<span class="empty-indicator" id="indicator-pref_gender" {% if profile.pref_gender %}style="display: none;"{% endif %}><span class="material-symbols-outlined" style="font-size:12px;">error_outline</span> Not filled</span></label>
             {{ form.pref_gender }}
           </div>
           <div class="ep-row">
@@ -1142,18 +1207,18 @@
               <div class="ep-range-box">
                 <div class="ep-range-label">Min</div>
                 <div class="ep-range-controls">
-                  <button type="button" class="ep-stepper-btn" onclick="stepRange('min', -1)"><i class="fas fa-minus"></i></button>
+                  <button type="button" class="ep-stepper-btn" onclick="stepRange('min', -1)"><span class="material-symbols-outlined" style="font-size:14px;">remove</span></button>
                   <span class="ep-range-num" id="min-age-display">{{ profile.pref_age_min }}</span>
-                  <button type="button" class="ep-stepper-btn" onclick="stepRange('min', 1)"><i class="fas fa-plus"></i></button>
+                  <button type="button" class="ep-stepper-btn" onclick="stepRange('min', 1)"><span class="material-symbols-outlined" style="font-size:14px;">add</span></button>
                 </div>
               </div>
-              <span class="ep-range-sep"><i class="fas fa-arrows-alt-h"></i></span>
+              <span class="ep-range-sep"><span class="material-symbols-outlined" style="font-size:14px;">arrow_range</span></span>
               <div class="ep-range-box">
                 <div class="ep-range-label">Max</div>
                 <div class="ep-range-controls">
-                  <button type="button" class="ep-stepper-btn" onclick="stepRange('max', -1)"><i class="fas fa-minus"></i></button>
+                  <button type="button" class="ep-stepper-btn" onclick="stepRange('max', -1)"><span class="material-symbols-outlined" style="font-size:14px;">remove</span></button>
                   <span class="ep-range-num" id="max-age-display">{{ profile.pref_age_max }}</span>
-                  <button type="button" class="ep-stepper-btn" onclick="stepRange('max', 1)"><i class="fas fa-plus"></i></button>
+                  <button type="button" class="ep-stepper-btn" onclick="stepRange('max', 1)"><span class="material-symbols-outlined" style="font-size:14px;">add</span></button>
                 </div>
               </div>
             </div>
@@ -1187,7 +1252,7 @@
       {% if is_admin_editing %}
       <div id="section-moderation" class="ep-panel" role="tabpanel">
         <div class="ep-group ep-admin">
-          <div class="ep-group-head"><i class="fas fa-user-shield"></i> Moderation</div>
+          <div class="ep-group-head"><span class="material-symbols-outlined">admin_panel_settings</span> Moderation</div>
           <div class="ep-row" style="border-top:none; padding-top:0;">
             <label class="ep-label">Verification image</label>
             {% if profile.verification_image %}
@@ -1197,7 +1262,7 @@
             </div>
             {% else %}
             <div class="ep-input ep-input--locked" style="justify-content:center; flex-direction:column; gap:6px; min-height:80px;">
-              <i class="fas fa-image" style="color:var(--ep-ink-4);"></i>
+              <span class="material-symbols-outlined" style="color:#94a3b8; font-size:24px;">image</span>
               <span style="font-size:12px;">No verification image</span>
             </div>
             {% endif %}
@@ -1214,7 +1279,7 @@
               <option value="manual_review" {% if profile.verification_status == 'manual_review' %}selected{% endif %}>Manual review</option>
             </select>
           </div>
-          <p class="ep-admin-warn"><i class="fas fa-exclamation-triangle"></i> Setting Pending or Rejected forces re-verification on next visit.</p>
+          <p class="ep-admin-warn"><span class="material-symbols-outlined" style="font-size:14px; vertical-align:middle;">warning</span> Setting Pending or Rejected forces re-verification on next visit.</p>
         </div>
       </div>
       {% endif %}
@@ -1223,21 +1288,21 @@
     <!-- GALLERY (outside main form) -->
     <div id="section-gallery" class="ep-panel" role="tabpanel">
       <div class="ep-group">
-        <div class="ep-group-head"><i class="fas fa-images"></i> Photos <span class="ep-badge">{{ gallery.count }}/5</span></div>
-        <p class="ep-gallery-note"><i class="fas fa-shield-alt"></i> AI safety check & auto-compress on every upload.</p>
+        <div class="ep-group-head"><span class="material-symbols-outlined">image</span> Photos <span class="ep-badge">{{ gallery.count }}/5</span></div>
+        <p class="ep-gallery-note"><span class="material-symbols-outlined">verified_user</span> AI safety check & auto-compress on every upload.</p>
         <div class="ep-gallery-warning" id="gallery-warning" {% if gallery.count >= 2 %}style="display: none;"{% endif %}>
-          <i class="fas fa-exclamation-triangle"></i>
+          <span class="material-symbols-outlined" style="font-size:16px;">warning</span>
           <span>At least 2 images are needed in your gallery.</span>
         </div>
         <div class="ep-gallery-grid">
           {% for img in gallery %}
           <div class="ep-gallery-slot">
             <img src="{{ img.get_image_url }}" alt="">
-            <a href="{% url 'delete_profile_image' img.id %}" class="ep-gallery-del" onclick="handleDeletePhoto(event, this.href)"><i class="fas fa-times"></i></a>
+            <a href="{% url 'delete_profile_image' img.id %}" class="ep-gallery-del" onclick="handleDeletePhoto(event, this.href)"><span class="material-symbols-outlined" style="font-size:14px;">close</span></a>
           </div>
           {% endfor %}
           {% if gallery.count < 5 %}
-          <label for="id_gallery_file" class="ep-gallery-add"><i class="fas fa-plus"></i><span>Add</span></label>
+          <label for="id_gallery_file" class="ep-gallery-add"><span class="material-symbols-outlined">add</span><span>Add</span></label>
           {% endif %}
         </div>
       </div>
@@ -1248,7 +1313,7 @@
   <!-- Floating save FAB -->
   <div class="ep-savebar">
     <button type="submit" form="profile-edit-form" class="ep-save-btn" id="save-btn" title="Save changes">
-      <i class="fas fa-save"></i>
+      <span class="material-symbols-outlined">check</span>
     </button>
   </div>
 
@@ -1400,7 +1465,7 @@
     const addLabel = document.querySelector('.ep-gallery-add');
     const placeholder = document.createElement('div');
     placeholder.className = 'ep-gallery-slot is-loading';
-    placeholder.innerHTML = '<div class="ep-gallery-spinner"><i class="fas fa-spinner fa-spin"></i></div>';
+    placeholder.innerHTML = '<div class="ep-gallery-spinner"><span class="material-symbols-outlined" style="font-size:24px; animation: ep-spin 0.7s linear infinite;">sync</span></div>';
     
     if (addLabel) {
       grid.insertBefore(placeholder, addLabel);
@@ -1441,7 +1506,7 @@
         newSlot.className = 'ep-gallery-slot';
         newSlot.innerHTML = `
           <img src="${data.url}" alt="">
-          <a href="${data.delete_url}" class="ep-gallery-del" onclick="handleDeletePhoto(event, this.href)"><i class="fas fa-times"></i></a>
+          <a href="${data.delete_url}" class="ep-gallery-del" onclick="handleDeletePhoto(event, this.href)"><span class="material-symbols-outlined" style="font-size:14px;">close</span></a>
         `;
         placeholder.replaceWith(newSlot);
         
@@ -1610,8 +1675,8 @@
       selected.forEach(val => {
         const chip = document.createElement('span');
         chip.className = 'ep-chip';
-        chip.innerHTML = '<span>' + val + '</span><i class="fas fa-times"></i>';
-        chip.querySelector('i').onclick = e => {
+        chip.innerHTML = '<span>' + val + '</span><span class="material-symbols-outlined" style="font-size:12px; cursor:pointer;">close</span>';
+        chip.querySelector('.material-symbols-outlined').onclick = e => {
           e.stopPropagation();
           selected = selected.filter(v => v !== val);
           renderChips(true);
@@ -1721,7 +1786,7 @@
     mc.innerHTML = selectedMovies.length ? selectedMovies.map((m,i) => `
       <div class="ep-media">
         <div class="ep-media-cover ep-media-cover--poster"><img src="${m.poster_url}" alt=""></div>
-        <button type="button" class="ep-media-rm" onclick="removeMovie(${i})"><i class="fas fa-times"></i></button>
+        <button type="button" class="ep-media-rm" onclick="removeMovie(${i})"><span class="material-symbols-outlined" style="font-size:12px;">close</span></button>
         <div class="ep-media-name">${m.title}</div>
       </div>`).join('') : '<span class="ep-media-empty">No movies yet</span>';
 
@@ -1730,7 +1795,7 @@
     sc.innerHTML = selectedSongs.length ? selectedSongs.map((s,i) => `
       <div class="ep-media">
         <div class="ep-media-cover ep-media-cover--sq"><img src="${s.artwork_url}" alt=""></div>
-        <button type="button" class="ep-media-rm" onclick="removeSong(${i})"><i class="fas fa-times"></i></button>
+        <button type="button" class="ep-media-rm" onclick="removeSong(${i})"><span class="material-symbols-outlined" style="font-size:12px;">close</span></button>
         <div class="ep-media-name">${s.title}</div>
       </div>`).join('') : '<span class="ep-media-empty">No songs yet</span>';
 
@@ -2082,7 +2147,7 @@
     if (await customConfirm('Delete this photo?', 'Delete Photo', 'Delete', 'Cancel')) {
       const originalHTML = slot.innerHTML;
       slot.classList.add('is-deleting');
-      slot.innerHTML = '<div class="ep-gallery-spinner del"><i class="fas fa-spinner fa-spin"></i></div>';
+      slot.innerHTML = '<div class="ep-gallery-spinner del"><span class="material-symbols-outlined" style="font-size:24px; animation: ep-spin 0.7s linear infinite; color:#ef4444;">sync</span></div>';
       
       try {
         const response = await fetch(url, {
@@ -2109,7 +2174,7 @@
             addLabel = document.createElement('label');
             addLabel.setAttribute('for', 'id_gallery_file');
             addLabel.className = 'ep-gallery-add';
-            addLabel.innerHTML = '<i class="fas fa-plus"></i><span>Add</span>';
+            addLabel.innerHTML = '<span class="material-symbols-outlined" style="font-size:22px;">add</span><span>Add</span>';
             grid.appendChild(addLabel);
           }
           

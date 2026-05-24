@@ -3,113 +3,144 @@
 
 {% block head %}
 <style>
-    /* ── Full Screen Lock ── */
-    html, body { 
-        height: 100%; 
-        height: 100dvh; 
-        overflow: hidden; 
-        position: fixed; 
-        width: 100%; 
-        background: #f0f7ff; /* Cool Blue White */
+    html, body {
+        height: 100%;
+        height: 100dvh;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        background: #f7f9fb;
         padding: 0 !important;
         margin: 0 !important;
     }
-    
+
     .container {
         max-width: 100% !important;
+        width: 100% !important;
         padding: 0 !important;
         margin: 0 !important;
         height: 100%;
         box-sizing: border-box;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
 
-    /* ── Match Feed Shell ── */
     .feed-wrapper {
         display: flex;
         flex-direction: column;
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
         width: 100%;
-        max-width: 600px;
+        max-width: 560px;
         margin: 0 auto;
-        background: #f0f7ff;
+        background: linear-gradient(180deg, #fbfcff 0%, #f7f9fb 58%, #eff4fb 100%);
         z-index: 10;
     }
 
-    /* ── Fixed Header ── */
     .feed-header {
         flex-shrink: 0;
-        padding: 16px 20px;
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(0, 102, 255, 0.1);
+        padding: calc(10px + env(safe-area-inset-top)) 20px 16px;
+        background: rgba(247, 249, 251, 0.78);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-bottom: 1px solid rgba(0, 74, 198, 0.08);
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 12px;
         z-index: 20;
     }
+
+    .feed-header-main {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    .feed-kicker {
+        display: block;
+        margin: 0 0 2px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #6d7b8f;
+    }
+
     .feed-header h2 {
         margin: 0;
-        font-size: 24px;
-        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        font-size: 28px;
+        color: #151b27;
         font-weight: 800;
-        letter-spacing: -1px;
+        letter-spacing: -0.04em;
     }
 
     .match-back-btn {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.95);
+        width: 44px;
+        height: 44px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.88);
         display: flex;
         justify-content: center;
         align-items: center;
         text-decoration: none;
-        color: #2563eb;
-        border: 1px solid rgba(0, 102, 255, 0.1);
-        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.04);
+        color: var(--primary);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
         transition: 0.2s ease;
         flex-shrink: 0;
     }
+
+    .match-back-btn .material-symbols-outlined {
+        font-size: 22px;
+    }
+
     .match-back-btn:active {
-        transform: scale(0.9);
+        transform: scale(0.94);
     }
 
     .feed-body {
         flex: 1;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        padding: 10px 14px 80px; 
-        background: #f0f7ff;
+        padding: 16px 16px 110px;
+        background: transparent;
     }
 
     .conn-link {
-        background: white;
-        padding: 10px 16px;
-        border-radius: 14px;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
-        border: 1px solid rgba(37, 99, 235, 0.1);
-        color: #2563eb;
+        background: rgba(255, 255, 255, 0.88);
+        padding: 11px 16px;
+        border-radius: 999px;
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        color: var(--primary);
         text-decoration: none;
         display: flex;
         align-items: center;
         gap: 8px;
-        transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transition: 0.22s ease;
         font-weight: 700;
-        font-size: 13px;
+        font-size: 12px;
+        white-space: nowrap;
     }
-    .conn-link:active { transform: scale(0.92); }
 
-    /* Quiz Card */
+    .conn-link .material-symbols-outlined {
+        font-size: 20px;
+        font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .conn-link:active { transform: scale(0.97); }
+
     .quiz-card {
-        padding: 28px;
-        background: white;
-        border: 1px solid rgba(37, 99, 235, 0.1);
-        border-radius: 30px;
-        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.05);
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        border-radius: 32px;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
         margin-bottom: 24px;
         min-height: 360px;
         display: flex;
@@ -124,18 +155,17 @@
         gap: 14px;
         margin-bottom: 20px;
         padding-bottom: 16px;
-        border-bottom: 1px dashed rgba(37, 99, 235, 0.15);
+        border-bottom: 1px solid rgba(0, 74, 198, 0.08);
     }
     .profile-mini img {
         width: 44px; height: 44px;
-        border-radius: 14px;
+        border-radius: 18px;
         object-fit: cover;
-        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.1);
+        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
     }
-    .profile-mini h3 { margin: 0; font-size: 16px; color: #1e3a8a; font-weight: 700; }
+    .profile-mini h3 { margin: 0; font-size: 17px; color: #151b27; font-weight: 700; letter-spacing: -0.03em; }
     .profile-mini p { margin: 0; font-size: 13px; color: #64748b; }
 
-    /* Progress UI */
     .progress-container {
         margin-bottom: 28px;
     }
@@ -144,26 +174,25 @@
         justify-content: space-between;
         font-size: 11px;
         font-weight: 800;
-        color: #3b82f6;
+        color: #5f79a6;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 0.11em;
         margin-bottom: 8px;
     }
     .progress-track {
         height: 8px;
-        background: #e0f2fe;
-        border-radius: 10px;
+        background: #e5ebf5;
+        border-radius: 999px;
         overflow: hidden;
     }
     .progress-fill {
         height: 100%;
         width: 0%;
-        background: linear-gradient(90deg, #2563eb, #60a5fa);
-        border-radius: 10px;
+        background: linear-gradient(90deg, #004ac6, #4f86ff);
+        border-radius: 999px;
         transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    /* Question Box */
     #question-area {
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }
@@ -171,12 +200,12 @@
     .q-fade-in { opacity: 0; transform: translateY(15px) scale(0.98); }
 
     .question-box h2 {
-        font-size: 22px;
+        font-size: 24px;
         margin-bottom: 24px;
-        color: #1e3a8a;
-        line-height: 1.4;
+        color: #151b27;
+        line-height: 1.35;
         font-weight: 800;
-        letter-spacing: -0.3px;
+        letter-spacing: -0.04em;
     }
     .options-list {
         display: flex;
@@ -187,13 +216,13 @@
         display: block;
         width: 100%;
         text-align: left;
-        padding: 16px 20px;
-        border: 1px solid #e0f2fe;
-        border-radius: 18px;
-        background: white;
+        padding: 17px 18px;
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        border-radius: 22px;
+        background: #fbfcff;
         font-size: 15px;
         font-weight: 600;
-        color: #475569;
+        color: #31435f;
         cursor: pointer;
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
@@ -203,57 +232,55 @@
         content: '';
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(37, 99, 235, 0.03);
+        background: rgba(0, 74, 198, 0.03);
         opacity: 0;
         transition: 0.2s;
     }
     .option-btn:hover { 
-        background: #f0f9ff; 
-        border-color: #3b82f6; 
-        color: #2563eb;
-        transform: translateX(4px);
+        background: #f3f7ff;
+        border-color: rgba(0, 74, 198, 0.18);
+        color: var(--primary);
+        transform: translateY(-1px);
     }
     .option-btn:hover::after { opacity: 1; }
     
     .option-btn.selected { 
-        background: #2563eb; 
+        background: linear-gradient(135deg, #004ac6 0%, #3f7dff 100%);
         color: white; 
-        border-color: #2563eb;
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
-        transform: scale(1.02);
+        border-color: transparent;
+        box-shadow: 0 14px 28px rgba(0, 74, 198, 0.24);
+        transform: scale(1.01);
     }
 
-    /* Loading Overlay */
     .quiz-loading {
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(240, 247, 255, 0.95);
+        background: rgba(247, 249, 251, 0.95);
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         z-index: 50;
-        border-radius: 30px;
+        border-radius: 32px;
         display: none;
     }
 
-    /* Match Cards */
     .match-card {
-        background: white;
-        border: 1px solid rgba(37, 99, 235, 0.08);
-        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.88);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        border-radius: 28px;
         padding: 18px;
         margin-bottom: 14px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 4px 15px rgba(37, 99, 235, 0.04);
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.06);
         transition: 0.3s;
     }
     .match-card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.08);
-        border-color: rgba(37, 99, 235, 0.2);
+        box-shadow: 0 22px 38px rgba(15, 23, 42, 0.08);
+        border-color: rgba(0, 74, 198, 0.15);
     }
     .match-info {
         display: flex;
@@ -264,98 +291,95 @@
         width: 54px; height: 54px;
         border-radius: 18px;
         object-fit: cover;
-        border: 2px solid #e0f2fe;
-        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.1);
+        border: 2px solid #e8eef8;
+        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
     }
     .match-score {
-        background: #e0f2fe;
-        color: #2563eb;
+        background: #e4ecff;
+        color: var(--primary);
         font-size: 11px;
         font-weight: 800;
-        padding: 3px 10px;
-        border-radius: 12px;
+        padding: 5px 10px;
+        border-radius: 999px;
         margin-top: 4px;
         display: inline-block;
     }
 
     .btn-view {
-        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        background: linear-gradient(135deg, #004ac6, #3f7dff);
         color: white !important;
         text-decoration: none;
-        padding: 10px 20px;
-        border-radius: 14px;
-        font-size: 14px;
+        padding: 11px 18px;
+        border-radius: 999px;
+        font-size: 13px;
         font-weight: 700;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        box-shadow: 0 12px 24px rgba(0, 74, 198, 0.2);
         transition: 0.2s;
     }
     .btn-view:hover {
-        transform: scale(1.05);
-        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 16px 28px rgba(0, 74, 198, 0.24);
     }
 
     .all-done { 
         text-align: center; 
         padding: 60px 30px; 
-        background: white; 
-        border-radius: 30px;
-        border: 1px solid rgba(37, 99, 235, 0.1);
-        box-shadow: 0 10px 30px rgba(37, 99, 235, 0.05);
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 32px;
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
     }
     .all-done .icon { 
         font-size: 48px; 
-        background: linear-gradient(135deg, #2563eb, #60a5fa);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: var(--primary);
         margin-bottom: 20px; 
     }
     .all-done h2 {
-        color: #1e3a8a;
+        color: #151b27;
         font-weight: 800;
         margin-bottom: 12px;
+        letter-spacing: -0.03em;
     }
 
-    /* Discovery Hidden Card & Button styling */
     .discovery-hidden-card {
         text-align: center;
-        padding: 20px 16px;
-        background: white;
-        border-radius: 20px;
-        border: 1px solid rgba(37, 99, 235, 0.12);
-        box-shadow: 0 8px 24px rgba(37, 99, 235, 0.04);
+        padding: 24px 18px;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 28px;
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
         margin: 4px 0;
     }
     .discovery-icon-wrapper {
-        width: 50px; height: 50px;
-        border-radius: 50%;
-        background: rgba(37, 99, 235, 0.08);
+        width: 56px; height: 56px;
+        border-radius: 18px;
+        background: rgba(0, 74, 198, 0.08);
         display: flex; align-items: center; justify-content: center;
-        margin: 0 auto 12px;
-        font-size: 20px; color: #2563eb;
-        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.04);
+        margin: 0 auto 14px;
+        font-size: 22px; color: var(--primary);
+        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.05);
     }
     .discovery-hidden-card h2 {
-        color: #1e3a8a; font-size: 16px; font-weight: 800;
-        margin-bottom: 6px; letter-spacing: -0.3px;
+        color: #151b27; font-size: 22px; font-weight: 800;
+        margin-bottom: 8px; letter-spacing: -0.04em;
     }
     .discovery-hidden-card > p {
-        color: #64748b; font-size: 12px; font-weight: 550;
-        line-height: 1.4; margin-bottom: 14px;
+        color: #64748b; font-size: 14px; font-weight: 550;
+        line-height: 1.6; margin-bottom: 18px;
     }
-    /* Checklist */
     .disc-checklist {
         list-style: none; padding: 0; margin: 0 0 16px;
         text-align: left;
-        background: #f8faff;
-        border-radius: 12px;
-        border: 1px solid rgba(37,99,235,0.08);
+        background: #f6f9fd;
+        border-radius: 20px;
+        border: 1px solid rgba(0,74,198,0.06);
         overflow: hidden;
     }
     .disc-checklist li {
         display: flex; align-items: center; gap: 8px;
-        padding: 8px 12px;
-        font-size: 11.5px; font-weight: 600;
-        border-bottom: 1px solid rgba(37,99,235,0.06);
+        padding: 12px 14px;
+        font-size: 13px; font-weight: 600;
+        border-bottom: 1px solid rgba(0,74,198,0.05);
         color: #334155;
     }
     .disc-checklist li:last-child { border-bottom: none; }
@@ -365,37 +389,38 @@
     .disc-check-icon.miss { background: #fee2e2; color: #ef4444; }
     /* CTA Buttons */
     .btn-discover {
-        width: 100%; min-height: 42px; border: none; border-radius: 12px;
-        background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+        width: 100%; min-height: 46px; border: none; border-radius: 999px;
+        background: linear-gradient(135deg, #004ac6 0%, #3f7dff 100%);
         color: #fff; font-family: inherit; font-size: 13px; font-weight: 700;
         cursor: pointer; display: flex; align-items: center; justify-content: center;
-        gap: 8px; box-shadow: 0 6px 18px rgba(37, 99, 235, 0.15);
+        gap: 8px; box-shadow: 0 12px 24px rgba(0, 74, 198, 0.18);
         transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
         -webkit-tap-highlight-color: transparent; text-decoration: none;
         margin-bottom: 8px;
     }
     .btn-discover:active { transform: scale(0.97); }
     .btn-discover.secondary {
-        background: white; color: #2563eb;
-        border: 2px solid rgba(37,99,235,0.2);
-        box-shadow: 0 4px 12px rgba(37,99,235,0.08);
+        background: white; color: var(--primary);
+        border: 1px solid rgba(0,74,198,0.15);
+        box-shadow: 0 10px 18px rgba(15,23,42,0.05);
     }
 </style>
 {% endblock %}
 
 {% block body %}
 <div class="feed-wrapper">
-    <!-- Header -->
     <div class="feed-header">
-        <div style="display: flex; align-items: center; gap: 12px;">
+        <div class="feed-header-main">
             <a href="{% url 'home' %}" class="match-back-btn">
-                <i class="fas fa-arrow-left"></i>
+                <span class="material-symbols-outlined">arrow_back</span>
             </a>
-            <h2>Match</h2>
+            <div>
+                <h2>Match</h2>
+            </div>
         </div>
         <a href="{% url 'connections' %}" class="conn-link">
-            <i class="fas fa-user-friends" style="color: var(--primary);"></i>
-            <span style="font-size: 13px; font-weight: 700;">Connections</span>
+            <span class="material-symbols-outlined">group</span>
+            <span>Connections</span>
             {% if pending_connections_count > 0 %}
             <span style="background: #ef4444; color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 10px;">{{ pending_connections_count }}</span>
             {% endif %}
@@ -509,7 +534,7 @@
 
             <!-- Discovery Feed (Matches) -->
             {% if matches %}
-                <h3 style="font-size: 14px; text-transform: uppercase; color: var(--text-muted); margin: 20px 4px 12px; font-weight: 800; letter-spacing: 0.05em;">Recommended Matches</h3>
+                <h3 style="font-size: 12px; text-transform: uppercase; color: #6d7b8f; margin: 22px 6px 12px; font-weight: 800; letter-spacing: 0.12em;">Recommended Matches</h3>
                 {% for m in matches %}
                 <div class="match-card">
                     <div class="match-info">
@@ -524,7 +549,7 @@
                 {% endfor %}
             {% elif not question %}
                 <div class="all-done">
-                    <div class="icon"><i class="fas fa-sparkles"></i></div>
+                    <div class="icon"><span class="material-symbols-outlined" style="font-size: 52px; font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 48;">auto_awesome</span></div>
                     <h2>All caught up!</h2>
                     <p style="color: var(--text-muted);">Check back later for new profiles.</p>
                 </div>
