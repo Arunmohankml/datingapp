@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Profile, Question, Option, UserAnswer
+from .models import Profile, Question, Option, UserAnswer, RoomRequest, Conversation
 
 
 # ✅ Inline options inside Question admin
@@ -30,3 +30,18 @@ class OptionAdmin(admin.ModelAdmin):
 class UserAnswerAdmin(admin.ModelAdmin):
     list_display = ("user", "question", "option")
     list_filter = ("question", "option", "user")
+
+
+@admin.register(RoomRequest)
+class RoomRequestAdmin(admin.ModelAdmin):
+    list_display = ('title', 'user', 'campus', 'min_rent', 'max_rent', 'preferred_room_type', 'is_active', 'created_at')
+    list_filter = ('campus', 'preferred_room_type', 'is_active')
+    search_fields = ('title', 'user__username', 'looking_near')
+
+
+@admin.register(Conversation)
+class ConversationAdmin(admin.ModelAdmin):
+    list_display = ('user1', 'user2', 'source', 'listing_id', 'request_id', 'created_at')
+    list_filter = ('source',)
+    search_fields = ('user1__username', 'user2__username')
+
