@@ -2,382 +2,245 @@
 {% load static %}
 
 {% block head %}
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
-<style>
-    :root {
-        --primary: #6366f1;
-        --primary-glow: rgba(99, 102, 241, 0.4);
-        --glass: rgba(255, 255, 255, 0.08);
-        --glass-border: rgba(255, 255, 255, 0.1);
-        --text-main: #ffffff;
-        --text-muted: rgba(255, 255, 255, 0.6);
-    }
-
-    body {
-        background: #05070a; /* Ultra dark deep space */
-        font-family: 'Outfit', sans-serif;
-        min-height: 100vh;
-        overflow-x: hidden;
-        margin: 0;
-        color: var(--text-main);
-    }
-
-    /* ── Animated CSS Background ── */
-    .bg-mesh {
-        position: fixed;
-        inset: 0;
-        z-index: -1;
-        background: radial-gradient(circle at 50% 50%, #0a0c14 0%, #05070a 100%);
-    }
-    .aurora-blob {
-        position: absolute;
-        width: 80vw;
-        height: 80vh;
-        background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
-        filter: blur(100px);
-        opacity: 0.3;
-        animation: auroraFloat 20s infinite alternate ease-in-out;
-    }
-    .blob-1 { top: -20%; left: -20%; background: radial-gradient(circle, #6366f1 0%, transparent 70%); }
-    .blob-2 { bottom: -20%; right: -20%; background: radial-gradient(circle, #818cf8 0%, transparent 70%); animation-delay: -10s; }
-
-    @keyframes auroraFloat {
-        0% { transform: translate(0,0) rotate(0deg); }
-        100% { transform: translate(100px, 50px) rotate(30deg); }
-    }
-
-    /* Override base container styles for landing page */
-    .container {
-        max-width: 580px !important;
-        padding: 0 16px !important;
-        margin-top: 10px !important;
-    }
-
-    .landing-container {
-        max-width: 100%;
-        margin: 0 auto;
-        padding: 60px 0;
-        text-align: center;
-    }
-
-    /* ── Hero Section ── */
-    .hero-section {
-        margin-bottom: 100px;
-        perspective: 1000px;
-    }
-
-    .logo-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 6px 18px;
-        background: rgba(255, 255, 255, 0.05);
-        color: #818cf8;
-        border-radius: 100px;
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.15em;
-        margin-bottom: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        text-transform: uppercase;
-    }
-
-    .tagline-container {
-        margin-bottom: 24px;
-        font-family: 'Outfit', sans-serif;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        font-size: 14px;
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-    }
-
-    .tagline-s { color: #6366f1; text-shadow: 0 0 10px rgba(99, 102, 241, 0.5); }
-    .tagline-word { 
-        color: white; 
-        opacity: 0;
-        animation: taglineReveal 0.6s forwards;
-    }
-
-    @keyframes taglineReveal {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .tagline-1 { animation-delay: 0.2s; }
-    .tagline-2 { animation-delay: 0.4s; }
-    .tagline-3 { animation-delay: 0.6s; }
-
-    .hero-title {
-        font-size: clamp(36px, 8vw, 60px);
-        font-weight: 800;
-        line-height: 1.0;
-        margin-bottom: 24px;
-        letter-spacing: -0.04em;
-    }
-
-    .hero-title span {
-        background: linear-gradient(to right, #ffffff, #6366f1);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    .hero-subtitle {
-        font-size: 14px;
-        color: var(--text-muted);
-        max-width: 540px;
-        margin: 0 auto 20px;
-        line-height: 1.6;
-    }
-
-    /* ── 3D Reveal Cards ── */
-    .feature-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 30px;
-        margin-bottom: 120px;
-    }
-
-    .feature-card {
-        background: var(--glass);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        padding: 40px 30px;
-        border-radius: 32px;
-        border: 1px solid var(--glass-border);
-        text-align: left;
-        transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1), background 0.3s;
-        opacity: 0;
-        transform: translateY(50px) rotateX(15deg);
-    }
-
-    .feature-card.revealed {
-        opacity: 1;
-        transform: translateY(0) rotateX(0deg);
-    }
-
-    .feature-card:hover {
-        background: rgba(255, 255, 255, 0.12);
-        border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .feature-icon {
-        width: 50px; height: 50px;
-        background: #6366f1;
-        border-radius: 16px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 20px; color: white;
-        margin-bottom: 24px;
-        box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
-    }
-
-    .feature-card h3 { font-size: 20px; margin-bottom: 12px; font-weight: 700; }
-    .feature-card p { font-size: 15px; color: var(--text-muted); line-height: 1.6; }
-
-    /* ── Premium Login Box ── */
-    .login-box {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(24px) saturate(180%);
-        -webkit-backdrop-filter: blur(24px) saturate(180%);
-        padding: 50px;
-        border-radius: 40px;
-        max-width: 100%;
-        margin: 0 auto;
-        color: white;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 40px 100px rgba(0,0,0,0.5);
-        transform: translateY(50px);
-        opacity: 0;
-        transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-    }
-    .login-box.revealed { opacity: 1; transform: translateY(0); }
-
-    .big-promo-btn {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        background: rgba(99, 102, 241, 0.1);
-        border: 1px solid rgba(99, 102, 241, 0.2);
-        padding: 24px;
-        border-radius: 32px;
-        text-decoration: none;
-        margin: 20px auto 20px;
-        max-width: 100%;
-        transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-        backdrop-filter: blur(10px);
-    }
-    .big-promo-btn:hover {
-        background: rgba(99, 102, 241, 0.15);
-        border-color: rgba(99, 102, 241, 0.4);
-        transform: translateY(-5px);
-        box-shadow: 0 20px 40px rgba(99, 102, 241, 0.15);
-    }
-    .promo-icon {
-        width: 60px; height: 60px;
-        background: #6366f1;
-        border-radius: 20px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 24px; color: white;
-        box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
-    }
-    .promo-text { flex: 1; text-align: left; }
-    .promo-title { display: block; font-size: 18px; font-weight: 800; color: white; margin-bottom: 4px; }
-    .promo-subtitle { display: block; font-size: 13px; color: var(--text-muted); }
-    .promo-arrow { color: #6366f1; font-size: 18px; transition: transform 0.3s; }
-    .big-promo-btn:hover .promo-arrow { transform: translateX(5px); }
-
-    .btn-google {
-        width: 100%;
-        background: #0f172a;
-        color: white;
-        border: none;
-        padding: 18px;
-        font-size: 16px;
-        font-weight: 700;
-        border-radius: 18px;
-        display: flex; align-items: center; justify-content: center;
-        gap: 12px;
-        cursor: pointer;
-        transition: transform 0.2s, background 0.2s;
-    }
-
-    .btn-google:hover {
-        background: #1e293b;
-        transform: scale(1.02);
-    }
-
-    .btn-google:active { transform: scale(0.98); }
-
-    .trust-note {
-        margin-top: 30px;
-        font-size: 12px;
-        color: #64748b;
-        display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
-
-    /* ── Responsive ── */
-    @media (max-width: 600px) {
-        .container {
-            padding: 0 12px !important;
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#e0e3e5",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#006242",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "on-tertiary-fixed": "#002113",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "secondary-container": "#d5e4f8",
+                        "primary-fixed-dim": "#b4c5ff",
+                        "primary-container": "#2563eb",
+                        "surface-container-low": "#f2f4f6",
+                        "on-secondary-fixed": "#0e1d2b",
+                        "primary-fixed": "#dbe1ff",
+                        "secondary-fixed-dim": "#b9c8db",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-surface-variant": "#434655",
+                        "on-surface": "#191c1e",
+                        "inverse-primary": "#b4c5ff",
+                        "outline-variant": "#c3c6d7",
+                        "on-tertiary-container": "#bdffdb",
+                        "surface-container-high": "#e6e8ea",
+                        "secondary": "#516070",
+                        "surface-dim": "#d8dadc",
+                        "secondary-fixed": "#d5e4f8",
+                        "outline": "#737686",
+                        "surface-bright": "#f7f9fb",
+                        "surface": "#f7f9fb",
+                        "inverse-surface": "#2d3133",
+                        "surface-container": "#eceef0",
+                        "on-primary-fixed": "#00174b",
+                        "error": "#ba1a1a",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#6ffbbe",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#3a4858",
+                        "on-primary-container": "#eeefff",
+                        "on-secondary-container": "#576676",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "background": "#f7f9fb",
+                        "primary": "#004ac6",
+                        "on-error-container": "#93000a",
+                        "surface-tint": "#0053db",
+                        "on-background": "#191c1e",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#003ea8",
+                        "tertiary-container": "#007d55",
+                        "inverse-on-surface": "#eff1f3"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "card-padding": "24px",
+                        "section-gap": "40px",
+                        "stack-gap": "20px",
+                        "gutter": "16px",
+                        "container-margin": "24px"
+                    },
+                    "fontFamily": {
+                        "label-bold": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Plus Jakarta Sans"],
+                        "headline-lg-mobile": ["Plus Jakarta Sans"],
+                        "title-md": ["Plus Jakarta Sans"],
+                        "body-sm": ["Plus Jakarta Sans"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                        "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+                    }
+                },
+            },
         }
-        .landing-container { padding: 30px 0; }
-        .hero-title { font-size: 36px; }
-        .login-box { padding: 32px 20px; border-radius: 30px; }
-    }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .hero-gradient {
+            background: radial-gradient(circle at 50% -20%, #dbe1ff 0%, #f7f9fb 60%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="bg-mesh">
-    <div class="aurora-blob blob-1"></div>
-    <div class="aurora-blob blob-2"></div>
+<body class="bg-background text-on-surface min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 flex items-center justify-between px-container-margin h-16">
+<div class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary tracking-tight">CampusPulse</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined p-2 text-on-surface-variant hover:bg-surface-container-high/50 transition-colors rounded-full active:scale-95 transition-transform duration-200 border-0 bg-none cursor-pointer">notifications</button>
+</div>
+</header>
+
+<main class="pt-24 pb-32 px-container-margin hero-gradient min-h-screen">
+<!-- Hero Section -->
+<section class="max-w-4xl mx-auto text-center mb-section-gap">
+<div class="inline-flex items-center px-4 py-1.5 rounded-full bg-primary-container/10 border border-primary-container/20 mb-6">
+<span class="font-label-bold text-label-bold text-primary uppercase tracking-widest">Exclusive Connection Hub</span>
+</div>
+<h1 class="font-display-lg text-display-lg md:text-6xl text-on-surface leading-tight mb-4">
+Socialise with <br/> <span class="text-primary">Your College Mates</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg mx-auto mb-10">
+SRM: Swipe, Relate, Match. The official exclusive space for meaningful campus interactions and genuine vibes.
+</p>
+
+<!-- Anonymous Confessions Teaser Card -->
+<div class="glass-card p-card-padding rounded-lg shadow-[0_30px_60px_-15px_rgba(37,99,235,0.08)] flex items-center justify-between mb-section-gap max-w-xl mx-auto text-left group cursor-pointer hover:shadow-xl transition-all duration-300">
+<div class="flex items-center gap-4">
+<div class="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-on-primary shadow-lg">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">masks</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-on-surface">Anonymous Confessions</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">See what's happening on campus anonymously</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary group-hover:translate-x-1 transition-transform">chevron_right</span>
+</div>
+</section>
+
+<!-- Main Content Area: Bento Layout -->
+<section class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-gutter">
+<!-- Join the Hub Card (Main Action) -->
+<div class="md:col-span-7 bg-surface-container-lowest p-8 rounded-lg border border-outline-variant/30 shadow-[0_4px_30px_rgba(37,99,235,0.04)] flex flex-col items-center justify-center text-center relative overflow-hidden group">
+<div class="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2 relative z-10">Join the Hub</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-8 max-w-xs relative z-10">Login to unlock SRM Match, campus updates, and exclusive student features.</p>
+<form method="POST" action="{% url 'login' %}" class="w-full max-w-sm relative z-10">
+{% csrf_token %}
+<div class="flex flex-col gap-4">
+<input type="email" name="email" placeholder="Your SRM email" class="w-full px-4 py-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface placeholder-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-body-sm" required>
+<input type="password" name="password" placeholder="Password" class="w-full px-4 py-3 rounded-lg border border-outline-variant/30 bg-surface-container-low text-on-surface placeholder-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-body-sm" required>
+<button type="submit" class="w-full bg-primary text-on-primary px-8 py-3 rounded-full font-label-bold text-label-bold hover:bg-primary/90 transition-colors active:scale-[0.98] border-0 cursor-pointer">
+Sign In
+</button>
+</div>
+</form>
+<div class="mt-8 flex flex-col items-center gap-4 relative z-10">
+<a href="{% url 'verify' %}" class="font-label-bold text-label-bold text-primary border border-primary/20 px-6 py-2 rounded-full hover:bg-primary/5 transition-colors no-underline">
+Sign Up Now
+</a>
+<div class="flex items-center gap-2 text-on-surface-variant/60">
+<span class="material-symbols-outlined text-[16px]">lock</span>
+<span class="text-[12px] font-medium">Secured with SRM Auth</span>
+</div>
+</div>
 </div>
 
-<div class="landing-container">
-    <div class="hero-section">
-        <div class="logo-badge">Exclusive Connection Hub</div>
-
-        <div class="tagline-container">
-            <span class="tagline-s">SRM:</span>
-            <span class="tagline-word tagline-1">Swipe,</span>
-            <span class="tagline-word tagline-2">Relate,</span>
-            <span class="tagline-word tagline-3">Match</span>
-        </div>
-        <h1 class="hero-title">Socialise with<br><span>Your College Mates</span></h1>
-
-        <!-- Big Prominent Confessions Button moved here -->
-        <a href="{% url 'confessions_feed' %}" class="big-promo-btn reveal">
-            <div class="promo-icon"><i class="fas fa-mask"></i></div>
-            <div class="promo-text">
-                <span class="promo-title">Anonymous Confessions</span>
-                <span class="promo-subtitle">See what's happening on campus anonymously</span>
-            </div>
-            <i class="fas fa-chevron-right promo-arrow"></i>
-        </a>
-
-        <div class="login-box reveal" style="margin-bottom: 40px;">
-            <div id="error-message" class="error-banner" style="display:none; color:red; margin-bottom:20px; font-weight:600;"></div>
-            
-            <h2 style="font-size: 26px; margin-bottom: 8px; font-weight: 800; color: white;">Join the Hub</h2>
-            <p style="font-size: 15px; color: rgba(255,255,255,0.6); margin-bottom: 30px;">Login to unlock SrmMatch and more features.</p>
-
-            <button class="btn-google" id="google-login-btn" style="background: white; color: #0f172a; margin-bottom: 20px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-                Sign in with Google
-            </button>
-
-            <div id="login-install-card" style="display: block; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; margin-top: 10px;">
-                <button onclick="triggerPwaInstall()" style="background: none; border: 1px solid rgba(255,255,255,0.1); color: #818cf8; padding: 12px 20px; border-radius: 14px; font-weight: 600; font-size: 13px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-arrow-down-to-line"></i> Install Match App
-                </button>
-                <p id="ios-install-hint" style="display: none; margin-top: 12px; font-size: 11px; color: rgba(255,255,255,0.5);">On iOS: Tap <i class="far fa-share-square"></i> then "Add to Home Screen"</p>
-            </div>
-
-            <p class="trust-note" style="color: rgba(255,255,255,0.4); margin-top: 30px;"><i class="fas fa-lock"></i> Secured with SRM Auth</p>
-        </div>
-    </div>
-
-    <div class="feature-grid">
-        <div class="feature-card reveal">
-            <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
-            <h3>Military Grade Verification</h3>
-            <p>Our biometric AI ensures every connection is authentic. Guaranteed 0% bots or fake profiles.</p>
-        </div>
-        <div class="feature-card reveal">
-            <div class="feature-icon"><i class="fas fa-bolt"></i></div>
-            <h3>Instant Vibe Match</h3>
-            <p>Real-time personality analysis through our unique fast-fire quiz system. Skip the small talk.</p>
-        </div>
-        <div class="feature-card reveal">
-            <div class="feature-icon"><i class="fas fa-eye-slash"></i></div>
-            <h3>Anonymous Hub</h3>
-            <p>Share your truest thoughts and campus confessions in a secure, anonymous environment.</p>
-        </div>
-    </div>
-    
-    <p style="margin-top: 80px; color: rgba(255, 255, 255, 0.2); font-size: 13px;">
-        © 2026 SRM Match. All rights reserved.
-    </p>
+<!-- Features Bento Column -->
+<div class="md:col-span-5 flex flex-col gap-gutter">
+<!-- Military Grade Verification -->
+<div class="bg-surface-container-lowest p-card-padding rounded-lg border border-outline-variant/30 shadow-[0_4px_30px_rgba(37,99,235,0.04)] border-l-4 border-l-primary group">
+<div class="w-10 h-10 rounded-xl bg-secondary-container flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+</div>
+<h4 class="font-title-md text-title-md text-on-surface mb-2">Military Grade Verification</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Our biometric AI ensures every connection is authentic. Guaranteed 0% bots or fake profiles.</p>
 </div>
 
-<!-- Scroll Reveal Script -->
-<script>
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: "0px 0px -50px 0px"
-    };
+<!-- Instant Vibe Match -->
+<div class="bg-surface-container-lowest p-card-padding rounded-lg border border-outline-variant/30 shadow-[0_4px_30px_rgba(37,99,235,0.04)] border-l-4 border-l-tertiary group">
+<div class="w-10 h-10 rounded-xl bg-tertiary-fixed flex items-center justify-center text-tertiary mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<h4 class="font-title-md text-title-md text-on-surface mb-2">Instant Vibe Match</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Real-time personality analysis through our unique fast-fire quiz system. Skip the small talk.</p>
+</div>
+</div>
+</section>
 
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('revealed');
-            }
-        });
-    }, observerOptions);
+<!-- Atmosphere Section -->
+<section class="mt-section-gap max-w-4xl mx-auto rounded-lg overflow-hidden h-64 relative">
+<img alt="Students Collaborating" class="w-full h-full object-cover grayscale-[20%] opacity-80" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQd8plbBbg70YPK9LW51PUpgdinRNHqvPT08YjfhyPaLZY4fEFHfHTx31nF_IpPEHUStFaKWAuvYw4IPJQwL1feZ0lhiH3hBM7HI3GaHTRgjyzKWkw7voroy3_SeXqwVWXHN87RATC0Du-qM_eH6HyXbPbPMxqwDdA9sief59gaPBVDnKp2zeYAn_YmwgxoKk-_jEXjQ94IXiAdPkbP9J4J85_a0BbyQ3fP5My08_jDQWetHhSdOVIPEotpXcXLqz2io74JLUoylc">
+<div class="absolute inset-0 bg-gradient-to-t from-primary/60 to-transparent"></div>
+<div class="absolute bottom-6 left-6 text-on-primary">
+<p class="font-headline-lg-mobile text-headline-lg-mobile">Join 5,000+ Students</p>
+<p class="font-body-sm text-body-sm opacity-90">Exclusive to the campus community.</p>
+</div>
+</section>
+</main>
 
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-</script>
-
-    <script>
-        document.getElementById('google-login-btn').addEventListener('click', () => {
-            if (typeof window.triggerGoogleLogin === 'function') {
-                window.triggerGoogleLogin();
-            } else {
-                console.error("triggerGoogleLogin not found");
-            }
-        });
-    </script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const installCard = document.getElementById('login-install-card');
-        
-        if (!isAppInstalled()) {
-            // Show the card. If it's PC/Android, the button calls triggerPwaInstall.
-            // If it's iOS, triggerPwaInstall shows the manual guide.
-            if (installCard) installCard.style.display = 'block';
-        }
-    });
-</script>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pt-3 pb-6 bg-surface/90 backdrop-blur-xl border-t border-outline-variant/20 shadow-[0_-4px_30px_rgba(37,99,235,0.04)] z-50 rounded-t-lg">
+<a class="flex flex-col items-center justify-center text-primary font-bold active:scale-90 transition-all duration-300 ease-out no-underline" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-bold text-label-bold mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 active:scale-90 transition-all duration-300 ease-out no-underline" href="#">
+<span class="material-symbols-outlined">hub</span>
+<span class="font-label-bold text-label-bold mt-1">Matches</span>
+</a>
+<div class="relative -top-6">
+<button class="w-14 h-14 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all border-0 cursor-pointer">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</div>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 active:scale-90 transition-all duration-300 ease-out no-underline" href="#">
+<span class="material-symbols-outlined">bed</span>
+<span class="font-label-bold text-label-bold mt-1">Rooms</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 active:scale-90 transition-all duration-300 ease-out no-underline" href="#">
+<span class="material-symbols-outlined">campaign</span>
+<span class="font-label-bold text-label-bold mt-1">Updates</span>
+</a>
+</nav>
+</body>
 {% endblock %}

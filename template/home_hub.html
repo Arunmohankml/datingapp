@@ -4,516 +4,258 @@
 {% block title %}Home | SRM Match{% endblock %}
 
 {% block head %}
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed-dim": "#b4c5ff",
+                    "background": "#f7f9fb",
+                    "on-background": "#191c1e",
+                    "on-tertiary-fixed": "#002113",
+                    "inverse-primary": "#b4c5ff",
+                    "on-tertiary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-primary-container": "#eeefff",
+                    "inverse-surface": "#2d3133",
+                    "on-tertiary-container": "#bdffdb",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-on-surface": "#eff1f3",
+                    "surface-container-low": "#f2f4f6",
+                    "surface": "#f7f9fb",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-secondary": "#ffffff",
+                    "outline-variant": "#c3c6d7",
+                    "primary": "#004ac6",
+                    "on-primary": "#ffffff",
+                    "on-secondary-fixed-variant": "#3a4858",
+                    "surface-dim": "#d8dadc",
+                    "on-error-container": "#93000a",
+                    "secondary-fixed": "#d5e4f8",
+                    "tertiary": "#006242",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "primary-container": "#2563eb",
+                    "secondary-fixed-dim": "#b9c8db",
+                    "surface-bright": "#f7f9fb",
+                    "secondary-container": "#d5e4f8",
+                    "surface-container": "#eceef0",
+                    "tertiary-container": "#007d55",
+                    "primary-fixed": "#dbe1ff",
+                    "on-secondary-fixed": "#0e1d2b",
+                    "on-secondary-container": "#576676",
+                    "on-surface-variant": "#434655",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "error": "#ba1a1a",
+                    "surface-tint": "#0053db",
+                    "tertiary-fixed": "#6ffbbe",
+                    "surface-variant": "#e0e3e5",
+                    "outline": "#737686",
+                    "on-error": "#ffffff",
+                    "on-surface": "#191c1e",
+                    "surface-container-high": "#e6e8ea",
+                    "on-primary-fixed": "#00174b",
+                    "secondary": "#516070"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-gap": "20px",
+                    "card-padding": "24px",
+                    "container-margin": "24px",
+                    "gutter": "16px",
+                    "section-gap": "40px"
+            },
+            "fontFamily": {
+                    "body-sm": ["Plus Jakarta Sans"],
+                    "label-bold": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "title-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Outfit:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap');
-
-    /* Force a gorgeous light screen blue background for the entire page */
-    body {
-        background: #f0f6ff !important;
-    }
-
-    .top-nav-bar {
-        position: fixed;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100%;
-        max-width: 500px;
-        z-index: 1000;
-        background: #ffffff; /* pure bright white */
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-bottom: 1px solid rgba(59, 130, 246, 0.08);
-        padding: 13px 18px; /* Taller padding for a premium, solid presence */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.04);
-        box-sizing: border-box;
-    }
-
-    .nav-brand {
-        font-family: 'Outfit', 'Montserrat', 'Inter', sans-serif;
-        font-size: 21px; /* Slightly larger text size */
-        font-weight: 900;
-        letter-spacing: -0.8px;
-        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); /* solid blue premium gradient */
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-transform: uppercase;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-
-    .brand-hub-badge {
-        font-family: 'Inter', sans-serif;
-        font-size: 9px; /* Slightly larger badge text */
-        font-weight: 850;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        color: #3b82f6;
-        background: rgba(59, 130, 246, 0.07);
-        border: 1px solid rgba(59, 130, 246, 0.12);
-        padding: 2px 5px;
-        border-radius: 5px;
-        vertical-align: middle;
-        text-fill-color: initial;
-        -webkit-text-fill-color: initial;
-    }
-
-    .hub-container {
-        position: relative;
-        padding: 6px 8px;
-        max-width: 500px;
-        margin: 12px auto 0; /* Reduced from 38px to bring the content grid closer and eliminate empty gap */
-        padding-bottom: 80px;
-        box-sizing: border-box;
-    }
-
-    /* Soft floating blue auras */
-    .mesh-glow {
-        position: absolute;
-        border-radius: 50%;
-        filter: blur(50px);
-        z-index: -1;
-        pointer-events: none;
-        opacity: 0.45;
-    }
-    .mesh-glow-1 {
-        top: 2%;
-        left: -10%;
-        width: 180px;
-        height: 180px;
-        background: radial-gradient(circle, rgba(37, 99, 235, 0.22) 0%, rgba(255,255,255,0) 70%);
-    }
-    .mesh-glow-2 {
-        top: 40%;
-        right: -10%;
-        width: 200px;
-        height: 200px;
-        background: radial-gradient(circle, rgba(79, 70, 229, 0.18) 0%, rgba(255,255,255,0) 70%);
-    }
-
-    /* 2-Column Grid Layout with enhanced spacing */
-    .hub-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        margin-bottom: 16px;
-    }
-
-    .hub-card {
-        position: relative;
-        background: #ffffff;
-        border-radius: 18px;
-        padding: 24px 14px 20px;
-        text-decoration: none;
-        border: 1px solid rgba(59, 130, 246, 0.08); /* light blue subtle borders */
-        box-shadow: 0 2px 12px rgba(37, 99, 235, 0.01);
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        box-sizing: border-box;
-    }
-    
-    .hub-card:hover {
-        transform: translateY(-2px);
-        border-color: rgba(37, 99, 235, 0.2);
-        box-shadow: 0 6px 18px rgba(37, 99, 235, 0.025);
-    }
-    
-    .hub-card.match:hover {
-        border-color: rgba(79, 70, 229, 0.2);
-    }
-    
-    .hub-card:active {
-        transform: scale(0.98);
-    }
-
-    .hub-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        margin-bottom: 12px;
-        transition: all 0.3s ease;
-    }
-    
-    .hub-card.match .hub-icon {
-        background: #e0e7ff;
-        color: #4f46e5;
-    }
-    
-    .hub-card.room .hub-icon {
-        background: #e0f2fe;
-        color: #0284c7;
-    }
-
-    .hub-card h2 {
-        font-family: 'Outfit', 'Inter', sans-serif;
-        font-size: 16px;
-        font-weight: 800;
-        color: #0f172a;
-        margin: 0 0 6px;
-        letter-spacing: -0.3px;
-    }
-    
-    .hub-card p {
-        font-family: 'Inter', sans-serif;
-        font-size: 11px;
-        color: #64748b;
-        margin: 0 0 12px;
-        line-height: 1.4;
-        font-weight: 500;
-        height: 42px;
-        overflow: hidden;
-    }
-
-    .hub-action-btn {
-        margin-top: auto;
-        padding: 6px 14px;
-        border-radius: 12px;
-        font-family: 'Inter', sans-serif;
-        font-size: 10px;
-        font-weight: 750;
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
-        transition: all 0.2s ease;
-    }
-    
-    .hub-card.match .hub-action-btn {
-        background: #e0e7ff;
-        color: #4f46e5;
-    }
-    
-    .hub-card.room .hub-action-btn {
-        background: #e0f2fe;
-        color: #0284c7;
-    }
-    
-    .hub-card.match:hover .hub-action-btn {
-        background: #4f46e5;
-        color: #ffffff;
-    }
-    
-    .hub-card.room:hover .hub-action-btn {
-        background: #0284c7;
-        color: #ffffff;
-    }
-
-    /* Modern Blue-Themed Accent Sections */
-    .hub-section {
-        position: relative;
-        background: #ffffff;
-        border-radius: 20px;
-        padding: 16px 16px;
-        margin-bottom: 16px;
-        border: 1px solid rgba(59, 130, 246, 0.08); /* light blue border */
-        box-shadow: 0 2px 14px rgba(37, 99, 235, 0.01);
-        box-sizing: border-box;
-    }
-    
-    .hub-section h3 {
-        font-family: 'Outfit', 'Inter', sans-serif;
-        font-size: 13.5px;
-        font-weight: 800;
-        color: #0f172a;
-        margin: 0 0 10px;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        letter-spacing: -0.2px;
-    }
-
-    /* Red accent left-border for confessions, blue accent left-border for updates */
-    .hub-section.confession-section {
-        border-left: 3px solid #4f46e5;
-        background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);
-    }
-    
-    .hub-section.updates-section {
-        border-left: 3px solid #3b82f6; /* premium blue accent left line */
-        background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%); /* blue tinted background gradient */
-    }
-
-    /* Modern Clickable Speech Confession Card */
-    a.top-confession-link {
-        display: block;
-        text-decoration: none;
-        outline: none;
-    }
-
-    .top-confession {
-        position: relative;
-        background: rgba(238, 242, 255, 0.45); /* soft periwinkle-blue quote card background tint */
-        border-radius: 14px;
-        padding: 10px 12px 6px;
-        border: 1px solid rgba(79, 70, 229, 0.06);
-        overflow: hidden;
-        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    
-    a.top-confession-link:hover .top-confession {
-        transform: translateY(-1px);
-        background: rgba(238, 242, 255, 0.75);
-        border-color: rgba(79, 70, 229, 0.15);
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.02);
-    }
-    
-    a.top-confession-link:active .top-confession {
-        transform: scale(0.985);
-    }
-    
-    .confession-body-wrapper {
-        max-height: 40px;
-        overflow: hidden;
-        position: relative;
-    }
-    
-    .confession-body-wrapper p {
-        font-family: 'Inter', sans-serif;
-        font-size: 11.5px;
-        color: #334155;
-        line-height: 1.4;
-        margin: 0;
-        font-weight: 550;
-        font-style: italic;
-    }
-    
-    /* Static fade overlay inside quotes */
-    .fade-overlay {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 20px;
-        background: linear-gradient(to bottom, rgba(238, 242, 255, 0) 0%, rgba(238, 242, 255, 1) 100%);
-        pointer-events: none;
-        z-index: 2;
-    }
-    
-    .top-confession .meta {
-        position: relative;
-        z-index: 2;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        margin-top: 8px;
-        padding-top: 6px;
-        border-top: 1px solid rgba(79, 70, 229, 0.15);
-    }
- 
-    .meta-pill {
-        background: #ffffff;
-        border: 1px solid rgba(59, 130, 246, 0.12); /* blue border for badges */
-        padding: 2px 6px;
-        border-radius: 6px;
-        font-size: 9.5px;
-        font-weight: 700;
-        display: inline-flex;
-        align-items: center;
-        gap: 3px;
-        color: #3b82f6; /* blue text for meta labels */
-    }
-
-    .confession-section .meta-pill {
-        color: #4f46e5;
-        border-color: rgba(79, 70, 229, 0.15);
-    }
-
-    /* Campus Updates list item with soft blue theme */
-    .update-item {
-        display: flex;
-        gap: 8px;
-        padding: 8px 10px;
-        border-radius: 14px;
-        background: rgba(239, 246, 255, 0.45); /* light blue updates card */
-        border: 1px solid rgba(59, 130, 246, 0.06);
-        align-items: center;
-    }
-    
-    .update-icon {
-        width: 28px;
-        height: 28px;
-        border-radius: 8px;
-        background: #dbeafe; /* gorgeous sky blue megaphone background */
-        color: #2563eb; /* royal blue icon color */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        font-size: 11px;
-    }
-    
-    .update-text p {
-        margin: 0 0 1px;
-        font-family: 'Inter', sans-serif;
-        font-size: 11.5px;
-        color: #0f172a;
-        font-weight: 700;
-        line-height: 1.25;
-    }
-    
-    .update-text span {
-        font-family: 'Inter', sans-serif;
-        font-size: 9px;
-        color: #2563eb; /* blue dates label */
-        font-weight: 650;
-    }
-
-    /* Campus Pulse compact horizontal capsule with soft blue glass */
-    .pulse-widget {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(219, 234, 254, 0.7) 100%); /* blue frosted glass background */
-        border: 1px solid rgba(59, 130, 246, 0.15);
-        border-radius: 14px;
-        padding: 12px 16px;
-        margin-top: 12px;
-        margin-bottom: 12px;
-        box-shadow: 0 1px 10px rgba(59, 130, 246, 0.01);
-        box-sizing: border-box;
-    }
-    
-    .pulse-left {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
-    
-    .pulse-dot {
-        width: 5px;
-        height: 5px;
-        background-color: #22c55e;
-        border-radius: 50%;
-        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
-        animation: pulse-ring 2s infinite cubic-bezier(0.66, 0, 0, 1);
-    }
-    
-    @keyframes pulse-ring {
-        0% {
-            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
-        70% {
-            box-shadow: 0 0 0 5px rgba(34, 197, 94, 0);
+        .soft-elevation {
+            box-shadow: 0 4px 30px rgba(37, 99, 235, 0.04);
         }
-        100% {
-            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
-    }
-    
-    .pulse-left span {
-        font-family: 'Inter', sans-serif;
-        font-size: 9.5px;
-        font-weight: 850;
-        color: #16a34a;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    
-    .pulse-right {
-        font-family: 'Outfit', 'Inter', sans-serif;
-        font-size: 11px;
-        font-weight: 800;
-        color: #0f172a;
-    }
-    
-    .pulse-right span {
-        color: #2563eb; /* royal blue counter color */
-    }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="top-nav-bar">
-    <span class="nav-brand">
-        SRM Match
-        <span class="brand-hub-badge">HUB</span>
-    </span>
+<body class="bg-background text-on-surface font-body-lg antialiased min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 flex items-center justify-between px-container-margin h-16">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden active:scale-95 transition-transform duration-200">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="User Profile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmota2Z67xU_Du2nlo5Vg2LlTGencGWxr8S4Tm0XaU1PIy9dx8PJiafRMmv38l1cVT_6a20rivlTGpo9RUX2AHC8yCsm3jQZXQXBkPuNlLy_TnTj4f-heunILuXjAZMW5dRtAjszn87HHVWMoagO09J5Ja_dpDtmctT6VJBHtabM2_L5Ww4fR-E1DW4QEILzQj90QHncBgM27tnDvIr8QcIs_cb84bfe4sj-_HWzYcgjc4NDK31qrhr0nkmW61RNioaej_QRl1j2E">
 </div>
-
-<div class="hub-container">
-    <!-- Soft backdrop blue glows -->
-    <div class="mesh-glow mesh-glow-1"></div>
-    <div class="mesh-glow mesh-glow-2"></div>
-
-    <!-- 2-Column Grid Layout with compressed margins/padding -->
-    <div class="hub-grid">
-        <a href="{% url 'match_feed' %}" class="hub-card match">
-            <div class="hub-icon"><i class="fas fa-heart"></i></div>
-            <h2>Match</h2>
-            <p>Find friends, connect and match with your campus mates.</p>
-            <span class="hub-action-btn">Enter Match <i class="fas fa-arrow-right" style="font-size: 7px;"></i></span>
-        </a>
-
-        <a href="{% url 'roomfinder_feed' %}" class="hub-card room">
-            <div class="hub-icon"><i class="fas fa-home"></i></div>
-            <h2>Roomie</h2>
-            <p>Find verified roommates and premium rooms near campus.</p>
-            <span class="hub-action-btn">Find Rooms <i class="fas fa-arrow-right" style="font-size: 7px;"></i></span>
-        </a>
-    </div>
-
-    <!-- Latest Confession Section (Clickable block card) -->
-    <div class="hub-section confession-section">
-        <h3><i class="fas fa-fire" style="color: #4f46e5;"></i> Latest Confession</h3>
-        {% if latest_confession %}
-        <a href="{% url 'confessions_feed' %}" class="top-confession-link">
-            <div class="top-confession">
-                <div class="confession-body-wrapper">
-                    <p>"{{ latest_confession.content }}"</p>
-                    <div class="fade-overlay"></div>
-                </div>
-                <div class="meta">
-                    <span class="meta-pill"><i class="fas fa-heart" style="color:#4f46e5;"></i> {{ latest_confession.likes_count }}</span>
-                    <span class="meta-pill"><i class="fas fa-comment" style="color:#2563eb;"></i> {{ latest_confession.comments.count }}</span>
-                </div>
-            </div>
-        </a>
-        {% else %}
-        <p style="color: #64748b; font-size: 11.5px; margin: 0; font-family: 'Inter', sans-serif;">No confessions yet. Be the first to express yourself!</p>
-        {% endif %}
-    </div>
-
-    <!-- Updates Section -->
-    <div class="hub-section updates-section">
-        <h3><i class="fas fa-bell" style="color: #2563eb;"></i> Updates</h3>
-        {% if latest_update %}
-        <div class="update-item">
-            <div class="update-icon"><i class="fas fa-bullhorn"></i></div>
-            <div class="update-text">
-                <p>{{ latest_update.text|truncatechars:50 }}</p>
-                <span>{{ latest_update.created_at|date:"M d, Y" }}</span>
-            </div>
-        </div>
-        {% else %}
-        <div class="update-item" style="border: 1px dashed rgba(59, 130, 246, 0.15); background: rgba(239, 246, 255, 0.25); padding: 6px 10px;">
-            <div class="update-icon" style="background: #eff6ff; color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.08); width: 24px; height: 24px; font-size: 10px;"><i class="fas fa-check"></i></div>
-            <div class="update-text">
-                <p style="font-size: 11px;">All caught up!</p>
-                <span style="font-size: 8.5px; color: #2563eb;">No new updates at the moment.</span>
-            </div>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Compact horizontal Campus Pulse widget -->
-    <div class="pulse-widget">
-        <div class="pulse-left">
-            <div class="pulse-dot"></div>
-            <span>Campus Pulse</span>
-        </div>
-        <div class="pulse-right">
-            <span>{{ total_users }}</span> campus members
-        </div>
-    </div>
 </div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary tracking-tight">CampusPulse</h1>
+<button class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-surface-container-high/50 transition-colors active:scale-95">
+<span class="material-symbols-outlined text-primary" data-icon="notifications">notifications</span>
+</button>
+</header>
+
+<!-- Main Content -->
+<main class="pt-24 pb-32 px-container-margin max-w-2xl mx-auto space-y-section-gap">
+<!-- Quick Access Feature Cards -->
+<section class="grid grid-cols-2 gap-stack-gap">
+<!-- Match Card -->
+<a href="{% url 'match_feed' %}" class="bg-surface-container-lowest rounded-lg p-card-padding soft-elevation border border-outline-variant/20 flex flex-col items-center text-center group hover:scale-[1.02] transition-all duration-300 no-underline">
+<div class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-primary text-3xl" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+<h2 class="font-title-md text-title-md text-on-surface mb-2">Match</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4">Find friends and connect with mates.</p>
+<button class="bg-primary-fixed-dim/30 text-primary px-4 py-2 rounded-full font-label-bold text-label-bold active:scale-95 transition-transform border-0 cursor-pointer">
+                    Enter Match →
+                </button>
+</a>
+
+<!-- Roomie Card -->
+<a href="{% url 'roomfinder_feed' %}" class="bg-surface-container-lowest rounded-lg p-card-padding soft-elevation border border-outline-variant/20 flex flex-col items-center text-center group hover:scale-[1.02] transition-all duration-300 no-underline">
+<div class="w-14 h-14 rounded-2xl bg-tertiary/10 flex items-center justify-center mb-4 group-hover:bg-tertiary/20 transition-colors">
+<span class="material-symbols-outlined text-tertiary text-3xl" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+</div>
+<h2 class="font-title-md text-title-md text-on-surface mb-2">Roomie</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-4">Verified roommates and premium rooms.</p>
+<button class="bg-tertiary/10 text-tertiary px-4 py-2 rounded-full font-label-bold text-label-bold active:scale-95 transition-transform border-0 cursor-pointer">
+                    Find Rooms →
+                </button>
+</a>
+</section>
+
+<!-- Latest Confession Section -->
+<section class="space-y-4">
+<div class="flex items-center gap-2 px-2">
+<span class="material-symbols-outlined text-primary" data-icon="auto_awesome">auto_awesome</span>
+<h3 class="font-title-md text-title-md text-on-surface">Latest Confession</h3>
+</div>
+<a href="{% url 'confessions_feed' %}" class="bg-surface-container-lowest rounded-lg p-card-padding soft-elevation border border-outline-variant/20 border-l-4 border-l-primary relative overflow-hidden no-underline block">
+<div class="relative z-10">
+{% if latest_confession %}
+<p class="font-body-lg text-body-lg italic text-on-surface-variant leading-relaxed mb-6">
+                        "{{ latest_confession.content }}"
+                    </p>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-primary/5 rounded-full text-primary hover:bg-primary/10 transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-label-bold text-label-bold">{{ latest_confession.likes_count }}</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-high/50 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-sm" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-bold text-label-bold">{{ latest_confession.comments.count }}</span>
+</div>
+<span class="ml-auto font-label-bold text-label-bold text-on-surface-variant/40">recently</span>
+</div>
+{% else %}
+<p class="font-body-lg text-body-lg text-on-surface-variant">No confessions yet. Be the first to express yourself!</p>
+{% endif %}
+</div>
+</a>
+</section>
+
+<!-- Updates Section -->
+<section class="space-y-4">
+<div class="flex items-center gap-2 px-2">
+<span class="material-symbols-outlined text-primary" data-icon="campaign">campaign</span>
+<h3 class="font-title-md text-title-md text-on-surface">Campus Updates</h3>
+</div>
+<div class="space-y-stack-gap">
+{% if latest_update %}
+<!-- Update Item -->
+<div class="bg-surface-container-low rounded-lg p-4 border border-outline-variant/20 flex items-start gap-4 hover:bg-surface-container transition-colors">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary" data-icon="celebration">celebration</span>
+</div>
+<div>
+<h4 class="font-label-bold text-body-lg text-on-surface">Campus Update</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">{{ latest_update.text|truncatechars:50 }}</p>
+<span class="font-label-bold text-label-bold text-primary mt-2 block">{{ latest_update.created_at|date:"M d, Y" }}</span>
+</div>
+</div>
+{% else %}
+<!-- Empty State -->
+<div class="bg-surface-container-low rounded-lg p-4 border border-outline-variant/20 flex items-start gap-4">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary" data-icon="done">done</span>
+</div>
+<div>
+<h4 class="font-label-bold text-body-lg text-on-surface">All caught up!</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant">No new updates at the moment.</p>
+</div>
+</div>
+{% endif %}
+</div>
+</section>
+
+<!-- Campus Pulse Badge -->
+<div class="flex justify-center pt-4">
+<div class="inline-flex items-center gap-2 px-6 py-3 bg-primary-container text-on-primary-container rounded-full soft-elevation animate-pulse">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed shadow-[0_0_8px_rgba(78,222,163,0.8)]"></span>
+<span class="font-label-bold text-label-bold tracking-widest uppercase">CAMPUS PULSE</span>
+<span class="w-px h-4 bg-on-primary-container/20 mx-1"></span>
+<span class="font-label-bold text-label-bold">{{ total_users }} members active</span>
+</div>
+</div>
+</main>
+
+<!-- FAB for quick action -->
+<a href="{% url 'confessions_feed' %}" class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center z-40 hover:scale-110 active:scale-95 transition-all duration-300 group no-underline flex justify-center items-center">
+<span class="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform duration-300" data-icon="add">add</span>
+</a>
+
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full bg-surface/90 backdrop-blur-xl border-t border-outline-variant/20 rounded-t-lg z-50 flex justify-around items-center px-4 pt-3 pb-6 shadow-[0_-4px_30px_rgba(37,99,235,0.04)]">
+<a class="flex flex-col items-center justify-center text-primary font-bold active:scale-90 transition-all duration-300 ease-out no-underline" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-bold text-label-bold mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 active:scale-90 transition-all duration-300 ease-out no-underline" href="{% url 'match_feed' %}">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span class="font-label-bold text-label-bold mt-1">Matches</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 active:scale-90 transition-all duration-300 ease-out no-underline" href="{% url 'confessions_feed' %}">
+<span class="material-symbols-outlined text-3xl" data-icon="add_circle">add_circle</span>
+<span class="font-label-bold text-label-bold mt-1">Post</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 active:scale-90 transition-all duration-300 ease-out no-underline" href="{% url 'roomfinder_feed' %}">
+<span class="material-symbols-outlined" data-icon="bed">bed</span>
+<span class="font-label-bold text-label-bold mt-1">Rooms</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 active:scale-90 transition-all duration-300 ease-out no-underline" href="#">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span class="font-label-bold text-label-bold mt-1">Updates</span>
+</a>
+</nav>
+</body>
 {% endblock %}

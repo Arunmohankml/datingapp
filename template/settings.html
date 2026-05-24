@@ -1,28 +1,112 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Settings | SRM Match{% endblock %}
 
 {% block head %}
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+                  "surface-variant": "#e0e3e5",
+                  "error-container": "#ffdad6",
+                  "tertiary": "#006242",
+                  "on-tertiary-fixed-variant": "#005236",
+                  "on-tertiary-fixed": "#002113",
+                  "tertiary-fixed-dim": "#4edea3",
+                  "secondary-container": "#d5e4f8",
+                  "primary-fixed-dim": "#b4c5ff",
+                  "primary-container": "#2563eb",
+                  "surface-container-low": "#f2f4f6",
+                  "on-secondary-fixed": "#0e1d2b",
+                  "primary-fixed": "#dbe1ff",
+                  "secondary-fixed-dim": "#b9c8db",
+                  "surface-container-highest": "#e0e3e5",
+                  "on-surface-variant": "#434655",
+                  "on-surface": "#191c1e",
+                  "inverse-primary": "#b4c5ff",
+                  "outline-variant": "#c3c6d7",
+                  "on-tertiary-container": "#bdffdb",
+                  "surface-container-high": "#e6e8ea",
+                  "secondary": "#516070",
+                  "surface-dim": "#d8dadc",
+                  "secondary-fixed": "#d5e4f8",
+                  "outline": "#737686",
+                  "surface-bright": "#f7f9fb",
+                  "surface": "#f7f9fb",
+                  "inverse-surface": "#2d3133",
+                  "surface-container": "#eceef0",
+                  "on-primary-fixed": "#00174b",
+                  "error": "#ba1a1a",
+                  "on-primary": "#ffffff",
+                  "tertiary-fixed": "#6ffbbe",
+                  "on-tertiary": "#ffffff",
+                  "on-secondary-fixed-variant": "#3a4858",
+                  "on-primary-container": "#eeefff",
+                  "on-secondary-container": "#576676",
+                  "on-secondary": "#ffffff",
+                  "on-error": "#ffffff",
+                  "background": "#f7f9fb",
+                  "primary": "#004ac6",
+                  "on-error-container": "#93000a",
+                  "surface-tint": "#0053db",
+                  "on-background": "#191c1e",
+                  "surface-container-lowest": "#ffffff",
+                  "on-primary-fixed-variant": "#003ea8",
+                  "tertiary-container": "#007d55",
+                  "inverse-on-surface": "#eff1f3"
+          },
+          "borderRadius": {
+                  "DEFAULT": "1rem",
+                  "lg": "2rem",
+                  "xl": "3rem",
+                  "full": "9999px"
+          },
+          "spacing": {
+                  "card-padding": "24px",
+                  "section-gap": "40px",
+                  "stack-gap": "20px",
+                  "gutter": "16px",
+                  "container-margin": "24px"
+          },
+          "fontFamily": {
+                  "label-bold": ["Plus Jakarta Sans"],
+                  "headline-lg": ["Plus Jakarta Sans"],
+                  "headline-lg-mobile": ["Plus Jakarta Sans"],
+                  "title-md": ["Plus Jakarta Sans"],
+                  "body-sm": ["Plus Jakarta Sans"],
+                  "display-lg": ["Plus Jakarta Sans"],
+                  "body-lg": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+                  "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                  "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                  "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                  "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                  "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                  "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                  "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+          }
+        },
+      },
+    }
+  </script>
 <style>
-    .card {
-        background: white;
-        border-radius: 24px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.03);
-        transition: transform 0.2s;
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
     }
-    .card:active {
-        transform: scale(0.98);
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
     }
-    .install-btn {
-        background: var(--primary);
-        color: white;
-        border: none;
-        padding: 10px 16px;
-        border-radius: 12px;
-        font-weight: 700;
-        font-size: 13px;
-        cursor: pointer;
-        transition: 0.2s;
+    .shadow-card {
+      box-shadow: 0 4px 30px rgba(37, 99, 235, 0.04);
     }
-    .install-btn:active { transform: scale(0.95); }
 
     /* Override base container so header sits flush at top */
     .container {
@@ -30,239 +114,180 @@
         margin-top: 0 !important;
         padding-bottom: 90px !important;
     }
-    /* Settings page header */
-    .s-topbar {
-        position: sticky;
-        top: 0;
-        z-index: 900;
-        background: #ffffff;
-        padding: 18px 20px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        border-bottom: 1px solid rgba(37, 99, 235, 0.1);
-        box-shadow: 0 2px 16px rgba(37, 99, 235, 0.08);
-        animation: fadeInDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-    }
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .s-topbar-title {
-        font-size: 21px;
-        font-weight: 900;
-        letter-spacing: -0.8px;
-        color: #1e3a8a;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .s-topbar-title i { color: #2563eb; font-size: 19px; }
-    .s-back-btn {
-        width: 34px; height: 34px;
-        border-radius: 10px;
-        background: rgba(37, 99, 235, 0.08);
-        color: #2563eb;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 14px;
-        text-decoration: none;
-        flex-shrink: 0;
-        transition: background 0.2s, transform 0.15s;
-        -webkit-tap-highlight-color: transparent;
-    }
-    .s-back-btn:active { background: rgba(37,99,235,0.18); transform: scale(0.92); }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="settings-container">
-    <!-- Settings Header -->
-    <div class="s-topbar">
-        <a href="{% url 'edit_profile' %}" class="s-back-btn" title="Back">
-            <i class="fas fa-chevron-left"></i>
-        </a>
-        <h2 class="s-topbar-title"><i class="fas fa-cog"></i> Settings</h2>
-    </div>
+<body class="bg-background text-on-surface min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 flex items-center justify-between px-container-margin h-16">
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-surface-container-high/50 active:scale-95 transition-all text-primary border-0 bg-none cursor-pointer" onclick="window.history.back()">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary tracking-tight">Settings</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-surface-container-high/50 active:scale-95 transition-all text-on-surface-variant border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined" data-icon="help_outline">help_outline</span>
+</button>
+</div>
+</header>
 
-    <div style="padding: 24px 20px 0;">
+<!-- Main Content Area -->
+<main class="pt-24 px-container-margin max-w-2xl mx-auto space-y-stack-gap">
+<!-- Hero Promo Card: Install SRM Match -->
+<section class="relative overflow-hidden bg-primary-container rounded-lg p-card-padding shadow-lg group">
+<!-- Decorative background element -->
+<div class="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-500"></div>
+<div class="flex items-center justify-between relative z-10">
+<div class="flex items-center gap-4">
+<div class="bg-white/20 p-3 rounded-2xl">
+<span class="material-symbols-outlined text-white text-[32px]" data-icon="smartphone">smartphone</span>
+</div>
+<div>
+<h2 class="font-title-md text-title-md text-on-primary-container">Install SRM Match</h2>
+<p class="font-body-sm text-body-sm text-on-primary-container/80">Get the full app experience</p>
+</div>
+</div>
+<button class="bg-white text-primary px-6 py-2 rounded-full font-label-bold text-label-bold hover:bg-surface-container-lowest transition-colors active:scale-95 border-0 cursor-pointer">
+Install
+</button>
+</div>
+</section>
 
-    <!-- Install App Card -->
-    <div id="install-app-card" class="card" style="padding: 20px; margin-bottom: 16px; display: none; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
-        <div style="display: flex; align-items: center; justify-content: space-between; color: white;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 40px; height: 40px; background: rgba(255, 255, 255, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px;">
-                    <i class="fas fa-mobile-alt"></i>
-                </div>
-                <div>
-                    <h4 style="margin: 0; font-size: 16px; color: white;">Install SRM Match</h4>
-                    <p style="margin: 4px 0 0; font-size: 12px; opacity: 0.8;">Get the full app experience</p>
-                </div>
-            </div>
-            <button onclick="triggerPwaInstall()" class="install-btn" style="background: white; color: var(--primary);">Install</button>
-        </div>
-    </div>
-
-    <!-- Notifications -->
-    <div class="card" style="padding: 20px; margin-bottom: 16px;">
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 40px; height: 40px; background: rgba(34, 197, 94, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #22c55e; font-size: 18px;">
-                    <i class="fas fa-bell"></i>
-                </div>
-                <div>
-                    <h4 style="margin: 0; font-size: 16px;">Push Notifications</h4>
-                    <p id="notif-status" style="margin: 4px 0 0; font-size: 13px; color: var(--text-muted);">Checking status...</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Request Permission Option -->
-    <div class="card" style="padding: 20px; margin-bottom: 16px;">
-        <button type="button" onclick="forceAskPushPermission()" style="width: 100%; background: none; border: none; padding: 0; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: var(--text-main);">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 40px; height: 40px; background: rgba(37, 99, 235, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #2563eb; font-size: 18px;">
-                    <i class="fas fa-key"></i>
-                </div>
-                <div>
-                    <h4 style="margin: 0; font-size: 16px;">Request Notification Permissions</h4>
-                    <p style="margin: 4px 0 0; font-size: 13px; color: var(--text-muted);">Force prompt to enable notification settings</p>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right" style="color: #cbd5e1;"></i>
-        </button>
-    </div>
-
-    <!-- Updates -->
-    <div class="card" style="padding: 20px; margin-bottom: 16px;">
-        <a href="{% url 'announcements' %}" style="display: flex; align-items: center; justify-content: space-between; text-decoration: none; color: var(--text-main);">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 40px; height: 40px; background: rgba(99, 102, 241, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 18px;">
-                    <i class="fas fa-bullhorn"></i>
-                </div>
-                <div>
-                    <h4 style="margin: 0; font-size: 16px;">Latest Updates</h4>
-                    <p style="margin: 4px 0 0; font-size: 13px; color: var(--text-muted);">See news and announcements</p>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right" style="color: #cbd5e1;"></i>
-        </a>
-    </div>
-
-    <!-- Policy / Terms -->
-    <div class="card" style="padding: 20px; margin-bottom: 16px;">
-        <button type="button" onclick="openPolicyModal()" style="width: 100%; background: none; border: none; padding: 0; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: var(--text-main);">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 40px; height: 40px; background: rgba(245, 158, 11, 0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #f59e0b; font-size: 18px;">
-                    <i class="fas fa-file-contract"></i>
-                </div>
-                <div>
-                    <h4 style="margin: 0; font-size: 16px;">Policy & Terms</h4>
-                    <p style="margin: 4px 0 0; font-size: 13px; color: var(--text-muted);">View community guidelines</p>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right" style="color: #cbd5e1;"></i>
-        </button>
-    </div>
-
-    <!-- Logout Form -->
-    <div class="card" style="padding: 20px; margin-bottom: 16px;">
-        <form id="logout-form" method="POST" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button type="button" onclick="handleLogout()" style="width: 100%; background: none; border: none; padding: 0; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: var(--text-main);">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <div style="width: 40px; height: 40px; background: #f1f5f9; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 18px;">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </div>
-                    <div>
-                        <h4 style="margin: 0; font-size: 16px;">Logout</h4>
-                        <p style="margin: 4px 0 0; font-size: 13px; color: var(--text-muted);">Sign out of your account</p>
-                    </div>
-                </div>
-                <i class="fas fa-chevron-right" style="color: #cbd5e1;"></i>
-            </button>
-        </form>
-    </div>
-
-    <!-- Delete Account -->
-    <div class="card" style="padding: 20px; margin-top: 40px; border: 1px solid #fecaca; background: #fff5f5;">
-        <button id="delete-account-btn" style="width: 100%; background: none; border: none; padding: 0; text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; color: #dc2626;">
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 40px; height: 40px; background: #fee2e2; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #dc2626; font-size: 18px;">
-                    <i class="fas fa-trash-alt"></i>
-                </div>
-                <div>
-                    <h4 style="margin: 0; font-size: 16px; font-weight: 700;">Delete Account</h4>
-                    <p style="margin: 4px 0 0; font-size: 13px; color: #ef4444;">Permanently remove your data</p>
-                </div>
-            </div>
-        </button>
-        <form id="delete-account-form" method="POST" action="{% url 'delete_account' %}" style="display: none;">
-            {% csrf_token %}
-        </form>
-    </div>
-
-    <!-- Policy Modal -->
-    <div id="policy-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; padding: 20px; align-items: center; justify-content: center;">
-        <div class="card" style="width: 100%; max-width: 500px; max-height: 80vh; overflow-y: auto; padding: 24px; position: relative;">
-            <button onclick="closePolicyModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer;"><i class="fas fa-times"></i></button>
-            <h3 style="margin: 0 0 16px; font-size: 20px; font-weight: 800; color: var(--text-main);">SRM Match Policy</h3>
-            <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 10px;">
-                <li>You must be 18 years or older to use this app.</li>
-                <li>You must use your own SRM email/account. Fake accounts or impersonation are not allowed.</li>
-                <li>Your profile photo, bio, confessions, and messages must not contain abuse, hate, threats, or harassment.</li>
-                <li>Face verification is used to reduce fake profiles and keep the app safer.</li>
-                <li>Your face verification image will be stored privately and will not be shown publicly on your profile.</li>
-                <li>Face verification images may be reviewed by admins only for verification, safety, or moderation purposes.</li>
-                <li>Anonymous confessions are hidden from the public, but admins may review them if there is abuse, spam, or reports.</li>
-                <li>Do not post real names, phone numbers, hostel/room details, private chats, or personal information of others.</li>
-                <li>Confessions containing names, abusive words, repeated spam, or sensitive content may be sent for admin approval or removed.</li>
-                <li>Users can report profiles, confessions, or messages that feel unsafe or inappropriate.</li>
-                <li>We may ban accounts, devices, fingerprints, or IP addresses if users spam, harass others, create fake profiles, or break rules.</li>
-                <li>Your data is used only to run the app, verify users, improve safety, and prevent misuse.</li>
-                <li>We do not sell your personal data.</li>
-                <li>You can request account/data deletion by contacting the admin.</li>
-                <li>By using this app, you agree to follow these rules and use the platform respectfully.</li>
-            </ul>
-        </div>
-    </div>
-    </div><!-- /inner content padding -->
+<!-- Settings List -->
+<div class="space-y-stack-gap">
+<!-- Push Notifications Toggle Card -->
+<div class="bg-surface-container-lowest rounded-lg p-card-padding shadow-card border border-outline-variant/10 flex items-center justify-between group cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-tertiary-fixed-dim/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary" data-icon="notifications" style="font-variation-settings: 'FILL' 1;">notifications</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md">Push Notifications</h3>
+<p class="font-body-sm text-body-sm text-tertiary font-semibold">Enabled</p>
+</div>
+</div>
+<div class="w-12 h-6 bg-primary-container rounded-full relative flex items-center px-1">
+<div class="w-4 h-4 bg-white rounded-full translate-x-6 transition-transform"></div>
+</div>
 </div>
 
+<!-- Request Permissions Card -->
+<div class="bg-surface-container-lowest rounded-lg p-card-padding shadow-card border border-outline-variant/10 flex items-center justify-between group cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-secondary-container/40 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="key">key</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md">Request Notification Permissions</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Force prompt to enable notification settings</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+
+<!-- Latest Updates Card -->
+<div class="bg-surface-container-lowest rounded-lg p-card-padding shadow-card border border-outline-variant/10 flex items-center justify-between group cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-secondary-container/40 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="campaign">campaign</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md">Latest Updates</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">See news and announcements</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+
+<!-- Policy & Terms Card -->
+<div class="bg-surface-container-lowest rounded-lg p-card-padding shadow-card border border-outline-variant/10 flex items-center justify-between group cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-secondary-container/40 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="description">description</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md">Policy & Terms</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">View community guidelines</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+
+<!-- Logout Card -->
+<form id="logout-form" method="POST" action="{% url 'logout' %}">
+{% csrf_token %}
+<div class="bg-surface-container-lowest rounded-lg p-card-padding shadow-card border border-outline-variant/10 flex items-center justify-between group cursor-pointer hover:bg-surface-container-low transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-surface-container-high flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="logout">logout</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md">Logout</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Sign out of your account</p>
+</div>
+</div>
+<button type="submit" style="border: none; background: none;" class="border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined text-outline group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</form>
+</div>
+
+<!-- Danger Zone Spacer -->
+<div class="pt-8">
+<!-- Delete Account Card -->
+<form id="delete-account-form" method="POST" action="{% url 'delete_account' %}">
+{% csrf_token %}
+<div class="bg-error-container/20 rounded-lg p-card-padding shadow-card border border-error/10 flex items-center justify-between group cursor-pointer hover:bg-error-container/30 transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-error" data-icon="delete" style="font-variation-settings: 'FILL' 1;">delete</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-error">Delete Account</h3>
+<p class="font-body-sm text-body-sm text-error/80">Permanently remove your data</p>
+</div>
+</div>
+<button type="submit" style="border: none; background: none;" class="border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined text-error" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</form>
+</div>
+
+<!-- App Version Info -->
+<div class="text-center pt-8 pb-12">
+<p class="font-label-bold text-label-bold text-on-surface-variant/40 uppercase tracking-widest">CampusPulse v2.4.0</p>
+</div>
+</main>
 
 <script>
-    function openPolicyModal() {
-        const modal = document.getElementById('policy-modal');
-        modal.style.display = 'flex';
-        modal.style.opacity = '0';
-        setTimeout(() => {
-            modal.style.transition = 'opacity 0.2s';
-            modal.style.opacity = '1';
-        }, 10);
-    }
-    
-    function closePolicyModal() {
-        const modal = document.getElementById('policy-modal');
-        modal.style.opacity = '0';
-        setTimeout(() => {
-            modal.style.display = 'none';
-        }, 200);
-    }
+document.querySelector('.w-12.h-6').parentElement.addEventListener('click', function() {
+  const dot = this.querySelector('.translate-x-6') || this.querySelector('.translate-x-1');
+  const bg = this.querySelector('.bg-primary-container') || this.querySelector('.bg-surface-variant');
+  const statusText = this.querySelector('p');
 
-    async function handleLogout() {
-        const confirmed = await customConfirm("Are you sure you want to logout?", "Logout", "Logout", "Stay");
-        if (confirmed) document.getElementById('logout-form').submit();
-    }
+  if (dot.classList.contains('translate-x-6')) {
+    dot.classList.replace('translate-x-6', 'translate-x-1');
+    dot.parentElement.classList.replace('bg-primary-container', 'bg-surface-variant');
+    statusText.textContent = 'Disabled';
+    statusText.classList.replace('text-tertiary', 'text-on-surface-variant');
+  } else {
+    dot.classList.replace('translate-x-1', 'translate-x-6');
+    dot.parentElement.classList.replace('bg-surface-variant', 'bg-primary-container');
+    statusText.textContent = 'Enabled';
+    statusText.classList.replace('text-on-surface-variant', 'text-tertiary');
+  }
+});
 
-
-
-    function forceAskPushPermission() {
-        if (window.showCustomNotificationPrompt) {
-            window.showCustomNotificationPrompt(true);
-        } else {
-            customAlert("Push notification system is loading. Please try again in a moment.", "System Loading");
-        }
+document.querySelectorAll('.cursor-pointer').forEach(card => {
+  card.addEventListener('mousedown', () => card.classList.add('scale-[0.98]'));
+  card.addEventListener('mouseup', () => card.classList.remove('scale-[0.98]'));
+  card.addEventListener('mouseleave', () => card.classList.remove('scale-[0.98]'));
+});
     }
 
     function updateNotifStatus() {
@@ -285,32 +310,6 @@
             statusEl.style.color = "#ef4444";
         }
     }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        updateNotifStatus();
-        window.addEventListener('notificationPermissionChanged', updateNotifStatus);
-
-        const deleteBtn = document.getElementById('delete-account-btn');
-        const deleteForm = document.getElementById('delete-account-form');
-        
-        if (deleteBtn) {
-            deleteBtn.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const confirmed = await customConfirm(
-                    "This action CANNOT be undone. All your matches, chats, and confessions will be lost forever.",
-                    "Delete Account?",
-                    "Permanently Delete",
-                    "Keep Account"
-                );
-                if (confirmed) deleteForm.submit();
-            });
-        }
-
-        // PWA Section Visibility
-        const installCard = document.getElementById('install-app-card');
-        if (!isAppInstalled()) {
-            if (installCard) installCard.style.display = 'block';
-        }
-    });
 </script>
+</body>
 {% endblock %}

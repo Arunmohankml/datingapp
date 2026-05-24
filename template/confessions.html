@@ -1,764 +1,322 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confessions | SRM Match{% endblock %}
 
 {% block head %}
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-fixed-dim": "#b4c5ff",
+                    "primary-container": "#2563eb",
+                    "tertiary-container": "#007d55",
+                    "outline-variant": "#c3c6d7",
+                    "surface-dim": "#d8dadc",
+                    "background": "#f7f9fb",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface": "#191c1e",
+                    "error": "#ba1a1a",
+                    "on-tertiary": "#ffffff",
+                    "surface-container": "#eceef0",
+                    "on-secondary": "#ffffff",
+                    "surface-bright": "#f7f9fb",
+                    "on-secondary-fixed": "#0e1d2b",
+                    "surface-variant": "#e0e3e5",
+                    "surface-container-high": "#e6e8ea",
+                    "surface": "#f7f9fb",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-tertiary-container": "#bdffdb",
+                    "on-primary-container": "#eeefff",
+                    "secondary-fixed": "#d5e4f8",
+                    "primary-fixed": "#dbe1ff",
+                    "tertiary-fixed": "#6ffbbe",
+                    "on-surface-variant": "#434655",
+                    "inverse-surface": "#2d3133",
+                    "inverse-on-surface": "#eff1f3",
+                    "on-background": "#191c1e",
+                    "surface-tint": "#0053db",
+                    "surface-container-highest": "#e0e3e5",
+                    "inverse-primary": "#b4c5ff",
+                    "on-primary-fixed-variant": "#003ea8",
+                    "on-primary-fixed": "#00174b",
+                    "secondary-fixed-dim": "#b9c8db",
+                    "primary": "#004ac6",
+                    "on-secondary-fixed-variant": "#3a4858",
+                    "on-error-container": "#93000a",
+                    "tertiary": "#006242",
+                    "outline": "#737686",
+                    "surface-container-low": "#f2f4f6",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "error-container": "#ffdad6",
+                    "secondary-container": "#d5e4f8",
+                    "on-tertiary-fixed": "#002113",
+                    "on-secondary-container": "#576676",
+                    "secondary": "#516070",
+                    "on-primary": "#ffffff",
+                    "on-error": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "stack-gap": "20px",
+                    "gutter": "16px",
+                    "card-padding": "24px",
+                    "section-gap": "40px",
+                    "container-margin": "24px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "title-md": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "label-bold": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-sm": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "label-bold": ["12px", {"lineHeight": "16px", "fontWeight": "700"}],
+                    "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
 <style>
-    /* ── Root Variables ── */
-    :root {
-        --primary-blue: #2563eb;
-        --secondary-blue: #3b82f6;
-        --soft-blue: #f0f7ff;
-        --glass-white: rgba(255, 255, 255, 0.7);
-        --text-dark: #1e3a8a;
-        --text-muted: #64748b;
-    }
-
-    /* Override base container styles for a seamless full-width card layout inside base.html */
-    .container {
-        padding: 0 !important;
-        margin-top: 0 !important;
-        max-width: 100% !important;
-    }
-
-    /* ── Full Page Lock & Theme ── */
-    .confession-page {
-        width: 100%;
-        max-width: 500px;
-        margin: 0 auto;
-        min-height: 100vh;
-        background: #f8fbff;
-        padding: 0 20px 100px;
-        position: relative;
-        box-shadow: 0 10px 40px rgba(37, 99, 235, 0.04);
-        box-sizing: border-box;
-    }
-
-    /* ── Clean Sticky Topbar ── */
-    .c-topbar {
-        position: sticky;
-        top: 0;
-        z-index: 900;
-        background: rgba(248, 251, 255, 0.88);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        padding: 16px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        border-bottom: 1px solid rgba(37, 99, 235, 0.08);
-        margin: 0 -20px 24px;
-        animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-    }
-    @keyframes fadeInDown {
-        from { opacity: 0; transform: translateY(-12px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    .c-topbar-title {
-        font-size: 20px;
-        font-weight: 900;
-        letter-spacing: -0.8px;
-        color: var(--text-dark);
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .c-topbar-title i {
-        color: var(--primary-blue);
-        font-size: 18px;
-    }
-    .c-admin-btn {
-        background: #0f172a;
-        color: white;
-        padding: 8px 14px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 700;
-        text-decoration: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .c-admin-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
-    }
-    .c-admin-btn:active {
-        transform: scale(0.96);
-    }
-
-    /* ── Ultra Modern Filter Bar ── */
-    .filter-bar {
-        margin-bottom: 20px;
-        animation: fadeIn 0.8s ease-out;
-    }
-    .filter-bar form {
-        display: flex;
-        gap: 8px;
-        width: 100%;
-    }
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    .filter-bar .filter-select {
-        flex: 1;
-        min-width: 0;
-        padding: 10px 32px 10px 14px;
-        border-radius: 12px;
-        border: 1.5px solid rgba(37, 99, 235, 0.15);
-        background: #fff;
-        font-size: 13px;
-        font-weight: 600;
-        color: #1e3a8a;
-        cursor: pointer;
-        appearance: none;
-        -webkit-appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 10px center;
-        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.06);
-        transition: all 0.2s ease;
-        outline: none;
-    }
-    .filter-bar .filter-select:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
-    }
-    .filter-bar .filter-select option {
-        font-weight: 500;
-        padding: 8px;
-    }
-
-    /* FAB Centered/Bounded Container */
-    .c-fab-container {
-        position: fixed;
-        bottom: 92px; /* Floats safely above the bottom navigation bar */
-        left: 50%;
-        transform: translateX(-50%);
-        width: 100%;
-        max-width: 500px;
-        height: 0;
-        z-index: 950;
-        pointer-events: none;
-    }
-
-    /* ── Circled Floating Action Button (FAB) ── */
-    .c-fab {
-        position: absolute;
-        bottom: 0;
-        right: 20px;
-        width: 58px;
-        height: 58px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
-        color: white;
-        border: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-        cursor: pointer;
-        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
-        pointer-events: auto;
-        transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.25s;
-    }
-    .c-fab:hover {
-        transform: translateY(-4px) scale(1.06);
-        box-shadow: 0 14px 32px rgba(37, 99, 235, 0.45);
-    }
-    .c-fab:active {
-        transform: scale(0.95) translateY(0);
-    }
-
-    /* ── Glassmorphic Confession Card ── */
-    .c-card {
-        background: white;
-        border: 1px solid rgba(255, 255, 255, 0.8);
-        border-radius: 32px;
-        padding: 24px;
-        margin-bottom: 24px;
-        box-shadow: 0 12px 35px rgba(37, 99, 235, 0.04);
-        transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        text-decoration: none;
-        display: block;
-        color: inherit;
-        position: relative;
-        overflow: hidden;
-        animation: cardEntry 0.6s cubic-bezier(0.23, 1, 0.32, 1) backwards;
-    }
-    @keyframes cardEntry {
-        from { opacity: 0; transform: translateY(40px) scale(0.95); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    .c-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; width: 6px; height: 100%;
-        background: linear-gradient(to bottom, var(--primary-blue), var(--secondary-blue));
-        opacity: 0;
-        transition: 0.3s;
-    }
-    .c-card:hover {
-        transform: translateY(-8px) scale(1.01);
-        box-shadow: 0 30px 60px rgba(37, 99, 235, 0.12);
-        border-color: rgba(37, 99, 235, 0.1);
-    }
-    .c-card:hover::before { opacity: 1; }
-
-    /* Card Header Styling */
-    .c-header {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        margin-bottom: 18px;
-    }
-    .c-avatar {
-        width: 50px; height: 50px;
-        border-radius: 18px;
-        background: #f0f7ff;
-        border: 2px solid white;
-        box-shadow: 0 8px 15px rgba(37, 99, 235, 0.08);
-        object-fit: cover;
-    }
-    .c-name {
-        font-weight: 800;
-        font-size: 16px;
-        color: var(--text-dark);
-        margin: 0;
-    }
-    .c-time {
-        font-size: 12px;
-        color: var(--text-muted);
-        font-weight: 600;
-    }
-    .c-campus {
-        margin-left: auto;
-        background: #eff6ff;
-        color: var(--primary-blue);
-        padding: 6px 14px;
-        border-radius: 12px;
-        font-size: 11px;
-        font-weight: 800;
-        letter-spacing: 0.5px;
-    }
-
-    /* Card Content */
-    .c-content {
-        font-size: 16px;
-        line-height: 1.8;
-        color: #334155;
-        font-weight: 500;
-        margin-bottom: 20px;
-        white-space: pre-wrap;
-    }
-    .c-image {
-        width: 100%;
-        border-radius: 24px;
-        margin-bottom: 20px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-    }
-
-    /* Card Footer */
-    .c-footer {
-        display: flex;
-        align-items: center;
-        gap: 25px;
-        padding-top: 20px;
-        border-top: 1px solid #f1f5f9;
-    }
-    .c-action {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-size: 14px;
-        font-weight: 700;
-        color: var(--text-muted);
-        transition: 0.3s;
-    }
-    .c-action i { font-size: 20px; }
-    .c-action.liked { color: #ef4444; }
-    .c-action:hover { color: var(--primary-blue); transform: scale(1.05); }
-
-    /* ── Modal Design ── */
-    .modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.3);
-        backdrop-filter: blur(12px);
-        z-index: 2000;
-        display: none;
-        align-items: flex-end;
-        justify-content: center;
-        transition: 0.4s;
-    }
-    .modal-overlay.active { display: flex; }
-    .modal-content {
-        background: #f8fbff;
-        width: 100%;
-        max-width: 500px;
-        border-radius: 40px 40px 0 0;
-        padding: 35px 25px;
-        box-shadow: 0 -20px 60px rgba(0,0,0,0.1);
-        transform: translateY(0);
-        animation: modalSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    @keyframes modalSlideUp {
-        from { transform: translateY(100%); }
-        to { transform: translateY(0); }
-    }
-    
-    .modal-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 20px;
-    }
-    .modal-header h3 {
-        font-size: 24px;
-        font-weight: 900;
-        color: var(--text-dark);
-        margin: 0;
-        flex: 1;
-    }
-    .close-modal {
-        background: white;
-        border: none;
-        width: 40px; height: 40px;
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-        color: var(--text-muted);
-        font-size: 24px;
-        flex-shrink: 0;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    #createConfessionForm {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-    #createConfessionForm textarea {
-        width: 100%;
-        padding: 20px;
-        border-radius: 24px;
-        border: 2px solid transparent;
-        background: white;
-        font-size: 16px;
-        font-weight: 600;
-        margin: 0;
-        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.05);
-        outline: none;
-        transition: 0.3s;
-        color: var(--text-dark);
-    }
-    #createConfessionForm textarea:focus {
-        border-color: var(--primary-blue);
-        box-shadow: 0 15px 35px rgba(37, 99, 235, 0.1);
-    }
-
-    /* ── Toggle Row ── */
-    .toggle-row {
-        background: white;
-        padding: 16px 20px;
-        border-radius: 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.02);
-    }
-    .toggle-label {
-        display: flex; align-items: center; gap: 12px;
-        font-weight: 800; color: var(--text-dark);
-    }
-    .switch {
-        width: 54px; height: 30px;
-        position: relative;
-    }
-    .switch input { opacity: 0; width: 0; height: 0; }
-    .slider {
-        position: absolute; cursor: pointer;
-        inset: 0; background: #e2e8f0;
-        border-radius: 30px; transition: 0.4s;
-    }
-    .slider:before {
-        content: ""; position: absolute;
-        height: 22px; width: 22px; left: 4px; bottom: 4px;
-        background: white; border-radius: 50%; transition: 0.4s;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    input:checked + .slider { background: var(--primary-blue); }
-    input:checked + .slider:before { transform: translateX(24px); }
-
-    .form-field {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        width: 100%;
-    }
-    .form-field-label {
-        font-weight: 800;
-        color: var(--text-dark);
-        font-size: 14px;
-        line-height: 1.2;
-    }
-
-    /* Campus select uses global .app-select (app-select.js) */
-    #createConfessionForm .app-select--modal .app-select-trigger {
-        min-height: 52px;
-        background: #fff;
-        border-radius: 16px;
-        font-weight: 700;
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.06);
-    }
-
-    #createConfessionForm .create-btn--submit {
-        margin-bottom: 0;
-        min-height: 52px;
-        border-radius: 16px;
-        font-size: 16px;
-        width: 100%;
-        background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
-        color: white;
-        border: none;
-        font-weight: 800;
-        cursor: pointer;
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
-        transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s, filter 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        outline: none;
-        -webkit-tap-highlight-color: transparent;
-    }
-    #createConfessionForm .create-btn--submit:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 28px rgba(37, 99, 235, 0.35);
-        filter: brightness(1.05);
-    }
-    #createConfessionForm .create-btn--submit:active {
-        transform: translateY(0) scale(0.98);
-        box-shadow: 0 6px 15px rgba(37, 99, 235, 0.2);
-    }
-
-    .login-banner {
-        background: linear-gradient(135deg, #2563eb, #1e40af);
-        border-radius: 24px;
-        padding: 16px 24px;
-        color: white;
-        display: flex; align-items: center; justify-content: space-between;
-        box-shadow: 0 20px 40px rgba(37, 99, 235, 0.3);
-        margin: 20px 0;
-    }
-
-    /* Back Button */
-    .c-back-btn {
-        width: 48px; height: 48px;
-        background: white;
-        border-radius: 18px;
-        display: flex; align-items: center; justify-content: center;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-        color: var(--primary-blue);
-        text-decoration: none;
-        transition: 0.3s;
-    }
-    .c-back-btn:hover { transform: scale(1.1); }
-    
-    /* Pagination */
-    .pag-btn {
-        padding: 10px 16px;
-        background: white;
-        border-radius: 12px;
-        color: var(--text-dark);
-        font-weight: 800;
-        text-decoration: none;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
-        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 44px;
-    }
-    .pag-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.12);
-        color: var(--primary-blue);
-    }
-    .pag-btn.active {
-        background: var(--primary-blue);
-        color: white;
-        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.2);
-    }
-    .pagination-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 8px;
-        margin-top: 40px;
-        padding-bottom: 20px;
-        overflow-x: auto;
-        padding-left: 10px;
-        padding-right: 10px;
-    }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            user-select: none;
+        }
+        .filled-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f7f9fb;
+        }
+        .shadow-soft {
+            box-shadow: 0 10px 30px -5px rgba(37, 99, 235, 0.04);
+        }
+        .card-accent {
+            border-left: 4px solid #004ac6;
+        }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="confession-page">
+<body class="bg-background text-on-surface min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 h-16 flex items-center justify-between px-container-margin">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDbdWLvR0UlSKEOsacPCyC0oSWZaVK3Q-Qlg-JytIAYEhUxVGN_x9Xw1wq_OZcJ7uzI3gUDsRuCJt7TJYqvi4hdJos6qGuI5uUE84CV3wt_iR6B15HhYI9UjnZJNsj9YfZGd9ZwBYh_J2fsagmUa6b5tb4gewclQNLf4oyCm2NmMf-tFCtPE9x0X4ECi1H1cu2t3KyjoVZkGl14Ozt_LpyrP8YD0qAPyDYeNQFPB10jk7QlS1t3hXCmq6h6jzgfshaxk8ZwRAcJbD8">
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary tracking-tight">CampusPulse</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-full hover:bg-surface-container-high/50 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined text-primary" data-icon="notifications">notifications</span>
+</button>
+</div>
+</header>
 
-    <!-- Premium Sticky Topbar -->
-    <div class="c-topbar">
-        <div style="display: flex; align-items: center; gap: 12px;">
-            {% if not user.is_authenticated %}
-            <a href="{% url 'login' %}" class="c-back-btn" title="Back to Login" style="width:36px; height:36px; border-radius:10px; box-shadow:none; border:1px solid rgba(0,0,0,0.06); margin:0; display:flex; align-items:center; justify-content:center;"><i class="fas fa-arrow-left" style="font-size:14px;"></i></a>
-            {% endif %}
-            <h2 class="c-topbar-title"><i class="fas fa-mask"></i> Confessions</h2>
-        </div>
-        
-        {% if is_admin %}
-        <a href="{% url 'admin_dashboard' %}" class="c-admin-btn"><i class="fas fa-shield-alt"></i> Admin Panel</a>
-        {% endif %}
-    </div>
-
-    <!-- Circled Floating Action Button (FAB) Bounded Container -->
-    <div class="c-fab-container">
-        <button class="c-fab" onclick="openCreateModal()" title="Write a Confession">
-            <i class="fas fa-pen"></i>
-        </button>
-    </div>
-
-    <!-- Filters -->
-    <div class="filter-bar">
-        <form method="GET" action="{% url 'confessions_feed' %}" id="filterForm">
-            <select name="sort" class="filter-select" onchange="document.getElementById('filterForm').submit()">
-                <option value="latest" {% if current_sort == 'latest' %}selected{% endif %}>Latest</option>
-                <option value="top" {% if current_sort == 'top' %}selected{% endif %}>Top Rated</option>
-            </select>
-            <select name="campus" class="filter-select" onchange="document.getElementById('filterForm').submit()">
-                <option value="">All Campuses</option>
-                <option value="KTR" {% if current_campus == 'KTR' %}selected{% endif %}>KTR</option>
-                <option value="RMP" {% if current_campus == 'RMP' %}selected{% endif %}>RMP</option>
-                <option value="VDP" {% if current_campus == 'VDP' %}selected{% endif %}>VDP</option>
-                <option value="ESW" {% if current_campus == 'ESW' %}selected{% endif %}>ESW</option>
-                <option value="NCR" {% if current_campus == 'NCR' %}selected{% endif %}>NCR</option>
-                <option value="TCY" {% if current_campus == 'TCY' %}selected{% endif %}>TCY</option>
-                <option value="AMT" {% if current_campus == 'AMT' %}selected{% endif %}>AMT</option>
-                <option value="SKM" {% if current_campus == 'SKM' %}selected{% endif %}>SKM</option>
-                <option value="SPT" {% if current_campus == 'SPT' %}selected{% endif %}>SPT</option>
-            </select>
-        </form>
-    </div>
-
-    <!-- Feed -->
-    <div class="feed">
-        {% if confessions %}
-            {% for c in confessions %}
-            <a href="{% url 'confession_detail' c.id %}" class="c-card">
-                <div class="c-header">
-                    <img src="{{ c.display_pic }}" alt="Avatar" class="c-avatar">
-                    <div class="c-meta">
-                        <p class="c-name">{{ c.display_name }}</p>
-                        <p class="c-time">{{ c.created_at|timesince }} ago</p>
-                    </div>
-                    {% if c.campus %}
-                    <div class="c-campus">{{ c.campus }}</div>
-                    {% endif %}
-                    {% if is_admin %}
-                    <div class="c-delete" onclick="deleteConfession(event, {{ c.id }}, this)" title="Delete Confession">
-                        <i class="fas fa-trash-alt"></i>
-                    </div>
-                    {% endif %}
-                </div>
-                
-                <div class="c-content">{{ c.content|truncatechars:200|linebreaksbr }}</div>
-                
-                {% if c.image %}
-                <img src="{{ c.image }}" alt="Attachment" class="c-image">
-                {% endif %}
-
-                <div class="c-footer">
-                    <div class="c-action like-btn" onclick="likeConfession(event, {{ c.id }}, this)">
-                        <i class="fas fa-heart"></i> <span class="like-count">{{ c.likes_count }}</span>
-                    </div>
-                    <div class="c-action">
-                        <i class="fas fa-comment"></i> {{ c.comments.count }}
-                    </div>
-                </div>
-            </a>
-            {% endfor %}
-
-            <!-- Pagination UI -->
-            <div class="pagination-container">
-                {% if confessions.has_previous %}
-                    <a href="?page={{ confessions.previous_page_number }}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_campus %}&campus={{ current_campus }}{% endif %}" 
-                       class="pag-btn">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-                {% endif %}
-
-                {% for i in confessions.paginator.page_range %}
-                    {% if confessions.number == i %}
-                        <span class="pag-btn active">{{ i }}</span>
-                    {% elif i > confessions.number|add:'-3' and i < confessions.number|add:'3' %}
-                        <a href="?page={{ i }}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_campus %}&campus={{ current_campus }}{% endif %}" 
-                           class="pag-btn">
-                            {{ i }}
-                        </a>
-                    {% endif %}
-                {% endfor %}
-
-                {% if confessions.has_next %}
-                    <a href="?page={{ confessions.next_page_number }}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if current_campus %}&campus={{ current_campus }}{% endif %}" 
-                       class="pag-btn">
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                {% endif %}
-            </div>
-        {% else %}
-            <div class="empty-state">
-                <i class="fas fa-comment-slash"></i>
-                <h3>No confessions yet</h3>
-                <p>Be the first to share a secret!</p>
-            </div>
-        {% endif %}
-    </div>
-
-    {% if not user.is_authenticated %}
-    <div class="login-banner">
-        <p>Login to unlock SrmMatch and more features!</p>
-        <button onclick="triggerGoogleLogin()" style="background: white; color: var(--primary); border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-            Login/Sign Up
-        </button>
-    </div>
-    {% endif %}
-
+<main class="mt-20 px-container-margin max-w-2xl mx-auto">
+<!-- Section Header & Filters -->
+<div class="mb-8">
+<div class="flex items-center justify-between mb-6">
+<h2 class="font-headline-lg text-headline-lg text-on-surface">Confessions</h2>
+<div class="flex gap-2">
+<div class="bg-secondary-container px-3 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px] text-primary" data-icon="auto_awesome">auto_awesome</span>
+<span class="text-label-bold font-label-bold text-primary uppercase tracking-wider">Trending</span>
+</div>
+</div>
+</div>
+<!-- Filters Grid -->
+<div class="grid grid-cols-2 gap-3">
+<div class="relative">
+<select class="w-full appearance-none bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 font-body-sm text-body-sm text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+<option>Latest</option>
+<option>Top Voted</option>
+<option>Most Discussed</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" data-icon="expand_more">expand_more</span>
+</div>
+<div class="relative">
+<select class="w-full appearance-none bg-surface-container-low border border-outline-variant/30 rounded-lg px-4 py-3 font-body-sm text-body-sm text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all">
+<option>All Campuses</option>
+<option>Main Campus</option>
+<option>West Campus</option>
+<option>North Square</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant" data-icon="expand_more">expand_more</span>
+</div>
+</div>
 </div>
 
-<!-- Create Modal -->
-<div class="modal-overlay" id="createModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>New Confession</h3>
-            <button class="close-modal" onclick="closeCreateModal()">&times;</button>
-        </div>
-        
-        <form method="POST" action="{% url 'create_confession' %}" enctype="multipart/form-data" id="createConfessionForm">
-            {% csrf_token %}
-            <input type="hidden" name="fingerprint" id="fingerprintInput">
-            
-            <textarea name="content" rows="6" placeholder="What's on your mind?..." required></textarea>
-            
-            <div class="toggle-row">
-                <div class="toggle-label"><i class="fas fa-mask" style="color:var(--primary-blue);"></i> Post Anonymously</div>
-                <label class="switch">
-                    <input type="checkbox" name="is_anonymous" value="true" checked>
-                    <span class="slider"></span>
-                </label>
-            </div>
-            
-            <div class="form-field">
-                <label class="form-field-label" for="campusSelect">Select Campus (Optional)</label>
-                <select name="campus" id="campusSelect" class="campus-select">
-                    <option value="">Global Feed</option>
-                    <option value="KTR">SRM KTR</option>
-                    <option value="RMP">SRM Ramapuram</option>
-                    <option value="VDP">SRM Vadapalani</option>
-                    <option value="ESW">SRM Eswari</option>
-                    <option value="NCR">SRM Delhi NCR</option>
-                    <option value="TCY">SRM Tiruchirappalli</option>
-                    <option value="AMT">SRM Amaravati</option>
-                    <option value="SKM">SRM Sikkim</option>
-                    <option value="SPT">SRM Sonepat</option>
-                </select>
-            </div>
-            
-            <button type="submit" class="create-btn create-btn--submit">Post</button>
-        </form>
-    </div>
+<!-- Confessions Feed -->
+<div class="space-y-stack-gap">
+<!-- Confession Card 1 -->
+<article class="bg-surface-container-lowest p-card-padding rounded-lg shadow-soft border border-outline-variant/20 card-accent transition-transform hover:scale-[1.01] duration-300">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-title-md">
+A
 </div>
+<div>
+<p class="font-label-bold text-on-surface">Anonymous</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant/60">9 hours ago</p>
+</div>
+</div>
+<span class="px-3 py-1 rounded-full bg-secondary-container text-primary font-label-bold text-[10px] uppercase tracking-widest">Main Campus</span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-6">
+Any female in KTR campus who's taking a PG (first year, any branch), please consider me too. Lemme know the available options and costs for sharing. I know the food is bad, but I could really use a friendly roommate!
+</p>
+<div class="flex items-center gap-6 pt-4 border-t border-outline-variant/10">
+<button class="flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors group border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined group-active:scale-125 transition-transform" data-icon="favorite">favorite</span>
+<span class="font-label-bold text-label-bold">124</span>
+</button>
+<button class="flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-bold text-label-bold">12</span>
+</button>
+<button class="ml-auto flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined" data-icon="share">share</span>
+</button>
+</div>
+</article>
+
+<!-- Confession Card 2 -->
+<article class="bg-surface-container-lowest p-card-padding rounded-lg shadow-soft border border-outline-variant/20 transition-transform hover:scale-[1.01] duration-300">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-title-md">
+S
+</div>
+<div>
+<p class="font-label-bold text-on-surface">Anonymous</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant/60">12 hours ago</p>
+</div>
+</div>
+<span class="px-3 py-1 rounded-full bg-secondary-container text-primary font-label-bold text-[10px] uppercase tracking-widest">West Campus</span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-6">
+18F here. This happened during the starting days of college, when everyone was trying to make new friends. There was this one guy, kinda cute with a moustache, not too tall, but he literally saved my library spot for 3 hours while I was stuck in a lab. If you're reading this, coffee is on me!
+</p>
+<div class="flex items-center gap-6 pt-4 border-t border-outline-variant/10">
+<button class="flex items-center gap-2 text-primary group border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined filled-icon" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="font-label-bold text-label-bold">482</span>
+</button>
+<button class="flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-bold text-label-bold">56</span>
+</button>
+<button class="ml-auto flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined" data-icon="share">share</span>
+</button>
+</div>
+</article>
+
+<!-- Confession Card 3 -->
+<article class="bg-surface-container-lowest p-card-padding rounded-lg shadow-soft border border-outline-variant/20 transition-transform hover:scale-[1.01] duration-300">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-title-md">
+M
+</div>
+<div>
+<p class="font-label-bold text-on-surface">Anonymous</p>
+<p class="text-body-sm font-body-sm text-on-surface-variant/60">1 day ago</p>
+</div>
+</div>
+<span class="px-3 py-1 rounded-full bg-secondary-container text-primary font-label-bold text-[10px] uppercase tracking-widest">Global</span>
+</div>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-6">
+I have selfish shitty friends, idkk what to do like one shit is hella toxic. The whole gang listens to her. Is it better to just be alone for a semester? Feeling really drained by all the drama lately.
+</p>
+<div class="flex items-center gap-6 pt-4 border-t border-outline-variant/10">
+<button class="flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors group border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined" data-icon="favorite">favorite</span>
+<span class="font-label-bold text-label-bold">92</span>
+</button>
+<button class="flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+<span class="font-label-bold text-label-bold">104</span>
+</button>
+<button class="ml-auto flex items-center gap-2 text-on-surface-variant/60 hover:text-primary transition-colors border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined" data-icon="share">share</span>
+</button>
+</div>
+</article>
+</div>
+</main>
+
+<!-- Floating Action Button -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-90 transition-all duration-300 z-50 border-0 cursor-pointer">
+<span class="material-symbols-outlined text-[28px]" data-icon="add">add</span>
+</button>
+
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full bg-surface/90 backdrop-blur-xl border-t border-outline-variant/20 shadow-[0_-4px_30px_rgba(37,99,235,0.04)] px-4 pt-3 pb-6 flex justify-around items-center z-50 rounded-t-lg">
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 transition-all active:scale-90 border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-bold text-label-bold mt-1">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 transition-all active:scale-90 border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span class="font-label-bold text-label-bold mt-1">Matches</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary font-bold active:scale-90 transition-all border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined filled-icon" data-icon="add_circle" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+<span class="font-label-bold text-label-bold mt-1">Post</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 transition-all active:scale-90 border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined" data-icon="bed">bed</span>
+<span class="font-label-bold text-label-bold mt-1">Rooms</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant/60 hover:text-primary/80 transition-all active:scale-90 border-0 bg-none cursor-pointer">
+<span class="material-symbols-outlined" data-icon="campaign">campaign</span>
+<span class="font-label-bold text-label-bold mt-1">Updates</span>
+</button>
+</nav>
 
 <script>
-function openCreateModal() { 
-    document.getElementById('createModal').classList.add('active'); 
-    document.getElementById('fingerprintInput').value = getFingerprint();
-}
-function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
-
-async function likeConfession(e, id, btn) {
-    e.preventDefault(); // prevent opening the card link
-    e.stopPropagation();
-    
-    try {
-        const res = await fetch(`/confessions/${id}/like/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-            }
-        });
-        const data = await res.json();
-        if (data.success) {
-            btn.classList.add('liked');
-            btn.querySelector('.like-count').textContent = data.likes_count;
-        }
-    } catch(err) {}
-}
-
-async function deleteConfession(e, id, btn) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!(await customConfirm('Are you sure you want to delete this confession permanently?', 'Delete Confession', 'Delete', 'Cancel'))) return;
-    
-    try {
-        const res = await fetch(`/confessions/${id}/delete/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        const data = await res.json();
-        if (data.success) {
-            const card = btn.closest('.c-card');
-            card.style.opacity = '0';
-            card.style.transform = 'scale(0.95)';
-            setTimeout(() => card.remove(), 300);
-        }
-    } catch(err) {
-        // Fallback for non-AJAX redirect if needed
-        location.reload();
+document.querySelectorAll('button').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const icon = this.querySelector('.material-symbols-outlined');
+    if (icon && icon.textContent === 'favorite') {
+      const isFilled = icon.style.fontVariationSettings.includes("'FILL' 1");
+      icon.style.fontVariationSettings = isFilled ? "'FILL' 0" : "'FILL' 1";
+      this.classList.toggle('text-primary');
     }
-}
+  });
+});
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Staggered card animation
-    const cards = document.querySelectorAll('.c-card');
-    cards.forEach((card, index) => {
-        card.style.animationDelay = `${index * 0.1}s`;
-    });
-
-    checkAndShowWarning(
-        'confessions_warning',
-        'The Vault of Confessions',
-        `<div style="text-align:left;">
-            <p>This is a space for secrets, stories, and crushes—not for attacks.</p>
-            <ul style="margin-top:12px; padding-left:20px; display:flex; flex-direction:column; gap:8px;">
-                <li><b>Zero Defamation:</b> Do not use full names to spread rumors or hurt reputations.</li>
-                <li><b>Mental Health:</b> If you are struggling, please use the "Help" resources instead of posting.</li>
-            </ul>
-            <p style="margin-top:12px; font-size:12px; font-weight:600;">Disclaimer: Mods reserve the right to delete any post that borders on bullying or NSFW territory.</p>
-        </div>`,
-        'Enter Respectfully',
-        null
-    );
+window.addEventListener('scroll', () => {
+  const header = document.querySelector('header');
+  if (window.scrollY > 10) {
+    header.classList.add('shadow-sm');
+  } else {
+    header.classList.remove('shadow-sm');
+  }
 });
 </script>
-
+</body>
 {% endblock %}
