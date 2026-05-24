@@ -24,40 +24,50 @@ body {
     left: 50%;
     transform: translateX(-50%);
     width: 100%;
-    max-width: 640px;
+    max-width: 560px;
     z-index: 100;
-    background: rgba(255,255,255,0.82);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(0,0,0,0.04);
-    height: 56px;
+    background: rgba(247, 249, 251, 0.78);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid rgba(0, 74, 198, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: calc(10px + env(safe-area-inset-top)) 20px 16px;
+    box-sizing: border-box;
+}
+.rfd-header-main {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 0 16px;
-    box-sizing: border-box;
+    min-width: 0;
 }
-.rfd-back-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #f1f5f9;
+.match-back-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.88);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     text-decoration: none;
-    color: #0f172a;
-    font-size: 16px;
+    color: var(--primary, #004ac6);
+    border: 1px solid rgba(0, 74, 198, 0.08);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    transition: 0.2s ease;
     flex-shrink: 0;
-    transition: all 0.2s;
+    cursor: pointer;
 }
-.rfd-back-btn:hover { background: #e2e8f0; }
+.match-back-btn .material-symbols-outlined { font-size: 22px; }
+.match-back-btn:active { transform: scale(0.94); }
+
 .rfd-header h2 {
-    font-size: 17px;
+    font-size: 28px;
     font-weight: 800;
+    color: #151b27;
     margin: 0;
-    flex: 1;
-    letter-spacing: -0.3px;
+    letter-spacing: -0.04em;
 }
 .rfd-header-actions {
     display: flex;
@@ -84,7 +94,7 @@ body {
 /* ---- Gallery ---- */
 .rfd-gallery-wrap {
     padding: 0 16px;
-    margin-top: 68px;
+    margin-top: 86px;
 }
 .rfd-gallery {
     position: relative;
@@ -414,9 +424,9 @@ body {
 
 /* Responsive */
 @media (min-width: 768px) {
-    .rfd-gallery-wrap { max-width: 640px; margin: 12px auto 0; }
-    .rfd-body { max-width: 640px; margin: 0 auto; }
-    .rfd-header { max-width: 640px; margin: 0 auto; }
+    .rfd-gallery-wrap { max-width: 560px; margin: 86px auto 0; }
+    .rfd-body { max-width: 560px; margin: 0 auto; }
+    .rfd-header { max-width: 560px; margin: 0 auto; }
 }
 </style>
 {% endblock %}
@@ -424,8 +434,10 @@ body {
 {% block body %}
 <!-- Sticky Header -->
 <div class="rfd-header">
-    <button onclick="history.back()" class="rfd-back-btn" style="border:none; cursor:pointer;"><i class="fas fa-arrow-left"></i></button>
-    <h2>Room Details</h2>
+    <div class="rfd-header-main">
+        <button onclick="history.back()" class="match-back-btn" style="border:none; cursor:pointer;"><span class="material-symbols-outlined">arrow_back</span></button>
+        <h2>Room Details</h2>
+    </div>
     {% if request.user == listing.user or request.user.is_staff or request.user.email == 'arunmohankml@gmail.com' %}
     <div class="rfd-header-actions">
         <button type="button" class="rfd-header-btn edit" onclick="openEditModal()" title="Edit"><i class="fas fa-edit"></i></button>
@@ -510,7 +522,7 @@ body {
         <i class="fas fa-chevron-right rfd-chevron"></i>
     </div>
 </div>
-
+ 
 <!-- Edit Modal -->
 {% if request.user == listing.user or request.user.is_staff or request.user.email == 'arunmohankml@gmail.com' %}
 <div class="rfd-modal-overlay" id="editModalOverlay" onclick="if(event.target===this)closeEditModal()">

@@ -108,34 +108,132 @@
       box-shadow: 0 4px 30px rgba(37, 99, 235, 0.04);
     }
 
-    /* Override base container so header sits flush at top */
-    .container {
+    html, body {
+        height: 100%;
+        height: 100dvh;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        background: #f7f9fb;
         padding: 0 !important;
-        margin-top: 0 !important;
-        padding-bottom: 90px !important;
+        margin: 0 !important;
+    }
+
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100%;
+        box-sizing: border-box;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    .settings-wrapper {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%;
+        max-width: 560px;
+        margin: 0 auto;
+        background: linear-gradient(180deg, #fbfcff 0%, #f7f9fb 58%, #eff4fb 100%);
+        z-index: 10;
+    }
+
+    .settings-header {
+        flex-shrink: 0;
+        padding: calc(10px + env(safe-area-inset-top)) 20px 16px;
+        background: rgba(247, 249, 251, 0.78);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-bottom: 1px solid rgba(0, 74, 198, 0.08);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        z-index: 20;
+    }
+
+    .settings-header-main {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+
+    .settings-header h2 {
+        margin: 0;
+        font-size: 28px;
+        color: #151b27;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+    }
+
+    .match-back-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.88);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-decoration: none;
+        color: var(--primary);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        transition: 0.2s ease;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+
+    .match-back-btn .material-symbols-outlined {
+        font-size: 22px;
+    }
+
+    .match-back-btn:active {
+        transform: scale(0.94);
+    }
+
+    .settings-body {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 20px 20px 110px;
+        background: transparent;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .settings-body::-webkit-scrollbar {
+        display: none;
     }
 </style>
 {% endblock %}
 
 {% block body %}
-<body class="bg-background text-on-surface min-h-screen pb-24">
-<!-- TopAppBar -->
-<header class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md border-b border-outline-variant/30 flex items-center justify-between px-container-margin h-12">
-<div class="flex items-center gap-3">
-<button class="p-1.5 rounded-full hover:bg-surface-container-high/50 active:scale-95 transition-all text-primary border-0 bg-none cursor-pointer" onclick="window.history.back()">
-<span class="material-symbols-outlined" style="font-size:20px;">arrow_back</span>
-</button>
-<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary tracking-tight">Settings</h1>
-</div>
-<div class="flex items-center gap-1">
-<button class="p-1.5 rounded-full hover:bg-surface-container-high/50 active:scale-95 transition-all text-on-surface-variant border-0 bg-none cursor-pointer">
-<span class="material-symbols-outlined" style="font-size:20px;">help_outline</span>
-</button>
-</div>
-</header>
+<div class="settings-wrapper text-on-surface">
+    <!-- Header -->
+    <div class="settings-header">
+        <div class="settings-header-main">
+            <button onclick="window.history.back()" class="match-back-btn">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <h2>Settings</h2>
+        </div>
+        <div class="flex items-center gap-1">
+            <button class="p-1.5 rounded-full hover:bg-surface-container-high/50 active:scale-95 transition-all text-on-surface-variant border-0 bg-none cursor-pointer">
+                <span class="material-symbols-outlined" style="font-size:24px;">help_outline</span>
+            </button>
+        </div>
+    </div>
 
-<!-- Main Content -->
-<main class="pt-16 px-container-margin max-w-2xl mx-auto space-y-3">
+    <!-- Main Content -->
+    <div class="settings-body">
+        <div class="space-y-3">
 
 <!-- Install App Card -->
 <section id="install-app-card" class="relative overflow-hidden bg-primary-container rounded-[20px] p-4 shadow-lg group" style="display:none;">
@@ -245,7 +343,9 @@
 <div class="text-center pt-6 pb-8">
 <p class="font-label-bold text-label-bold text-on-surface-variant/40 uppercase tracking-widest" style="font-size:11px;">CampusPulse v2.4.0</p>
 </div>
-</main>
+        </div>
+    </div>
+</div>
 
 <!-- Policy Modal -->
 <div id="policy-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;padding:20px;align-items:center;justify-content:center;">
@@ -329,5 +429,4 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 </script>
-</body>
 {% endblock %}

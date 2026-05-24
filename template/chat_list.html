@@ -5,33 +5,94 @@
 
 {% block head %}
 <style>
+    html, body {
+        height: 100%;
+        height: 100dvh;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        background: #f7f9fb;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
     .container {
-        padding-top: 18px !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100%;
+        box-sizing: border-box;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
     }
 
     .chat-shell {
         display: flex;
         flex-direction: column;
-        gap: 18px;
-        padding-top: 68px;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%;
+        max-width: 560px;
+        margin: 0 auto;
+        background: linear-gradient(180deg, #fbfcff 0%, #f7f9fb 58%, #eff4fb 100%);
+        z-index: 10;
     }
 
     /* ── Fixed top bar ── */
     .chat-topbar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 100;
-        background: rgba(255, 255, 255, 0.96);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
+        flex-shrink: 0;
+        background: rgba(247, 249, 251, 0.78);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
         border-bottom: 1px solid rgba(0, 74, 198, 0.08);
-        padding: 14px 20px;
+        padding: calc(10px + env(safe-area-inset-top)) 20px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        z-index: 20;
+    }
+
+    .chat-topbar-main {
         display: flex;
         align-items: center;
         gap: 12px;
-        box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+        min-width: 0;
+    }
+
+    .match-back-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.88);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-decoration: none;
+        color: var(--primary, #004ac6);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        transition: 0.2s ease;
+        flex-shrink: 0;
+lc         cursor: pointer;
+    }
+    .match-back-btn .material-symbols-outlined {
+        font-size: 22px;
+    }
+    .match-back-btn:active {
+        transform: scale(0.94);
+    }
+
+    .chat-topbar h2 {
+        margin: 0;
+        font-size: 28px;
+        color: #151b27;
+        font-weight: 800;
+        letter-spacing: -0.04em;
     }
 
     .panel-badge {
@@ -47,6 +108,26 @@
     }
 
     /* ── Chat cards ── */
+    .feed-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        padding: 0 16px;
+    }
+
+    .feed-body {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 16px 0 110px;
+        background: transparent;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .feed-body::-webkit-scrollbar {
+        display: none;
+    }
+
     .chat-card {
         background: rgba(255, 255, 255, 0.84);
         border: 1px solid rgba(0, 74, 198, 0.08);
@@ -220,44 +301,36 @@
     .btn-gradient:active {
         transform: scale(0.98);
     }
+/* ── Desktop & PC Layout (Min 768px) ── */
+@media (min-width: 768px) {
 
-    /* ── Desktop & PC Layout (Min 768px) ── */
-    @media (min-width: 768px) {
-        .chat-shell {
-            max-width: 760px;
-            margin: 0 auto;
-            padding-bottom: 40px;
-        }
-
-        .chat-topbar {
-            position: sticky;
-            top: 18px; /* Push down slightly from top */
-            border-radius: 24px;
-            margin-bottom: 8px;
-        }
-
-        .chat-card {
-            padding: 24px;
-            border-radius: 32px;
-        }
-
-        .chat-avatar {
-            width: 64px;
-            height: 64px;
-        }
-
-        .chat-name {
-            font-size: 18px;
-        }
-
-        .chat-snippet {
-            font-size: 15px;
-        }
-        
-        .empty-state {
-            padding: 80px 20px;
-        }
+    .feed-list {
+         padding: 0 10px;
+        gap: 18px;
     }
+
+    .chat-card {
+        padding: 16px 18px;
+        border-radius: 26px;
+    }
+
+    .chat-avatar {
+        width: 56px;
+        height: 56px;
+    }
+
+    .chat-name {
+        font-size: 16px;
+    }
+
+    .chat-snippet {
+        font-size: 14px;
+    }
+
+    .empty-state {
+        padding: 80px 20px;
+    }
+}
 </style>
 {% endblock %}
 
@@ -265,13 +338,16 @@
 <section class="chat-shell">
 
     <div class="chat-topbar">
-        <h3 style="margin:0; font-size:19px; font-weight:800; color:#151b27; letter-spacing:-0.03em; flex:1;">
-            <span class="material-symbols-outlined" style="font-size:22px; color:var(--primary); vertical-align:middle; margin-right:10px;">chat_bubble</span>
-            Chats
-        </h3>
-        <span class="panel-badge">{{ chats|length }} conversations</span>
+        <div class="chat-topbar-main">
+            <span class="material-symbols-outlined" style="font-size: 28px; color: var(--primary, #004ac6);">chat_bubble</span>
+            <h2>Chats</h2>
+        </div>
+        <div class="panel-badge">
+            {{ chats|length }} conversations
+        </div>
     </div>
 
+    <div class="feed-body">
     {% if chats %}
     <div class="feed-list">
         {% for chat in chats %}
@@ -325,6 +401,7 @@
         </a>
     </div>
     {% endif %}
+    </div>
 
 </section>
 
@@ -348,17 +425,5 @@ function goToChat(baseUrl) {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const fromParam = urlParams.get('from');
-    const backBtn = document.querySelector('.chat-hero-label');
-    if (backBtn && fromParam) {
-        if (fromParam === 'match') {
-            backBtn.href = "{% url 'match_feed' %}";
-        } else if (fromParam === 'home') {
-            backBtn.href = "{% url 'home' %}";
-        }
-    }
-});
 </script>
 {% endblock %}

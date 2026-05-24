@@ -13,72 +13,101 @@
     --rf-page-padding: 16px;
 }
 
-/* Force container to be static so sticky works to top */
-body > .container {
+html, body {
+    height: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    background: #f7f9fb;
     padding: 0 !important;
-    position: static !important;
+    margin: 0 !important;
+}
+
+.container {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100%;
+    box-sizing: border-box;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+.rf-wrapper {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+    background: linear-gradient(180deg, #fbfcff 0%, #f7f9fb 58%, #eff4fb 100%);
+    z-index: 10;
 }
 
 /* ---- Sticky Header (matching reference) ---- */
-.rf-header {
-    position: fixed;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100%;
-    max-width: var(--shell-width, 560px);
-    z-index: 100;
-    background: rgba(247,249,251,0.78);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-bottom: 1px solid rgba(0,74,198,0.08);
-    padding: calc(10px + env(safe-area-inset-top)) var(--rf-page-padding) 14px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    box-sizing: border-box;
+    .feed-header {
+        flex-shrink: 0;
+        padding: calc(10px + env(safe-area-inset-top)) 20px 16px;
+        background: rgba(247,249,251,0.78);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-bottom: 1px solid rgba(0,74,198,0.08);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        z-index: 20;
+    }
+    .feed-header-main {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+    .feed-header h2 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 800;
+        color: #151b27;
+        letter-spacing: -0.04em;
+    }
+
+    .match-back-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.88);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-decoration: none;
+        color: var(--primary, #004ac6);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        transition: 0.2s ease;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .match-back-btn .material-symbols-outlined { font-size: 22px; }
+    .match-back-btn:active { transform: scale(0.94); }
+
+.feed-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 16px 110px;
+    background: transparent;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
-.rf-header-main {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    min-width: 0;
-}
-.rf-back-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 16px;
-    background: rgba(255,255,255,0.88);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-decoration: none;
-    color: var(--primary, #2563eb);
-    border: 1px solid rgba(0,74,198,0.08);
-    box-shadow: 0 10px 24px rgba(15,23,42,0.06);
-    transition: 0.2s ease;
-    flex-shrink: 0;
-    cursor: pointer;
-}
-.rf-back-btn:active {
-    transform: scale(0.94);
-}
-.rf-header h1 {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 800;
-    color: #151b27;
-    letter-spacing: -0.04em;
-}
-.rf-header .rf-subtitle {
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #6d7b8f;
-    display: block;
-    margin: 0 0 1px;
+.feed-body::-webkit-scrollbar {
+    display: none;
 }
 
 /* ---- Segmented Control (Tab Bar) ---- */
@@ -88,7 +117,6 @@ body > .container {
     padding: 4px;
     border-radius: 100px;
     margin: 12px var(--rf-page-padding) 12px;
-    margin-top: calc(68px + env(safe-area-inset-top));
     position: relative;
 }
 .rf-segmented .rf-tab {
@@ -524,8 +552,8 @@ body > .container {
 
 /* ---- FAB ---- */
 .rf-fab {
-    position: fixed;
-    bottom: 90px;
+    position: absolute;
+    bottom: 105px;
     right: 16px;
     width: 52px;
     height: 52px;
@@ -617,11 +645,17 @@ body > .container {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
 }
-.rf-modal-header {
+.modal-header {
+    padding: 16px 20px;
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    margin-bottom: 18px;
+    align-items: center;
+    border-bottom: 1px solid rgba(0,74,198,0.08);
+}
+.modal-header h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
 }
 .rf-modal-header h2 {
     font-size: 18px;
@@ -894,10 +928,6 @@ body > .container {
 
 /* ---- Responsive ---- */
 @media (min-width: 768px) {
-    .rf-feed { max-width: 640px; margin: 0 auto; }
-    .rf-search-row { max-width: 640px; margin: 0 auto 12px; }
-    .rf-segmented { max-width: 640px; margin-right: auto; margin-left: auto; }
-    .rf-header { max-width: 640px; }
     .rf-modal { border-radius: 24px; margin-bottom: 40px; }
     .rf-modal-overlay { align-items: center; }
 }
@@ -948,58 +978,66 @@ body > .container {
 {% endblock %}
 
 {% block body %}
-<div class="rf-header">
-    <div class="rf-header-main">
-        <button onclick="window.location.href='{% url 'home' %}'" class="rf-back-btn">
-            <span class="material-symbols-outlined" style="font-size:22px;">arrow_back</span>
-        </button>
-        <h1>Roomie</h1>
+<div class="rf-wrapper">
+    <!-- Header -->
+    <div class="feed-header">
+        <div class="feed-header-main">
+            <a href="{% url 'home' %}" class="match-back-btn">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+            <div>
+                <h2>Roomfinder</h2>
+            </div>
+        </div>
     </div>
-</div>
 
-<div class="rf-segmented">
-    <button class="rf-tab active" id="tabAvailable" onclick="switchTab('available')">
-        <i class="fas fa-door-open" style="font-size:13px; vertical-align:middle; margin-right:4px;"></i> Available Rooms
-    </button>
-    <button class="rf-tab" id="tabRequests" onclick="switchTab('requests')">
-        <i class="fas fa-file-signature" style="font-size:13px; vertical-align:middle; margin-right:4px;"></i> Room Requests
-    </button>
-</div>
+    <!-- Main Content -->
+    <div class="feed-body">
+        <div class="rf-segmented">
+            <button class="rf-tab active" id="tabAvailable" onclick="switchTab('available')">
+                <i class="fas fa-door-open" style="font-size:13px; vertical-align:middle; margin-right:4px;"></i> Available Rooms
+            </button>
+            <button class="rf-tab" id="tabRequests" onclick="switchTab('requests')">
+                <i class="fas fa-file-signature" style="font-size:13px; vertical-align:middle; margin-right:4px;"></i> Room Requests
+            </button>
+        </div>
 
-<div class="rf-search-row">
-    <div class="rf-search-wrap">
-        <span class="material-symbols-outlined">search</span>
-        <input type="text" id="rfSearch" placeholder="Search area, college, or tags..." oninput="handleSearch()">
+        <div class="rf-search-row">
+            <div class="rf-search-wrap">
+                <span class="material-symbols-outlined">search</span>
+                <input type="text" id="rfSearch" placeholder="Search area, college, or tags..." oninput="handleSearch()">
+            </div>
+            <button class="rf-filter-btn" onclick="openFilterModal()" id="filterToggleBtn">
+                <span class="material-symbols-outlined">tune</span>
+                <span class="rf-active-filter-badge" id="filterCountBadge" style="display:none;">0</span>
+            </button>
+        </div>
+
+        <div class="rf-feed" id="rfFeed">
+            <div style="text-align:center; padding: 40px; color: #94a3b8;">
+                <div class="rf-spinner" style="width:24px; height:24px; border-color:rgba(37,99,235,0.2); border-top-color:#2563eb; margin:0 auto 12px;"></div>
+                <p style="font-size:14px; font-weight:500;">Loading roomie listings...</p>
+            </div>
+        </div>
+
+        <div class="rf-load-more" id="rfLoadMore" style="display:none;">
+            <button class="rf-load-btn" id="rfLoadBtn" onclick="loadMore()">
+                <span class="rf-load-spinner"></span>
+                <span class="rf-load-text">Load more</span>
+            </button>
+        </div>
     </div>
-    <button class="rf-filter-btn" onclick="openFilterModal()" id="filterToggleBtn">
-        <span class="material-symbols-outlined">tune</span>
-        <span class="rf-active-filter-badge" id="filterCountBadge" style="display:none;">0</span>
+
+    <!-- Dynamic FAB Action Button -->
+    <button class="rf-fab" onclick="handleFabClick()" id="rfFabBtn">
+        <span class="material-symbols-outlined">edit</span>
     </button>
 </div>
-
-<div class="rf-feed" id="rfFeed">
-    <div style="text-align:center; padding: 40px; color: #94a3b8;">
-        <div class="rf-spinner" style="width:24px; height:24px; border-color:rgba(37,99,235,0.2); border-top-color:#2563eb; margin:0 auto 12px;"></div>
-        <p style="font-size:14px; font-weight:500;">Loading roomie listings...</p>
-    </div>
-</div>
-
-<div class="rf-load-more" id="rfLoadMore" style="display:none;">
-    <button class="rf-load-btn" id="rfLoadBtn" onclick="loadMore()">
-        <span class="rf-load-spinner"></span>
-        <span class="rf-load-text">Load more</span>
-    </button>
-</div>
-
-<!-- Dynamic FAB Action Button -->
-<button class="rf-fab" onclick="handleFabClick()" id="rfFabBtn">
-    <span class="material-symbols-outlined">edit</span>
-</button>
 
 <!-- Unified Filters Modal -->
 <div class="rf-modal-overlay" id="filterModalOverlay" onclick="if(event.target===this)closeFilterModal()">
 <div class="rf-modal" id="filterModal">
-    <div class="rf-modal-header">
+    <div class="modal-header">
         <h2>Filters</h2>
         <button class="rf-modal-close" onclick="closeFilterModal()">
             <span class="material-symbols-outlined">close</span>
@@ -1085,7 +1123,7 @@ body > .container {
 <!-- Modal 1: Post Available Room Listing -->
 <div class="rf-modal-overlay" id="postModalOverlay" onclick="if(event.target===this)closePostModal()">
 <div class="rf-modal" id="postModal">
-    <div class="rf-modal-header">
+    <div class="modal-header">
         <h2>List an Available Room</h2>
         <button class="rf-modal-close" onclick="closePostModal()">
             <span class="material-symbols-outlined">close</span>
@@ -1185,7 +1223,7 @@ body > .container {
 <!-- Modal 2: Post Room Request -->
 <div class="rf-modal-overlay" id="requestModalOverlay" onclick="if(event.target===this)closeRequestModal()">
 <div class="rf-modal" id="requestModal">
-    <div class="rf-modal-header">
+    <div class="modal-header">
         <h2>Post Room Request</h2>
         <button class="rf-modal-close" onclick="closeRequestModal()">
             <span class="material-symbols-outlined">close</span>

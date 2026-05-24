@@ -26,77 +26,72 @@
     .chat-wrapper {
         display: flex;
         flex-direction: column;
-        height: 100%;
-        width: 100%;
-        max-width: 600px;
-        margin: 0 auto;
-        background: #f7f9fb;
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
+        height: 100%;
+        width: 100%;
+        max-width: 560px;
+        margin: 0 auto;
+        background: linear-gradient(180deg, #fbfcff 0%, #f7f9fb 58%, #eff4fb 100%);
+        z-index: 10;
         will-change: height, transform;
-    }
-    @media (min-width: 768px) {
-        html, body {
-            overflow: auto !important;
-            position: relative;
-            background: #eef2f6; /* Matching home page soft bg */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 24px 0 !important;
-        }
-
-        .chat-wrapper {
-            position: relative;
-            max-width: 740px;
-            height: calc(100vh - 48px);
-            max-height: 900px;
-            border-radius: 28px;
-            box-shadow: 0 20px 60px rgba(0, 74, 198, 0.12);
-            border: 1px solid rgba(0, 74, 198, 0.08);
-            overflow: hidden;
-        }
-        
-        .chat-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid rgba(0, 74, 198, 0.06);
-        }
-        
-        .chat-messages {
-            padding: 30px 24px;
-        }
-        
-        .chat-input-area {
-            padding: 16px 24px 20px;
-        }
-        
-        .message {
-            max-width: 75%; /* Slightly more constrained on wide desktop */
-        }
     }
 
     /* ── Header ── */
     .chat-header {
-        padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px;
-        background: #ffffff;
+        padding: calc(10px + env(safe-area-inset-top)) 20px 16px;
+        background: rgba(247, 249, 251, 0.78);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
         border-bottom: 1px solid rgba(0, 74, 198, 0.08);
         display: flex;
+        justify-content: space-between;
         align-items: center;
         gap: 12px;
         z-index: 100;
     }
-    .chat-back {
-        width: 38px; height: 38px;
-        background: #f1f5f9;
-        border-radius: 12px;
-        display: flex; align-items: center; justify-content: center;
-        color: #151b27;
-        text-decoration: none;
-        transition: background 0.2s;
-        flex-shrink: 0;
+    .chat-header-main {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
     }
-    .chat-back:active { background: #e2e8f0; }
-
+    .match-back-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.88);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-decoration: none;
+        color: var(--primary, #004ac6);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        transition: 0.2s ease;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .match-back-btn:active {
+        transform: scale(0.94);
+    }
+    .chat-partner-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-width: 0;
+    }
+    .chat-partner-name {
+        font-size: 17px;
+        font-weight: 700;
+        color: #151b27;
+        margin: 0;
+    }
+    .chat-partner-status {
+        font-size: 12px;
+        color: #64748b;
+        margin: 0;
+    }
     .chat-partner-pic {
         width: 40px; height: 40px;
         border-radius: 14px;
@@ -614,16 +609,18 @@
 
     <!-- Header -->
     <div class="chat-header">
-        <button onclick="history.back()" class="chat-back" style="border:none; cursor:pointer; background:none; display:flex; align-items:center;">
-            <span class="material-symbols-outlined" style="font-size:20px;">arrow_back</span>
-        </button>
-        <a href="{% url 'view_profile' partner.id %}">
-            <img src="{{ partner.profile.get_profile_pic_url }}" alt="Avatar" class="chat-partner-pic" loading="lazy" decoding="async" width="40" height="40">
-        </a>
-        <a href="{% url 'view_profile' partner.id %}" class="chat-header-info">
-            <h3>{{ partner.profile.name|default:partner.username }}</h3>
-            <p>{{ partner.profile.campus_display }}</p>
-        </a>
+        <div class="chat-header-main">
+            <a href="javascript:history.back()" class="match-back-btn">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+            <a href="{% url 'view_profile' partner.id %}">
+                <img src="{{ partner.profile.get_profile_pic_url }}" alt="Avatar" class="chat-partner-pic" loading="lazy" decoding="async" width="40" height="40">
+            </a>
+            <a href="{% url 'view_profile' partner.id %}" class="chat-partner-info" style="text-decoration:none;">
+                <h3 class="chat-partner-name">{{ partner.profile.name|default:partner.username }}</h3>
+                <p class="chat-partner-status">{{ partner.profile.campus_display }}</p>
+            </a>
+        </div>
         <div class="header-actions">
             <button onclick="toggleSpark({{ partner.id }})" id="chatSparkBtn" class="header-btn" style="color:#f59e0b;">
                 <span class="material-symbols-outlined" id="chatSparkIcon">{% if has_sparked %}bolt{% else %}bolt{% endif %}</span>
