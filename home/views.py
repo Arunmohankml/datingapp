@@ -2874,3 +2874,22 @@ def roomrequest_detail(request, id):
         'is_admin': is_admin,
     })
 
+
+from django.http import HttpResponse
+
+def sitemap_view(request):
+    xml = """<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://srm-match.vercel.app/</loc></url>
+  <url><loc>https://srm-match.vercel.app/match/</loc></url>
+  <url><loc>https://srm-match.vercel.app/roomfinder/</loc></url>
+  <url><loc>https://srm-match.vercel.app/wall/</loc></url>
+  <url><loc>https://srm-match.vercel.app/confession/feed/</loc></url>
+  <url><loc>https://srm-match.vercel.app/more/</loc></url>
+</urlset>"""
+    return HttpResponse(xml, content_type='application/xml')
+
+def robots_txt_view(request):
+    text = "User-agent: *\nAllow: /\n\nSitemap: https://srm-match.vercel.app/sitemap.xml\n"
+    return HttpResponse(text, content_type='text/plain')
+

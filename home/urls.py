@@ -70,4 +70,6 @@ urlpatterns = [
     path("api/roomrequests/<int:id>/delete/", views.api_delete_room_request, name="api_delete_room_request"),
     path("api/roomrequests/<int:id>/edit/", views.api_edit_room_request, name="api_edit_room_request"),
     path("roomrequest/<int:id>/", views.roomrequest_detail, name="roomrequest_detail"),
+    path("sitemap.xml", views.sitemap_view, name="sitemap"),
+    path("robots.txt", views.robots_txt_view, name="robots_txt"),
 ]

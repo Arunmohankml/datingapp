@@ -79,6 +79,7 @@
         object-fit: cover;
         flex-shrink: 0;
         box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+        background: #f1f5f9;
     }
 
     .chat-details {
@@ -220,10 +221,42 @@
         transform: scale(0.98);
     }
 
-    .feed-list {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
+    /* ── Desktop & PC Layout (Min 768px) ── */
+    @media (min-width: 768px) {
+        .chat-shell {
+            max-width: 760px;
+            margin: 0 auto;
+            padding-bottom: 40px;
+        }
+
+        .chat-topbar {
+            position: sticky;
+            top: 18px; /* Push down slightly from top */
+            border-radius: 24px;
+            margin-bottom: 8px;
+        }
+
+        .chat-card {
+            padding: 24px;
+            border-radius: 32px;
+        }
+
+        .chat-avatar {
+            width: 64px;
+            height: 64px;
+        }
+
+        .chat-name {
+            font-size: 18px;
+        }
+
+        .chat-snippet {
+            font-size: 15px;
+        }
+        
+        .empty-state {
+            padding: 80px 20px;
+        }
     }
 </style>
 {% endblock %}
@@ -243,7 +276,7 @@
     <div class="feed-list">
         {% for chat in chats %}
         <div onclick="goToChat('{% url 'chat_view' chat.partner.id %}')" class="chat-card">
-            <img src="{% if chat.partner.profile.profile_pic %}{{ chat.partner.profile.profile_pic }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ chat.partner.username }}{% endif %}" alt="Avatar" class="chat-avatar">
+            <img src="{% if chat.partner.profile.profile_pic %}{{ chat.partner.profile.profile_pic }}{% else %}https://api.dicebear.com/7.x/notionists/svg?seed={{ chat.partner.username }}{% endif %}" alt="Avatar" class="chat-avatar" loading="lazy" decoding="async" width="56" height="56">
 
             <div class="chat-details">
                 <div class="chat-info-row">

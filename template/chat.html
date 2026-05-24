@@ -35,8 +35,44 @@
         top: 0; left: 0; right: 0; bottom: 0;
         will-change: height, transform;
     }
-    @media (max-width: 600px) {
-        .chat-wrapper { max-width: none; }
+    @media (min-width: 768px) {
+        html, body {
+            overflow: auto !important;
+            position: relative;
+            background: #eef2f6; /* Matching home page soft bg */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 0 !important;
+        }
+
+        .chat-wrapper {
+            position: relative;
+            max-width: 740px;
+            height: calc(100vh - 48px);
+            max-height: 900px;
+            border-radius: 28px;
+            box-shadow: 0 20px 60px rgba(0, 74, 198, 0.12);
+            border: 1px solid rgba(0, 74, 198, 0.08);
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(0, 74, 198, 0.06);
+        }
+        
+        .chat-messages {
+            padding: 30px 24px;
+        }
+        
+        .chat-input-area {
+            padding: 16px 24px 20px;
+        }
+        
+        .message {
+            max-width: 75%; /* Slightly more constrained on wide desktop */
+        }
     }
 
     /* ── Header ── */
@@ -67,6 +103,7 @@
         object-fit: cover;
         flex-shrink: 0;
         box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+        background: #f1f5f9;
     }
 
     .chat-header-info {
@@ -581,7 +618,7 @@
             <span class="material-symbols-outlined" style="font-size:20px;">arrow_back</span>
         </button>
         <a href="{% url 'view_profile' partner.id %}">
-            <img src="{{ partner.profile.get_profile_pic_url }}" alt="Avatar" class="chat-partner-pic">
+            <img src="{{ partner.profile.get_profile_pic_url }}" alt="Avatar" class="chat-partner-pic" loading="lazy" decoding="async" width="40" height="40">
         </a>
         <a href="{% url 'view_profile' partner.id %}" class="chat-header-info">
             <h3>{{ partner.profile.name|default:partner.username }}</h3>

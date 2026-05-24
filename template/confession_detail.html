@@ -2,8 +2,17 @@
 
 {% block head %}
 <style>
+    html, body {
+        height: 100dvh !important;
+        overflow: hidden !important;
+    }
+
     .container {
         padding-top: 18px !important;
+        height: 100dvh;
+        overflow-y: auto;
+        padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+        box-sizing: border-box;
     }
 
     nav { display: none !important; }
@@ -275,7 +284,7 @@
     .comment-bar {
         position: fixed;
         left: 50%;
-        bottom: 1px;
+        bottom: calc(10px + env(safe-area-inset-bottom));
         transform: translateX(-50%);
         width: min(calc(100% - 20px), calc(var(--shell-width, 560px) - 20px));
         background: #ffffff;

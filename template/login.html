@@ -19,6 +19,19 @@ body {
     flex-direction: column;
     align-items: center;
     min-height: 100dvh;
+    position: relative;
+}
+body::before {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 20%, rgba(0,74,198,0.03) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(37,99,235,0.03) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
 }
 .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -26,32 +39,29 @@ body {
 .page-wrap {
     width: 100%;
     max-width: 480px;
-    padding: 80px 24px 40px;
+    padding: 40px 24px 40px;
     display: flex;
     flex-direction: column;
     align-items: center;
     flex: 1;
+    position: relative;
+    z-index: 1;
 }
-header {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 50;
-    max-width: 480px;
-    margin: 0 auto;
-    height: 56px;
+
+/* Sections for Desktop compatibility */
+.hero-content {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    padding: 0 24px;
-    background: rgba(247,249,251,0.8);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(0,0,0,0.04);
+    width: 100%;
 }
-header h1 {
-    font-size: 20px;
-    font-weight: 800;
-    color: #004ac6;
-    letter-spacing: -0.3px;
+.action-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
 }
+
 .hero-pill {
     display: inline-flex;
     align-items: center;
@@ -96,6 +106,7 @@ header h1 {
     padding: 28px 24px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.04);
     margin-bottom: 12px;
+    transition: all 0.3s;
 }
 .glass-card h2 {
     font-size: 22px;
@@ -176,7 +187,7 @@ header h1 {
     transition: all 0.3s;
     box-shadow: 0 20px 50px rgba(0,0,0,0.04);
 }
-.confess-card:hover { box-shadow: 0 25px 60px rgba(0,0,0,0.06); }
+.confess-card:active { transform: scale(0.98); }
 .confess-icon {
     width: 48px; height: 48px;
     border-radius: 16px;
@@ -207,50 +218,238 @@ header h1 {
 }
 .confess-arrow .material-symbols-outlined { font-size: 20px; }
 
-@media (min-width: 768px) {
-    .page-wrap { padding: 90px 32px 60px; }
-    .hero-title { font-size: 36px; }
+/* ── SEO Content Section (Mobile Base) ── */
+.seo-section {
+    width: 100%;
+    margin-top: 32px;
+    padding-top: 28px;
+    border-top: 1px solid rgba(0,74,198,0.08);
 }
+.seo-tagline {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    line-height: 1.6;
+    margin-bottom: 6px;
+    text-align: center;
+}
+.seo-campuses {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+    margin-bottom: 22px;
+    text-align: center;
+    font-weight: 500;
+}
+.seo-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.seo-feature {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 20px;
+    border: 1px solid rgba(0,74,198,0.06);
+    transition: background 0.2s;
+}
+.seo-feature:hover {
+    background: rgba(255,255,255,0.85);
+}
+.seo-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: #e4ecff;
+    color: var(--primary, #004ac6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.seo-icon .material-symbols-outlined,
+.seo-icon i {
+    font-size: 20px;
+}
+.seo-feature h4 {
+    margin: 0 0 2px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #151b27;
+}
+.seo-feature p {
+    margin: 0;
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.4;
+}
+
 @keyframes fadeUp {
     from { opacity: 0; transform: translateX(-50%) translateY(20px); }
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
+
+@media (min-width: 768px) {
+    body {
+        background: radial-gradient(ellipse at 30% 0%, #dbe1ff 0%, #eef4ff 40%, #f7f9fb 80%);
+        padding: 40px 24px;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+    }
+    body::before {
+        background: radial-gradient(circle at 20% 30%, rgba(0,74,198,0.04) 0%, transparent 45%),
+                    radial-gradient(circle at 80% 60%, rgba(37,99,235,0.03) 0%, transparent 45%),
+                    radial-gradient(circle at 50% 90%, rgba(99,102,241,0.02) 0%, transparent 30%);
+    }
+    
+    .page-wrap {
+        width: 100%;
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0;
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        column-gap: 48px;
+        row-gap: 0;
+        align-content: center;
+        min-height: 100vh;
+    }
+    
+    .hero-content {
+        grid-column: 1;
+        grid-row: 1;
+        align-items: flex-start;
+        text-align: left;
+    }
+    
+    .seo-section {
+        grid-column: 1;
+        grid-row: 2;
+        margin-top: 40px;
+        padding-top: 32px;
+        border-top: 1px solid rgba(0,74,198,0.1);
+    }
+    
+    .action-section {
+        grid-column: 2;
+        grid-row: 1 / 3;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        align-self: center;
+    }
+
+    .hero-pill { font-size: 13px; margin-bottom: 24px; }
+    .hero-title { font-size: 56px; text-align: left; line-height: 1.1; margin-bottom: 20px; }
+    .hero-sub { font-size: 16px; text-align: left; max-width: 100%; margin-bottom: 0; /* Let grid gap or seo margin handle spacing */ }
+    
+    .glass-card { 
+        padding: 40px; 
+        border-radius: 32px; 
+        box-shadow: 0 24px 60px rgba(0,0,0,0.06); 
+    }
+    .glass-card:hover { box-shadow: 0 32px 80px rgba(0,0,0,0.08); }
+    
+    .confess-card { 
+        margin-bottom: 24px; 
+        box-shadow: 0 24px 60px rgba(0,0,0,0.06); 
+    }
+    .confess-card:hover { 
+        box-shadow: 0 32px 80px rgba(0,0,0,0.08); 
+        transform: translateY(-2px); 
+    }
+    
+    .seo-tagline, .seo-campuses { text-align: left; }
+    .seo-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+    .seo-feature {
+        padding: 18px 20px;
+        border-radius: 20px;
+        align-items: flex-start;
+    }
+    
+    #pwa-install-prompt {
+        max-width: 420px !important;
+        bottom: 32px !important;
+    }
+}
 </style>
 </head>
 <body>
-<header>
-    <h1>Match</h1>
-</header>
 
 <div class="page-wrap">
-    <div class="hero-pill"><span>Exclusive Connection Hub</span></div>
-    <h1 class="hero-title">Socialise with <br/><span>Your College Mates</span></h1>
-    <p class="hero-sub">SRM: Swipe, Relate, Match. The official exclusive space for meaningful campus interactions.</p>
-
-    <div class="confess-card" style="margin-bottom:20px; cursor:pointer;" onclick="window.location.href='/confessions/'">
-        <div class="confess-icon">
-            <i class="fas fa-mask" style="font-size:18px;"></i>
-        </div>
-        <div class="confess-text">
-            <h3>Anonymous Confessions</h3>
-            <p>See what's happening on campus anonymously</p>
-        </div>
-        <div class="confess-arrow">
-            <span class="material-symbols-outlined">chevron_right</span>
-        </div>
+    
+    <!-- Hero Content -->
+    <div class="hero-content">
+        <div class="hero-pill"><span>Exclusive Connection Hub</span></div>
+        <h1 class="hero-title">Socialise with <br/><span>Your College Mates</span></h1>
+        <p class="hero-sub">SRM: Swipe, Relate, Match. The official exclusive space for meaningful campus interactions.</p>
     </div>
 
-    <div class="glass-card">
-        <h2>Join the Hub</h2>
-        <p class="desc">Login to unlock SRM Match, campus updates, and exclusive student features.</p>
-        <button type="button" onclick="triggerGoogleLogin()" class="google-btn">
-            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-            Sign in with Google
-        </button>
-        <div class="links">
-            <div class="lock-row">
-                <span class="material-symbols-outlined">lock</span>
-                <span>Secured with SRM Auth</span>
+    <!-- Actions (Confession & Login) - Placed correctly for mobile flow -->
+    <div class="action-section">
+        <div class="confess-card" style="margin-bottom:20px; cursor:pointer;" onclick="window.location.href='/confessions/'">
+            <div class="confess-icon">
+                <i class="fas fa-mask" style="font-size:18px;"></i>
+            </div>
+            <div class="confess-text">
+                <h3>Anonymous Confessions</h3>
+                <p>See what's happening on campus anonymously</p>
+            </div>
+            <div class="confess-arrow">
+                <span class="material-symbols-outlined">chevron_right</span>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h2>Join the Hub</h2>
+            <p class="desc">Login to unlock SRM Match, campus updates, and exclusive student features.</p>
+            <button type="button" onclick="triggerGoogleLogin()" class="google-btn">
+                <svg viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                Sign in with Google
+            </button>
+            <div class="links">
+                <div class="lock-row">
+                    <span class="material-symbols-outlined">lock</span>
+                    <span>Secured with SRM Auth</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SEO Content - Placed at the bottom for mobile, shifted left on desktop -->
+    <div class="seo-section">
+        <p class="seo-tagline">The smartest way to meet your campus crew — find friends, roommates, and real connections across SRM, all in one place.</p>
+        <p class="seo-campuses">Built for students at SRM KTR · Ramapuram · Vadapalani · NCR · AP · Chennai</p>
+
+        <div class="seo-grid">
+            <div class="seo-feature">
+                <div class="seo-icon"><i class="fas fa-mask"></i></div>
+                <div>
+                    <h4>Anonymous Confessions</h4>
+                    <p>Post and read campus confessions without revealing your name.</p>
+                </div>
+            </div>
+            <div class="seo-feature">
+                <div class="seo-icon" style="background:#dcf5e7; color:#006242;"><span class="material-symbols-outlined">bed</span></div>
+                <div>
+                    <h4>Roomie</h4>
+                    <p>Find rooms, PGs, roommates, and flatmates near your SRM campus.</p>
+                </div>
+            </div>
+            <div class="seo-feature">
+                <div class="seo-icon" style="background:#fbe9f0; color:#be185d;"><span class="material-symbols-outlined">favorite</span></div>
+                <div>
+                    <h4>Campus Match</h4>
+                    <p>Meet verified SRM students and make new friends safely.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -272,8 +471,6 @@ header h1 {
             <span class="material-symbols-outlined" style="font-size:18px;">close</span>
         </button>
     </div>
-</div>
-
 </div>
 
 <script>
