@@ -84,7 +84,7 @@ import base64
 import math
 from django.utils import timezone
 
-from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier
+from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier, Conversation, RoomRequest
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm, ProfileInitForm
 from .supabase_utils import delete_from_supabase_by_url
 from .cloudinary_utils import upload_to_cloudinary, upload_base64_to_cloudinary
@@ -885,6 +885,9 @@ def chat_view(request, partner_id):
     is_connected = MatchRequest.objects.filter(
         Q(sender=request.user, receiver=partner, status='accepted') |
         Q(sender=partner, receiver=request.user, status='accepted')
+    ).exists() or Conversation.objects.filter(
+        Q(user1=request.user, user2=partner) |
+        Q(user1=partner, user2=request.user)
     ).exists()
     
     if not is_connected:
@@ -998,6 +1001,9 @@ def chat_api_messages(request, partner_id):
     is_connected = MatchRequest.objects.filter(
         Q(sender=request.user, receiver=partner, status='accepted') |
         Q(sender=partner, receiver=request.user, status='accepted')
+    ).exists() or Conversation.objects.filter(
+        Q(user1=request.user, user2=partner) |
+        Q(user1=partner, user2=request.user)
     ).exists()
     
     if not is_connected:
@@ -2257,7 +2263,7 @@ def roomfinder_feed(request):
     if not profile or not profile.name or not profile.age or not profile.gender or not profile.campus or not profile.native_place:
         return redirect('complete_profile')
     
-    return render(request, 'roomfinder.html')
+    return render(request, 'roomfinder.html', {'profile': profile})
 
 @login_required
 def roomfinder_detail(request, id):
@@ -2429,6 +2435,12 @@ def api_get_rooms(request):
     if request.method == 'GET':
         listings = RoomListing.objects.filter(is_active=True).order_by('-created_at')
         
+        # Exclude blocked users for safety
+        blocked_ids = set(BlockedUser.objects.filter(blocker=request.user).values_list('blocked_id', flat=True)) | \
+                      set(BlockedUser.objects.filter(blocked=request.user).values_list('blocker_id', flat=True))
+        if blocked_ids:
+            listings = listings.exclude(user_id__in=blocked_ids)
+            
         # Filters
         saved_only = request.GET.get('saved_only')
         if saved_only == 'true':
@@ -2487,11 +2499,14 @@ def api_get_rooms(request):
                 'needed_occupants': lst.needed_occupants,
                 'gender_preference': lst.get_gender_preference_display(),
                 'images': images,
+                 'is_owner': lst.user == request.user,
                 'poster': {
+                    'id': lst.user.id,
                     'name': profile.name,
                     'pic': profile.get_profile_pic_url,
                     'course': profile.course,
-                    'year': profile.clg_year
+                    'year': profile.clg_year,
+                    'is_verified': profile.is_face_verified
                 },
                 'compatibility': compatibility,
                 'is_saved': lst.id in saved_ids,
@@ -2501,4 +2516,338 @@ def api_get_rooms(request):
         return JsonResponse({'success': True, 'listings': data, 'has_next': page.has_next()})
     
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+@csrf_exempt
+@login_required
+def api_get_or_create_conversation(request):
+    if request.method == 'POST':
+        try:
+            import json
+            if request.headers.get('Content-Type') == 'application/json' or (request.body and b'{' in request.body):
+                try:
+                    data = json.loads(request.body)
+                except Exception:
+                    data = request.POST
+            else:
+                data = request.POST
+
+            other_user_id = data.get('other_user_id')
+            if not other_user_id:
+                return JsonResponse({'success': False, 'error': 'Missing other_user_id.'})
+            
+            other_user_id = int(other_user_id)
+            if other_user_id == request.user.id:
+                return JsonResponse({'success': False, 'error': 'You cannot chat with yourself.'})
+            
+            other_user = get_object_or_404(User, id=other_user_id)
+            source = data.get('source', 'roomie')
+            listing_id = data.get('listing_id')
+            request_id = data.get('request_id')
+            
+            u1, u2 = (request.user, other_user) if request.user.id < other_user.id else (other_user, request.user)
+            
+            conv, conv_created = Conversation.objects.get_or_create(
+                user1=u1,
+                user2=u2,
+                defaults={
+                    'source': source,
+                    'listing_id': int(listing_id) if listing_id else None,
+                    'request_id': int(request_id) if request_id else None,
+                }
+            )
+            
+            match_req = MatchRequest.objects.filter(
+                Q(sender=request.user, receiver=other_user) |
+                Q(sender=other_user, receiver=request.user)
+            ).first()
+            
+            if match_req:
+                if match_req.status != 'accepted':
+                    match_req.status = 'accepted'
+                    match_req.save()
+            else:
+                MatchRequest.objects.create(
+                    sender=request.user,
+                    receiver=other_user,
+                    status='accepted'
+                )
+                
+            return JsonResponse({
+                'success': True,
+                'conversation_id': other_user.id,
+                'partner_id': other_user.id
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+            
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
+
+
+@csrf_exempt
+@login_required
+def api_create_room_request(request):
+    if request.method == 'POST':
+        try:
+            profile = getattr(request.user, 'profile', None)
+            if not profile:
+                return JsonResponse({'success': False, 'error': 'Profile not found.'})
+            
+            # Check profile completeness for languages, mother_tongues, native_place
+            langs = profile.languages_list
+            mts = profile.mother_tongues_list
+            np = profile.native_place.strip() if profile.native_place else ""
+            
+            if not langs or not mts or not np:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'profile_incomplete',
+                    'message': 'Please complete your mother tongue, languages spoken, and native place in your profile before posting a Room Request.'
+                })
+            
+            import json
+            if request.headers.get('Content-Type') == 'application/json' or (request.body and b'{' in request.body):
+                try:
+                    data = json.loads(request.body)
+                except Exception:
+                    data = request.POST
+            else:
+                data = request.POST
+                
+            title = data.get('title', '').strip()
+            campus = data.get('campus', '').strip()
+            looking_near = data.get('looking_near', '').strip()
+            min_rent = data.get('min_rent', '0').strip()
+            max_rent = data.get('max_rent', '0').strip()
+            preferred_room_type = data.get('preferred_room_type', '').strip()
+            sharing_preference = data.get('sharing_preference', '').strip()
+            needed_amenities = data.get('needed_amenities', '').strip() # comma separated
+            move_in_date = data.get('move_in_date', '').strip()
+            extra_note = data.get('extra_note', '').strip()
+            
+            if not title or len(title) > 70:
+                return JsonResponse({'success': False, 'error': 'Title must be between 1 and 70 characters.'})
+            if not campus:
+                return JsonResponse({'success': False, 'error': 'Campus is required.'})
+            if not looking_near:
+                return JsonResponse({'success': False, 'error': 'Looking near is required.'})
+            if not min_rent or not max_rent:
+                return JsonResponse({'success': False, 'error': 'Budget range is required.'})
+            if not preferred_room_type:
+                return JsonResponse({'success': False, 'error': 'Preferred room type is required.'})
+            if not sharing_preference:
+                return JsonResponse({'success': False, 'error': 'Sharing preference is required.'})
+            if not move_in_date:
+                return JsonResponse({'success': False, 'error': 'Move-in date is required.'})
+            if len(extra_note) > 110:
+                return JsonResponse({'success': False, 'error': 'Extra note must be at most 110 characters.'})
+                
+            req = RoomRequest.objects.create(
+                user=request.user,
+                title=title,
+                campus=campus,
+                looking_near=looking_near,
+                min_rent=int(min_rent),
+                max_rent=int(max_rent),
+                preferred_room_type=preferred_room_type,
+                sharing_preference=sharing_preference,
+                needed_amenities=needed_amenities,
+                move_in_date=move_in_date,
+                extra_note=extra_note
+            )
+            return JsonResponse({'success': True, 'request_id': req.id})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+            
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
+
+
+@login_required
+def api_get_room_requests(request):
+    if request.method == 'GET':
+        reqs = RoomRequest.objects.filter(is_active=True).order_by('-created_at')
+        
+        # Exclude blocked users for safety
+        blocked_ids = set(BlockedUser.objects.filter(blocker=request.user).values_list('blocked_id', flat=True)) | \
+                      set(BlockedUser.objects.filter(blocked=request.user).values_list('blocker_id', flat=True))
+        if blocked_ids:
+            reqs = reqs.exclude(user_id__in=blocked_ids)
+            
+        # Filters
+        campus = request.GET.get('campus')
+        if campus:
+            reqs = reqs.filter(campus=campus)
+            
+        min_rent = request.GET.get('min_rent')
+        if min_rent:
+            reqs = reqs.filter(max_rent__gte=int(min_rent))
+            
+        max_rent = request.GET.get('max_rent')
+        if max_rent:
+            reqs = reqs.filter(min_rent__lte=int(max_rent))
+            
+        gender = request.GET.get('gender')
+        if gender:
+            reqs = reqs.filter(user__profile__gender=gender)
+            
+        room_type = request.GET.get('room_type')
+        if room_type:
+            reqs = reqs.filter(preferred_room_type=room_type)
+            
+        amenity = request.GET.get('amenity')
+        if amenity:
+            reqs = reqs.filter(needed_amenities__icontains=amenity)
+            
+        mother_tongue = request.GET.get('mother_tongue')
+        if mother_tongue:
+            reqs = reqs.filter(user__profile__mother_tongues__icontains=mother_tongue)
+            
+        # Pagination
+        page_num = request.GET.get('page', 1)
+        paginator = Paginator(reqs, 10)
+        page = paginator.get_page(page_num)
+        
+        data = []
+        for r in page.object_list:
+            profile = r.user.profile
+            gender_char = 'M' if profile.gender == 'male' else 'F' if profile.gender == 'female' else 'O'
+            gender_age = f"{profile.age or ''}{gender_char}"
+            
+            data.append({
+                'id': r.id,
+                'title': r.title,
+                'campus': r.campus,
+                'looking_near': r.looking_near,
+                'min_rent': r.min_rent,
+                'max_rent': r.max_rent,
+                'preferred_room_type': r.preferred_room_type,
+                'sharing_preference': r.sharing_preference,
+                'needed_amenities': r.needed_amenities,
+                'move_in_date': r.move_in_date.strftime("%b %d, %Y") if r.move_in_date else '',
+                'extra_note': r.extra_note,
+                'created_at': r.created_at.strftime("%b %d, %Y"),
+                'is_owner': r.user == request.user,
+                'is_admin': request.user.is_staff or request.user.email == 'arunmohankml@gmail.com',
+                'user': {
+                    'id': r.user.id,
+                    'name': profile.name,
+                    'pic': profile.get_profile_pic_url,
+                    'gender_age': gender_age,
+                    'mother_tongue': profile.mother_tongues,
+                    'languages': profile.languages,
+                    'native_place': profile.native_place,
+                    'is_verified': profile.is_face_verified
+                }
+            })
+            
+        return JsonResponse({'success': True, 'requests': data, 'has_next': page.has_next()})
+        
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
+
+
+@csrf_exempt
+@login_required
+def api_delete_room_request(request, id):
+    if request.method == 'POST':
+        try:
+            req = RoomRequest.objects.get(id=id)
+            if not (request.user == req.user or request.user.is_staff or request.user.email == 'arunmohankml@gmail.com'):
+                return JsonResponse({'success': False, 'error': 'Unauthorized.'})
+                
+            req.is_active = False # soft delete
+            req.save()
+            return JsonResponse({'success': True})
+        except RoomRequest.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Request not found.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+            
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
+
+
+@csrf_exempt
+@login_required
+def api_edit_room_request(request, id):
+    if request.method == 'POST':
+        try:
+            req = RoomRequest.objects.get(id=id, is_active=True)
+            if not (request.user == req.user or request.user.is_staff or request.user.email == 'arunmohankml@gmail.com'):
+                return JsonResponse({'success': False, 'error': 'Unauthorized.'})
+            
+            import json
+            if request.headers.get('Content-Type') == 'application/json' or (request.body and b'{' in request.body):
+                try:
+                    data = json.loads(request.body)
+                except Exception:
+                    data = request.POST
+            else:
+                data = request.POST
+            
+            title = data.get('title', '').strip()
+            if title and len(title) <= 70:
+                req.title = title
+            
+            campus = data.get('campus', '').strip()
+            if campus:
+                req.campus = campus
+            
+            looking_near = data.get('looking_near', '').strip()
+            if looking_near:
+                req.looking_near = looking_near
+            
+            min_rent = data.get('min_rent', '').strip()
+            if min_rent:
+                req.min_rent = int(min_rent)
+            
+            max_rent = data.get('max_rent', '').strip()
+            if max_rent:
+                req.max_rent = int(max_rent)
+            
+            preferred_room_type = data.get('preferred_room_type', '').strip()
+            if preferred_room_type:
+                req.preferred_room_type = preferred_room_type
+            
+            sharing_preference = data.get('sharing_preference', '').strip()
+            if sharing_preference:
+                req.sharing_preference = sharing_preference
+            
+            needed_amenities = data.get('needed_amenities', '').strip()
+            req.needed_amenities = needed_amenities
+            
+            move_in_date = data.get('move_in_date', '').strip()
+            if move_in_date:
+                req.move_in_date = move_in_date
+            
+            extra_note = data.get('extra_note', '').strip()
+            if len(extra_note) <= 110:
+                req.extra_note = extra_note
+            
+            req.save()
+            return JsonResponse({'success': True})
+        except RoomRequest.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Request not found.'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    
+    return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
+
+
+@login_required
+def roomrequest_detail(request, id):
+    try:
+        req = RoomRequest.objects.get(id=id, is_active=True)
+    except RoomRequest.DoesNotExist:
+        messages.error(request, "Room request not found or has been deleted.")
+        return redirect('roomfinder_feed')
+    
+    profile = req.user.profile
+    is_owner = request.user == req.user
+    is_admin = request.user.is_staff or request.user.email == 'arunmohankml@gmail.com'
+    
+    return render(request, 'roomrequest_detail.html', {
+        'req': req,
+        'profile': profile,
+        'is_owner': is_owner,
+        'is_admin': is_admin,
+    })
 

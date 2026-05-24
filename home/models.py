@@ -542,3 +542,44 @@ class SavedRoomListing(models.Model):
     def __str__(self):
         return f"{self.user.username} saved {self.listing.id}"
 
+
+class Conversation(models.Model):
+    user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conversations_initiated')
+    user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conversations_received')
+    source = models.CharField(max_length=50, default='match') # e.g. roomie_available_room, roomie_room_request, match
+    listing_id = models.PositiveIntegerField(null=True, blank=True)
+    request_id = models.PositiveIntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user1', 'user2')
+
+    def __str__(self):
+        return f"Chat: {self.user1.username} & {self.user2.username} ({self.source})"
+
+
+class RoomRequest(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='room_requests')
+    title = models.CharField(max_length=70)
+    campus = models.CharField(max_length=100)
+    looking_near = models.CharField(max_length=200)
+    min_rent = models.PositiveIntegerField()
+    max_rent = models.PositiveIntegerField()
+    
+    preferred_room_type = models.CharField(max_length=50) # e.g., PG, flat, hostel, apartment, any
+    sharing_preference = models.CharField(max_length=50) # e.g., single, 2 sharing, 3 sharing, any
+    needed_amenities = models.CharField(max_length=200, blank=True) # comma-separated list like "WiFi,AC"
+    move_in_date = models.DateField()
+    extra_note = models.CharField(max_length=110, blank=True)
+    
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"RoomRequest: {self.title[:20]} by {self.user.username}"
+
+

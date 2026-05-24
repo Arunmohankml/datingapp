@@ -21,6 +21,7 @@ urlpatterns = [
     path("match/accept/<int:req_id>/", views.accept_match, name="accept_match"),
     path("match/reject/<int:req_id>/", views.reject_match, name="reject_match"),
     path("connections/", views.connections_view, name="connections"),
+    path("chat/get-or-create/", views.api_get_or_create_conversation, name="api_get_or_create_conversation"),
     path("chat/<int:partner_id>/", views.chat_view, name="chat_view"),
     path("chats/", views.chat_list_view, name="chat_list"),
     path("api/chat/<int:partner_id>/", views.chat_api_messages, name="chat_api_messages"),
@@ -64,4 +65,9 @@ urlpatterns = [
     path("api/roomfinder/<int:id>/delete/", views.api_delete_room, name="api_delete_room"),
     path("api/roomfinder/create/", views.api_create_room, name="api_create_room"),
     path("api/roomfinder/list/", views.api_get_rooms, name="api_get_rooms"),
+    path("api/roomrequests/create/", views.api_create_room_request, name="api_create_room_request"),
+    path("api/roomrequests/list/", views.api_get_room_requests, name="api_get_room_requests"),
+    path("api/roomrequests/<int:id>/delete/", views.api_delete_room_request, name="api_delete_room_request"),
+    path("api/roomrequests/<int:id>/edit/", views.api_edit_room_request, name="api_edit_room_request"),
+    path("roomrequest/<int:id>/", views.roomrequest_detail, name="roomrequest_detail"),
 ]

@@ -5,167 +5,274 @@
 
 {% block head %}
 <style>
-    /* Light Theme */
+    /* Light Theme Styling */
     :root {
-        --rf-bg: var(--bg-color, #f0f7ff);
-        --rf-card: var(--surface, #ffffff);
-        --rf-glass: var(--glass-bg, rgba(255, 255, 255, 0.8));
-        --rf-border: var(--border, #e0f2fe);
-        --rf-text: var(--text-main, #1e3a8a);
-        --rf-text-muted: var(--text-muted, #64748b);
-        --rf-primary: var(--primary, #2563eb);
-        --rf-accent: var(--accent, #ef4444);
+        --rf-bg: #f8fafc;
+        --rf-card: #ffffff;
+        --rf-glass: rgba(255, 255, 255, 0.95);
+        --rf-border: #f1f5f9;
+        --rf-border-hover: #e2e8f0;
+        --rf-text: #0f172a;
+        --rf-text-muted: #64748b;
+        --rf-primary: #2563eb;
+        --rf-primary-hover: #1d4ed8;
+        --rf-primary-light: #eff6ff;
+        --rf-accent: #ef4444;
+        --rf-success: #10b981;
+        --rf-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+        --rf-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
     }
 
     body {
         background: var(--rf-bg);
         color: var(--rf-text);
-        padding-bottom: 80px;
+        padding-bottom: 90px;
+        font-family: 'Inter', system-ui, sans-serif;
     }
 
-    /* Override base container */
     .container {
         max-width: 100% !important;
         padding: 0 !important;
         margin-top: 0 !important;
     }
 
+    /* Premium Header */
     .rf-header {
-        position: fixed;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%);
         width: 100%;
-        max-width: 600px;
         box-sizing: border-box;
-        padding: 6px 16px 8px;
-        background: var(--glass-bg, rgba(255, 255, 255, 0.95));
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
-        border-bottom: 1.5px solid var(--rf-primary);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-        z-index: 500;
+        padding: 16px 20px 16px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--rf-border);
+        transition: all 0.3s ease;
+    }
+
+    .rf-header-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+
+    .rf-title-area {
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
     .rf-title {
-        font-size: 18px;
-        font-weight: 800;
+        font-size: 20px;
+        font-weight: 850;
         margin: 0;
-        color: var(--rf-text);
-    }
-
-    .rf-subtitle {
-        font-size: 13px;
-        color: var(--rf-text-muted);
-        margin: 0 0 16px;
+        color: var(--rf-primary);
+        letter-spacing: -0.5px;
     }
 
     .rf-back-btn {
-        width: 30px;
-        height: 30px;
+        width: 34px;
+        height: 34px;
         border-radius: 50%;
-        background: var(--rf-glass);
+        background: #f1f5f9;
         display: flex;
         justify-content: center;
         align-items: center;
         text-decoration: none;
         color: var(--rf-text);
-        border: 1px solid var(--rf-border);
-        box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.05));
-        transition: 0.2s ease;
-        flex-shrink: 0;
-        font-size: 12px;
+        transition: all 0.2s ease;
+        font-size: 13px;
+    }
+    .rf-back-btn:hover {
+        background: #e2e8f0;
     }
     .rf-back-btn:active {
-        transform: scale(0.9);
+        transform: scale(0.92);
     }
 
-    /* Search & Filter */
-    .rf-search-bar {
-        background: var(--rf-glass);
-        border: 1px solid var(--rf-border);
-        border-radius: 16px;
+    /* Page Navigation Floating Pills */
+    .rf-float-nav {
+        display: flex;
+        gap: 6px;
+        background: #f1f5f9;
+        padding: 4px;
+        border-radius: 12px;
+    }
+
+    .rf-nav-pill {
         padding: 6px 12px;
+        border-radius: 9px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--rf-text-muted);
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        background: transparent;
+    }
+
+    .rf-nav-pill.active {
+        background: #ffffff;
+        color: var(--rf-primary);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .rf-header-subtitle {
+        font-size: 13px;
+        color: var(--rf-text-muted);
+        margin: 0 0 16px;
+        line-height: 1.4;
+    }
+
+    /* Double Tabs Container */
+    .rf-tabs-container {
+        display: flex;
+        border-bottom: 2px solid #e2e8f0;
+        margin-bottom: 12px;
+    }
+
+    .rf-tab-btn {
+        flex: 1;
+        text-align: center;
+        padding: 12px 6px;
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--rf-text-muted);
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+    }
+
+    .rf-tab-btn.active {
+        color: var(--rf-primary);
+    }
+
+    .rf-tab-btn::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: var(--rf-primary);
+        transform: scaleX(0);
+        transition: transform 0.3s ease;
+    }
+
+    .rf-tab-btn.active::after {
+        transform: scaleX(1);
+    }
+
+    .rf-tab-badge {
+        font-size: 10px;
+        font-weight: 500;
+        color: var(--rf-text-muted);
+        margin-top: 1px;
+    }
+
+    /* Search & Filters chips row */
+    .rf-search-filter-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 8px;
+        align-items: center;
+    }
+
+    .rf-search-input-wrapper {
+        flex: 1;
+        background: #f1f5f9;
+        border-radius: 12px;
+        padding: 0 14px;
+        height: 42px;
         display: flex;
         align-items: center;
         gap: 8px;
-        margin-bottom: 8px;
+        box-sizing: border-box;
     }
 
-    .rf-search-bar input {
-        background: transparent;
+    .rf-search-input-wrapper input {
         border: none;
-        color: var(--rf-text);
-        font-size: 13px;
-        width: 100%;
+        background: transparent;
         outline: none;
+        color: var(--rf-text);
+        font-size: 13.5px;
+        width: 100%;
+        height: 100%;
         padding: 0;
         margin: 0;
     }
 
-    .rf-search-bar input::placeholder {
-        color: var(--rf-text-muted);
-    }
-
-    .rf-chips-wrapper {
-        display: flex;
-        overflow-x: auto;
-        gap: 6px;
-        padding-bottom: 4px;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-    }
-
-    .rf-chips-wrapper::-webkit-scrollbar {
-        display: none;
-    }
-
-    .rf-chip {
-        background: var(--rf-glass);
-        border: 1px solid var(--rf-border);
-        padding: 4px 10px;
+    .rf-filter-btn {
+        background: #f1f5f9;
+        border: none;
         border-radius: 12px;
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--rf-text-muted);
-        white-space: nowrap;
+        height: 42px;
+        padding: 0 16px;
+        font-size: 13.5px;
+        font-weight: 700;
+        color: var(--rf-text);
         cursor: pointer;
-        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+    .rf-filter-btn:hover { background: #e2e8f0; }
+
+    .rf-filter-btn.active {
+        background: var(--rf-primary-light);
+        color: var(--rf-primary);
+        border: 1px solid rgba(37, 130, 246, 0.2);
     }
 
-    .rf-chip.active {
+    .rf-active-filter-badge {
         background: var(--rf-primary);
-        color: white;
-        border-color: var(--rf-primary);
+        color: #ffffff;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        font-weight: 800;
     }
 
-    /* Feed & Cards */
+    /* Feed Layout */
     .rf-feed {
-        padding: 24px 20px;
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 24px;
-        margin-top: 105px;
+        padding: 16px 20px 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        margin-top: 8px;
     }
 
+    /* Modern Rounded Cards */
     .rf-card {
         background: var(--rf-card);
-        border-radius: 24px;
+        border-radius: 20px;
         border: 1px solid var(--rf-border);
         overflow: hidden;
-        box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,0.08));
-        transition: transform 0.3s;
+        box-shadow: var(--rf-shadow);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
     }
-
-    .rf-card:active {
-        transform: scale(0.98);
+    .rf-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--rf-shadow-lg);
+        border-color: var(--rf-border-hover);
     }
 
     .rf-carousel {
         position: relative;
         width: 100%;
-        aspect-ratio: 4/3;
-        background: #f1f5f9;
+        aspect-ratio: 16/10;
+        background: #f8fafc;
         overflow: hidden;
     }
 
@@ -175,36 +282,30 @@
         object-fit: cover;
     }
 
-    /* PC Carousel Arrows */
     .rf-carousel-btn {
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
-        background: rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.9);
         border: none;
-        width: 32px;
-        height: 32px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
-        display: none;
+        display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        color: var(--text-main);
+        color: var(--rf-text);
         z-index: 10;
-        backdrop-filter: blur(4px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.2s ease;
     }
-    .rf-card:hover .rf-carousel-btn {
-        display: flex; /* Show only on PC hover */
-    }
-    @media (hover: none) {
-        .rf-carousel-btn { display: none !important; }
-    }
-    .rf-carousel-btn.prev { left: 8px; }
-    .rf-carousel-btn.next { right: 8px; }
-    .rf-carousel-btn:hover { background: white; }
+    .rf-carousel-btn:hover { background: #ffffff; transform: translateY(-50%) scale(1.05); }
+    .rf-carousel-btn.prev { left: 10px; }
+    .rf-carousel-btn.next { right: 10px; }
 
     .rf-card-body {
-        padding: 20px;
+        padding: 16px 18px;
     }
 
     .rf-price-row {
@@ -215,22 +316,24 @@
     }
 
     .rf-price {
-        font-size: 24px;
-        font-weight: 800;
+        font-size: 20px;
+        font-weight: 850;
         color: var(--rf-text);
     }
 
     .rf-type-badge {
-        background: rgba(37, 99, 235, 0.1);
+        background: var(--rf-primary-light);
         color: var(--rf-primary);
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
     .rf-location {
-        font-size: 14px;
+        font-size: 13.5px;
         color: var(--rf-text-muted);
         margin-bottom: 12px;
         display: flex;
@@ -242,199 +345,262 @@
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
-        margin-bottom: 16px;
+        margin-bottom: 14px;
     }
 
     .rf-tag {
-        background: var(--rf-glass);
+        background: #f8fafc;
         border: 1px solid var(--rf-border);
-        padding: 4px 10px;
-        border-radius: 8px;
+        padding: 4px 8px;
+        border-radius: 6px;
         font-size: 11px;
+        font-weight: 500;
         color: var(--rf-text-muted);
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
 
     .rf-user-row {
         display: flex;
         align-items: center;
-        gap: 12px;
-        padding-top: 16px;
+        gap: 10px;
+        padding-top: 14px;
         border-top: 1px solid var(--rf-border);
+        margin-top: 4px;
     }
 
     .rf-user-pic {
-        width: 40px;
-        height: 40px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
         object-fit: cover;
+        border: 1px solid #f1f5f9;
     }
 
     .rf-user-info {
         flex: 1;
     }
+
     .rf-user-name {
-        font-size: 14px;
-        font-weight: 700;
-        margin: 0;
+        font-size: 13px;
+        font-weight: 750;
+        margin: 0 0 2px;
+        color: var(--rf-text);
+        display: flex;
+        align-items: center;
+        gap: 4px;
     }
+
     .rf-user-course {
-        font-size: 12px;
+        font-size: 11px;
         color: var(--rf-text-muted);
         margin: 0;
     }
-    
+
     .rf-card-save-btn {
-        background: rgba(37, 99, 235, 0.06);
-        border: 1px solid rgba(37, 99, 235, 0.12);
-        color: var(--rf-primary);
-        padding: 6px 12px;
-        border-radius: 12px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        color: var(--rf-text-muted);
+        padding: 8px 12px;
+        border-radius: 10px;
         font-size: 12px;
         font-weight: 700;
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 5px;
         cursor: pointer;
         transition: all 0.2s ease;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
+
     .rf-card-save-btn.saved {
         background: var(--rf-primary);
         border-color: var(--rf-primary);
-        color: white;
-        box-shadow: 0 3px 8px rgba(37, 99, 235, 0.25);
+        color: #ffffff;
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.25);
     }
-    .rf-card-save-btn:hover {
-        background: rgba(37, 99, 235, 0.12);
-    }
-    .rf-card-save-btn.saved:hover {
-        background: #1d4ed8;
-    }
-    .rf-card-save-btn:active {
-        transform: scale(0.95);
-    }
+    .rf-card-save-btn:active { transform: scale(0.94); }
 
-    /* FAB */
+    /* Dynamic FAB button */
     .rf-fab {
         position: fixed;
-        bottom: 90px;
+        bottom: 85px;
         right: 20px;
         background: var(--rf-primary);
         color: white;
-        width: 56px;
-        height: 56px;
-        border-radius: 28px;
+        padding: 12px 20px;
+        border-radius: 30px;
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        box-shadow: 0 10px 25px rgba(99,102,241,0.5);
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 800;
+        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
         cursor: pointer;
         z-index: 100;
-        transition: 0.3s;
+        transition: all 0.25s cubic-bezier(0.1, 1, 0.2, 1);
+        border: none;
     }
-    .rf-fab:active { transform: scale(0.9); }
+    .rf-fab:active { transform: scale(0.95); }
 
-    /* Bottom Sheet Modal */
+    /* Modals & Overlays */
     .rf-modal-overlay {
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.6);
-        backdrop-filter: blur(5px);
+        background: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(8px);
         z-index: 1000;
         display: none;
         opacity: 0;
-        transition: opacity 0.3s;
+        transition: opacity 0.3s ease;
     }
-    
-    .rf-modal-overlay.active {
-        display: block;
-        opacity: 1;
-    }
+    .rf-modal-overlay.active { display: block; opacity: 1; }
 
     .rf-modal {
         position: fixed;
         bottom: -100%;
-        left: 0;
-        right: 0;
-        background: var(--rf-bg);
-        border-top-left-radius: 24px;
-        border-top-right-radius: 24px;
-        padding: 24px 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 600px;
+        background: #ffffff;
+        border-top-left-radius: 28px;
+        border-top-right-radius: 28px;
+        padding: 24px 20px 30px;
         z-index: 1001;
         transition: bottom 0.4s cubic-bezier(0.1, 1, 0.2, 1);
-        max-height: 90vh;
+        max-height: 88vh;
         overflow-y: auto;
-        border-top: 1px solid var(--rf-border);
+        box-sizing: border-box;
+        box-shadow: 0 -10px 40px rgba(0,0,0,0.06);
     }
-    
-    .rf-modal.active {
-        bottom: 0;
-    }
-    
+    .rf-modal.active { bottom: 0; }
+
     .rf-modal-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
     }
-    
-    .rf-modal-title { font-size: 20px; font-weight: 800; margin: 0; }
-    
-    .rf-form-group {
-        margin-bottom: 16px;
-    }
+
+    .rf-modal-title { font-size: 18px; font-weight: 850; margin: 0; color: var(--rf-text); }
+
+    .rf-form-group { margin-bottom: 16px; }
     .rf-form-group label {
         display: block;
-        font-size: 13px;
+        font-size: 12px;
+        font-weight: 700;
         color: var(--rf-text-muted);
         margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
+
     .rf-form-control {
         width: 100%;
-        background: var(--rf-card);
+        background: #f8fafc;
         border: 1px solid var(--rf-border);
         color: var(--rf-text);
-        padding: 12px 16px;
+        padding: 10px 14px;
         border-radius: 12px;
-        font-size: 15px;
-        font-family: inherit;
+        font-size: 14px;
         outline: none;
         box-sizing: border-box;
+        transition: border 0.2s ease;
     }
-    .rf-form-control:focus { border-color: var(--rf-primary); }
-    
+    .rf-form-control:focus { border-color: var(--rf-primary); background: #ffffff; }
+
+    /* Amenity checkbox pills style */
+    .rf-amenity-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 6px;
+    }
+
+    .rf-amenity-checkbox {
+        display: none;
+    }
+
+    .rf-amenity-pill {
+        background: #f1f5f9;
+        color: var(--rf-text-muted);
+        border: 1px solid #e2e8f0;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .rf-amenity-checkbox:checked + .rf-amenity-pill {
+        background: var(--rf-primary-light);
+        color: var(--rf-primary);
+        border-color: var(--rf-primary);
+    }
+
     .rf-submit-btn {
         width: 100%;
-        padding: 16px;
+        padding: 14px;
         background: var(--rf-primary);
         color: white;
         border: none;
-        border-radius: 16px;
-        font-size: 16px;
-        font-weight: 700;
-        margin-top: 10px;
+        border-radius: 14px;
+        font-size: 15px;
+        font-weight: 800;
         cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .rf-submit-btn:hover { background: var(--rf-primary-hover); }
+
+    /* Empty state card style */
+    .rf-empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        background: #ffffff;
+        border-radius: 20px;
+        border: 1px solid var(--rf-border);
+        color: var(--rf-text-muted);
+        box-shadow: var(--rf-shadow);
+    }
+    .rf-empty-state-title {
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--rf-text);
+        margin: 12px 0 8px;
     }
 
-    /* PC Desktop Sizing Constraints */
+    /* Warning/Profile Complete Banner style */
+    .rf-warning-banner {
+        background: #fffbeb;
+        border: 1px solid #fef3c7;
+        border-left: 4px solid #f59e0b;
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 18px;
+        color: #b45309;
+        font-size: 13px;
+        line-height: 1.5;
+        text-align: left;
+    }
+
     @media (min-width: 600px) {
         .container {
             max-width: 600px !important;
             margin: 0 auto !important;
             border-left: 1px solid var(--rf-border);
             border-right: 1px solid var(--rf-border);
-            box-shadow: 0 0 60px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.03);
             background: var(--rf-bg);
             min-height: 100vh;
             position: relative;
         }
-        .rf-header {
-            width: 600px;
-        }
-        .rf-fab {
-            right: calc(50% - 300px + 20px);
-        }
+        .rf-header { width: 600px; }
+        .rf-fab { right: calc(50% - 300px + 20px); }
         .rf-modal {
             max-width: 600px;
             left: 50% !important;
@@ -448,48 +614,59 @@
 
 {% block body %}
 <div class="rf-header">
-    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-        <a href="{% url 'home' %}" class="rf-back-btn">
-            <i class="fas fa-arrow-left"></i>
-        </a>
-        <h1 class="rf-title">Roomie</h1>
+    <div class="rf-header-top">
+        <div class="rf-title-area">
+            <a href="{% url 'home' %}" class="rf-back-btn"><i class="fas fa-arrow-left"></i></a>
+            <h1 class="rf-title">Roomie</h1>
+        </div>
     </div>
     
-    <div class="rf-search-bar">
-        <i class="fas fa-search" style="color:var(--rf-text-muted)"></i>
-        <input type="text" id="rfSearch" placeholder="Search area, campus, or keyword..." oninput="fetchListings()">
-    </div>
+    <p class="rf-header-subtitle">Find rooms, roommates, PGs, and flatmates around your campus.</p>
     
-    <div class="rf-chips-wrapper" id="filterChips">
-        <div class="rf-chip" onclick="openFilterModal()" style="background: var(--rf-primary); color: white; border-color: var(--rf-primary);">
+    <!-- Tab buttons with clear explanation markers -->
+    <div class="rf-tabs-container">
+        <button class="rf-tab-btn active" id="tabAvailable" onclick="switchTab('available')">
+            Available Rooms
+            <span class="rf-tab-badge" id="tabAvailableSub">"I have a room / PG / flat"</span>
+        </button>
+        <button class="rf-tab-btn" id="tabRequests" onclick="switchTab('requests')">
+            Room Requests
+            <span class="rf-tab-badge" id="tabRequestsSub">"I need a room"</span>
+        </button>
+    </div>
+
+    <!-- Search and Unified Filter row -->
+    <div class="rf-search-filter-row">
+        <div class="rf-search-input-wrapper">
+            <i class="fas fa-search" style="color:var(--rf-text-muted)"></i>
+            <input type="text" id="rfSearch" placeholder="Search area, college, or tags..." oninput="handleSearch()">
+        </div>
+        <button class="rf-filter-btn" onclick="openFilterModal()" id="filterToggleBtn">
             <i class="fas fa-filter"></i> Filters
-        </div>
-        <div class="rf-chip" id="savedFilterChip" onclick="toggleSavedFilter()">
-            <i class="far fa-bookmark"></i> Saved
-        </div>
-        <div class="rf-chip" id="activeFilterCount" style="display:none; font-weight: 800;">0 Active</div>
+            <span class="rf-active-filter-badge" id="filterCountBadge" style="display:none;">0</span>
+        </button>
     </div>
 </div>
-
 
 <div class="rf-feed" id="rfFeed">
-    <!-- Listings will be injected here via JS -->
+    <!-- Content injected via JavaScript -->
     <div style="text-align:center; padding: 40px; color: var(--rf-text-muted);">
-        <i class="fas fa-spinner fa-spin fa-2x"></i>
-        <p style="margin-top:12px;">Finding best places...</p>
+        <i class="fas fa-spinner fa-spin fa-2x" style="color:var(--rf-primary)"></i>
+        <p style="margin-top:12px;">Loading roomie listings...</p>
     </div>
 </div>
 
-<div class="rf-fab" onclick="openPostModal()">
-    <i class="fas fa-plus"></i>
-</div>
+<!-- Dynamic FAB Action Button -->
+<button class="rf-fab" onclick="handleFabClick()" id="rfFabBtn">
+    <i class="fas fa-plus"></i> <span id="rfFabText">List a Room</span>
+</button>
 
-<!-- Filter Modal -->
+<!-- Unified Filters Modal -->
 <div class="rf-modal-overlay" id="filterModalOverlay" onclick="closeFilterModal()"></div>
 <div class="rf-modal" id="filterModal">
     <div class="rf-modal-header">
         <h2 class="rf-modal-title">Filters</h2>
-        <i class="fas fa-times" onclick="closeFilterModal()" style="font-size:20px; color:var(--rf-text-muted); cursor:pointer;"></i>
+        <i class="fas fa-times" onclick="closeFilterModal()" style="font-size:18px; color:var(--rf-text-muted); cursor:pointer;"></i>
     </div>
     
     <div class="rf-form-group">
@@ -504,23 +681,10 @@
     </div>
 
     <div class="rf-form-group">
-        <label>Room Type</label>
-        <select id="filterType" class="rf-form-control">
-            <option value="">Any Type</option>
-            <option value="1bhk">1 BHK</option>
-            <option value="2bhk">2 BHK</option>
-            <option value="3bhk">3 BHK</option>
-            <option value="pg">PG</option>
-            <option value="shared">Shared Room</option>
-            <option value="flatmate">Flatmate Needed</option>
-        </select>
-    </div>
-
-    <div class="rf-form-group">
-        <label>Rent Price (₹)</label>
-        <div style="display:flex; gap:12px; align-items:center;">
+        <label>Rent Budget (₹)</label>
+        <div style="display:flex; gap:10px; align-items:center;">
             <input type="number" id="filterMinRent" class="rf-form-control" placeholder="Min">
-            <span>to</span>
+            <span style="font-size:13px; color:var(--rf-text-muted);">to</span>
             <input type="number" id="filterMaxRent" class="rf-form-control" placeholder="Max">
         </div>
     </div>
@@ -528,23 +692,66 @@
     <div class="rf-form-group">
         <label>Gender Preference</label>
         <select id="filterGender" class="rf-form-control">
-            <option value="">Any</option>
-            <option value="boys">Boys Only</option>
-            <option value="girls">Girls Only</option>
+            <option value="">Any Gender</option>
+            <option value="male">Boys / Males</option>
+            <option value="female">Girls / Females</option>
         </select>
     </div>
 
-    <button type="button" class="rf-submit-btn" onclick="applyFilters()">Apply Filters</button>
+    <div class="rf-form-group">
+        <label>Room / Share Type</label>
+        <select id="filterType" class="rf-form-control">
+            <option value="">Any Type</option>
+            <option value="1bhk">1 BHK</option>
+            <option value="2bhk">2 BHK</option>
+            <option value="3bhk">3 BHK</option>
+            <option value="pg">PG</option>
+            <option value="hostel">Hostel</option>
+            <option value="shared">Shared Room</option>
+            <option value="flatmate">Flatmate Needed</option>
+            <option value="any">Any Room Type</option>
+        </select>
+    </div>
+
+    <div class="rf-form-group">
+        <label>Amenities</label>
+        <div class="rf-amenity-grid">
+            <label><input type="checkbox" name="filterAmenity" value="WiFi" class="rf-amenity-checkbox"><span class="rf-amenity-pill">WiFi</span></label>
+            <label><input type="checkbox" name="filterAmenity" value="AC" class="rf-amenity-checkbox"><span class="rf-amenity-pill">AC</span></label>
+            <label><input type="checkbox" name="filterAmenity" value="Food" class="rf-amenity-checkbox"><span class="rf-amenity-pill">Food</span></label>
+            <label><input type="checkbox" name="filterAmenity" value="Washing Machine" class="rf-amenity-checkbox"><span class="rf-amenity-pill">Washing Machine</span></label>
+            <label><input type="checkbox" name="filterAmenity" value="Attached Bathroom" class="rf-amenity-checkbox"><span class="rf-amenity-pill">Attached Bathroom</span></label>
+        </div>
+    </div>
+
+    <div class="rf-form-group">
+        <label>Mother Tongue</label>
+        <select id="filterMotherTongue" class="rf-form-control">
+            <option value="">Any Language</option>
+            <option value="Tamil">Tamil</option>
+            <option value="Telugu">Telugu</option>
+            <option value="Hindi">Hindi</option>
+            <option value="Malayalam">Malayalam</option>
+            <option value="Kannada">Kannada</option>
+            <option value="English">English</option>
+            <option value="Bengali">Bengali</option>
+            <option value="Marathi">Marathi</option>
+            <option value="Gujarati">Gujarati</option>
+            <option value="Punjabi">Punjabi</option>
+        </select>
+    </div>
+
+    <button type="button" class="rf-submit-btn" onclick="applyFilters()" style="margin-top:10px;">Apply Active Filters</button>
 </div>
 
-<!-- Post Modal -->
+<!-- Modal 1: Post Available Room Listing -->
 <div class="rf-modal-overlay" id="postModalOverlay" onclick="closePostModal()"></div>
 <div class="rf-modal" id="postModal">
     <div class="rf-modal-header">
-        <h2 class="rf-modal-title">Post a Room</h2>
-        <i class="fas fa-times" onclick="closePostModal()" style="font-size:20px; color:var(--rf-text-muted); cursor:pointer;"></i>
+        <h2 class="rf-modal-title">List an Available Room</h2>
+        <i class="fas fa-times" onclick="closePostModal()" style="font-size:18px; color:var(--rf-text-muted); cursor:pointer;"></i>
     </div>
-    <form id="postRoomForm" onsubmit="submitRoom(event)">
+    <form id="postRoomForm" onsubmit="submitRoomListing(event)">
         <div class="rf-form-group">
             <label>Images (Up to 5)</label>
             <input type="file" id="roomImages" class="rf-form-control" multiple accept="image/*" onchange="previewRoomImages(this)">
@@ -634,166 +841,277 @@
     </form>
 </div>
 
+<!-- Modal 2: Post Room Request -->
+<div class="rf-modal-overlay" id="requestModalOverlay" onclick="closeRequestModal()"></div>
+<div class="rf-modal" id="requestModal">
+    <div class="rf-modal-header">
+        <h2 class="rf-modal-title">Post Room Request</h2>
+        <i class="fas fa-times" onclick="closeRequestModal()" style="font-size:18px; color:var(--rf-text-muted); cursor:pointer;"></i>
+    </div>
+    
+    <!-- Profile Completion Validation Banner -->
+    <div id="profileWarningBanner" class="rf-warning-banner" style="display:none;">
+        <i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>
+        <strong>Profile Incomplete:</strong> You must fill out your **Mother Tongue**, **Languages Spoken**, and **Native Place** in your profile before posting a Room Request.
+        <div style="margin-top:10px;">
+            <a href="{% url 'edit_profile' %}" class="rf-submit-btn" style="display:inline-block; width:auto; text-decoration:none; font-size:12px; padding:6px 12px; background:#b45309; text-align:center;">Edit Profile Now</a>
+        </div>
+    </div>
+
+    <form id="postRequestForm" onsubmit="submitRoomRequest(event)" style="display:block;">
+        <div class="rf-form-group">
+            <label>Request Title (Max 70 chars)</label>
+            <input type="text" id="reqTitle" class="rf-form-control" placeholder="18F looking for a room near SRM Ramapuram" maxlength="70" required>
+        </div>
+        
+        <div style="display:flex; gap:12px;">
+            <div class="rf-form-group" style="flex:1;">
+                <label>Campus</label>
+                <select id="reqCampus" class="rf-form-control" required>
+                    <option value="KTR">KTR</option>
+                    <option value="RMP">RMP</option>
+                    <option value="VDP">VDP</option>
+                    <option value="NCR">NCR</option>
+                </select>
+            </div>
+            <div class="rf-form-group" style="flex:1;">
+                <label>Preferred Room Type</label>
+                <select id="reqRoomType" class="rf-form-control" required>
+                    <option value="PG">PG</option>
+                    <option value="flat">Flat</option>
+                    <option value="hostel">Hostel</option>
+                    <option value="apartment">Apartment</option>
+                    <option value="any">Any Room Type</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="rf-form-group">
+            <label>Looking Near (Area / Landmark)</label>
+            <input type="text" id="reqLookingNear" class="rf-form-control" placeholder="Potheri, Ramapuram main road, etc." required>
+        </div>
+        
+        <div style="display:flex; gap:12px;">
+            <div class="rf-form-group" style="flex:1;">
+                <label>Min Budget (Per Month)</label>
+                <input type="number" id="reqMinRent" class="rf-form-control" placeholder="₹" required>
+            </div>
+            <div class="rf-form-group" style="flex:1;">
+                <label>Max Budget (Per Month)</label>
+                <input type="number" id="reqMaxRent" class="rf-form-control" placeholder="₹" required>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:12px;">
+            <div class="rf-form-group" style="flex:1;">
+                <label>Sharing Preference</label>
+                <select id="reqSharing" class="rf-form-control" required>
+                    <option value="single">Single Room</option>
+                    <option value="2 sharing">2 Sharing</option>
+                    <option value="3 sharing">3 Sharing</option>
+                    <option value="any">Any Sharing</option>
+                </select>
+            </div>
+            <div class="rf-form-group" style="flex:1;">
+                <label>Move-in Date</label>
+                <input type="date" id="reqMoveIn" class="rf-form-control" required>
+            </div>
+        </div>
+
+        <div class="rf-form-group">
+            <label>Needed Amenities</label>
+            <div class="rf-amenity-grid">
+                <label><input type="checkbox" name="reqAmenity" value="WiFi" class="rf-amenity-checkbox"><span class="rf-amenity-pill">WiFi</span></label>
+                <label><input type="checkbox" name="reqAmenity" value="AC" class="rf-amenity-checkbox"><span class="rf-amenity-pill">AC</span></label>
+                <label><input type="checkbox" name="reqAmenity" value="Food" class="rf-amenity-checkbox"><span class="rf-amenity-pill">Food</span></label>
+                <label><input type="checkbox" name="reqAmenity" value="Washing Machine" class="rf-amenity-checkbox"><span class="rf-amenity-pill">Washing Machine</span></label>
+                <label><input type="checkbox" name="reqAmenity" value="Attached Bathroom" class="rf-amenity-checkbox"><span class="rf-amenity-pill">Attached Bathroom</span></label>
+            </div>
+        </div>
+
+        <div class="rf-form-group">
+            <label>Extra Note (Max 110 chars)</label>
+            <input type="text" id="reqNote" class="rf-form-control" placeholder="Looking for neat roommates, veg preferred..." maxlength="110">
+        </div>
+        
+        <!-- Auto filled details preview -->
+        <div style="background:#f1f5f9; padding: 12px; border-radius:12px; margin-bottom:16px; font-size:12px; color:var(--rf-text-muted);">
+            <div style="font-weight:700; text-transform:uppercase; font-size:10px; margin-bottom:6px; color:var(--rf-text);">Auto-filled Profile Details</div>
+            <div><strong>Native Place:</strong> <span id="previewNativePlace"></span></div>
+            <div><strong>Mother Tongue:</strong> <span id="previewMotherTongue"></span></div>
+            <div><strong>Languages Spoken:</strong> <span id="previewLanguages"></span></div>
+        </div>
+        
+        <button type="submit" class="rf-submit-btn" id="reqSubmitBtn">Post Room Request</button>
+    </form>
+</div>
+
 <script>
-    let showSavedOnly = false;
+    let currentTab = 'available'; // 'available' or 'requests'
+    let activeFilters = {};
     let selectedRoomImages = [];
 
-    function previewRoomImages(input) {
-        if (!input.files || input.files.length === 0) return;
+    // Parse logged in user profile from Django context
+    const userProfile = {
+        mother_tongue: "{{ profile.mother_tongues|escapejs }}".trim(),
+        languages: "{{ profile.languages|escapejs }}".trim(),
+        native_place: "{{ profile.native_place|escapejs }}".trim()
+    };
+
+    // Tab Switching Logic
+    function switchTab(tab) {
+        currentTab = tab;
         
-        const newFiles = Array.from(input.files);
-        let exceededLimit = false;
-
-        newFiles.forEach(file => {
-            if (selectedRoomImages.length >= 5) {
-                exceededLimit = true;
-                return;
-            }
-            if (!selectedRoomImages.some(f => f.name === file.name && f.size === file.size)) {
-                selectedRoomImages.push(file);
-            }
-        });
-
-        if (exceededLimit) {
-            customAlert("You can only upload a maximum of 5 images.", "Limit Exceeded");
-        }
-
-        input.value = ''; // Reset input to support progressive uploads of the same file
-        renderImagePreviews();
-    }
-
-    function renderImagePreviews() {
-        const container = document.getElementById('imagePreviewContainer');
-        container.innerHTML = '';
+        // Update Tabs UI
+        document.getElementById('tabAvailable').classList.toggle('active', tab === 'available');
+        document.getElementById('tabRequests').classList.toggle('active', tab === 'requests');
         
-        if (selectedRoomImages.length > 0) {
-            container.style.display = 'flex';
-            selectedRoomImages.forEach((file, index) => {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const wrapper = document.createElement('div');
-                    wrapper.style.position = 'relative';
-                    wrapper.style.width = '100px';
-                    wrapper.style.height = '100px';
-                    wrapper.style.flexShrink = '0';
+        // Update FAB Label
+        document.getElementById('rfFabText').innerText = tab === 'available' ? 'List a Room' : 'Post Request';
+        
+        // Refresh Content
+        fetchContent();
+    }
 
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.style.height = '100%';
-                    img.style.width = '100%';
-                    img.style.objectFit = 'cover';
-                    img.style.borderRadius = '12px';
-                    img.style.border = '1px solid var(--rf-border)';
-                    
-                    const delBtn = document.createElement('button');
-                    delBtn.type = 'button';
-                    delBtn.innerHTML = '<i class="fas fa-times"></i>';
-                    delBtn.style.position = 'absolute';
-                    delBtn.style.top = '4px';
-                    delBtn.style.right = '4px';
-                    delBtn.style.width = '22px';
-                    delBtn.style.height = '22px';
-                    delBtn.style.borderRadius = '50%';
-                    delBtn.style.background = 'rgba(15, 23, 42, 0.75)';
-                    delBtn.style.color = '#ffffff';
-                    delBtn.style.border = 'none';
-                    delBtn.style.display = 'flex';
-                    delBtn.style.alignItems = 'center';
-                    delBtn.style.justifyContent = 'center';
-                    delBtn.style.fontSize = '10px';
-                    delBtn.style.cursor = 'pointer';
-                    delBtn.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.15)';
-                    delBtn.style.transition = 'background 0.2s';
-                    
-                    delBtn.onclick = function(event) {
-                        event.stopPropagation();
-                        selectedRoomImages.splice(index, 1);
-                        renderImagePreviews();
-                    };
-
-                    wrapper.appendChild(img);
-                    wrapper.appendChild(delBtn);
-                    container.appendChild(wrapper);
-                }
-                reader.readAsDataURL(file);
-            });
+    function handleFabClick() {
+        if (currentTab === 'available') {
+            openPostModal();
         } else {
-            container.style.display = 'none';
+            openRequestModal();
         }
     }
 
-    function toggleSavedFilter() {
-        showSavedOnly = !showSavedOnly;
-        const chip = document.getElementById("savedFilterChip");
-        if (showSavedOnly) {
-            chip.classList.add("active");
-            chip.innerHTML = '<i class="fas fa-bookmark"></i> Saved';
+    // Dynamic fetch route
+    function fetchContent() {
+        if (currentTab === 'available') {
+            fetchListings();
         } else {
-            chip.classList.remove("active");
-            chip.innerHTML = '<i class="far fa-bookmark"></i> Saved';
-        }
-        fetchListings();
-    }
-
-    async function toggleSaveCard(listingId, btn) {
-        try {
-            const res = await fetch(`/api/roomfinder/${listingId}/save/`, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
-            });
-            const data = await res.json();
-            if (data.success) {
-                if (data.saved) {
-                    btn.classList.add('saved');
-                    const icon = btn.querySelector('i');
-                    if (icon) icon.className = 'fas fa-bookmark';
-                    const textSpan = btn.querySelector('span');
-                    if (textSpan) textSpan.innerText = 'Saved';
-                    showGlobalToast("Listing saved to favorites!");
-                } else {
-                    btn.classList.remove('saved');
-                    const icon = btn.querySelector('i');
-                    if (icon) icon.className = 'far fa-bookmark';
-                    const textSpan = btn.querySelector('span');
-                    if (textSpan) textSpan.innerText = 'Save';
-                    showGlobalToast("Listing removed from favorites.");
-                    if (showSavedOnly) {
-                        fetchListings();
-                    }
-                }
-            } else {
-                showGlobalToast(data.error || "Failed to save listing.");
-            }
-        } catch (e) {
-            console.error(e);
-            showGlobalToast("Network error occurred.");
+            fetchRequests();
         }
     }
 
+    function handleSearch() {
+        fetchContent();
+    }
+
+    // Modal Control Logic
+    function openPostModal() {
+        document.getElementById('postModalOverlay').classList.add('active');
+        document.getElementById('postModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closePostModal() {
+        document.getElementById('postModalOverlay').classList.remove('active');
+        document.getElementById('postModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function openRequestModal() {
+        document.getElementById('requestModalOverlay').classList.add('active');
+        document.getElementById('requestModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+        
+        // Profile verification before posting request
+        const hasLangs = userProfile.languages && userProfile.languages.toLowerCase() !== 'none' && userProfile.languages !== '[]';
+        const hasMts = userProfile.mother_tongue && userProfile.mother_tongue.toLowerCase() !== 'none' && userProfile.mother_tongue !== '[]';
+        const hasNp = userProfile.native_place && userProfile.native_place.trim().length > 0;
+        
+        if (!hasLangs || !hasMts || !hasNp) {
+            document.getElementById('profileWarningBanner').style.display = 'block';
+            document.getElementById('postRequestForm').style.display = 'none';
+        } else {
+            document.getElementById('profileWarningBanner').style.display = 'none';
+            document.getElementById('postRequestForm').style.display = 'block';
+            
+            // Populate auto-filled preview text
+            document.getElementById('previewNativePlace').innerText = userProfile.native_place;
+            document.getElementById('previewMotherTongue').innerText = userProfile.mother_tongue;
+            document.getElementById('previewLanguages').innerText = userProfile.languages;
+        }
+    }
+    function closeRequestModal() {
+        document.getElementById('requestModalOverlay').classList.remove('active');
+        document.getElementById('requestModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function openFilterModal() {
+        document.getElementById('filterModalOverlay').classList.add('active');
+        document.getElementById('filterModal').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeFilterModal() {
+        document.getElementById('filterModalOverlay').classList.remove('active');
+        document.getElementById('filterModal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    // Unified Filters application
+    function applyFilters() {
+        activeFilters = {};
+        const campus = document.getElementById('filterCampus').value;
+        const type = document.getElementById('filterType').value;
+        const gender = document.getElementById('filterGender').value;
+        const minRent = document.getElementById('filterMinRent').value;
+        const maxRent = document.getElementById('filterMaxRent').value;
+        const motherTongue = document.getElementById('filterMotherTongue').value;
+        
+        // Get checked amenities
+        const checkedAmenities = Array.from(document.querySelectorAll('input[name="filterAmenity"]:checked')).map(el => el.value);
+
+        if (campus) activeFilters['campus'] = campus;
+        if (type) activeFilters['room_type'] = type;
+        if (gender) activeFilters['gender'] = gender;
+        if (minRent) activeFilters['min_rent'] = minRent;
+        if (maxRent) activeFilters['max_rent'] = maxRent;
+        if (motherTongue) activeFilters['mother_tongue'] = motherTongue;
+        if (checkedAmenities.length > 0) activeFilters['amenity'] = checkedAmenities[0]; // Ripgrep style filtering
+
+        let count = Object.keys(activeFilters).length;
+        const countBadge = document.getElementById('filterCountBadge');
+        const filterBtn = document.getElementById('filterToggleBtn');
+        
+        if (count > 0) {
+            countBadge.style.display = 'inline-flex';
+            countBadge.innerText = count;
+            filterBtn.classList.add('active');
+        } else {
+            countBadge.style.display = 'none';
+            filterBtn.classList.remove('active');
+        }
+        
+        closeFilterModal();
+        fetchContent();
+    }
+
+    // Fetch Room listings from API
     async function fetchListings() {
         const feed = document.getElementById('rfFeed');
         const search = document.getElementById('rfSearch').value;
         
         let params = new URLSearchParams(activeFilters);
-        if (search) params.append('q', search);
-        if (showSavedOnly) params.append('saved_only', 'true');
-        
-        let query = params.toString();
+        if (search) params.append('campus', search); // Search by campus/location
         
         try {
-            const res = await fetch(`/api/roomfinder/list/?${query}`);
+            const res = await fetch(`/api/roomfinder/list/?${params.toString()}`);
             const data = await res.json();
             
             if (data.success) {
                 if (data.listings.length === 0) {
-                    feed.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--rf-text-muted);"><i class="fas fa-ghost fa-2x"></i><p>No listings found.</p></div>`;
+                    feed.innerHTML = `
+                    <div class="rf-empty-state">
+                        <i class="fas fa-bed fa-2x" style="color:var(--rf-primary-hover)"></i>
+                        <h3 class="rf-empty-state-title">No rooms listed yet.</h3>
+                        <p style="font-size:12.5px; margin:0 0 16px;">Be the first to list a room near your campus.</p>
+                        <button class="rf-submit-btn" onclick="openPostModal()" style="display:inline-block; width:auto; padding:8px 18px;">List a Room</button>
+                    </div>`;
                     return;
                 }
                 
                 feed.innerHTML = data.listings.map(l => {
                     const imgHtml = l.images.length > 0 ? 
-                        l.images.map(img => `<img src="${img}" style="display:none; width:100%; height:100%; object-fit:cover;" class="carousel-img">`).join('') :
-                        `<img src="https://placehold.co/600x400/f1f5f9/94a3b8?text=No+Image" style="width:100%; height:100%; object-fit:cover;">`;
+                        l.images.map((img, idx) => `<img src="${img}" style="display:${idx===0?'block':'none'}; width:100%; height:100%; object-fit:cover;" class="carousel-img">`).join('') :
+                        `<img src="https://placehold.co/600x400/f8fafc/94a3b8?text=No+Image" style="width:100%; height:100%; object-fit:cover;">`;
                     
                     return `
                     <div class="rf-card" onclick="window.location.href='/roomfinder/${l.id}/'">
@@ -806,10 +1124,10 @@
                         </div>
                         <div class="rf-card-body">
                             <div class="rf-price-row">
-                                <div class="rf-price">₹${l.rent}<span style="font-size:14px; font-weight:400; color:#94a3b8;">/mo</span></div>
+                                <div class="rf-price">₹${l.rent}<span style="font-size:13px; font-weight:400; color:var(--rf-text-muted);">/mo</span></div>
                                 <div class="rf-type-badge">${l.room_type}</div>
                             </div>
-                            <div class="rf-location"><i class="fas fa-map-marker-alt"></i> ${l.location} (${l.campus})</div>
+                            <div class="rf-location"><i class="fas fa-map-marker-alt" style="color:var(--rf-primary)"></i> ${l.location} (${l.campus})</div>
                             
                             <div class="rf-tags">
                                 <div class="rf-tag"><i class="fas fa-couch"></i> ${l.furnished_status}</div>
@@ -817,16 +1135,32 @@
                                 ${l.gender_preference !== 'Any' ? `<div class="rf-tag"><i class="fas fa-venus-mars"></i> ${l.gender_preference}</div>` : ''}
                             </div>
                             
-                            <div class="rf-user-row">
+                            <div class="rf-user-row" style="flex-wrap: wrap; gap: 8px;">
                                 <img src="${l.poster.pic}" class="rf-user-pic">
-                                <div class="rf-user-info">
-                                    <p class="rf-user-name">Posted by ${l.poster.name}</p>
+                                <div class="rf-user-info" style="min-width: 100px;">
+                                    <p class="rf-user-name">
+                                        ${l.poster.name}
+                                        ${l.poster.is_verified ? 
+                                            `<i class="fas fa-check-circle" style="color:var(--rf-primary); font-size:13px;" title="Verified Account"></i>` : 
+                                            `<i class="fas fa-check-circle" style="color:#cbd5e1; font-size:13px;" title="Unverified Account"></i>`
+                                        }
+                                    </p>
                                     <p class="rf-user-course">${l.poster.course} • ${l.created_at}</p>
                                 </div>
-                                <button class="rf-card-save-btn ${l.is_saved ? 'saved' : ''}" onclick="event.stopPropagation(); toggleSaveCard(${l.id}, this)" title="Save Room">
-                                    <i class="${l.is_saved ? 'fas' : 'far'} fa-bookmark"></i>
-                                    <span>${l.is_saved ? 'Saved' : 'Save'}</span>
-                                </button>
+                                <div style="display:flex; gap:6px; margin-left:auto;">
+                                    <button class="rf-card-save-btn ${l.is_saved ? 'saved' : ''}" onclick="event.stopPropagation(); toggleSaveCard(${l.id}, this)" title="Save Room">
+                                        <i class="${l.is_saved ? 'fas' : 'far'} fa-bookmark"></i>
+                                    </button>
+                                    ${l.is_owner ? `
+                                        <button class="rf-card-save-btn" onclick="event.stopPropagation(); window.location.href='/roomfinder/${l.id}/'" style="background:rgba(59,130,246,0.06); border-color:rgba(59,130,246,0.12); color:var(--rf-primary);">
+                                            <i class="fas fa-eye"></i> View
+                                        </button>
+                                    ` : `
+                                        <button class="rf-card-save-btn saved" onclick="event.stopPropagation(); initiateChat(${l.poster.id}, 'roomie_available_room', ${l.id})">
+                                            <i class="fas fa-comments"></i> Chat
+                                        </button>
+                                    `}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -835,11 +1169,141 @@
             }
         } catch (e) {
             console.error(e);
-            feed.innerHTML = `<div style="color:red; text-align:center;">Failed to load listings.</div>`;
+            feed.innerHTML = `<div style="color:red; text-align:center; padding: 20px;">Failed to load room listings.</div>`;
         }
     }
 
-    async function submitRoom(e) {
+    // Fetch Room Requests from API
+    async function fetchRequests() {
+        const feed = document.getElementById('rfFeed');
+        const search = document.getElementById('rfSearch').value;
+        
+        let params = new URLSearchParams(activeFilters);
+        if (search) params.append('campus', search);
+        
+        try {
+            const res = await fetch(`/api/roomrequests/list/?${params.toString()}`);
+            const data = await res.json();
+            
+            if (data.success) {
+                if (data.requests.length === 0) {
+                    feed.innerHTML = `
+                    <div class="rf-empty-state">
+                        <i class="fas fa-bullhorn fa-2x" style="color:var(--rf-primary-hover)"></i>
+                        <h3 class="rf-empty-state-title">No room requests yet.</h3>
+                        <p style="font-size:12.5px; margin:0 0 16px;">Post what you need and let others contact you.</p>
+                        <button class="rf-submit-btn" onclick="openRequestModal()" style="display:inline-block; width:auto; padding:8px 18px;">Post Room Request</button>
+                    </div>`;
+                    return;
+                }
+                
+                feed.innerHTML = data.requests.map(r => {
+                    const canEdit = r.is_owner;
+                    const canDelete = r.is_owner || r.is_admin;
+                    return `
+                    <div class="rf-card" style="cursor:pointer;" onclick="window.location.href='/roomrequest/${r.id}/'">
+                        <div class="rf-card-body">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                                <h3 style="font-size:16px; font-weight:850; margin:0; line-height:1.3; color:var(--rf-text); flex:1; padding-right:10px;">${r.title}</h3>
+                                <span class="rf-type-badge">${r.campus}</span>
+                            </div>
+                            
+                            <div class="rf-user-row" style="border:none; padding-top:0; margin-top:0;">
+                                <img src="${r.user.pic}" class="rf-user-pic">
+                                <div class="rf-user-info">
+                                    <p class="rf-user-name">
+                                        ${r.user.name}
+                                        ${r.user.is_verified ? 
+                                            `<i class="fas fa-check-circle" style="color:var(--rf-primary); font-size:13px;" title="Verified Account"></i>` : 
+                                            `<i class="fas fa-check-circle" style="color:#cbd5e1; font-size:13px;" title="Unverified Account"></i>`
+                                        }
+                                    </p>
+                                    <p class="rf-user-course">${r.created_at}</p>
+                                </div>
+                                <div style="display:flex; gap:6px; margin-left:auto;" onclick="event.stopPropagation();">
+                                    ${canEdit ? `
+                                        <button class="rf-card-save-btn" onclick="window.location.href='/roomrequest/${r.id}/'" style="background:rgba(59,130,246,0.06); border-color:rgba(59,130,246,0.12); color:var(--rf-primary);">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    ` : ''}
+                                    ${canDelete ? `
+                                        <button class="rf-card-save-btn" onclick="deleteRequest(${r.id})" style="background: rgba(239, 68, 68, 0.06); border-color: rgba(239, 68, 68, 0.12); color: var(--rf-accent);">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    ` : `
+                                        <button class="rf-card-save-btn saved" onclick="initiateChat(${r.user.id}, 'roomie_room_request', ${r.id})">
+                                            <i class="fas fa-comments"></i> Chat
+                                        </button>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            }
+        } catch (e) {
+            console.error(e);
+            feed.innerHTML = `<div style="color:red; text-align:center; padding: 20px;">Failed to load room requests.</div>`;
+        }
+    }
+
+    // Delete room request
+    async function deleteRequest(id) {
+        customConfirm("Are you sure you want to delete this room request?", "Delete Request", "Delete", "Cancel")
+        .then(async (res) => {
+            if (res) {
+                try {
+                    const response = await fetch(`/api/roomrequests/${id}/delete/`, {
+                        method: 'POST',
+                        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        showGlobalToast("Room request deleted.");
+                        fetchRequests();
+                    } else {
+                        showGlobalToast(data.error || "Failed to delete request.");
+                    }
+                } catch(e) {
+                    console.error(e);
+                    showGlobalToast("Network error occurred.");
+                }
+            }
+        });
+    }
+
+    // In-App Uniquified Chat Thread Connection
+    async function initiateChat(otherUserId, source, relatedId) {
+        try {
+            const res = await fetch('/chat/get-or-create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    other_user_id: otherUserId,
+                    source: source,
+                    listing_id: source === 'roomie_available_room' ? relatedId : null,
+                    request_id: source === 'roomie_room_request' ? relatedId : null
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                // Redirect straight to chat view
+                window.location.href = `/chat/${data.partner_id}/`;
+            } else {
+                showGlobalToast(data.error || "Could not start chat thread.");
+            }
+        } catch (e) {
+            console.error(e);
+            showGlobalToast("Network error starting chat.");
+        }
+    }
+
+    // Post room listing submission
+    async function submitRoomListing(e) {
         e.preventDefault();
         
         const contactVal = document.getElementById('roomContact').value.trim();
@@ -857,12 +1321,9 @@
 
         const btn = document.getElementById('submitBtn');
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
-
         btn.disabled = true;
 
         const formData = new FormData();
-        
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Compressing Images...';
         for(let i=0; i<selectedRoomImages.length; i++) {
             try {
                 const compressedFile = await compressImage(selectedRoomImages[i], 0.6, 800);
@@ -872,7 +1333,6 @@
                 formData.append('images', selectedRoomImages[i]);
             }
         }
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
         
         formData.append('campus', document.getElementById('roomCampus').value);
         formData.append('room_type', document.getElementById('roomType').value);
@@ -897,7 +1357,7 @@
                 closePostModal();
                 showGlobalToast("Listing created successfully!");
                 document.getElementById('postRoomForm').reset();
-                selectedRoomImages = []; // Reset the persistent image array
+                selectedRoomImages = []; 
                 document.getElementById('imagePreviewContainer').style.display = 'none';
                 fetchListings();
             } else {
@@ -912,74 +1372,167 @@
         btn.disabled = false;
     }
 
+    // Submit room request seeker post
+    async function submitRoomRequest(e) {
+        e.preventDefault();
+        
+        const btn = document.getElementById('reqSubmitBtn');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+        btn.disabled = true;
+        
+        const amenities = Array.from(document.querySelectorAll('input[name="reqAmenity"]:checked')).map(el => el.value).join(', ');
+        
+        const requestData = {
+            title: document.getElementById('reqTitle').value.trim(),
+            campus: document.getElementById('reqCampus').value,
+            looking_near: document.getElementById('reqLookingNear').value.trim(),
+            min_rent: document.getElementById('reqMinRent').value,
+            max_rent: document.getElementById('reqMaxRent').value,
+            preferred_room_type: document.getElementById('reqRoomType').value,
+            sharing_preference: document.getElementById('reqSharing').value,
+            needed_amenities: amenities,
+            move_in_date: document.getElementById('reqMoveIn').value,
+            extra_note: document.getElementById('reqNote').value.trim()
+        };
+        
+        try {
+            const res = await fetch('/api/roomrequests/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(requestData)
+            });
+            const data = await res.json();
+            if (data.success) {
+                closeRequestModal();
+                showGlobalToast("Room request posted successfully!");
+                document.getElementById('postRequestForm').reset();
+                fetchRequests();
+            } else {
+                customAlert(data.error || "Failed to post request.", "Error");
+            }
+        } catch (e) {
+            console.error(e);
+            customAlert("Network error occurred.", "Error");
+        }
+        
+        btn.innerHTML = 'Post Room Request';
+        btn.disabled = false;
+    }
+
+    // Bookmark Toggle for room listings
+    async function toggleSaveCard(listingId, btn) {
+        try {
+            const res = await fetch(`/api/roomfinder/${listingId}/save/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (data.saved) {
+                    btn.classList.add('saved');
+                    const icon = btn.querySelector('i');
+                    if (icon) icon.className = 'fas fa-bookmark';
+                    showGlobalToast("Listing saved to favorites!");
+                } else {
+                    btn.classList.remove('saved');
+                    const icon = btn.querySelector('i');
+                    if (icon) icon.className = 'far fa-bookmark';
+                    showGlobalToast("Listing removed from favorites.");
+                }
+            } else {
+                showGlobalToast(data.error || "Failed to save listing.");
+            }
+        } catch (e) {
+            console.error(e);
+            showGlobalToast("Network error occurred.");
+        }
+    }
+
+    // Image upload handling
+    function previewRoomImages(input) {
+        if (!input.files || input.files.length === 0) return;
+        const newFiles = Array.from(input.files);
+        newFiles.forEach(file => {
+            if (selectedRoomImages.length >= 5) return;
+            if (!selectedRoomImages.some(f => f.name === file.name && f.size === file.size)) {
+                selectedRoomImages.push(file);
+            }
+        });
+        input.value = '';
+        renderImagePreviews();
+    }
+
+    function renderImagePreviews() {
+        const container = document.getElementById('imagePreviewContainer');
+        container.innerHTML = '';
+        if (selectedRoomImages.length > 0) {
+            container.style.display = 'flex';
+            selectedRoomImages.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const wrapper = document.createElement('div');
+                    wrapper.style.position = 'relative';
+                    wrapper.style.width = '70px';
+                    wrapper.style.height = '70px';
+                    wrapper.style.flexShrink = '0';
+
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.height = '100%';
+                    img.style.width = '100%';
+                    img.style.objectFit = 'cover';
+                    img.style.borderRadius = '10px';
+                    
+                    const delBtn = document.createElement('button');
+                    delBtn.type = 'button';
+                    delBtn.innerHTML = '<i class="fas fa-times"></i>';
+                    delBtn.style.position = 'absolute';
+                    delBtn.style.top = '2px';
+                    delBtn.style.right = '2px';
+                    delBtn.style.width = '18px';
+                    delBtn.style.height = '18px';
+                    delBtn.style.borderRadius = '50%';
+                    delBtn.style.background = 'rgba(15, 23, 42, 0.8)';
+                    delBtn.style.color = '#ffffff';
+                    delBtn.style.border = 'none';
+                    delBtn.style.display = 'flex';
+                    delBtn.style.alignItems = 'center';
+                    delBtn.style.justifyContent = 'center';
+                    delBtn.style.fontSize = '9px';
+                    delBtn.style.cursor = 'pointer';
+                    
+                    delBtn.onclick = function(event) {
+                        event.stopPropagation();
+                        selectedRoomImages.splice(index, 1);
+                        renderImagePreviews();
+                    };
+
+                    wrapper.appendChild(img);
+                    wrapper.appendChild(delBtn);
+                    container.appendChild(wrapper);
+                }
+                reader.readAsDataURL(file);
+            });
+        } else {
+            container.style.display = 'none';
+        }
+    }
+
     function changeImage(id, dir) {
         const container = document.getElementById(`carousel-${id}`);
         if (!container) return;
         const images = container.querySelectorAll('.carousel-img');
         if (images.length <= 1) return;
-        
         let currentIndex = 0;
         images.forEach((img, idx) => {
             if (img.style.display !== 'none') currentIndex = idx;
         });
-        
         images[currentIndex].style.display = 'none';
         let newIndex = (currentIndex + dir + images.length) % images.length;
         images[newIndex].style.display = 'block';
-    }
-
-    // Modal Logic
-    function openPostModal() {
-        document.getElementById('postModalOverlay').classList.add('active');
-        document.getElementById('postModal').classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-    function closePostModal() {
-        document.getElementById('postModalOverlay').classList.remove('active');
-        document.getElementById('postModal').classList.remove('active');
-        document.body.style.overflow = '';
-    }
-    
-    function openFilterModal() {
-        document.getElementById('filterModalOverlay').classList.add('active');
-        document.getElementById('filterModal').classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeFilterModal() {
-        document.getElementById('filterModalOverlay').classList.remove('active');
-        document.getElementById('filterModal').classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    let activeFilters = {};
-
-    function applyFilters() {
-        activeFilters = {};
-        const campus = document.getElementById('filterCampus').value;
-        const type = document.getElementById('filterType').value;
-        const gender = document.getElementById('filterGender').value;
-        const minRent = document.getElementById('filterMinRent').value;
-        const maxRent = document.getElementById('filterMaxRent').value;
-
-        if (campus) activeFilters['campus'] = campus;
-        if (type) activeFilters['room_type'] = type;
-        if (gender) activeFilters['gender'] = gender;
-        if (minRent) activeFilters['min_rent'] = minRent;
-        if (maxRent) activeFilters['max_rent'] = maxRent;
-
-        let count = Object.keys(activeFilters).length;
-        const countBadge = document.getElementById('activeFilterCount');
-        if (count > 0) {
-            countBadge.style.display = 'inline-flex';
-            countBadge.innerText = count + ' Active';
-            countBadge.style.background = '#e0f2fe';
-            countBadge.style.color = '#0284c7';
-        } else {
-            countBadge.style.display = 'none';
-        }
-        
-        closeFilterModal();
-        fetchListings();
     }
 
     function compressImage(file, quality = 0.6, maxWidth = 800) {
@@ -992,17 +1545,14 @@
                     const canvas = document.createElement('canvas');
                     let width = img.width;
                     let height = img.height;
-                    
                     if (width > maxWidth) {
                         height *= maxWidth / width;
                         width = maxWidth;
                     }
-                    
                     canvas.width = width;
                     canvas.height = height;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    
                     canvas.toBlob((blob) => {
                         resolve(new File([blob], file.name, {
                             type: 'image/jpeg',
@@ -1017,15 +1567,9 @@
         });
     }
 
-    // Init
+    // Init page feed on load
     document.addEventListener('DOMContentLoaded', () => {
-        fetchListings().then(() => {
-            // Initialize first images
-            document.querySelectorAll('.rf-carousel').forEach(car => {
-                const imgs = car.querySelectorAll('.carousel-img');
-                if (imgs.length > 0) imgs[0].style.display = 'block';
-            });
-        });
+        fetchContent();
     });
 </script>
 {% endblock %}

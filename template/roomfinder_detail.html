@@ -533,7 +533,7 @@
             <i class="far fa-bookmark"></i> Save
         {% endif %}
     </button>
-    <button id="contactBtn" class="rf-btn rf-btn-primary" onclick="revealContact()"><i class="fas fa-phone-alt"></i> Contact</button>
+    <button id="contactBtn" class="rf-btn rf-btn-primary" onclick="revealContact()"><i class="fas fa-comments"></i> Chat</button>
 </div>
 
 <script>
@@ -564,36 +564,42 @@
         }
     }
     
-    let contactRevealed = false;
-    
-    function revealContact() {
-        const contactInfo = "{{ listing.contact_info|escapejs }}".trim();
-        const btn = document.getElementById("contactBtn");
-        
-        if (!contactInfo) {
-            showGlobalToast("No contact details provided for this listing.");
+    async function revealContact() {
+        {% if request.user == listing.user %}
+            showGlobalToast("This is your own listing!");
             return;
-        }
+        {% endif %}
         
-        if (!contactRevealed) {
-            // 1st click: reveal contact inside the button itself
-            let isPhone = /[0-9]/.test(contactInfo) && contactInfo.replace(/\D/g, '').length >= 7;
-            let icon = isPhone ? '<i class="fas fa-phone-alt"></i>' : '<i class="fab fa-instagram"></i>';
-            
-            btn.innerHTML = `${icon} ${contactInfo}`;
-            contactRevealed = true;
-            showGlobalToast("Contact info revealed! Click again to open.");
-        } else {
-            // 2nd click: redirect appropriately
-            let cleanContact = contactInfo;
-            let isPhone = /[0-9]/.test(cleanContact) && cleanContact.replace(/\D/g, '').length >= 7;
-            
-            if (isPhone) {
-                window.location.href = `tel:${cleanContact.replace(/\s/g, '')}`;
+        const btn = document.getElementById("contactBtn");
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+        btn.disabled = true;
+        
+        try {
+            const res = await fetch('/chat/get-or-create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    other_user_id: "{{ listing.user.id }}",
+                    source: "roomie_available_room",
+                    listing_id: "{{ listing.id }}"
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                window.location.href = `/chat/${data.partner_id}/`;
             } else {
-                let username = cleanContact.startsWith('@') ? cleanContact.substring(1) : cleanContact;
-                window.open(`https://instagram.com/${username}`, '_blank');
+                showGlobalToast(data.error || "Failed to start chat.");
+                btn.innerHTML = '<i class="fas fa-phone-alt"></i> Contact';
+                btn.disabled = false;
             }
+        } catch (e) {
+            console.error(e);
+            showGlobalToast("Network error occurred.");
+            btn.innerHTML = '<i class="fas fa-phone-alt"></i> Contact';
+            btn.disabled = false;
         }
     }
     
