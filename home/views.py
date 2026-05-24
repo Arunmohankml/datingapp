@@ -2884,8 +2884,9 @@ def sitemap_view(request):
   <url><loc>https://srm-match.vercel.app/match/</loc></url>
   <url><loc>https://srm-match.vercel.app/roomfinder/</loc></url>
   <url><loc>https://srm-match.vercel.app/wall/</loc></url>
-  <url><loc>https://srm-match.vercel.app/confession/feed/</loc></url>
+  <url><loc>https://srm-match.vercel.app/confessions/</loc></url>
   <url><loc>https://srm-match.vercel.app/more/</loc></url>
+  <url><loc>https://srm-match.vercel.app/login/</loc></url>
 </urlset>"""
     return HttpResponse(xml, content_type='application/xml')
 
