@@ -216,8 +216,8 @@ LOGOUT_REDIRECT_URL = '/'
 # Firebase Configuration is now handled via lazy-loading in home/views.py
 # to ensure stability in the Vercel serverless environment.
 
-# Temporarily disabling COOP to fix the sign-in popup being blocked on Vercel
-SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+# Set COOP to allow popup communication for Firebase Auth (fixes Brave/Chrome issues)
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
 
 # TMDB API
 TMDB_API_KEY = os.environ.get('TMDB_API_KEY')

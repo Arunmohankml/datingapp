@@ -1,9 +1,8 @@
-const CACHE_NAME = 'srm-match-v1';
+const CACHE_NAME = 'srm-match-v1.1'; // Version bump to clear old broken cache
 const STATIC_ASSETS = [
-  '/',
-  '/login/',
-  '/confessions/',
-  '/manifest.json'
+  '/manifest.json',
+  '/icon-192x192.png',
+  '/icon-512x512.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -31,29 +30,45 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener("fetch", function(event) {
-    const url = event.request.url;
-    const isDynamic = url.includes('/api/') || url.includes('/chat/') || event.request.method !== 'GET';
-    
-    if (isDynamic) {
-        return event.respondWith(fetch(event.request));
+    // Only handle GET requests
+    if (event.request.method !== 'GET') {
+        return;
     }
 
+    const url = new URL(event.request.url);
+
+    // API and Chat routes bypass cache entirely
+    if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/chat/')) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
+
+    // HTML Pages (Navigation) -> Network First
+    if (event.request.mode === 'navigate' || event.request.headers.get('accept').includes('text/html')) {
+        event.respondWith(
+            fetch(event.request).catch(() => {
+                return caches.match(event.request);
+            })
+        );
+        return;
+    }
+
+    // Static Assets -> Cache First, fallback to Network
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
-            const fetchPromise = fetch(event.request).then((networkResponse) => {
+            if (cachedResponse) {
+                return cachedResponse;
+            }
+            
+            return fetch(event.request).then((networkResponse) => {
                 if (networkResponse && networkResponse.status === 200) {
-                    const responseToCache = networkResponse.clone();
-                    if (url.includes('/static/') || url.match(/\.(png|jpg|jpeg|svg|gif|woff2?|css|js)$/)) {
-                        caches.open(CACHE_NAME).then((cache) => {
-                            cache.put(event.request, responseToCache);
-                        });
+                    if (url.pathname.includes('/static/') || url.pathname.match(/\.(png|jpg|jpeg|svg|gif|woff2?|css|js)$/)) {
+                        const responseToCache = networkResponse.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
                     }
                 }
                 return networkResponse;
-            }).catch(() => {
-                // Network failed, rely on cache.
             });
-            return cachedResponse || fetchPromise;
         })
     );
 });

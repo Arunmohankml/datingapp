@@ -2,522 +2,661 @@
 
 {% block head %}
 <style>
-    .admin-container {
-        padding: 20px 0;
+    html, body {
+        height: 100dvh;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        background: #f7f9fb;
+        padding: 0 !important;
+        margin: 0 !important;
     }
-    .admin-card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 20px;
-        margin-bottom: 24px;
-        box-shadow: var(--shadow-sm);
+
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100%;
+        box-sizing: border-box;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
     }
-    .admin-card h3 {
-        margin-top: 0;
-        margin-bottom: 16px;
-        color: var(--primary);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .item-list {
+
+    .admin-wrapper {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
+        background: linear-gradient(180deg, #fbfcff 0%, #f7f9fb 58%, #eff4fb 100%);
+        z-index: 10;
     }
-    .item-row {
+
+    /* ── Sticky Header ── */
+    .admin-header {
+        flex-shrink: 0;
+        padding: calc(10px + env(safe-area-inset-top)) 20px 16px;
+        background: rgba(247,249,251,0.85);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-bottom: 1px solid rgba(0,74,198,0.08);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        z-index: 20;
+    }
+    .admin-header-main {
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        padding: 12px;
-        background: #f8fafc;
-        border: 1px solid var(--border);
-        border-radius: 12px;
+        gap: 12px;
     }
-    .item-info {
-        flex: 1;
-        min-width: 0;
+    .match-back-btn {
+        width: 44px; height: 44px;
+        border-radius: 16px;
+        background: #ffffff;
+        display: flex; align-items: center; justify-content: center;
+        text-decoration: none;
+        color: #2563eb;
+        border: 1px solid rgba(0,74,198,0.08);
+        box-shadow: 0 10px 24px rgba(15,23,42,0.06);
+        transition: 0.2s ease;
+        cursor: pointer;
     }
-    .item-title {
-        font-weight: 700;
-        font-size: 14px;
-        margin-bottom: 2px;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .match-back-btn:active { transform: scale(0.94); }
+    
+    .admin-header h2 {
+        margin: 0; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;
+    }
+    .admin-header p {
+        margin: 0; font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #64748b;
+    }
+
+    /* ── Segmented Tabs ── */
+    .admin-tabs-container {
+        padding: 12px 20px 0;
+        background: rgba(247,249,251,0.85);
+        backdrop-filter: blur(24px);
+        z-index: 19;
+    }
+    .admin-tabs {
+        display: flex;
+        background: #f1f5f9;
+        padding: 4px;
+        border-radius: 16px;
+        gap: 4px;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .admin-tabs::-webkit-scrollbar { display: none; }
+    
+    .admin-tab {
+        flex: 1; min-width: 100px;
+        padding: 10px 14px;
+        text-align: center;
+        font-size: 13px; font-weight: 700; color: #64748b;
+        border: none; background: transparent; border-radius: 12px;
+        cursor: pointer; transition: all 0.3s ease;
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
         white-space: nowrap;
     }
-    .item-meta {
-        font-size: 12px;
-        color: var(--text-muted);
+    .admin-tab.active {
+        background: #ffffff; color: #2563eb;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-    .btn-danger {
-        background: #fee2e2;
-        color: #ef4444;
-        border: 1px solid #fecaca;
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: 0.2s;
-    }
-    .btn-danger:hover {
-        background: #fecaca;
-    }
-    .btn-secondary {
-        background: #f1f5f9;
-        color: #475569;
-        border: 1px solid var(--border);
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: 700;
-        cursor: pointer;
+    .tab-badge {
+        background: #ef4444; color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: 800; margin-left: 4px;
     }
 
-    /* ── Confession Bubbles ── */
-    .confession-bubble {
-        background: #fff;
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 14px;
-        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: pointer;
-        position: relative;
-        margin-bottom: 8px;
-    }
-    .confession-bubble:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-    }
-    .cb-top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 15px;
-    }
-    .cb-content {
+    /* ── Body ── */
+    .admin-body {
         flex: 1;
-        font-size: 14px;
-        font-weight: 500;
-        color: #1e293b;
-        line-height: 1.4;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 20px;
+        padding-bottom: 120px;
     }
-    .cb-actions {
-        display: flex;
-        gap: 8px;
-    }
-    .action-icon-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: none;
-        cursor: pointer;
-        transition: 0.2s;
-        font-size: 14px;
-    }
-    .btn-approve { background: #d1fae5; color: #059669; }
-    .btn-approve:hover { background: #10b981; color: white; }
-    .btn-reject { background: #fee2e2; color: #dc2626; }
-    .btn-reject:hover { background: #ef4444; color: white; }
-    
-    .cb-details {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease-out;
-        font-size: 12px;
-        color: #64748b;
-        margin-top: 0;
-        padding-top: 0;
-        border-top: 1px solid transparent;
-    }
-    .confession-bubble.active .cb-details {
-        max-height: 200px;
-        margin-top: 10px;
-        padding-top: 10px;
-        border-top: 1px solid #f1f5f9;
-    }
+    .admin-panel { display: none; animation: fadeIn 0.3s ease; }
+    .admin-panel.active { display: block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 
-    /* ── User Accordion ── */
-    .user-accordion {
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        overflow: hidden;
-        background: #fff;
-        transition: box-shadow 0.2s;
-    }
-    .user-accordion:hover { box-shadow: var(--shadow-sm); }
-    .ua-header {
-        display: flex;
-        align-items: center;
+    /* ── Metric Cards ── */
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
         gap: 12px;
-        padding: 10px 14px;
-        cursor: pointer;
-        user-select: none;
+        margin-bottom: 24px;
     }
-    .ua-avatar {
-        width: 36px; height: 36px;
-        border-radius: 50%;
-        object-fit: cover;
-        border: 2px solid var(--border);
-        flex-shrink: 0;
+    .metric-card {
+        background: #ffffff; border: 1px solid rgba(0,74,198,0.08); border-radius: 20px;
+        padding: 16px; box-shadow: 0 10px 30px rgba(15,23,42,0.04);
+        display: flex; flex-direction: column; gap: 8px;
     }
-    .ua-avatar-fallback {
-        background: linear-gradient(135deg, #6366f1, #f43f5e);
-        display: flex; align-items: center; justify-content: center;
+    .metric-icon {
+        width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px;
     }
-    .ua-avatar-fallback i { color: white; font-size: 13px; }
-    .ua-info { flex: 1; min-width: 0; }
-    .ua-name { display: block; font-size: 13px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ua-email { display: block; font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .badge-banned { background: #fee2e2; color: #ef4444; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 99px; margin-left: 4px; text-transform: uppercase; }
-    .badge-verified { background: #d1fae5; color: #16a34a; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 99px; margin-left: 4px; }
-    .ua-chevron { color: var(--text-muted); font-size: 11px; flex-shrink: 0; transition: transform 0.25s ease; }
-    .ua-chevron.open { transform: rotate(180deg); }
+    .metric-card.users .metric-icon { background: #eff6ff; color: #2563eb; }
+    .metric-card.faces .metric-icon { background: #fef2f2; color: #ef4444; }
+    .metric-card.reports .metric-icon { background: #fffbeb; color: #d97706; }
+    .metric-card.confessions .metric-icon { background: #f0fdf4; color: #16a34a; }
+    
+    .metric-val { font-size: 24px; font-weight: 800; color: #0f172a; line-height: 1; }
+    .metric-label { font-size: 12px; font-weight: 600; color: #64748b; }
 
-    /* Action panel */
-    .ua-panel {
-        display: none;
-        padding: 10px 14px 12px;
-        border-top: 1px solid var(--border);
-        background: #f8fafc;
-        gap: 8px;
-        flex-wrap: wrap;
+    /* ── Content Cards ── */
+    .admin-card {
+        background: #ffffff; border: 1px solid rgba(0,74,198,0.08); border-radius: 24px;
+        padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(15,23,42,0.04);
     }
-    .ua-panel.open { display: flex; }
-    .ua-btn {
-        display: inline-flex; align-items: center; gap: 5px;
-        padding: 7px 14px; border-radius: 10px; border: none;
-        font-size: 12px; font-weight: 700; cursor: pointer;
-        text-decoration: none; transition: opacity 0.15s;
+    .admin-card-header {
+        display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
     }
-    .ua-btn:hover { opacity: 0.85; }
-    .ua-btn-view  { background: #f1f5f9; color: #475569; border: 1px solid var(--border); }
-    .ua-btn-ban   { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; }
-    .ua-btn-unban { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-    .ua-btn-delete{ background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
+    .admin-card-header h3 {
+        margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;
+    }
+    .admin-card-header h3 i { color: #2563eb; }
+
+    /* ── Lists & Items ── */
+    .list-group { display: flex; flex-direction: column; gap: 12px; }
+    .list-item {
+        background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 14px;
+    }
+    .item-header {
+        display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;
+    }
+    .item-title { font-weight: 700; font-size: 14px; color: #0f172a; }
+    .item-meta { font-size: 11px; color: #64748b; font-weight: 600; margin-top: 2px; }
+    
+    .action-row {
+        display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;
+    }
+    
+    /* ── Buttons ── */
+    .btn {
+        padding: 8px 16px; border-radius: 10px; font-size: 12px; font-weight: 700; border: none; cursor: pointer;
+        display: inline-flex; align-items: center; gap: 6px; font-family: 'Plus Jakarta Sans', sans-serif; transition: 0.2s; text-decoration: none;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn-primary { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; box-shadow: 0 4px 12px rgba(37,99,235,0.2); }
+    .btn-success { background: #16a34a; color: white; }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-outline { background: transparent; border: 1px solid #cbd5e1; color: #475569; }
+    .btn-outline:hover { background: #f1f5f9; }
+
+    /* ── Face Review UI ── */
+    .face-compare {
+        display: flex; gap: 12px; margin-top: 12px; background: #ffffff; padding: 10px; border-radius: 12px; border: 1px solid #e2e8f0;
+    }
+    .face-box { flex: 1; text-align: center; }
+    .face-box img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; border: 2px solid #f1f5f9; margin-bottom: 6px; }
+    .face-label { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .face-score { text-align: center; font-size: 14px; font-weight: 800; color: #0f172a; margin: 10px 0; background: #f0fdf4; color: #16a34a; padding: 6px; border-radius: 8px; border: 1px solid #bbf7d0; }
+
+    /* ── User Directory (Search & Grid) ── */
+    .toolbar {
+        display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .search-box {
+        flex: 1; min-width: 200px; position: relative;
+    }
+    .search-box i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+    .search-box input {
+        width: 100%; padding: 12px 14px 12px 40px; border-radius: 14px; border: 1px solid #e2e8f0;
+        font-family: inherit; font-size: 13px; outline: none; box-sizing: border-box; background: white;
+    }
+    .search-box input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    
+    .sort-box select {
+        padding: 12px 14px; border-radius: 14px; border: 1px solid #e2e8f0; font-family: inherit; font-size: 13px; outline: none; background: white; cursor: pointer;
+    }
+
+    .user-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;
+    }
+    .user-card {
+        background: white; border: 1px solid rgba(0,74,198,0.08); border-radius: 20px; padding: 16px;
+        display: flex; flex-direction: column; gap: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    }
+    .uc-top { display: flex; gap: 12px; align-items: center; }
+    .uc-avatar { width: 50px; height: 50px; border-radius: 16px; object-fit: cover; background: #f1f5f9; }
+    .uc-info { flex: 1; min-width: 0; }
+    .uc-name { font-size: 15px; font-weight: 800; color: #0f172a; margin: 0 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 4px; }
+    .uc-email { font-size: 11px; color: #64748b; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    .uc-details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f8fafc; padding: 10px; border-radius: 12px; border: 1px solid #e2e8f0; }
+    .uc-stat { font-size: 11px; color: #475569; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+    .uc-stat i { color: #2563eb; width: 14px; text-align: center; }
+
+    .status-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+    .s-badge { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .s-verified { background: #d1fae5; color: #16a34a; }
+    .s-banned { background: #fee2e2; color: #ef4444; }
+    .s-disc { background: #dbeafe; color: #2563eb; }
+
+    .uc-actions { display: flex; gap: 6px; border-top: 1px solid #f1f5f9; padding-top: 12px; }
+    .uc-actions .btn { flex: 1; justify-content: center; }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: #94a3b8; }
+    .empty-state i { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+    .empty-state h3 { font-size: 16px; color: #0f172a; margin: 0 0 4px; }
+    
+    /* Badge inside confession/report text */
+    .reason-box { background: #fef2f2; color: #be123c; padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 600; margin-top: 8px; border: 1px solid #fecaca; }
+
+    @media (max-width: 600px) {
+        .metrics-grid { grid-template-columns: 1fr 1fr; }
+        .face-compare { flex-direction: column; }
+        .admin-tab-text { display: none; }
+        .admin-tab {
+            min-width: 0;
+            gap: 0;
+            padding: 10px;
+        }
+        .admin-header h2 {
+            font-size: 20px;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="admin-container">
-    <h2 style="margin-bottom: 20px;">Admin Dashboard</h2>
+<div class="admin-wrapper">
 
-    <!-- Wall Controls -->
-    <div class="admin-card">
-        <h3><i class="fas fa-paint-brush"></i> Wall Management</h3>
-        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">Reset the anonymous wall strokes.</p>
-        <form action="{% url 'admin_action' %}" method="POST" id="clearWallForm">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="clear_wall">
-            <button type="button" class="btn-danger" onclick="confirmClearWall()">Erase All Scribbles</button>
-        </form>
-    </div>
-
-    <!-- Pending Confessions -->
-    <div class="admin-card">
-        <h3><i class="fas fa-clock"></i> Pending Confessions</h3>
-        <div class="item-list">
-            {% for c in pending_confessions %}
-            <div class="confession-bubble" onclick="this.classList.toggle('active')">
-                <div class="cb-top">
-                    <div class="cb-content">{{ c.content }}</div>
-                    <div class="cb-actions">
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;" onclick="event.stopPropagation()">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="approve_confession">
-                            <input type="hidden" name="target_id" value="{{ c.id }}">
-                            <button type="submit" class="action-icon-btn btn-approve" title="Approve"><i class="fas fa-check"></i></button>
-                        </form>
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;" onclick="event.stopPropagation()">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="reject_confession">
-                            <input type="hidden" name="target_id" value="{{ c.id }}">
-                            <button type="submit" class="action-icon-btn btn-reject" title="Reject"><i class="fas fa-times"></i></button>
-                        </form>
-                    </div>
-                </div>
-                <div class="cb-details">
-                    <div style="margin-bottom: 4px;"><strong>By:</strong> {{ c.display_name }} • <strong>Campus:</strong> {{ c.campus|default:"N/A" }}</div>
-                    <div style="color: #ea580c;"><strong>Flagged Reason:</strong> {{ c.moderation_reason }}</div>
-                    {% if c.poster_fingerprint %}
-                    <div style="margin-top: 8px; display: flex; gap: 8px;">
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;" onclick="event.stopPropagation()">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="shadow_ban_fingerprint">
-                            <input type="hidden" name="fingerprint" value="{{ c.poster_fingerprint }}">
-                            <button type="submit" class="btn-secondary" style="font-size: 10px; padding: 4px 8px;">Shadow Ban FP</button>
-                        </form>
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;" onclick="event.stopPropagation()">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="ban_fingerprint">
-                            <input type="hidden" name="fingerprint" value="{{ c.poster_fingerprint }}">
-                            <button type="submit" class="btn-danger" style="font-size: 10px; padding: 4px 8px;">Hard Ban FP</button>
-                        </form>
-                    </div>
-                    {% endif %}
-                </div>
+    <div class="admin-header">
+        <div class="admin-header-main">
+            <a href="{% url 'more_menu' %}" class="match-back-btn"><span class="material-symbols-outlined">arrow_back</span></a>
+            <div>
+                <p>Command Center</p>
+                <h2>Admin Hub</h2>
             </div>
-            {% empty %}
-            <p style="font-size: 14px; color: var(--text-muted);">No pending confessions.</p>
-            {% endfor %}
         </div>
     </div>
 
-    <!-- Reported Confessions -->
-    <div class="admin-card">
-        <h3><i class="fas fa-flag"></i> Reported Confessions</h3>
-        <div class="item-list">
-            {% for c in reported_confessions %}
-            <div class="confession-bubble" onclick="this.classList.toggle('active')">
-                <div class="cb-top">
-                    <div class="cb-content">{{ c.content }}</div>
-                    <div class="cb-actions">
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;" onclick="event.stopPropagation()">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="dismiss_confession">
-                            <input type="hidden" name="target_id" value="{{ c.id }}">
-                            <button type="submit" class="action-icon-btn btn-approve" title="Keep/Dismiss"><i class="fas fa-check"></i></button>
-                        </form>
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;" onclick="event.stopPropagation()">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="delete_confession">
-                            <input type="hidden" name="target_id" value="{{ c.id }}">
-                            <button type="submit" class="action-icon-btn btn-reject" title="Delete Confession"><i class="fas fa-trash"></i></button>
-                        </form>
-                    </div>
-                </div>
-                <div class="cb-details">
-                    <div style="margin-bottom: 8px;"><strong>By:</strong> {{ c.display_name }} • <strong>{{ c.reports.count }} reports</strong></div>
-                    <div style="padding: 10px; background: #fff1f2; border-radius: 8px; font-size: 11px; color: #be123c;">
-                        <strong>Reasons:</strong>
-                        {% for report in c.reports.all %}
-                            <div style="margin-top: 4px; border-top: 1px solid #fecaca; padding-top: 4px;">
-                                {{ report.reasons|join:", " }} {% if report.other_reason %}- {{ report.other_reason }}{% endif %}
-                            </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            {% empty %}
-            <p style="font-size: 14px; color: var(--text-muted);">No reports yet.</p>
-            {% endfor %}
+    <div class="admin-tabs-container">
+        <div class="admin-tabs">
+            <button class="admin-tab active" onclick="switchAdminTab('overview')"><i class="fas fa-chart-pie"></i><span class="admin-tab-text">Overview</span></button>
+            <button class="admin-tab" onclick="switchAdminTab('moderation')">
+                <i class="fas fa-shield-alt"></i><span class="admin-tab-text">Moderation</span>
+                {% if face_reviews.count > 0 or pending_confessions.count > 0 or user_reports.count > 0 %}
+                <span class="tab-badge">{{ face_reviews.count|add:pending_confessions.count|add:user_reports.count }}</span>
+                {% endif %}
+            </button>
+            <button class="admin-tab" onclick="switchAdminTab('users')"><i class="fas fa-users"></i><span class="admin-tab-text">Users Directory</span></button>
+            <button class="admin-tab" onclick="switchAdminTab('system')"><i class="fas fa-server"></i><span class="admin-tab-text">System</span></button>
         </div>
     </div>
 
-    <!-- User Chat Reports -->
-    <div class="admin-card">
-        <h3><i class="fas fa-user-shield"></i> User Chat Reports</h3>
-        <div class="item-list">
-            {% for r in user_reports %}
-            <div class="item-row" style="flex-direction: column; align-items: stretch; gap: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="item-info">
-                        <div class="item-title">Reported: {{ r.reported_user.username }}</div>
-                        <div class="item-meta">By: {{ r.reporter.username }} • {{ r.created_at|date:"M d, g:i A" }}</div>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="delete_user_report">
-                            <input type="hidden" name="target_id" value="{{ r.id }}">
-                            <button type="submit" class="btn-secondary">Dismiss</button>
-                        </form>
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="ban_user">
-                            <input type="hidden" name="target_id" value="{{ r.reported_user.profile.id }}">
-                            <button type="submit" class="btn-danger">Ban User</button>
-                        </form>
-                    </div>
+    <div class="admin-body">
+
+        <!-- ================= OVERVIEW TAB ================= -->
+        <div id="tab-overview" class="admin-panel active">
+            <div class="metrics-grid">
+                <div class="metric-card users">
+                    <div class="metric-icon"><i class="fas fa-users"></i></div>
+                    <div class="metric-val">{{ all_users.count }}</div>
+                    <div class="metric-label">Total Users</div>
                 </div>
-                
-                <div style="padding: 12px; background: #f1f5f9; border-radius: 12px; border: 1px solid var(--border);">
-                    <p style="font-size: 13px; font-weight: 700; color: #ef4444; margin-bottom: 8px;">
-                        Reasons: {{ r.reasons|join:", " }} {% if r.other_reason %}- {{ r.other_reason }}{% endif %}
-                    </p>
-                    
-                    <details style="background: white; border-radius: 8px; border: 1px solid var(--border); padding: 10px;">
-                        <summary style="font-size: 12px; font-weight: 700; cursor: pointer; color: var(--primary); outline: none;">
-                            <i class="fas fa-history"></i> View Chat Log Snapshot
-                        </summary>
-                        <div style="margin-top: 10px; max-height: 300px; overflow-y: auto;">
-                            <p style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; border-bottom: 1px solid var(--border);">Evidence Log</p>
-                            {% for msg in r.chat_snapshot %}
-                            <div style="margin-bottom: 8px; font-size: 12px;">
-                                <span style="font-weight: 700; color: var(--primary);">{{ msg.sender }}:</span>
-                                <span style="color: var(--text-main);">{{ msg.content }}</span>
-                                <span style="font-size: 10px; color: var(--text-muted); float: right;">{{ msg.time }}</span>
+                <div class="metric-card faces">
+                    <div class="metric-icon"><i class="fas fa-camera"></i></div>
+                    <div class="metric-val">{{ face_reviews.count }}</div>
+                    <div class="metric-label">Pending Faces</div>
+                </div>
+                <div class="metric-card reports">
+                    <div class="metric-icon"><i class="fas fa-flag"></i></div>
+                    <div class="metric-val">{{ user_reports.count }}</div>
+                    <div class="metric-label">User Reports</div>
+                </div>
+                <div class="metric-card confessions">
+                    <div class="metric-icon"><i class="fas fa-comment-dots"></i></div>
+                    <div class="metric-val">{{ pending_confessions.count|add:reported_confessions.count }}</div>
+                    <div class="metric-label">Flagged Confessions</div>
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                </div>
+                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                    <a href="{% url 'announcements' %}" class="btn btn-primary"><i class="fas fa-bullhorn"></i> Post Announcement</a>
+                    <button onclick="switchAdminTab('moderation')" class="btn btn-outline"><i class="fas fa-broom"></i> Clear Queue</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= MODERATION TAB ================= -->
+        <div id="tab-moderation" class="admin-panel">
+            
+            <!-- Face Reviews -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3><i class="fas fa-user-check"></i> Face Verification Queue ({{ face_reviews.count }})</h3>
+                </div>
+                {% if face_reviews %}
+                <div class="list-group">
+                    {% for review in face_reviews %}
+                    <div class="list-item">
+                        <div class="item-header">
+                            <div>
+                                <div class="item-title">{{ review.user.username }}</div>
+                                <div class="item-meta">Distance Score: {{ review.face_match_score|default:"N/A" }} | Gender match: {{ review.gender|default:"?" }} vs {{ review.profile_photo_gender|default:"?" }}</div>
                             </div>
+                        </div>
+                        <div class="face-compare">
+                            <div class="face-box">
+                                <div class="face-label">Base Verification Selfie</div>
+                                <img src="{{ review.image_front }}" onerror="this.src='https://placehold.co/200x200?text=Missing'">
+                            </div>
+                            <div class="face-box">
+                                <div class="face-label">Uploaded Profile Pic</div>
+                                <img src="{{ review.user.profile.profile_pic }}" onerror="this.src='https://placehold.co/200x200?text=Missing'">
+                            </div>
+                        </div>
+                        <div class="action-row">
+                            <form action="{% url 'admin_action' %}" method="POST" style="flex:1;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="approve_face">
+                                <input type="hidden" name="target_id" value="{{ review.id }}">
+                                <button type="submit" class="btn btn-success" style="width:100%; justify-content:center;"><i class="fas fa-check"></i> Approve</button>
+                            </form>
+                            <form action="{% url 'admin_action' %}" method="POST" style="flex:1;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="reject_face">
+                                <input type="hidden" name="target_id" value="{{ review.id }}">
+                                <button type="submit" class="btn btn-danger" style="width:100%; justify-content:center;"><i class="fas fa-times"></i> Reject</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state"><i class="fas fa-check-circle" style="color:#16a34a;"></i><h3>Queue Empty</h3><p>All faces verified!</p></div>
+                {% endif %}
+            </div>
+
+            <!-- User Reports -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Chat/User Reports ({{ user_reports.count }})</h3>
+                </div>
+                {% if user_reports %}
+                <div class="list-group">
+                    {% for r in user_reports %}
+                    <div class="list-item">
+                        <div class="item-header">
+                            <div>
+                                <div class="item-title">Reported: <span style="color:#ef4444;">{{ r.reported_user.username }}</span></div>
+                                <div class="item-meta">By: {{ r.reporter.username }} • {{ r.created_at|date:"M d, Y" }}</div>
+                            </div>
+                        </div>
+                        <div class="reason-box">
+                            <i class="fas fa-flag"></i> {{ r.reasons|join:", " }} {% if r.other_reason %}- {{ r.other_reason }}{% endif %}
+                        </div>
+                        <details style="margin-top:10px; font-size:12px; background:white; padding:8px; border-radius:8px; border:1px solid #e2e8f0;">
+                            <summary style="font-weight:700; cursor:pointer; color:#2563eb; outline:none;"><i class="fas fa-history"></i> View Chat Snapshot</summary>
+                            <div style="margin-top:8px; max-height:150px; overflow-y:auto;">
+                                {% for msg in r.chat_snapshot %}
+                                <div style="margin-bottom:6px; padding-bottom:6px; border-bottom:1px solid #f1f5f9;">
+                                    <strong style="color:#0f172a;">{{ msg.sender }}:</strong> <span style="color:#475569;">{{ msg.content }}</span>
+                                    <div style="font-size:9px; color:#94a3b8;">{{ msg.time }}</div>
+                                </div>
+                                {% empty %}
+                                <span style="color:#94a3b8; font-style:italic;">No recent messages found.</span>
+                                {% endfor %}
+                            </div>
+                        </details>
+                        <div class="action-row">
+                            <form action="{% url 'admin_action' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_user_report">
+                                <input type="hidden" name="target_id" value="{{ r.id }}">
+                                <button type="submit" class="btn btn-outline"><i class="fas fa-times"></i> Dismiss Report</button>
+                            </form>
+                            <form action="{% url 'admin_action' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="ban_user">
+                                <input type="hidden" name="target_id" value="{{ r.reported_user.profile.id }}">
+                                <button type="submit" class="btn btn-danger"><i class="fas fa-ban"></i> Ban {{ r.reported_user.username }}</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state"><i class="fas fa-smile-beam" style="color:#16a34a;"></i><h3>No Reports</h3><p>Community is playing nice.</p></div>
+                {% endif %}
+            </div>
+
+            <!-- Pending Confessions -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3><i class="fas fa-mask"></i> AI/Filter Flagged Confessions ({{ pending_confessions.count }})</h3>
+                </div>
+                {% if pending_confessions %}
+                <div class="list-group">
+                    {% for c in pending_confessions %}
+                    <div class="list-item">
+                        <div class="item-header">
+                            <div>
+                                <div class="item-title">By: {{ c.display_name }} ({{ c.campus|default:"Global" }})</div>
+                                <div class="item-meta">Flagged for: {{ c.moderation_reason }}</div>
+                            </div>
+                        </div>
+                        <p style="font-size:14px; color:#1e293b; margin:10px 0; line-height:1.5;">"{{ c.content }}"</p>
+                        <div class="action-row">
+                            <form action="{% url 'admin_action' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="approve_confession">
+                                <input type="hidden" name="target_id" value="{{ c.id }}">
+                                <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Allow</button>
+                            </form>
+                            <form action="{% url 'admin_action' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="reject_confession">
+                                <input type="hidden" name="target_id" value="{{ c.id }}">
+                                <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Delete</button>
+                            </form>
+                            {% if c.poster_fingerprint %}
+                            <form action="{% url 'admin_action' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="shadow_ban_fingerprint">
+                                <input type="hidden" name="fingerprint" value="{{ c.poster_fingerprint }}">
+                                <button type="submit" class="btn btn-outline" style="color:#b45309;"><i class="fas fa-ghost"></i> Shadow Ban Device</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state"><i class="fas fa-check-circle" style="color:#16a34a;"></i><h3>Queue Empty</h3></div>
+                {% endif %}
+            </div>
+            
+            <!-- User Reported Confessions -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3><i class="fas fa-users-slash"></i> User-Reported Confessions ({{ reported_confessions.count }})</h3>
+                </div>
+                {% if reported_confessions %}
+                <div class="list-group">
+                    {% for c in reported_confessions %}
+                    <div class="list-item">
+                        <div class="item-header">
+                            <div>
+                                <div class="item-title">By: {{ c.display_name }}</div>
+                                <div class="item-meta">{{ c.reports.count }} Reports</div>
+                            </div>
+                        </div>
+                        <p style="font-size:14px; color:#1e293b; margin:10px 0; line-height:1.5;">"{{ c.content }}"</p>
+                        <div class="reason-box">
+                            {% for report in c.reports.all %}
+                            <div>• {{ report.reasons|join:", " }} {% if report.other_reason %}({{ report.other_reason }}){% endif %}</div>
                             {% endfor %}
                         </div>
-                    </details>
-                </div>
-            </div>
-            {% empty %}
-            <p style="font-size: 14px; color: var(--text-muted);">No chat reports yet.</p>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- Face Verification Review Queue -->
-    <div class="admin-card">
-        <h3><i class="fas fa-camera-retro"></i> Face Verification Review</h3>
-        <div class="item-list">
-            {% for review in face_reviews %}
-            <div class="item-row" style="flex-direction: column; align-items: stretch; gap: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="item-info">
-                        <div class="item-title">User: {{ review.user.username }}</div>
-                        <div class="item-meta">Distance Score: <strong>{{ review.face_match_score|default:"N/A" }}</strong> | 
-                        Base Gender: {{ review.gender|default:"N/A" }} | 
-                        PFP Gender: {{ review.profile_photo_gender|default:"N/A" }}</div>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="approve_face">
-                            <input type="hidden" name="target_id" value="{{ review.id }}">
-                            <button type="submit" class="btn-secondary" style="color: #16a34a; border-color: #bbf7d0; background: #f0fdf4;">Approve</button>
-                        </form>
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="reject_face">
-                            <input type="hidden" name="target_id" value="{{ review.id }}">
-                            <button type="submit" class="btn-danger">Reject</button>
-                        </form>
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="ban_user">
-                            <input type="hidden" name="target_id" value="{{ review.user.profile.id }}">
-                            <button type="submit" class="btn-danger" style="background: #000; color: #fff; border-color: #000;">Ban</button>
-                        </form>
-                    </div>
-                </div>
-                
-                <div style="display: flex; gap: 12px; margin-top: 10px;">
-                    <div style="flex: 1; text-align: center;">
-                        <span style="font-size: 11px; font-weight: bold; color: var(--text-muted); display: block; margin-bottom: 4px;">Baseline Verification</span>
-                        <img src="{{ review.image_front }}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border);">
-                    </div>
-                    <div style="flex: 1; text-align: center;">
-                        <span style="font-size: 11px; font-weight: bold; color: var(--text-muted); display: block; margin-bottom: 4px;">Uploaded Profile Photo</span>
-                        <img src="{{ review.user.profile.profile_pic }}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border);">
-                    </div>
-                </div>
-            </div>
-            {% empty %}
-            <p style="font-size: 14px; color: var(--text-muted);">No profiles pending review.</p>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- Banned Identifiers -->
-    <div class="admin-card">
-        <h3><i class="fas fa-ban"></i> Banned Devices/IPs</h3>
-        <div class="item-list">
-            {% for b in banned_identifiers %}
-            <div class="item-row" style="flex-direction: column; align-items: stretch; gap: 10px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div class="item-info">
-                        <div class="item-title">{{ b.fingerprint|truncatechars:30 }}</div>
-                        <div class="item-meta">
-                            {% if b.is_shadow_ban %}
-                            <span class="badge" style="background: #fef08a; color: #854d0e; font-size: 10px; padding: 2px 6px; border-radius: 4px;">SHADOW BAN</span>
-                            {% else %}
-                            <span class="badge" style="background: #fee2e2; color: #ef4444; font-size: 10px; padding: 2px 6px; border-radius: 4px;">HARD BAN</span>
-                            {% endif %}
-                            • {{ b.reason|default:"Admin Action" }} • {{ b.created_at|date:"M d, Y" }}
+                        <div class="action-row">
+                            <form action="{% url 'admin_action' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="dismiss_confession">
+                                <input type="hidden" name="target_id" value="{{ c.id }}">
+                                <button type="submit" class="btn btn-outline"><i class="fas fa-check"></i> Keep (Dismiss Reports)</button>
+                            </form>
+                            <form action="{% url 'admin_action' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_confession">
+                                <input type="hidden" name="target_id" value="{{ c.id }}">
+                                <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Delete Confession</button>
+                            </form>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 8px;">
-                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline;">
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state"><i class="fas fa-check-circle" style="color:#16a34a;"></i><h3>No Reports</h3></div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- ================= USERS DIRECTORY TAB ================= -->
+        <div id="tab-users" class="admin-panel">
+            
+            <div class="toolbar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="user-search" placeholder="Search by name, campus, email..." oninput="filterUsers()">
+                </div>
+                <div class="sort-box">
+                    <select id="user-sort" onchange="sortUsers(this.value)">
+                        <option value="recent">Newest First</option>
+                        <option value="name">Alphabetical</option>
+                        <option value="campus">By Campus</option>
+                        <option value="banned">Banned First</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="user-grid" id="usersGrid">
+                {% for p in all_users %}
+                <div class="user-card" 
+                     data-name="{{ p.name|default:p.user.email|lower }}" 
+                     data-campus="{{ p.campus|lower }}" 
+                     data-email="{{ p.user.email|lower }}"
+                     data-recent="{{ forloop.counter }}"
+                     data-banned="{{ p.is_banned|yesno:'1,0' }}">
+                    <div class="uc-top">
+                        <img src="{{ p.get_profile_pic_url }}" class="uc-avatar" onerror="this.src='https://placehold.co/100x100?text=U'">
+                        <div class="uc-info">
+                            <h4 class="uc-name">{{ p.name|default:"No Name" }} 
+                                {% if p.is_face_verified %}<i class="fas fa-check-circle" style="color:#2563eb; font-size:12px;"></i>{% endif %}
+                            </h4>
+                            <span class="uc-email">{{ p.user.email }}</span>
+                            <div class="status-badges">
+                                {% if p.is_banned %}<span class="s-badge s-banned">Banned</span>{% endif %}
+                                {% if p.is_discoverable %}<span class="s-badge s-disc">Discoverable</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="uc-details">
+                        <div class="uc-stat"><i class="fas fa-university"></i> {{ p.campus|default:"N/A" }}</div>
+                        <div class="uc-stat"><i class="fas fa-birthday-cake"></i> {{ p.age|default:"-" }} yrs, {{ p.gender|default:"-"|title }}</div>
+                        <div class="uc-stat" style="grid-column: 1 / -1;"><i class="fas fa-clock"></i> Joined: {{ p.user.date_joined|date:"M d, Y" }}</div>
+                    </div>
+                    <div class="uc-actions">
+                        <a href="{% url 'admin_view_user' p.user.id %}" class="btn btn-outline" style="flex:1;"><i class="fas fa-eye"></i> View</a>
+                        {% if p.is_banned %}
+                        <form action="{% url 'admin_action' %}" method="POST" style="flex:1;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="unban_user">
+                            <input type="hidden" name="target_id" value="{{ p.id }}">
+                            <button type="submit" class="btn btn-success" style="width:100%;"><i class="fas fa-unlock"></i> Unban</button>
+                        </form>
+                        {% else %}
+                        <button class="btn btn-outline" style="color:#ef4444; border-color:#fca5a5; flex:1;" onclick="confirmAdminAction('ban_user','{{ p.id }}','Ban {{ p.name|escapejs }}?','They will lose access.')"><i class="fas fa-ban"></i> Ban</button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div id="search-empty" class="empty-state" style="display:none;">
+                <i class="fas fa-search"></i>
+                <h3>No matching users</h3>
+                <p>Try a different search term.</p>
+            </div>
+        </div>
+
+        <!-- ================= SYSTEM TAB ================= -->
+        <div id="tab-system" class="admin-panel">
+            <!-- Banned Devices -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3><i class="fas fa-laptop-house"></i> Banned Devices & IPs</h3>
+                </div>
+                {% if banned_identifiers %}
+                <div class="list-group">
+                    {% for b in banned_identifiers %}
+                    <div class="list-item">
+                        <div class="item-header">
+                            <div>
+                                <div class="item-title">{{ b.fingerprint|truncatechars:40 }}</div>
+                                <div class="item-meta">{{ b.reason|default:"Admin Action" }} • {{ b.created_at|date:"M d, Y" }}</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:6px; margin-bottom:12px;">
+                            {% if b.is_shadow_ban %}
+                            <span class="s-badge" style="background:#fef08a; color:#854d0e;">Shadow Ban</span>
+                            {% else %}
+                            <span class="s-badge s-banned">Hard Ban</span>
+                            {% endif %}
+                        </div>
+                        <form action="{% url 'admin_action' %}" method="POST">
                             {% csrf_token %}
                             <input type="hidden" name="action" value="unban_fingerprint">
                             <input type="hidden" name="fingerprint" value="{{ b.fingerprint }}">
-                            <button type="submit" class="btn-secondary" style="background: #f0fdf4; color: #16a34a; border-color: #bbf7d0;">Unban</button>
+                            <button type="submit" class="btn btn-outline"><i class="fas fa-unlock"></i> Unban Device</button>
                         </form>
                     </div>
+                    {% endfor %}
                 </div>
+                {% else %}
+                <div class="empty-state"><i class="fas fa-shield-alt" style="color:#16a34a;"></i><h3>Clean Slate</h3></div>
+                {% endif %}
             </div>
-            {% empty %}
-            <p style="font-size: 14px; color: var(--text-muted);">No banned identifiers.</p>
-            {% endfor %}
-        </div>
-    </div>
 
-    <!-- User Management -->
-    <div class="admin-card">
-        <h3><i class="fas fa-users"></i> User Management <span style="font-size:13px; font-weight:500; color:var(--text-muted);">({{ all_users.count }} users)</span></h3>
-        <div style="display:flex; flex-direction:column; gap:6px;">
-            {% for p in all_users %}
-            <div class="user-accordion" id="ua-{{ p.id }}">
-                <!-- Clickable header row -->
-                <div class="ua-header" onclick="toggleUser('{{ p.id }}')">
-                    {% if p.profile_pic %}
-                    <img src="{{ p.profile_pic }}" class="ua-avatar">
-                    {% else %}
-                    <div class="ua-avatar ua-avatar-fallback"><i class="fas fa-user"></i></div>
-                    {% endif %}
-                    <div class="ua-info">
-                        <span class="ua-name">{{ p.name|default:p.user.email }}</span>
-                        <span class="ua-email">
-                            {{ p.user.email|truncatechars:28 }}
-                            {% if p.is_banned %}<span class="badge-banned">BANNED</span>{% endif %}
-                            {% if p.verification_status == 'verified' %}<span class="badge-verified">✓</span>{% endif %}
-                        </span>
-                    </div>
-                    <i class="fas fa-chevron-down ua-chevron" id="chev-{{ p.id }}"></i>
+            <!-- Wall Controls -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3><i class="fas fa-paint-brush"></i> Public Wall Reset</h3>
                 </div>
-                <!-- Collapsible action panel -->
-                <div class="ua-panel" id="panel-{{ p.id }}">
-                    <a href="{% url 'admin_view_user' p.user.id %}" target="_blank" class="ua-btn ua-btn-view">
-                        <i class="fas fa-eye"></i> View Profile
-                    </a>
-                    {% if p.is_banned %}
-                    <form action="{% url 'admin_action' %}" method="POST" style="display:contents;">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="unban_user">
-                        <input type="hidden" name="target_id" value="{{ p.id }}">
-                        <button type="submit" class="ua-btn ua-btn-unban">
-                            <i class="fas fa-unlock"></i> Unban
-                        </button>
-                    </form>
-                    {% else %}
-                    <button class="ua-btn ua-btn-ban"
-                        onclick="confirmAdminAction('ban_user','{{ p.id }}','Ban {{ p.name|default:p.user.email|escapejs }}?','This will block them from using the app. You can unban later.')">
-                        <i class="fas fa-ban"></i> Ban
-                    </button>
-                    {% endif %}
-                    <button class="ua-btn ua-btn-delete"
-                        onclick="confirmAdminAction('delete_user','{{ p.id }}','Delete {{ p.name|default:p.user.email|escapejs }}?','⚠️ Permanent. All data, chats and posts will be gone forever.')">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </div>
+                <p style="font-size:13px; color:#64748b; margin-bottom:16px;">Completely wipe all scribbles and images from the anonymous campus wall. Cannot be undone.</p>
+                <form action="{% url 'admin_action' %}" method="POST" id="clearWallForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="clear_wall">
+                    <button type="button" class="btn btn-danger" onclick="confirmClearWall()"><i class="fas fa-eraser"></i> Erase Wall</button>
+                </form>
             </div>
-            {% endfor %}
         </div>
+
     </div>
 </div>
 
 <!-- Admin Confirmation Modal -->
-<div id="admin-confirm-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(6px); z-index:9999; align-items:center; justify-content:center;">
+<div id="admin-confirm-overlay" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(8px); z-index:9999; align-items:center; justify-content:center;">
     <div style="background:white; border-radius:24px; padding:32px; max-width:340px; width:90%; box-shadow:0 25px 60px rgba(0,0,0,0.3); text-align:center; animation: slideUp 0.3s ease;">
         <div style="width:60px;height:60px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
             <i class="fas fa-exclamation-triangle" style="color:#ef4444;font-size:24px;"></i>
         </div>
-        <h3 id="confirm-title" style="margin:0 0 8px; font-size:17px; color:#0f172a;"></h3>
+        <h3 id="confirm-title" style="margin:0 0 8px; font-size:18px; font-weight:800; color:#0f172a;"></h3>
         <p id="confirm-desc" style="font-size:14px; color:#64748b; margin:0 0 24px;"></p>
         <div style="display:flex; gap:10px;">
-            <button onclick="closeAdminConfirm()" style="flex:1;padding:12px;border-radius:12px;border:1px solid #e2e8f0;background:#f8fafc;font-weight:700;font-size:14px;cursor:pointer;color:#475569;">
+            <button onclick="closeAdminConfirm()" style="flex:1;padding:12px;border-radius:14px;border:1px solid #e2e8f0;background:#f8fafc;font-weight:700;font-size:14px;cursor:pointer;color:#475569;">
                 Cancel
             </button>
-            <button id="confirm-btn" style="flex:1;padding:12px;border-radius:12px;border:none;background:#ef4444;color:white;font-weight:700;font-size:14px;cursor:pointer;">
+            <button id="confirm-btn" style="flex:1;padding:12px;border-radius:14px;border:none;background:#ef4444;color:white;font-weight:700;font-size:14px;cursor:pointer;">
                 Confirm
             </button>
         </div>
@@ -532,26 +671,63 @@
 
 <style>
 @keyframes slideUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(30px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 </style>
 
 <script>
-function toggleUser(id) {
-    const panel = document.getElementById('panel-' + id);
-    const chev  = document.getElementById('chev-' + id);
-    const isOpen = panel.classList.contains('open');
-    // Close all others
-    document.querySelectorAll('.ua-panel').forEach(p => p.classList.remove('open'));
-    document.querySelectorAll('.ua-chevron').forEach(c => c.classList.remove('open'));
-    // Toggle clicked one
-    if (!isOpen) {
-        panel.classList.add('open');
-        chev.classList.add('open');
-    }
+// ── Tabs Logic ──
+function switchAdminTab(tabId) {
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+    
+    event.currentTarget.classList.add('active');
+    document.getElementById('tab-' + tabId).classList.add('active');
 }
 
+// ── Search & Filter Users ──
+function filterUsers() {
+    const query = document.getElementById('user-search').value.toLowerCase().trim();
+    const cards = document.querySelectorAll('.user-card');
+    let visibleCount = 0;
+    
+    cards.forEach(card => {
+        const name = card.getAttribute('data-name') || '';
+        const campus = card.getAttribute('data-campus') || '';
+        const email = card.getAttribute('data-email') || '';
+        
+        if (name.includes(query) || campus.includes(query) || email.includes(query)) {
+            card.style.display = 'flex';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    document.getElementById('search-empty').style.display = visibleCount === 0 ? 'block' : 'none';
+}
+
+function sortUsers(criteria) {
+    const grid = document.getElementById('usersGrid');
+    const cards = Array.from(grid.querySelectorAll('.user-card'));
+    
+    cards.sort((a, b) => {
+        if (criteria === 'recent') {
+            return parseInt(a.getAttribute('data-recent')) - parseInt(b.getAttribute('data-recent'));
+        } else if (criteria === 'banned') {
+            return parseInt(b.getAttribute('data-banned')) - parseInt(a.getAttribute('data-banned'));
+        } else {
+            const valA = a.getAttribute(`data-${criteria}`) || '';
+            const valB = b.getAttribute(`data-${criteria}`) || '';
+            return valA.localeCompare(valB);
+        }
+    });
+    
+    cards.forEach(card => grid.appendChild(card));
+}
+
+// ── Modal Logic ──
 function confirmAdminAction(action, targetId, title, desc) {
     document.getElementById('confirm-title').innerText = title;
     document.getElementById('confirm-desc').innerText = desc;
@@ -561,9 +737,9 @@ function confirmAdminAction(action, targetId, title, desc) {
     const overlay = document.getElementById('admin-confirm-overlay');
     overlay.style.display = 'flex';
     
-    const isDanger = action === 'delete_user';
-    document.getElementById('confirm-btn').style.background = isDanger ? '#7f1d1d' : '#ef4444';
-    document.getElementById('confirm-btn').innerText = isDanger ? 'Delete Forever' : 'Yes, Ban User';
+    const isDanger = action === 'delete_user' || action === 'ban_user';
+    document.getElementById('confirm-btn').style.background = isDanger ? '#ef4444' : '#2563eb';
+    document.getElementById('confirm-btn').innerText = isDanger ? 'Yes, do it' : 'Confirm';
     document.getElementById('confirm-btn').onclick = function() {
         document.getElementById('admin-confirm-form').submit();
     };
@@ -573,15 +749,15 @@ function closeAdminConfirm() {
     document.getElementById('admin-confirm-overlay').style.display = 'none';
 }
 
-// Close on overlay click
-document.getElementById('admin-confirm-overlay').addEventListener('click', function(e) {
-    if (e.target === this) closeAdminConfirm();
-});
-
 async function confirmClearWall() {
-    const confirmed = await customConfirm("Are you sure you want to erase everything on the wall? This cannot be undone.", "Erase Wall", "Erase", "Cancel");
-    if (confirmed) {
-        document.getElementById('clearWallForm').submit();
+    // Using the site-wide customConfirm if available, fallback to built in
+    if (typeof customConfirm !== 'undefined') {
+        const confirmed = await customConfirm("Are you sure you want to erase everything on the wall? This cannot be undone.", "Erase Wall", "Erase", "Cancel");
+        if (confirmed) document.getElementById('clearWallForm').submit();
+    } else {
+        if (confirm("Are you sure you want to erase the entire public wall?")) {
+            document.getElementById('clearWallForm').submit();
+        }
     }
 }
 </script>

@@ -3036,3 +3036,15 @@ def sitemap_view(request):
 def robots_txt_view(request):
     text = "User-agent: *\nAllow: /\n\nSitemap: https://srm-match.vercel.app/sitemap.xml\n"
     return HttpResponse(text, content_type='text/plain')
+
+def privacy_policy_view(request):
+    return render(request, 'privacy_policy.html')
+
+def terms_and_conditions_view(request):
+    return render(request, 'terms_and_conditions.html')
+
+def community_guidelines_view(request):
+    return render(request, 'community_guidelines.html')
+
+def about_view(request):
+    return render(request, 'about.html')

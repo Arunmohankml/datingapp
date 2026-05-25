@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Privacy Policy | SRM Match{% endblock %}
+{% block head %}
+<style>
+    nav { display: none !important; }
+    .policy-container { max-width: 720px; margin: 0 auto; padding: 20px 20px 80px; }
+    .policy-header { text-align: center; margin-bottom: 32px; padding-top: 20px; }
+    .policy-header h1 { font-size: 28px; color: var(--primary); font-weight: 800; letter-spacing: -0.5px; }
+    .policy-header p { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+    .policy-section { margin-bottom: 28px; }
+    .policy-section h2 { font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .policy-section p, .policy-section ul { font-size: 14px; line-height: 1.7; color: var(--text-muted); }
+    .policy-section ul { padding-left: 20px; }
+    .policy-section li { margin-bottom: 8px; }
+    .back-btn-container { text-align: center; margin-top: 40px; }
+    .back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 100px; background: #f1f5f9; border: 1px solid var(--border); font-size: 13px; font-weight: 700; color: #475569; text-decoration: none; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="policy-container">
+    <div class="policy-header">
+        <h1>Privacy Policy</h1>
+        <p>Effective Date: May 25, 2026</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>1. Data Collection and Use</h2>
+        <p>SRM Match collects limited information necessary to operate and protect the platform.</p>
+        <p>This may include:</p>
+        <ul>
+            <li>Account information</li>
+            <li>Profile information</li>
+            <li>Uploaded images</li>
+            <li>Verification images</li>
+            <li>Quiz answers and preferences</li>
+            <li>Chat and interaction data</li>
+            <li>Roommate listing data</li>
+            <li>Confession and moderation data</li>
+            <li>Device, browser, fingerprint, IP, or security-related identifiers</li>
+        </ul>
+        <p>This information may be used to:</p>
+        <ul>
+            <li>Provide app features</li>
+            <li>Improve matching and recommendations</li>
+            <li>Verify accounts</li>
+            <li>Prevent fake accounts and abuse</li>
+            <li>Investigate reports</li>
+            <li>Improve safety and platform performance</li>
+        </ul>
+        <p><strong>SRM Match does not sell your personal data.</strong></p>
+    </div>
+
+    <div class="policy-section">
+        <h2>2. Private and Public Content</h2>
+        <p>Some areas of SRM Match may be publicly accessible for landing pages, approved confessions, public community features, or PWA installation support.</p>
+        <p>Private information such as verification images, private chats, hidden moderation data, and account security information is not intentionally displayed publicly.</p>
+        <p>Users should avoid sharing sensitive personal information through public or semi-public features.</p>
+    </div>
+
+    <div class="back-btn-container" style="display: flex; justify-content: center; gap: 12px;">
+        <a href="{% url 'home' %}" class="back-btn" style="background: #2563eb; color: white; border: none;"><i class="fas fa-home"></i> Home</a>
+    </div>
+</div>
+{% endblock %}

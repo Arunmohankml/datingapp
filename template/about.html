@@ -1,0 +1,497 @@
+{% extends 'base.html' %}
+
+{% block title %}About SRM Match – Student Social Platform for SRM Campuses{% endblock %}
+
+{% block head %}
+<meta name="description" content="SRM Match is a student-built platform for SRM campuses featuring social matching, anonymous confessions, roommate finder, and campus community features.">
+<meta property="og:title" content="About SRM Match">
+<meta property="og:description" content="Discover the ultimate student-built social platform for SRM campuses. Connect, confess, and find roommates securely.">
+
+<style>
+    nav { display: none !important; }
+    
+    html, body {
+        background: #f7f9fb;
+        overflow-x: hidden;
+        scroll-behavior: smooth;
+        width: 100%;
+    }
+
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        border: none !important;
+    }
+
+    /* --- Animations --- */
+    @keyframes float {
+        0% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(5deg); }
+        100% { transform: translateY(0px) rotate(0deg); }
+    }
+    @keyframes float-reverse {
+        0% { transform: translateY(0px) rotate(0deg); }
+        50% { transform: translateY(20px) rotate(-5deg); }
+        100% { transform: translateY(0px) rotate(0deg); }
+    }
+    @keyframes revealUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* --- Layout Wrappers --- */
+    .about-wrapper {
+        width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 0 20px;
+        box-sizing: border-box;
+        position: relative;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        gap: 60px;
+        padding-bottom: 80px;
+    }
+
+    /* --- Floating Background Blobs --- */
+    .bg-blob {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(80px);
+        z-index: 0;
+        opacity: 0.4;
+        pointer-events: none;
+    }
+    .blob-1 {
+        top: -100px; left: -100px;
+        width: 300px; height: 300px;
+        background: #2563eb;
+        animation: float 8s infinite ease-in-out;
+    }
+    .blob-2 {
+        top: 200px; right: -100px;
+        width: 400px; height: 400px;
+        background: #ec4899;
+        animation: float-reverse 10s infinite ease-in-out;
+        opacity: 0.2;
+    }
+    .blob-3 {
+        bottom: 10%; left: 20%;
+        width: 350px; height: 350px;
+        background: #10b981;
+        animation: float 12s infinite ease-in-out;
+        opacity: 0.15;
+    }
+
+    /* --- Hero Section --- */
+    .hero-section {
+        text-align: center;
+        padding-top: calc(80px + env(safe-area-inset-top));
+        position: relative;
+        z-index: 2;
+    }
+    .hero-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 100px;
+        background: rgba(37, 99, 235, 0.1);
+        border: 1px solid rgba(37, 99, 235, 0.2);
+        color: #2563eb;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 24px;
+        animation: revealUp 0.8s ease backwards;
+    }
+    .hero-section h1 {
+        font-size: clamp(36px, 8vw, 56px);
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.1;
+        letter-spacing: -0.04em;
+        margin-bottom: 20px;
+        animation: revealUp 0.8s ease 0.1s backwards;
+    }
+    .text-gradient {
+        background: linear-gradient(135deg, #2563eb 0%, #ec4899 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .hero-section p {
+        font-size: clamp(15px, 4vw, 18px);
+        color: #475569;
+        line-height: 1.6;
+        max-width: 600px;
+        margin: 0 auto 32px;
+        font-weight: 500;
+        animation: revealUp 0.8s ease 0.2s backwards;
+    }
+    .hero-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+        justify-content: center;
+        animation: revealUp 0.8s ease 0.3s backwards;
+    }
+
+    /* --- Buttons --- */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        max-width: 280px;
+        padding: 16px 24px;
+        border-radius: 100px;
+        font-size: 15px;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        cursor: pointer;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white;
+        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
+        border: none;
+    }
+    .btn-primary:hover { box-shadow: 0 16px 32px rgba(37, 99, 235, 0.35); transform: translateY(-2px); }
+    
+    .btn-glass {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        color: #1e293b;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+    }
+    .btn-glass:hover { background: rgba(255, 255, 255, 0.9); transform: translateY(-2px); }
+
+    /* --- App Mockup Graphic --- */
+    .hero-mockup {
+        margin-top: 40px;
+        width: 100%;
+        max-width: 320px;
+        border-radius: 32px;
+        border: 6px solid #ffffff;
+        box-shadow: 0 30px 60px rgba(15, 23, 42, 0.15);
+        animation: float 6s infinite ease-in-out;
+    }
+
+    /* --- General Section Styles --- */
+    .section-title {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+    .section-title h2 {
+        font-size: clamp(24px, 6vw, 32px);
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.5px;
+        margin-bottom: 12px;
+    }
+    .section-title p {
+        font-size: 15px;
+        color: #64748b;
+        max-width: 500px;
+        margin: 0 auto;
+        line-height: 1.6;
+    }
+
+    /* --- Feature Grid --- */
+    .feature-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    .glass-card {
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 28px;
+        padding: 28px 24px;
+        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.04);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .glass-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+    }
+    .glass-card .icon-box {
+        width: 56px; height: 56px;
+        border-radius: 20px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 24px;
+        margin-bottom: 16px;
+    }
+    .glass-card.match .icon-box { background: rgba(37,99,235,0.1); color: #2563eb; }
+    .glass-card.confess .icon-box { background: rgba(236,72,153,0.1); color: #ec4899; }
+    .glass-card.room .icon-box { background: rgba(16,185,129,0.1); color: #10b981; }
+    .glass-card.comm .icon-box { background: rgba(245,158,11,0.1); color: #f59e0b; }
+
+    .glass-card h3 {
+        font-size: 18px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0 0 8px;
+    }
+    .glass-card ul {
+        list-style: none;
+        padding: 0; margin: 0;
+    }
+    .glass-card li {
+        font-size: 14px;
+        color: #475569;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+    }
+    .glass-card li i { font-size: 12px; color: #2563eb; }
+
+    /* --- Why It Exists (Emotional Text) --- */
+    .mission-card {
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        border-radius: 32px;
+        padding: 40px 24px;
+        color: #0f172a;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 15px 35px rgba(15, 23, 42, 0.04);
+    }
+    .mission-card::before {
+        content: '"';
+        position: absolute;
+        top: -10px; left: 20px;
+        font-size: 140px;
+        color: rgba(37, 99, 235, 0.05);
+        font-family: serif;
+        line-height: 1;
+    }
+    .mission-card p {
+        font-size: clamp(15px, 4vw, 17px);
+        line-height: 1.7;
+        color: #475569;
+        margin-bottom: 16px;
+        font-weight: 500;
+    }
+    .mission-card p:last-child { margin-bottom: 0; }
+
+    /* --- Campuses --- */
+    .campus-chips {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+    .campus-chip {
+        background: white;
+        border: 1px solid rgba(0,0,0,0.05);
+        padding: 12px 20px;
+        border-radius: 100px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .campus-chip i { color: #2563eb; }
+
+    /* --- Footer --- */
+    .about-footer {
+        text-align: center;
+        border-top: 1px solid rgba(0,0,0,0.06);
+        padding-top: 32px;
+        margin-top: 20px;
+    }
+    .footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .footer-links a {
+        color: #64748b;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+        transition: color 0.2s;
+    }
+    .footer-links a:hover { color: #2563eb; }
+    .about-footer p {
+        font-size: 13px;
+        color: #94a3b8;
+        font-weight: 600;
+    }
+
+    @media (min-width: 768px) {
+        .hero-actions { flex-direction: row; }
+        .btn { width: auto; }
+        .feature-grid { grid-template-columns: 1fr 1fr; }
+        .mission-card { padding: 60px 40px; }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="bg-blob blob-1"></div>
+<div class="bg-blob blob-2"></div>
+<div class="bg-blob blob-3"></div>
+
+<div class="about-wrapper">
+
+    <!-- Hero -->
+    <section class="hero-section">
+        <div class="hero-pill"><i class="fas fa-sparkles"></i> For Students, By Students</div>
+        <h1>Made for the <br><span class="text-gradient">SRM Community</span></h1>
+        <p>SRM Match is a completely independent social platform designed to help you connect, socialize, find roommates, and interact safely across SRM campuses.</p>
+        <div class="hero-actions">
+            <a href="{% url 'home' %}" class="btn btn-primary">Open App <i class="fas fa-arrow-right"></i></a>
+            <a href="{% url 'confessions_feed' %}" class="btn btn-glass">View Confessions</a>
+        </div>
+    </section>
+
+    <!-- Why We Built It -->
+    <section class="reveal">
+        <div class="mission-card">
+            <p>College is massive, and it's easy to feel lost in the crowd. We noticed how hard it was to just meet people outside our immediate circles, find reliable roommates without getting scammed, or share thoughts freely without judgment.</p>
+            <p>So we built SRM Match. It's not a corporate product—it's a genuine attempt to make campus life a little more connected, a little safer, and a lot more fun.</p>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="reveal">
+        <div class="section-title">
+            <h2>The Hub for Everything</h2>
+            <p>Everything you need to survive and thrive socially on campus.</p>
+        </div>
+        <div class="feature-grid">
+            <div class="glass-card match">
+                <div class="icon-box"><i class="fas fa-heart"></i></div>
+                <h3>Match & Discover</h3>
+                <ul>
+                    <li><i class="fas fa-check"></i> Interest-based connections</li>
+                    <li><i class="fas fa-check"></i> Deep compatibility quizzes</li>
+                    <li><i class="fas fa-check"></i> Cross-campus discovery</li>
+                </ul>
+            </div>
+            <div class="glass-card confess">
+                <div class="icon-box"><i class="fas fa-mask"></i></div>
+                <h3>Campus Confessions</h3>
+                <ul>
+                    <li><i class="fas fa-check"></i> 100% anonymous posting</li>
+                    <li><i class="fas fa-check"></i> Moderated for safety</li>
+                    <li><i class="fas fa-check"></i> React and comment securely</li>
+                </ul>
+            </div>
+            <div class="glass-card room">
+                <div class="icon-box"><i class="fas fa-bed"></i></div>
+                <h3>Roommate Finder</h3>
+                <ul>
+                    <li><i class="fas fa-check"></i> Find flats, PGs, and roommates</li>
+                    <li><i class="fas fa-check"></i> Advanced budget & vibe filters</li>
+                    <li><i class="fas fa-check"></i> Zero broker interference</li>
+                </ul>
+            </div>
+            <div class="glass-card comm">
+                <div class="icon-box"><i class="fas fa-shield-alt"></i></div>
+                <h3>Safety First</h3>
+                <ul>
+                    <li><i class="fas fa-check"></i> AI-powered face verification</li>
+                    <li><i class="fas fa-check"></i> strict anti-spam & ban systems</li>
+                    <li><i class="fas fa-check"></i> Private reporting tools</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Campuses -->
+    <section class="reveal">
+        <div class="section-title">
+            <h2>Across All Campuses</h2>
+        </div>
+        <div class="campus-chips">
+            <div class="campus-chip"><i class="fas fa-map-marker-alt"></i> KTR (Kattankulathur)</div>
+            <div class="campus-chip"><i class="fas fa-map-marker-alt"></i> Ramapuram</div>
+            <div class="campus-chip"><i class="fas fa-map-marker-alt"></i> Vadapalani</div>
+            <div class="campus-chip"><i class="fas fa-map-marker-alt"></i> Delhi NCR</div>
+            <div class="campus-chip"><i class="fas fa-map-marker-alt"></i> Amaravati</div>
+            <div class="campus-chip"><i class="fas fa-map-marker-alt"></i> Tiruchirappalli</div>
+        </div>
+    </section>
+
+    <!-- Disclaimer / Built By -->
+    <section class="reveal">
+        <div class="glass-card" style="text-align: center; border-color: rgba(37, 99, 235, 0.2); background: rgba(255,255,255,0.85);">
+            <div style="font-size: 32px; margin-bottom: 12px;">🎓</div>
+            <h3 style="margin-bottom: 12px;">100% Student Run</h3>
+            <p style="font-size: 14px; color: #475569; line-height: 1.6; margin: 0;">SRM Match is an independent passion project created by students. We are <strong>not</strong> officially affiliated with, endorsed by, or managed by SRM University or any of its administration.</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="about-footer reveal">
+        <div class="footer-links">
+            <a href="{% url 'privacy_policy' %}">Privacy Policy</a>
+            <a href="{% url 'terms_and_conditions' %}">Terms & Conditions</a>
+            <a href="{% url 'community_guidelines' %}">Community Guidelines</a>
+            <a href="mailto:admin@srmmatch.com">Contact Us</a>
+        </div>
+        <p>Made with <i class="fas fa-heart" style="color: #ec4899;"></i> for the SRM community</p>
+    </footer>
+
+</div>
+
+<script>
+    // Smooth scroll reveal animation
+    document.addEventListener('DOMContentLoaded', () => {
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.15
+        };
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal').forEach(el => {
+            observer.observe(el);
+        });
+    });
+</script>
+{% endblock %}

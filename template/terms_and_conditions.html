@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}Terms & Conditions | SRM Match{% endblock %}
+{% block head %}
+<style>
+    nav { display: none !important; }
+    .policy-container { max-width: 720px; margin: 0 auto; padding: 20px 20px 80px; }
+    .policy-header { text-align: center; margin-bottom: 32px; padding-top: 20px; }
+    .policy-header h1 { font-size: 28px; color: var(--primary); font-weight: 800; letter-spacing: -0.5px; }
+    .policy-header p { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+    .policy-section { margin-bottom: 28px; }
+    .policy-section h2 { font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .policy-section p, .policy-section ul { font-size: 14px; line-height: 1.7; color: var(--text-muted); }
+    .policy-section ul { padding-left: 20px; }
+    .policy-section li { margin-bottom: 8px; }
+    .back-btn-container { text-align: center; margin-top: 40px; }
+    .back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 100px; background: #f1f5f9; border: 1px solid var(--border); font-size: 13px; font-weight: 700; color: #475569; text-decoration: none; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="policy-container">
+    <div class="policy-header">
+        <h1>Terms and Conditions</h1>
+        <p>Effective Date: May 25, 2026</p>
+    </div>
+
+    <div class="policy-section">
+        <p>SRM Match is an independent student-built platform created to help students connect, socialize, discover compatible matches, find roommates, and share moderated anonymous confessions within the SRM student community.</p>
+        <p>By accessing or using SRM Match, you agree to these Terms, Community Guidelines, and Privacy Policy.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>1. Eligibility</h2>
+        <p>You must be at least 18 years old to use SRM Match.</p>
+        <p>By using the platform, you confirm that:</p>
+        <ul>
+            <li>You are 18 years of age or older.</li>
+            <li>You will provide accurate and genuine information.</li>
+            <li>You will not impersonate another person.</li>
+            <li>You will not create fake, misleading, or duplicate accounts.</li>
+        </ul>
+        <p>SRM Match reserves the right to restrict, suspend, or remove accounts that violate these requirements.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>2. User Accounts and Verification</h2>
+        <p>Users may be required to create an account to access certain features.</p>
+        <p>To improve safety and reduce fake profiles, SRM Match may use verification methods such as email verification, profile review, face verification, or other safety checks.</p>
+        <p>Face verification images are used only for verification, safety, and moderation purposes. These images are not displayed publicly on user profiles.</p>
+        <p>Admins may review verification-related data only when required for verification, safety, abuse prevention, or moderation.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>3. Roommate Finder</h2>
+        <p>SRM Match is only a connecting platform and is not responsible for rental agreements, payments, property conditions, disputes, or offline arrangements between users.</p>
+        <p>Users should independently verify listings, meet safely, and avoid sharing sensitive personal or financial information too quickly.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>4. Reports and Moderation</h2>
+        <p>Users may report profiles, confessions, messages, roommate listings, or public content that appears unsafe, abusive, fake, or inappropriate.</p>
+        <p>SRM Match may review reports and take actions including:</p>
+        <ul>
+            <li>Removing content</li>
+            <li>Hiding or limiting content</li>
+            <li>Restricting user features</li>
+            <li>Suspending accounts</li>
+            <li>Banning accounts, devices, fingerprints, IP addresses, or other identifiers</li>
+        </ul>
+        <p>Moderation decisions are made to protect user safety and platform integrity.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>5. Platform Independence</h2>
+        <p>SRM Match is an independent student-made platform.</p>
+        <p>SRM Match is not officially affiliated with, endorsed by, sponsored by, or managed by SRM University, SRMIST, or any SRM campus administration.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>6. Changes to This Policy</h2>
+        <p>SRM Match may update these Terms, Guidelines, and Privacy Policy as features, safety systems, or legal requirements change.</p>
+        <p>Continued use of the platform after updates means you accept the revised policy.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>7. Contact</h2>
+        <p>For reports, deletion requests, safety concerns, or policy questions, contact:</p>
+        <p><strong>Admin:</strong> [Add Contact Email / Instagram / Phone]</p>
+    </div>
+
+    <div class="back-btn-container" style="display: flex; justify-content: center; gap: 12px;">
+        <a href="{% url 'home' %}" class="back-btn" style="background: #2563eb; color: white; border: none;"><i class="fas fa-home"></i> Home</a>
+    </div>
+</div>
+{% endblock %}

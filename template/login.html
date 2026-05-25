@@ -456,23 +456,6 @@ body::before {
 
 </div>
 
-<!-- PWA Install Prompt -->
-<div id="pwa-install-prompt" style="display:none; position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:rgba(255,255,255,0.88); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); padding:12px 16px; border-radius:20px; box-shadow:0 10px 30px rgba(0,0,0,0.1); width:88%; max-width:360px; z-index:10001; border:1px solid rgba(0,0,0,0.04); animation:fadeUp 0.4s ease; font-family:'Plus Jakarta Sans',sans-serif;">
-    <div style="display:flex; align-items:center; gap:10px;">
-        <div style="width:40px; height:40px; border-radius:12px; background:linear-gradient(135deg,#004ac6,#2563eb); display:flex; align-items:center; justify-content:center; color:#fff; flex-shrink:0;">
-            <span class="material-symbols-outlined" style="font-size:20px; font-variation-settings:'FILL' 1;">download</span>
-        </div>
-        <div style="flex:1; min-width:0;">
-            <div style="font-size:13px; font-weight:700; color:#0f172a;">Install SRM Match</div>
-            <div style="font-size:11px; color:#64748b;">Add to home screen for quick access</div>
-        </div>
-        <button onclick="triggerPwaInstall()" style="padding:7px 16px; border-radius:100px; border:none; background:linear-gradient(135deg,#004ac6,#2563eb); color:white; font-weight:700; font-size:12px; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; white-space:nowrap;">Install</button>
-        <button onclick="dismissPwa()" style="background:none; border:none; cursor:pointer; color:#94a3b8; padding:4px; flex-shrink:0;">
-            <span class="material-symbols-outlined" style="font-size:18px;">close</span>
-        </button>
-    </div>
-</div>
-
 <script>
     // PWA Logic
     window.deferredPrompt = null;
@@ -486,18 +469,14 @@ body::before {
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         window.deferredPrompt = e;
-        if (!localStorage.getItem('pwaDismissed')) {
-            document.getElementById('pwa-install-prompt').style.display = 'block';
-        }
     });
 
     window.addEventListener('appinstalled', () => {
-        document.getElementById('pwa-install-prompt').style.display = 'none';
-        localStorage.setItem('pwaDismissed', 'true');
+        localStorage.setItem('pwaInstalled', 'true');
     });
 
     if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-        localStorage.setItem('pwaDismissed', 'true');
+        localStorage.setItem('pwaInstalled', 'true');
     }
 
     async function triggerPwaInstall() {
@@ -505,18 +484,14 @@ body::before {
             window.deferredPrompt.prompt();
             const { outcome } = await window.deferredPrompt.userChoice;
             window.deferredPrompt = null;
-            localStorage.setItem('pwaDismissed', 'true');
-            document.getElementById('pwa-install-prompt').style.display = 'none';
+            if (outcome === 'accepted') {
+                localStorage.setItem('pwaInstalled', 'true');
+            }
         } else if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
             alert("To install on iOS: Tap the 'Share' icon in Safari, then select 'Add to Home Screen'.");
         } else {
             alert("Open this page in Chrome or Edge to install the app.");
         }
-    }
-
-    function dismissPwa() {
-        document.getElementById('pwa-install-prompt').style.display = 'none';
-        localStorage.setItem('pwaDismissed', 'true');
     }
 </script>
 <script type="module">
@@ -556,7 +531,11 @@ body::before {
             }
         } catch (error) {
             console.error(error);
-            alert("Google sign-in was cancelled or failed. Please try again.");
+            if (error.message && (error.message.includes('Cross-Origin') || error.message.includes('popup'))) {
+                alert("Login blocked by browser security. If you are using Brave, please turn off 'Brave Shields' (lion icon in the address bar) or try Chrome/Safari.");
+            } else {
+                alert("Google sign-in was cancelled or failed. Please try again.");
+            }
         }
     };
 </script>

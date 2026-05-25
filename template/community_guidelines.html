@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Community Guidelines | SRM Match{% endblock %}
+{% block head %}
+<style>
+    nav { display: none !important; }
+    .policy-container { max-width: 720px; margin: 0 auto; padding: 20px 20px 80px; }
+    .policy-header { text-align: center; margin-bottom: 32px; padding-top: 20px; }
+    .policy-header h1 { font-size: 28px; color: var(--primary); font-weight: 800; letter-spacing: -0.5px; }
+    .policy-header p { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+    .policy-section { margin-bottom: 28px; }
+    .policy-section h2 { font-size: 18px; font-weight: 700; color: var(--text-main); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .policy-section p, .policy-section ul { font-size: 14px; line-height: 1.7; color: var(--text-muted); }
+    .policy-section ul { padding-left: 20px; }
+    .policy-section li { margin-bottom: 8px; }
+    .back-btn-container { text-align: center; margin-top: 40px; }
+    .back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 100px; background: #f1f5f9; border: 1px solid var(--border); font-size: 13px; font-weight: 700; color: #475569; text-decoration: none; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="policy-container">
+    <div class="policy-header">
+        <h1>Community Guidelines</h1>
+        <p>Effective Date: May 25, 2026</p>
+    </div>
+
+    <div class="policy-section">
+        <p>By using SRM Match, you agree to use the platform responsibly, respect other users, and help maintain a safe student community.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>1. Acceptable Use</h2>
+        <p>Users must use SRM Match respectfully and responsibly.</p>
+        <p>You agree not to post, upload, send, or share content that includes:</p>
+        <ul>
+            <li>Harassment, bullying, or threats</li>
+            <li>Hate speech or discriminatory content</li>
+            <li>Sexually explicit or extreme content</li>
+            <li>Abuse, intimidation, or targeted insults</li>
+            <li>Spam, scams, or repeated disruptive behavior</li>
+            <li>Fake identities or impersonation</li>
+            <li>Private information of others</li>
+            <li>Content that may harm, defame, or mislead another person</li>
+        </ul>
+        <p>Violation of these rules may result in content removal, feature restrictions, suspension, or permanent ban.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>2. Matching and Social Features</h2>
+        <p>SRM Match may use quiz answers, profile information, interests, preferences, campus details, language preferences, and other compatibility signals to suggest matches.</p>
+        <p>Match scores and recommendations are generated automatically and are intended only as social discovery tools. They do not guarantee compatibility, safety, identity, or future interaction.</p>
+        <p>Users are responsible for how they communicate and interact with others.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>3. Anonymous Confessions</h2>
+        <p>Anonymous confessions are provided for safe, moderated community expression.</p>
+        <p>Users must not post confessions that include:</p>
+        <ul>
+            <li>Real names of students, staff, or individuals</li>
+            <li>Phone numbers, addresses, hostel or room details</li>
+            <li>Screenshots of private chats</li>
+            <li>Personal or sensitive information</li>
+            <li>Defamatory or harmful accusations</li>
+            <li>Harassment, hate speech, or threats</li>
+            <li>Repeated spam or abusive content</li>
+        </ul>
+        <p>Confessions may be automatically filtered, held for admin approval, removed, or reviewed if reported.</p>
+        <p>SRM Match reserves the right to remove any confession that may be unsafe, abusive, misleading, or harmful to the community.</p>
+    </div>
+
+    <div class="policy-section">
+        <h2>4. Roommate Finder</h2>
+        <p>The Roommate Finder feature is provided to help students discover roommates, flats, PGs, hostel options, or shared accommodation opportunities.</p>
+        <p>Users are responsible for the accuracy of listings they create.</p>
+        <p>You must not post:</p>
+        <ul>
+            <li>Fake or misleading accommodation listings</li>
+            <li>Scam listings</li>
+            <li>Someone else’s property or contact details without permission</li>
+            <li>Unsafe or inappropriate location details</li>
+            <li>Content that violates privacy or safety rules</li>
+        </ul>
+    </div>
+
+    <div class="policy-section">
+        <h2>5. Public Wall and Community Features</h2>
+        <p>Public community features such as walls, posts, reactions, or interactive spaces must be used respectfully.</p>
+        <p>Users must not upload, draw, write, or share:</p>
+        <ul>
+            <li>Vulgar or obscene content</li>
+            <li>Hateful or abusive content</li>
+            <li>Targeted harassment</li>
+            <li>Private information</li>
+            <li>Spam or repeated disruptive content</li>
+            <li>Content intended to damage the platform or community experience</li>
+        </ul>
+        <p>Admins may remove content, reset public areas, restrict access, or ban users if misuse occurs.</p>
+    </div>
+
+    <div class="back-btn-container" style="display: flex; justify-content: center; gap: 12px;">
+        <a href="{% url 'home' %}" class="back-btn" style="background: #2563eb; color: white; border: none;"><i class="fas fa-home"></i> Home</a>
+    </div>
+</div>
+{% endblock %}

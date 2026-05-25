@@ -235,22 +235,6 @@
     <div class="settings-body">
         <div class="space-y-3">
 
-<!-- Install App Card -->
-<section id="install-app-card" class="relative overflow-hidden bg-primary-container rounded-[20px] p-4 shadow-lg group" style="display:none;">
-<div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
-<div class="flex items-center justify-between relative z-10">
-<div class="flex items-center gap-3">
-<div class="bg-white/20 p-2 rounded-xl">
-<span class="material-symbols-outlined text-white text-[24px]">smartphone</span>
-</div>
-<div>
-<h2 class="font-title-md text-title-md text-on-primary-container" style="font-size:15px;font-weight:700;">Install SRM Match</h2>
-<p class="font-body-sm text-body-sm text-on-primary-container/80" style="font-size:13px;">Get the full app experience</p>
-</div>
-</div>
-<button onclick="triggerPwaInstall()" class="bg-white text-primary px-5 py-1.5 rounded-full font-label-bold text-label-bold hover:bg-surface-container-lowest transition-colors active:scale-95 border-0 cursor-pointer" style="font-size:12px;">Install</button>
-</div>
-</section>
 
 <!-- Settings List -->
 <div class="space-y-3">
@@ -271,6 +255,22 @@
 </div>
 </div>
 
+<!-- Install App -->
+<button onclick="triggerPwaInstall()" class="w-full bg-surface-container-lowest rounded-[20px] p-4 shadow-card border border-outline-variant/10 hover:bg-surface-container-low transition-colors text-left border-0 cursor-pointer">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-[14px] bg-secondary-container/40 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" style="font-size:20px;">download</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md" style="font-size:15px;font-weight:600;color:var(--text-main);">Install App</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant" style="font-size:13px;">Add SRM Match to home screen</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline" style="font-size:18px;">chevron_right</span>
+</div>
+</button>
+
 <!-- Latest Updates -->
 <a href="{% url 'announcements' %}" class="block bg-surface-container-lowest rounded-[20px] p-4 shadow-card border border-outline-variant/10 hover:bg-surface-container-low transition-colors no-underline">
 <div class="flex items-center justify-between">
@@ -286,22 +286,6 @@
 <span class="material-symbols-outlined text-outline" style="font-size:18px;">chevron_right</span>
 </div>
 </a>
-
-<!-- Policy & Terms -->
-<button onclick="openPolicyModal()" class="w-full bg-surface-container-lowest rounded-[20px] p-4 shadow-card border border-outline-variant/10 hover:bg-surface-container-low transition-colors text-left border-0 cursor-pointer">
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-3">
-<div class="w-10 h-10 rounded-[14px] bg-secondary-container/40 flex items-center justify-center">
-<span class="material-symbols-outlined text-primary" style="font-size:20px;">description</span>
-</div>
-<div>
-<h3 class="font-title-md text-title-md" style="font-size:15px;font-weight:600;color:var(--text-main);">Policy & Terms</h3>
-<p class="font-body-sm text-body-sm text-on-surface-variant" style="font-size:13px;">View community guidelines</p>
-</div>
-</div>
-<span class="material-symbols-outlined text-outline" style="font-size:18px;">chevron_right</span>
-</div>
-</button>
 
 <!-- Logout -->
 <button onclick="handleLogout()" class="w-full bg-surface-container-lowest rounded-[20px] p-4 shadow-card border border-outline-variant/10 hover:bg-surface-container-low transition-colors text-left border-0 cursor-pointer">
@@ -347,49 +331,12 @@
     </div>
 </div>
 
-<!-- Policy Modal -->
-<div id="policy-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;padding:20px;align-items:center;justify-content:center;">
-<div class="bg-surface-container-lowest rounded-[20px] p-6 shadow-lg" style="width:100%;max-width:500px;max-height:80vh;overflow-y:auto;position:relative;">
-<button onclick="closePolicyModal()" style="position:absolute;top:12px;right:12px;background:none;border:none;cursor:pointer;padding:4px;">
-<span class="material-symbols-outlined text-outline" style="font-size:20px;">close</span>
-</button>
-<h3 style="margin:0 0 16px;font-size:18px;font-weight:800;color:#191c1e;">SRM Match Policy</h3>
-<ul style="margin:0;padding-left:18px;font-size:13px;color:#64748b;line-height:1.6;display:flex;flex-direction:column;gap:8px;">
-<li>You must be 18 years or older to use this app.</li>
-<li>You must use your own SRM email/account. Fake accounts or impersonation are not allowed.</li>
-<li>Your profile photo, bio, confessions, and messages must not contain abuse, hate, threats, or harassment.</li>
-<li>Face verification is used to reduce fake profiles and keep the app safer.</li>
-<li>Your face verification image will be stored privately and will not be shown publicly on your profile.</li>
-<li>Face verification images may be reviewed by admins only for verification, safety, or moderation purposes.</li>
-<li>Anonymous confessions are hidden from the public, but admins may review them if there is abuse, spam, or reports.</li>
-<li>Do not post real names, phone numbers, hostel/room details, private chats, or personal information of others.</li>
-<li>Confessions containing names, abusive words, repeated spam, or sensitive content may be sent for admin approval or removed.</li>
-<li>Users can report profiles, confessions, or messages that feel unsafe or inappropriate.</li>
-<li>We may ban accounts, devices, fingerprints, or IP addresses if users spam, harass others, create fake profiles, or break rules.</li>
-<li>Your data is used only to run the app, verify users, improve safety, and prevent misuse.</li>
-<li>We do not sell your personal data.</li>
-<li>You can request account/data deletion by contacting the admin.</li>
-<li>By using this app, you agree to follow these rules and use the platform respectfully.</li>
-</ul>
-</div>
-</div>
-
 <!-- Hidden form for logout -->
 <form id="logout-form" method="POST" action="{% url 'logout' %}" style="display:none;">{% csrf_token %}</form>
 <!-- Hidden form for delete account -->
 <form id="delete-account-form" method="POST" action="{% url 'delete_account' %}" style="display:none;">{% csrf_token %}</form>
 
 <script>
-function openPolicyModal() {
-  const m = document.getElementById('policy-modal');
-  m.style.display = 'flex';
-  setTimeout(() => { m.style.opacity = '1'; }, 10);
-}
-function closePolicyModal() {
-  const m = document.getElementById('policy-modal');
-  m.style.opacity = '0';
-  setTimeout(() => { m.style.display = 'none'; }, 200);
-}
 async function handleLogout() {
   const c = await customConfirm("Are you sure you want to logout?", "Logout", "Logout", "Stay");
   if (c) document.getElementById('logout-form').submit();
@@ -422,11 +369,6 @@ function updateNotifStatus() {
 document.addEventListener('DOMContentLoaded', function() {
   updateNotifStatus();
   window.addEventListener('notificationPermissionChanged', updateNotifStatus);
-  // Show install card if PWA not installed
-  if (typeof isAppInstalled === 'function' && !isAppInstalled()) {
-    var card = document.getElementById('install-app-card');
-    if (card) card.style.display = 'block';
-  }
 });
 </script>
 {% endblock %}
