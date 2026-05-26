@@ -1,9 +1,37 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ req.title }} | Room Request{% endblock %}
+{% block title %}{{ req.title }} | Room Request | SRM Match{% endblock %}
+
+{% block meta_description %}Student looking for {{ req.preferred_room_type }} near {{ req.looking_near }} around SRM {{ req.campus }} campus. Connect on SRM Match.{% endblock %}
+
+{% block json_ld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{ req.title|escapejs }}",
+  "description": "Student looking for {{ req.preferred_room_type|escapejs }} near {{ req.looking_near|escapejs }} around SRM {{ req.campus }} campus. Connect on SRM Match.",
+  "author": {
+    "@type": "Person",
+    "name": "SRM Match User"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SRM Match",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://srm-match.vercel.app/icon-512x512.png"
+    }
+  },
+  "datePublished": "{{ req.created_at|date:'c' }}"
+}
+</script>
+{% endblock %}
 
 {% block head %}
+<meta property="og:title" content="{{ req.title }} | Room Request | SRM Match">
+<meta property="og:description" content="Student looking for {{ req.preferred_room_type }} near {{ req.looking_near }} around SRM {{ req.campus }} campus. Connect on SRM Match.">
 <style>
 body > .container {
     padding: 0 !important;
@@ -464,7 +492,7 @@ body {
 
     <div style="margin-bottom:12px;">
         <h3 class="rr-section-title" style="margin-bottom:8px;"><i class="fas fa-user-circle"></i> Requested By</h3>
-        <div class="rr-user-card" style="margin-bottom:10px;" onclick="window.location.href='{% url 'view_profile' req.user.id %}'">
+        <div class="rr-user-card" style="margin-bottom:10px;" onclick="{% if request.user.is_authenticated %}window.location.href='{% url 'view_profile' req.user.id %}'{% else %}window.location.href='{% url 'login' %}'{% endif %}">
             <img src="{{ req.user.profile.get_profile_pic_url }}" class="rr-user-pic" onerror="this.src='https://placehold.co/100x100/e2e8f0/94a3b8?text=User'">
             <div class="rr-user-info">
                 <h4>
@@ -479,7 +507,7 @@ body {
             </div>
             <i class="fas fa-chevron-right rr-chevron"></i>
         </div>
-        <button class="rr-btn rr-btn-primary" onclick="initiateChat()" style="width:100%;"><i class="fas fa-comments"></i> Chat with {{ profile.name }}</button>
+        <button class="rr-btn rr-btn-primary" onclick="{% if request.user.is_authenticated %}initiateChat(){% else %}requireLoginForChat(){% endif %}" style="width:100%;"><i class="fas fa-comments"></i> Chat with {{ profile.name }}</button>
     </div>
 </div>
 
@@ -589,6 +617,15 @@ body {
             if (currentAmenities.indexOf(cb.value) !== -1) { cb.checked = true; }
         });
     });
+
+    function requireLoginForChat() {
+        customConfirm("Please login to start a chat with this user.", "Login Required", "Login", "Dismiss")
+        .then((res) => {
+            if (res) {
+                window.location.href = "{% url 'login' %}";
+            }
+        });
+    }
 
     function openEditModal() {
         document.getElementById('editModalOverlay').classList.add('active');

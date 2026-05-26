@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
 
-{% block title %}About SRM Match – Student Social Platform for SRM Campuses{% endblock %}
+{% block title %}About SRM Match – Student Social Platform{% endblock %}
+
+{% block meta_description %}Learn about SRM Match, the student-built social platform for SRM campuses featuring matching, confessions, roommate finder, and campus community features.{% endblock %}
 
 {% block head %}
-<meta name="description" content="SRM Match is a student-built platform for SRM campuses featuring social matching, anonymous confessions, roommate finder, and campus community features.">
-<meta property="og:title" content="About SRM Match">
-<meta property="og:description" content="Discover the ultimate student-built social platform for SRM campuses. Connect, confess, and find roommates securely.">
+<meta property="og:title" content="About SRM Match – Student Social Platform">
+<meta property="og:description" content="Learn about SRM Match, the student-built social platform for SRM campuses featuring matching, confessions, roommate finder, and campus community features.">
 
 <style>
     nav { display: none !important; }
@@ -372,7 +373,7 @@
     <!-- Hero -->
     <section class="hero-section">
         <div class="hero-pill"><i class="fas fa-sparkles"></i> For Students, By Students</div>
-        <h1>Made for the <br><span class="text-gradient">SRM Community</span></h1>
+        <h1>About <span class="text-gradient">SRM Match</span></h1>
         <p>SRM Match is a completely independent social platform designed to help you connect, socialize, find roommates, and interact safely across SRM campuses.</p>
         <div class="hero-actions">
             <a href="{% url 'home' %}" class="btn btn-primary">Open App <i class="fas fa-arrow-right"></i></a>

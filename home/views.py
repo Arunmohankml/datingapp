@@ -2450,15 +2450,15 @@ def safe_print(msg):
 from .models import RoomListing, RoomImage, SavedRoomListing
 from django.core.paginator import Paginator
 
-@login_required
 def roomfinder_feed(request):
-    profile = getattr(request.user, 'profile', None)
-    if not profile or not profile.name or not profile.age or not profile.gender or not profile.campus or not profile.native_place:
-        return redirect('complete_profile')
+    profile = None
+    if request.user.is_authenticated:
+        profile = getattr(request.user, 'profile', None)
+        if not profile or not profile.name or not profile.age or not profile.gender or not profile.campus or not profile.native_place:
+            return redirect('complete_profile')
     
     return render(request, 'roomfinder.html', {'profile': profile})
 
-@login_required
 def roomfinder_detail(request, id):
     try:
         listing = RoomListing.objects.get(id=id, is_active=True)
@@ -2466,7 +2466,9 @@ def roomfinder_detail(request, id):
         messages.error(request, "Listing not found or is no longer available.")
         return redirect('roomfinder_feed')
     
-    is_saved = SavedRoomListing.objects.filter(user=request.user, listing=listing).exists()
+    is_saved = False
+    if request.user.is_authenticated:
+        is_saved = SavedRoomListing.objects.filter(user=request.user, listing=listing).exists()
     
     return render(request, 'roomfinder_detail.html', {'listing': listing, 'is_saved': is_saved})
 
@@ -2623,23 +2625,26 @@ def api_create_room(request):
             
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
-@login_required
 def api_get_rooms(request):
     if request.method == 'GET':
         try:
             listings = RoomListing.objects.filter(is_active=True).order_by('-created_at')
+            saved_ids = set()
             
-            # Exclude blocked users for safety
-            blocked_ids = set(BlockedUser.objects.filter(blocker=request.user).values_list('blocked_id', flat=True)) | \
-                          set(BlockedUser.objects.filter(blocked=request.user).values_list('blocker_id', flat=True))
-            if blocked_ids:
-                listings = listings.exclude(user_id__in=blocked_ids)
-                
-            # Filters
-            saved_only = request.GET.get('saved_only')
-            if saved_only == 'true':
-                saved_ids = SavedRoomListing.objects.filter(user=request.user).values_list('listing_id', flat=True)
-                listings = listings.filter(id__in=saved_ids)
+            if request.user.is_authenticated:
+                # Exclude blocked users for safety
+                blocked_ids = set(BlockedUser.objects.filter(blocker=request.user).values_list('blocked_id', flat=True)) | \
+                              set(BlockedUser.objects.filter(blocked=request.user).values_list('blocker_id', flat=True))
+                if blocked_ids:
+                    listings = listings.exclude(user_id__in=blocked_ids)
+                    
+                # Filters
+                saved_only = request.GET.get('saved_only')
+                if saved_only == 'true':
+                    saved_db_ids = SavedRoomListing.objects.filter(user=request.user).values_list('listing_id', flat=True)
+                    listings = listings.filter(id__in=saved_db_ids)
+
+                saved_ids = set(SavedRoomListing.objects.filter(user=request.user).values_list('listing_id', flat=True))
 
             campus = request.GET.get('campus')
             if campus:
@@ -2682,7 +2687,6 @@ def api_get_rooms(request):
             page = paginator.get_page(page_num)
             
             data = []
-            saved_ids = set(SavedRoomListing.objects.filter(user=request.user).values_list('listing_id', flat=True))
             for lst in page.object_list:
                 images = [img.image_url for img in lst.images.all()]
                 
@@ -2704,7 +2708,7 @@ def api_get_rooms(request):
                     'needed_occupants': lst.needed_occupants,
                     'gender_preference': lst.get_gender_preference_display(),
                     'images': images,
-                     'is_owner': lst.user == request.user,
+                     'is_owner': request.user.is_authenticated and lst.user == request.user,
                     'poster': {
                         'id': lst.user.id,
                         'name': profile.name if profile else lst.user.username,
@@ -2869,17 +2873,17 @@ def api_create_room_request(request):
     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
 
 
-@login_required
 def api_get_room_requests(request):
     if request.method == 'GET':
         try:
             reqs = RoomRequest.objects.filter(is_active=True).order_by('-created_at')
             
-            # Exclude blocked users for safety
-            blocked_ids = set(BlockedUser.objects.filter(blocker=request.user).values_list('blocked_id', flat=True)) | \
-                          set(BlockedUser.objects.filter(blocked=request.user).values_list('blocker_id', flat=True))
-            if blocked_ids:
-                reqs = reqs.exclude(user_id__in=blocked_ids)
+            if request.user.is_authenticated:
+                # Exclude blocked users for safety
+                blocked_ids = set(BlockedUser.objects.filter(blocker=request.user).values_list('blocked_id', flat=True)) | \
+                              set(BlockedUser.objects.filter(blocked=request.user).values_list('blocker_id', flat=True))
+                if blocked_ids:
+                    reqs = reqs.exclude(user_id__in=blocked_ids)
                 
             # Filters
             campus = request.GET.get('campus')
@@ -2948,8 +2952,8 @@ def api_get_room_requests(request):
                     'move_in_date': r.move_in_date.strftime("%b %d, %Y") if r.move_in_date else '',
                     'extra_note': r.extra_note,
                     'created_at': r.created_at.strftime("%b %d, %Y"),
-                    'is_owner': r.user == request.user,
-                    'is_admin': request.user.is_staff or request.user.email == 'arunmohankml@gmail.com',
+                    'is_owner': request.user.is_authenticated and r.user == request.user,
+                    'is_admin': request.user.is_authenticated and (request.user.is_staff or request.user.email == 'arunmohankml@gmail.com'),
                     'user': {
                         'id': r.user.id,
                         'name': profile.name if profile else r.user.username,
@@ -3056,7 +3060,6 @@ def api_edit_room_request(request, id):
     return JsonResponse({'success': False, 'error': 'Invalid request method.'}, status=405)
 
 
-@login_required
 def roomrequest_detail(request, id):
     try:
         req = RoomRequest.objects.get(id=id, is_active=True)
@@ -3079,16 +3082,58 @@ def roomrequest_detail(request, id):
 from django.http import HttpResponse
 
 def sitemap_view(request):
-    xml = """<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://srm-match.vercel.app/</loc></url>
-  <url><loc>https://srm-match.vercel.app/match/</loc></url>
-  <url><loc>https://srm-match.vercel.app/roomfinder/</loc></url>
-  <url><loc>https://srm-match.vercel.app/wall/</loc></url>
-  <url><loc>https://srm-match.vercel.app/confessions/</loc></url>
-  <url><loc>https://srm-match.vercel.app/more/</loc></url>
-  <url><loc>https://srm-match.vercel.app/login/</loc></url>
-</urlset>"""
+    base_url = "https://srm-match.vercel.app"
+    
+    pages = [
+        {"loc": "/", "changefreq": "daily", "priority": "1.0"},
+        {"loc": "/login/", "changefreq": "monthly", "priority": "0.5"},
+        {"loc": "/about/", "changefreq": "monthly", "priority": "0.5"},
+        {"loc": "/confessions/", "changefreq": "hourly", "priority": "0.9"},
+        {"loc": "/roomfinder/", "changefreq": "daily", "priority": "0.9"},
+        {"loc": "/wall/", "changefreq": "hourly", "priority": "0.8"},
+        {"loc": "/privacy-policy/", "changefreq": "monthly", "priority": "0.5"},
+        {"loc": "/community-guidelines/", "changefreq": "monthly", "priority": "0.5"},
+        {"loc": "/terms-and-conditions/", "changefreq": "monthly", "priority": "0.5"},
+        {"loc": "/contact/", "changefreq": "monthly", "priority": "0.5"},
+        {"loc": "/faq/", "changefreq": "monthly", "priority": "0.5"},
+    ]
+    
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    
+    for p in pages:
+        xml += '  <url>\n'
+        xml += f'    <loc>{base_url}{p["loc"]}</loc>\n'
+        xml += f'    <changefreq>{p["changefreq"]}</changefreq>\n'
+        xml += f'    <priority>{p["priority"]}</priority>\n'
+        xml += '  </url>\n'
+        
+    try:
+        from .models import Confession, RoomListing
+        
+        # Dynamic Confessions
+        confessions = Confession.objects.filter(moderation_status='approved').order_by('-created_at')
+        for c in confessions:
+            xml += '  <url>\n'
+            xml += f'    <loc>{base_url}/confessions/{c.id}/</loc>\n'
+            xml += f'    <lastmod>{c.created_at.strftime("%Y-%m-%d")}</lastmod>\n'
+            xml += '    <changefreq>weekly</changefreq>\n'
+            xml += '    <priority>0.7</priority>\n'
+            xml += '  </url>\n'
+            
+        # Dynamic Room Listings
+        listings = RoomListing.objects.filter(is_active=True).order_by('-created_at')
+        for listing in listings:
+            xml += '  <url>\n'
+            xml += f'    <loc>{base_url}/roomfinder/{listing.id}/</loc>\n'
+            xml += f'    <lastmod>{listing.created_at.strftime("%Y-%m-%d")}</lastmod>\n'
+            xml += '    <changefreq>weekly</changefreq>\n'
+            xml += '    <priority>0.8</priority>\n'
+            xml += '  </url>\n'
+    except Exception as e:
+        print(f"Error generating dynamic sitemap urls: {e}")
+        
+    xml += '</urlset>'
     return HttpResponse(xml, content_type='application/xml')
 
 def robots_txt_view(request):

@@ -1,6 +1,41 @@
 {% extends 'base.html' %}
 
+{% block title %}SRM Confession #{{ confession.id }} | SRM Match{% endblock %}
+{% block meta_description %}{% if confession.content %}{{ confession.content|truncatechars:150 }}{% else %}Read anonymous student confession posted on SRM Match.{% endif %}{% endblock %}
+
+{% block json_ld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "SRM Confession #{{ confession.id }}",
+  "description": "{% if confession.content %}{{ confession.content|truncatechars:150|escapejs }}{% else %}Read anonymous student confession posted on SRM Match.{% endif %}",
+  {% if confession.image %}
+  "image": "{{ request.scheme }}://{{ request.get_host }}{{ confession.image.url|default:confession.image }}",
+  {% endif %}
+  "author": {
+    "@type": "Person",
+    "name": "Anonymous SRM Student"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SRM Match",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://srm-match.vercel.app/icon-512x512.png"
+    }
+  },
+  "datePublished": "{{ confession.created_at|date:'c' }}"
+}
+</script>
+{% endblock %}
+
 {% block head %}
+<meta property="og:title" content="SRM Confession #{{ confession.id }} | SRM Match">
+<meta property="og:description" content="{% if confession.content %}{{ confession.content|truncatechars:150 }}{% else %}Read anonymous student confession posted on SRM Match.{% endif %}">
+{% if confession.image %}
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ confession.image.url|default:confession.image }}">
+{% endif %}
 <style>
     html, body {
         height: 100dvh !important;

@@ -6,14 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="google-site-verification" content="X4viSHKffVA_JGTZMiKQlf-ugS7MBoGgyMrrwF_xmwQ" />
-    <meta name="description" content="SRM Match is a student social platform for SRM campuses. Find friends, roommates, anonymous confessions and connect with students across SRM KTR, RMP, NCR, VDP and more.">
-    <meta name="keywords" content="srm,srm match,srm confession,srm roommate,srm students,srm social,srm ktr,srm rmp,srm chennai,srm ncr,srm amaravati">
-    <meta property="og:title" content="SRM Match">
-    <meta property="og:description" content="Connect with SRM students – find friends, roommates, and share confessions.">
-    <meta property="og:image" content="https://srm-match.vercel.app/banner.png">
-    <meta property="og:url" content="https://srm-match.vercel.app/">
+    <meta name="description" content="{% block meta_description %}SRM Match is a student social platform for SRM campuses to make friends, post anonymous confessions, find roommates, and connect with students across SRM campuses.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}SRM Match, SRM students, SRM confessions, SRM roommate finder, SRM social app, SRM KTR, SRM Ramapuram, SRM NCR, SRM AP, SRM Vadapalani{% endblock %}">
+    <meta property="og:site_name" content="SRM Match">
+    <meta property="og:title" content="{% block og_title %}SRM Match{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}SRM Match is a student social platform for SRM campuses to make friends, post anonymous confessions, find roommates, and connect with students across SRM campuses.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}https://srm-match.vercel.app/banner.png{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
     <meta property="og:type" content="website">
     <meta name="twitter:card" content="summary_large_image">
+    <link rel="canonical" href="{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}">
+    {% block robots_tag %}
+    <meta name="robots" content="{% if user.is_authenticated %}noindex, nofollow{% else %}index, follow{% endif %}">
+    {% endblock %}
     <title>{% block title %}SRM Match{% endblock %}</title>
     <link rel="icon" type="image/x-icon" href="/favicon.png">
     <link rel="apple-touch-icon" href="/favicon.png">
@@ -463,6 +468,34 @@
         .custom-alert-box { background: white; border-radius: 24px; padding: 30px; width: 90%; max-width: 320px; text-align: center; }
     </style>
     {% block head %}{% endblock %}
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "SRM Match",
+      "url": "https://srm-match.vercel.app/",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://srm-match.vercel.app/roomfinder/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "SRM Match",
+      "url": "https://srm-match.vercel.app/",
+      "logo": "https://srm-match.vercel.app/icon-512x512.png",
+      "sameAs": [
+        "https://www.instagram.com/srm.match/"
+      ]
+    }
+    </script>
+    {% block json_ld %}{% endblock %}
+    
     <script src="{% static 'js/app-select.js' %}" defer></script>
 </head>
 <body>

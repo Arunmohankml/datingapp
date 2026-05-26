@@ -1,10 +1,14 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Drawing Wall | SRM Match{% endblock %}
+{% block title %}Public Drawing Wall | SRM Match{% endblock %}
+
+{% block meta_description %}Draw and explore the public collaborative student wall on SRM Match.{% endblock %}
+{% block meta_keywords %}public drawing wall, SRM wall, pixel wall, student wall{% endblock %}
 
 {% block head %}
-<link rel="icon" type="image/x-icon" href="{% static 'images/favicon.ico' %}">
+<meta property="og:title" content="Public Drawing Wall | SRM Match">
+<meta property="og:description" content="Draw and explore the public collaborative student wall on SRM Match.">
 <style>
 :root {
     --wall-grid: #eef2f6;
@@ -26,7 +30,7 @@ body {
     position: absolute;
     top: 0; left: 0;
     cursor: crosshair;
-    background: #f1f5f9;
+    background: #000000;
 }
 
 /* Premium Header */
@@ -142,9 +146,9 @@ body {
     top: calc(118px + env(safe-area-inset-top));
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(255,255,255,0.8);
+    background: rgba(15, 23, 42, 0.8);
     backdrop-filter: blur(8px);
-    color: var(--text-muted, #64748b);
+    color: #e2e8f0;
     padding: 3px 12px;
     border-radius: 10px;
     font-size: 11px;
@@ -199,13 +203,13 @@ body {
         </button>
         <div>
             <span class="wall-subtitle">Public Canvas</span>
-            <h1>Drawing Wall</h1>
+            <h1>Public Drawing Wall</h1>
         </div>
     </div>
 </div>
 
 <div class="toolbar">
-    <div class="color-dot active" data-color="#0f172a" style="background:#0f172a;"></div>
+    <div class="color-dot active" data-color="#ffffff" style="background:#ffffff; border: 1px solid #e2e8f0;"></div>
     <div class="color-dot" data-color="#ef4444" style="background:#ef4444;"></div>
     <div class="color-dot" data-color="#22c55e" style="background:#22c55e;"></div>
     <div class="color-dot" data-color="#3b82f6" style="background:#3b82f6;"></div>
@@ -214,9 +218,12 @@ body {
     <input type="color" id="customColor" style="width: 24px; height: 24px; border: none; border-radius: 50%; padding: 0; cursor: pointer; background: none;" title="Custom Color">
 
     <div class="sep"></div>
+    <button class="size-btn" id="eyedropperBtn" onclick="toggleEyedropper()" title="Eyedropper">
+        <i class="fas fa-eye-dropper"></i>
+    </button>
+    <div class="sep"></div>
     <div class="size-btn active" data-size="1">1x</div>
     <div class="size-btn" data-size="2">2x</div>
-    <div class="size-btn" data-size="3">3x</div>
 
     {% if request.user.email == 'arunmohankml@gmail.com' %}
     <div class="sep"></div>
@@ -245,7 +252,7 @@ body {
     <button onclick="finalizePlacement()" style="background: var(--primary, #6366f1); border: none; color: white; padding: 6px 14px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 12px;">PLACE</button>
 </div>
 
-<div class="zoom-indicator" id="zoomLabel">100%</div>
+<div class="zoom-indicator" id="coordLabel">X: 0 | Y: 0 | Zoom: 100%</div>
 
 <!-- Bottom Sheet Modal for Wall -->
 <div id="global-warning-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; opacity: 0; transition: opacity 0.3s ease;"></div>
@@ -258,6 +265,7 @@ body {
 
 <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 <script>
+(function() {
 // Pusher Setup — use wallPusher to avoid conflict with base.html
 const wallPusherKey = "{{ PUSHER_KEY|default:'' }}";
 const wallPusherCluster = "{{ PUSHER_CLUSTER|default:'ap2' }}";
@@ -274,6 +282,7 @@ if (wallPusherKey) {
     wallChannel.bind('new_image', (data) => {
         if (!allImages.some(img => img.id === data.id)) {
             const imgObj = new Image();
+            imgObj.crossOrigin = "Anonymous";
             imgObj.src = data.image_url;
             imgObj.onload = () => {
                 data.imgElement = imgObj;
@@ -346,25 +355,27 @@ document.addEventListener('DOMContentLoaded', () => {
         null
     );
 });
-const VIRTUAL_W = 8000, VIRTUAL_H = 8000;
-const PIXEL_SIZE = 10;
-const canvas = document.getElementById('drawCanvas');
-const ctx = canvas.getContext('2d');
+var VIRTUAL_W = 8000, VIRTUAL_H = 8000;
+var PIXEL_SIZE = 10;
+var canvas = document.getElementById('drawCanvas');
+var ctx = canvas.getContext('2d');
 
-let scale = 1;
-let offsetX = 0, offsetY = 0;
-let drawing = false, panning = false;
-let currentColor = '#0f172a';
-let brushSize = 1;
-let isEraser = false;
-let currentStroke = [];
-let allStrokes = [];
-let allImages = [];
-let panStart = { x: 0, y: 0 };
-let spaceDown = false;
+var scale = 1;
+var offsetX = 0, offsetY = 0;
+var drawing = false, panning = false;
+var currentColor = '#ffffff';
+var brushSize = 1;
+var isEraser = false;
+var isEyedropper = false;
+var currentStroke = [];
+var allStrokes = [];
+var allImages = [];
+var panStart = { x: 0, y: 0 };
+var spaceDown = false;
 
-let pendingImage = null;
-let mouseWorldPos = { x: 0, y: 0 };
+var pendingImage = null;
+var mouseWorldPos = { x: 0, y: 0 };
+var redrawPending = false;
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -406,7 +417,7 @@ function drawStroke(s) {
 function drawGrid() {
     const gridSize = PIXEL_SIZE * scale;
     if (gridSize < 4) return;
-    ctx.strokeStyle = 'rgba(0,0,0,0.05)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
     ctx.lineWidth = 0.5;
     
     const startX = offsetX % gridSize;
@@ -418,9 +429,28 @@ function drawGrid() {
     ctx.stroke();
 }
 
+function isStrokeVisible(stroke) {
+    if (!stroke.points || stroke.points.length === 0) return false;
+    return stroke.points.some(p => {
+        const sx = p.x * scale + offsetX;
+        const sy = p.y * scale + offsetY;
+        return sx > -50 && sx < canvas.width + 50 && sy > -50 && sy < canvas.height + 50;
+    });
+}
+
 function redraw() {
+    if (!redrawPending) {
+        redrawPending = true;
+        requestAnimationFrame(() => {
+            performRedraw();
+            redrawPending = false;
+        });
+    }
+}
+
+function performRedraw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     drawGrid();
     
@@ -436,7 +466,9 @@ function redraw() {
         }
     }
 
-    for (const s of allStrokes) drawStroke(s);
+    for (const s of allStrokes) {
+        if (isStrokeVisible(s)) drawStroke(s);
+    }
     if (currentStroke.length > 0) drawStroke({ points: currentStroke, color: currentColor, brush_size: brushSize });
 
     if (pendingImage) {
@@ -461,6 +493,17 @@ function redraw() {
     }
 }
 
+function updateCoordLabel() {
+    const label = document.getElementById('coordLabel');
+    if (label) {
+        label.textContent = `X: ${mouseWorldPos.x} | Y: ${mouseWorldPos.y} | Zoom: ${Math.round(scale * 100)}%`;
+    }
+}
+
+function rgbToHex(r, g, b) {
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
 canvas.addEventListener('pointerdown', e => {
     if (e.button === 2 || spaceDown) { 
         panning = true; 
@@ -468,14 +511,38 @@ canvas.addEventListener('pointerdown', e => {
         canvas.style.cursor = 'grabbing'; 
         return; 
     }
+    
+    if (isEyedropper) {
+        try {
+            const pixel = ctx.getImageData(e.clientX, e.clientY, 1, 1).data;
+            if (pixel[3] > 0) {
+                currentColor = rgbToHex(pixel[0], pixel[1], pixel[2]);
+                const customColor = document.getElementById('customColor');
+                if (customColor) customColor.value = currentColor;
+                document.querySelectorAll('.color-dot').forEach(x => x.classList.remove('active'));
+            }
+        } catch (err) {
+            console.warn("Could not pick color", err);
+        }
+        toggleEyedropper(false);
+        return;
+    }
+    
     drawing = true;
     const pos = screenToWorld(e.clientX, e.clientY);
+    
+    if (isEraser) {
+        deleteWallPixel(pos.x, pos.y);
+        return;
+    }
+    
     currentStroke = [pos];
     redraw();
 });
 canvas.addEventListener('pointermove', e => {
     const pos = screenToWorld(e.clientX, e.clientY);
     mouseWorldPos = pos;
+    updateCoordLabel();
     
     if (pendingImage) { redraw(); return; }
     if (panning) { 
@@ -492,7 +559,7 @@ canvas.addEventListener('pointermove', e => {
     }
 
     const last = currentStroke[currentStroke.length - 1];
-    if (last.x !== pos.x || last.y !== pos.y) {
+    if (!last || last.x !== pos.x || last.y !== pos.y) {
         currentStroke.push(pos);
         redraw();
     }
@@ -518,7 +585,7 @@ async function deleteWallPixel(x, y) {
     const area = brushSize * PIXEL_SIZE;
     const half = area / 2;
     allStrokes = allStrokes.filter(s => {
-        return !s.points.some(p => (x - half <= p.x <= x + half + PIXEL_SIZE) && (y - half <= p.y <= y + half + PIXEL_SIZE));
+        return !s.points.some(p => p.x >= x - half && p.x <= x + half + PIXEL_SIZE && p.y >= y - half && p.y <= y + half + PIXEL_SIZE);
     });
     redraw();
 
@@ -544,7 +611,7 @@ canvas.addEventListener('wheel', e => {
     offsetX = e.clientX - (e.clientX - offsetX) * (ns / scale);
     offsetY = e.clientY - (e.clientY - offsetY) * (ns / scale);
     scale = ns;
-    document.getElementById('zoomLabel').textContent = Math.round(scale * 100) + '%';
+    updateCoordLabel();
     redraw();
 }, { passive: false });
 
@@ -567,7 +634,7 @@ canvas.addEventListener('touchmove', e => {
         offsetX = c.x - (c.x-offsetX)*(ns/scale) + (c.x-lastCenter.x);
         offsetY = c.y - (c.y-offsetY)*(ns/scale) + (c.y-lastCenter.y);
         scale = ns; lastDist = dist; lastCenter = c;
-        document.getElementById('zoomLabel').textContent = Math.round(scale*100)+'%';
+        updateCoordLabel();
         redraw();
     }
 }, {passive:false});
@@ -584,24 +651,37 @@ document.querySelectorAll('.size-btn').forEach(b => {
     b.addEventListener('click', () => {
         if (b.onclick && b.onclick.toString().includes('adminImageInput')) return; 
         if (b.id === 'eraserBtn') return; 
+        if (b.id === 'eyedropperBtn') return;
         
         document.querySelectorAll('.size-btn').forEach(x => x.classList.remove('active'));
         b.classList.add('active'); 
         brushSize = parseFloat(b.dataset.size);
         
         if (isEraser) toggleEraser(false);
+        if (isEyedropper) toggleEyedropper(false);
     });
 });
+
+function toggleEyedropper(force) {
+    isEyedropper = (force !== undefined) ? force : !isEyedropper;
+    const btn = document.getElementById('eyedropperBtn');
+    if (isEyedropper) {
+        if (btn) btn.classList.add('active');
+        if (isEraser) toggleEraser(false);
+        canvas.style.cursor = 'crosshair';
+    } else {
+        if (btn) btn.classList.remove('active');
+    }
+}
 
 function toggleEraser(force) {
     isEraser = (force !== undefined) ? force : !isEraser;
     const btn = document.getElementById('eraserBtn');
     if (isEraser) {
-        btn.classList.add('active');
-        currentColor = '#ffffff';
-        document.querySelectorAll('.color-dot').forEach(x => x.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        if (isEyedropper) toggleEyedropper(false);
     } else {
-        btn.classList.remove('active');
+        if (btn) btn.classList.remove('active');
         const firstColor = document.querySelector('.color-dot');
         if (firstColor) firstColor.click();
     }
@@ -719,6 +799,97 @@ function compressImage(file) {
 async function saveStroke(s) {
     try { await fetch('/api/wall/', { method:'POST', headers:{'Content-Type':'application/json', 'X-CSRFToken': '{{ csrf_token }}'}, body:JSON.stringify(s) }); } catch(e) {}
 }
+
+function addStarterDrawings() {
+    const starters = [];
+    
+    function createShape(startX, startY, color, pattern) {
+        const points = [];
+        const lines = pattern.trim().split('\n');
+        for (let y = 0; y < lines.length; y++) {
+            const line = lines[y].trim();
+            for (let x = 0; x < line.length; x++) {
+                if (line[x] !== '.') {
+                    points.push({ x: startX + x * PIXEL_SIZE, y: startY + y * PIXEL_SIZE });
+                }
+            }
+        }
+        if (points.length > 0) {
+            starters.push({ points: points, color: color, brush_size: 1 });
+        }
+    }
+
+    createShape(4000 - 50, 4000 - 50, '#ef4444', `
+.XX..XX.
+XXXXXXXX
+XXXXXXXX
+.XXXXXX.
+..XXXX..
+...XX...
+    `);
+
+    createShape(4000 + 80, 4000 + 60, '#fbbf24', `
+..XXXX..
+.X....X.
+X.X..X.X
+X......X
+X.X..X.X
+X..XX..X
+.X....X.
+..XXXX..
+    `);
+
+    createShape(4000 - 120, 4000 + 80, '#ec4899', `
+..XX..
+.XXXX.
+XX..XX
+XXXXXX
+..XX..
+..X...
+..X...
+    `);
+
+    createShape(4000 + 150, 4000 - 100, '#fef08a', `
+...XX
+..XXX
+.XXXX
+..XXX
+...XX
+    `);
+
+    createShape(4000 + 30, 4000 - 120, '#a78bfa', `
+.XXXX.
+X....X
+X....XX
+X....XX
+.XXXXX.
+..XX..
+    `);
+
+    createShape(4000 - 150, 4000 - 30, '#ef4444', `
+...X...
+..X.X..
+.X...X.
+XX...XX
+XX...XX
+.X...X.
+    `);
+
+    createShape(4000 - 60, 4000 + 150, '#6366f1', `
+.XXX.XXXX.X...X.
+X....X..X.XX.XX.
+.XX..XXXX.X.X.X.
+...X.X..X.X...X.
+XXX..X..X.X...X.
+    `);
+
+    starters.forEach(s => {
+        allStrokes.push(s);
+        saveStroke(s);
+    });
+    redraw();
+}
+
 async function loadStrokes() {
     try { 
         const r = await fetch('/api/wall/'); 
@@ -727,6 +898,7 @@ async function loadStrokes() {
         
         for (const imgData of (d.images || [])) {
             const imgObj = new Image();
+            imgObj.crossOrigin = "Anonymous";
             imgObj.src = imgData.image_url;
             imgObj.onload = () => {
                 imgData.imgElement = imgObj;
@@ -734,10 +906,23 @@ async function loadStrokes() {
                 redraw();
             };
         }
-        redraw(); 
+        
+        if (allStrokes.length === 0 && (!d.images || d.images.length === 0)) {
+            addStarterDrawings();
+        } else {
+            redraw(); 
+        }
     } catch(e) {}
     document.getElementById('loadingOverlay').classList.add('hidden');
 }
 loadStrokes();
+
+// Expose to window for inline HTML handlers
+window.toggleEyedropper = toggleEyedropper;
+window.toggleEraser = toggleEraser;
+window.handleAdminImageUpload = handleAdminImageUpload;
+window.cancelPlacement = cancelPlacement;
+window.finalizePlacement = finalizePlacement;
+})();
 </script>
 {% endblock %}

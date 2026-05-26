@@ -1,9 +1,14 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Roomie | SRM Match{% endblock %}
+{% block title %}SRM Roommate Finder | Rooms & PG Near SRM Campuses{% endblock %}
+
+{% block meta_description %}Find roommates, flats, PGs, and student accommodation near SRM campuses.{% endblock %}
+{% block meta_keywords %}SRM roommate finder, SRM PG, SRM flats, SRM hostel rooms{% endblock %}
 
 {% block head %}
+<meta property="og:title" content="SRM Roommate Finder | Rooms & PG Near SRM Campuses">
+<meta property="og:description" content="Find roommates, flats, PGs, and student accommodation near SRM campuses.">
 <style>
 /* ============================================
    Roomfinder - Premium UI Theme
@@ -1002,7 +1007,8 @@ html, body {
                 <span class="material-symbols-outlined">arrow_back</span>
             </a>
             <div>
-                <h2>Roomfinder</h2>
+                <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #151b27; letter-spacing: -0.04em;">Room Finder</h1>
+                <p style="font-size: 10px; color: #94a3b8; margin: 2px 0 0; line-height: 1.3; max-width: 250px;">Find student-friendly appartment rooms, PGs, and roommate listings near SRM KTR campus using SRM Match.</p>
             </div>
         </div>
     </div>
@@ -1345,6 +1351,7 @@ html, body {
 </div>
 
 <script>
+    const isAuthenticated = "{{ request.user.is_authenticated|yesno:'true,false' }}" === "true";
     let currentTab = 'available';
     let activeFilters = {};
     let selectedRoomImages = [];
@@ -1380,6 +1387,15 @@ html, body {
     }
 
     function handleFabClick() {
+        if (!isAuthenticated) {
+            customConfirm("Please login to post a room or request.", "Login Required", "Login", "Dismiss")
+            .then((res) => {
+                if (res) {
+                    window.location.href = "{% url 'login' %}";
+                }
+            });
+            return;
+        }
         if (currentTab === 'available') {
             openPostModal();
         } else {
@@ -1903,6 +1919,15 @@ html, body {
 
     // Bookmark Toggle for room listings
     async function toggleSaveCard(listingId, btn) {
+        if (!isAuthenticated) {
+            customConfirm("Please login to save this room.", "Login Required", "Login", "Dismiss")
+            .then((res) => {
+                if (res) {
+                    window.location.href = "{% url 'login' %}";
+                }
+            });
+            return;
+        }
         try {
             const res = await fetch(`/api/roomfinder/${listingId}/save/`, {
                 method: 'POST',

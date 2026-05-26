@@ -1,9 +1,43 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ listing.get_room_type_display }} in {{ listing.location }} | SRM Match{% endblock %}
+{% block title %}{{ listing.get_room_type_display }} in {{ listing.location }} Near SRM {{ listing.campus }} | SRM Match{% endblock %}
+
+{% block meta_description %}Find {{ listing.get_room_type_display|lower }} in {{ listing.location }} near SRM {{ listing.campus }} for ₹{{ listing.rent }} on SRM Match.{% endblock %}
+
+{% block json_ld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "{{ listing.get_room_type_display }} in {{ listing.location }} Near SRM {{ listing.campus }}",
+  "description": "Find {{ listing.get_room_type_display|lower }} in {{ listing.location }} near SRM {{ listing.campus }} for ₹{{ listing.rent }} on SRM Match.",
+  {% if listing.images.all %}
+  "image": "{{ request.scheme }}://{{ request.get_host }}{{ listing.images.first.image_url }}",
+  {% endif %}
+  "author": {
+    "@type": "Person",
+    "name": "SRM Match User"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "SRM Match",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://srm-match.vercel.app/icon-512x512.png"
+    }
+  },
+  "datePublished": "{{ listing.created_at|date:'c' }}"
+}
+</script>
+{% endblock %}
 
 {% block head %}
+<meta property="og:title" content="{{ listing.get_room_type_display }} in {{ listing.location }} Near SRM {{ listing.campus }} | SRM Match">
+<meta property="og:description" content="Find {{ listing.get_room_type_display|lower }} in {{ listing.location }} near SRM {{ listing.campus }} for ₹{{ listing.rent }} on SRM Match.">
+{% if listing.images.all %}
+<meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ listing.images.first.image_url }}">
+{% endif %}
 <style>
 body > .container {
     padding: 0 !important;
@@ -506,7 +540,7 @@ body {
     {% endif %}
 
     <!-- Posted By -->
-    <div class="rfd-poster" onclick="window.location.href='{% url 'view_profile' listing.user.id %}'">
+    <div class="rfd-poster" onclick="{% if request.user.is_authenticated %}window.location.href='{% url 'view_profile' listing.user.id %}'{% else %}window.location.href='{% url 'login' %}'{% endif %}">
         <img src="{{ listing.user.profile.get_profile_pic_url }}" class="rfd-poster-pic" onerror="this.src='https://placehold.co/100x100/e2e8f0/94a3b8?text=User'">
         <div class="rfd-poster-info">
             <h4>
@@ -628,6 +662,15 @@ body {
 
 <script>
     async function saveListing() {
+        {% if not request.user.is_authenticated %}
+            customConfirm("Please login to save this room.", "Login Required", "Login", "Dismiss")
+            .then((res) => {
+                if (res) {
+                    window.location.href = "{% url 'login' %}";
+                }
+            });
+            return;
+        {% endif %}
         try {
             const res = await fetch(`/api/roomfinder/{{ listing.id }}/save/`, {
                 method: 'POST',
@@ -655,6 +698,15 @@ body {
     }
     
     async function revealContact() {
+        {% if not request.user.is_authenticated %}
+            customConfirm("Please login to start a chat with this user.", "Login Required", "Login", "Dismiss")
+            .then((res) => {
+                if (res) {
+                    window.location.href = "{% url 'login' %}";
+                }
+            });
+            return;
+        {% endif %}
         {% if request.user == listing.user %}
             showGlobalToast("This is your own listing!");
             return;
