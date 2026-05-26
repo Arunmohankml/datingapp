@@ -25,7 +25,10 @@ html, body { height: 100%; }
 body {
     font-family: 'Plus Jakarta Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
-    background: radial-gradient(ellipse at 50% -10%, #dbe1ff 0%, #f7f9fb 60%);
+    background-color: #f7f9fb;
+    background-image: radial-gradient(ellipse at 50% -10%, #dbe1ff 0%, #f7f9fb 60%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -305,7 +308,7 @@ body::before {
 
 @media (min-width: 768px) {
     body {
-        background: radial-gradient(ellipse at 30% 0%, #dbe1ff 0%, #eef4ff 40%, #f7f9fb 80%);
+        background-image: radial-gradient(ellipse at 30% 0%, #dbe1ff 0%, #eef4ff 40%, #f7f9fb 80%);
         padding: 40px 24px;
         align-items: center;
         justify-content: center;
@@ -449,7 +452,7 @@ body::before {
                     <p>Post and read campus confessions without revealing your name.</p>
                 </div>
             </div>
-            <div class="seo-feature">
+            <div class="seo-feature" style="cursor: pointer;" onclick="window.location.href='/roomfinder/'">
                 <div class="seo-icon" style="background:#dcf5e7; color:#006242;"><span class="material-symbols-outlined">bed</span></div>
                 <div>
                     <h4>Roomie</h4>
@@ -551,5 +554,6 @@ body::before {
         }
     };
 </script>
+{% include 'footer.html' %}
 </body>
 </html>

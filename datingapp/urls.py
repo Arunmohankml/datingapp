@@ -34,6 +34,7 @@ urlpatterns = [
     path('terms-and-conditions/', views.terms_and_conditions_view, name='terms_and_conditions'),
     path('community-guidelines/', views.community_guidelines_view, name='community_guidelines'),
     path('about/', views.about_view, name='about'),
+    path('contact/', views.contact_view, name='contact'),
     path('manifest.json', TemplateView.as_view(template_name='manifest.json', content_type='application/json')),
     path('sw.js', TemplateView.as_view(template_name='sw.js', content_type='application/javascript')),
     path('icon-192x192.png', lambda r: serve_template_file(r, 'icon-192x192.png', 'image/png')),

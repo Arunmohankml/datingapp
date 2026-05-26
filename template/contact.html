@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Contact Us | SRM Match{% endblock %}
+{% block meta_description %}Get in touch with SRM Match. Have questions, feedback, or need help? Contact us here.{% endblock %}
+{% block meta_keywords %}contact SRM Match, help, support, feedback, student support{% endblock %}
+
+{% block head %}
+<meta property="og:title" content="Contact Us | SRM Match">
+<meta property="og:description" content="Get in touch with SRM Match. Have questions, feedback, or need help? Contact us here.">
+<style>
+    nav { display: none !important; }
+    .contact-container { max-width: 600px; margin: 0 auto; padding: 20px 20px 80px; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .contact-header { text-align: center; margin-bottom: 32px; padding-top: 20px; }
+    .contact-header h1 { font-size: 28px; color: var(--primary); font-weight: 800; letter-spacing: -0.5px; margin: 0 0 8px; }
+    .contact-header p { color: var(--text-muted); font-size: 15px; margin: 0; line-height: 1.5; }
+    
+    .contact-card { background: #fff; border-radius: 24px; padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border); text-align: center; }
+    .contact-card i { font-size: 40px; color: #2563eb; margin-bottom: 16px; }
+    .contact-card h2 { font-size: 20px; font-weight: 700; margin: 0 0 12px; color: #0f172a; }
+    .contact-card p { font-size: 15px; color: #475569; margin: 0 0 24px; line-height: 1.6; }
+    
+    .contact-email { display: inline-flex; align-items: center; justify-content: center; background: rgba(37,99,235,0.08); color: #2563eb; padding: 12px 24px; border-radius: 100px; font-weight: 700; font-size: 16px; text-decoration: none; transition: 0.2s; }
+    .contact-email:hover { background: #2563eb; color: #fff; transform: translateY(-2px); }
+    
+    .back-btn-container { text-align: center; margin-top: 40px; }
+    .back-btn { display: inline-flex; align-items: center; gap: 6px; padding: 12px 24px; border-radius: 100px; background: #2563eb; border: none; font-size: 14px; font-weight: 700; color: white; text-decoration: none; transition: 0.2s; }
+    .back-btn:hover { background: #1d4ed8; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="contact-container">
+    <div class="contact-header">
+        <h1>Contact Us</h1>
+        <p>We'd love to hear from you. Reach out to us for support, feedback, or business inquiries.</p>
+    </div>
+
+    <div class="contact-card">
+        <i class="fas fa-envelope-open-text"></i>
+        <h2>Get In Touch</h2>
+        <p>If you need assistance with your account, want to report an issue, or just want to say hi, drop us an email and we'll get back to you as soon as possible.</p>
+        <a href="mailto:support@srmmatch.com" class="contact-email">support@srmmatch.com</a>
+    </div>
+
+    <div class="back-btn-container">
+        <a href="{% url 'home' %}" class="back-btn"><i class="fas fa-home"></i> Back to Home</a>
+    </div>
+</div>
+
+{% include 'footer.html' %}
+{% endblock %}

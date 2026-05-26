@@ -37,6 +37,7 @@
 <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ confession.image.url|default:confession.image }}">
 {% endif %}
 <style>
+    #pwa-mini-prompt { display: none !important; }
     html, body {
         height: 100dvh !important;
         overflow: hidden !important;
@@ -670,7 +671,14 @@
             <div class="comment-body">
                 <div class="comment-head">
                     <p class="comment-name">{{ comment.display_name }}</p>
-                    <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="comment-time">{{ comment.created_at|timesince }} ago</span>
+                        {% if is_admin %}
+                            <a href="{% url 'delete_comment' comment.id %}" onclick="confirmDeleteComment(event, '{% url 'delete_comment' comment.id %}')" style="color: #ef4444; display: inline-flex; align-items: center; text-decoration: none;" title="Delete Comment">
+                                <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
                 <p class="comment-text">{{ comment.content }}</p>
             </div>
@@ -744,6 +752,12 @@ async function confirmDelete(event, url, isAdmin) {
     const title = isAdmin ? "Admin Delete" : "Delete Confession";
     const msg = isAdmin ? "Are you sure you want to ADMIN delete this confession?" : "Are you sure you want to delete this confession permanently?";
     const confirmed = await customConfirm(msg, title, "Delete", "Cancel");
+    if (confirmed) window.location.href = url;
+}
+
+async function confirmDeleteComment(event, url) {
+    event.preventDefault();
+    const confirmed = await customConfirm("Are you sure you want to delete this comment?", "Delete Comment", "Delete", "Cancel");
     if (confirmed) window.location.href = url;
 }
 

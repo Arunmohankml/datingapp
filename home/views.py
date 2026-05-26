@@ -1891,7 +1891,8 @@ def report_user(request, user_id):
 
 def confession_detail(request, confession_id):
     confession = get_object_or_404(Confession, id=confession_id)
-    return render(request, 'confession_detail.html', {'confession': confession})
+    is_admin = request.user.is_authenticated and (request.user.is_staff or request.user.email == 'arunmohankml@gmail.com')
+    return render(request, 'confession_detail.html', {'confession': confession, 'is_admin': is_admin})
 
 def add_comment(request, confession_id):
     if request.method == 'POST':
@@ -1921,6 +1922,19 @@ def add_comment(request, confession_id):
                 poster_fingerprint=fingerprint
             )
     return redirect('confession_detail', confession_id=confession_id)
+
+@login_required
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(ConfessionComment, id=comment_id)
+    is_admin = request.user.is_authenticated and (request.user.is_staff or request.user.email == 'arunmohankml@gmail.com')
+    if is_admin:
+        confession_id = comment.confession.id
+        comment.delete()
+        messages.success(request, "Comment deleted.")
+        return redirect('confession_detail', confession_id=confession_id)
+    
+    messages.error(request, "Not authorized.")
+    return redirect('confessions_feed')
 
 @csrf_exempt
 def like_confession(request, confession_id):
@@ -3069,7 +3083,7 @@ def roomrequest_detail(request, id):
     
     profile = req.user.profile
     is_owner = request.user == req.user
-    is_admin = request.user.is_staff or request.user.email == 'arunmohankml@gmail.com'
+    is_admin = request.user.is_authenticated and (request.user.is_staff or request.user.email == 'arunmohankml@gmail.com')
     
     return render(request, 'roomrequest_detail.html', {
         'req': req,
@@ -3153,3 +3167,6 @@ def about_view(request):
     return render(request, 'about.html')
 def about_view(request):
     return render(request, 'about.html')
+
+def contact_view(request):
+    return render(request, 'contact.html')
