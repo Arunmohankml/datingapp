@@ -1021,7 +1021,7 @@
         {% if not profile.is_face_verified %}
         <a href="{% url 'verify' %}" class="ep-btn-gradient">Verify</a>
         {% else %}
-        <a href="{% url 'view_profile' profile.id %}" class="ep-btn-gradient">Preview</a>
+        <a href="{% url 'view_profile' profile.user.id %}" class="ep-btn-gradient">Preview</a>
         {% endif %}
       </div>
     </section>
