@@ -326,34 +326,6 @@
     }
     .campus-chip i { color: #2563eb; }
 
-    /* --- Footer --- */
-    .about-footer {
-        text-align: center;
-        border-top: 1px solid rgba(0,0,0,0.06);
-        padding-top: 32px;
-        margin-top: 20px;
-    }
-    .footer-links {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 16px;
-        margin-bottom: 24px;
-    }
-    .footer-links a {
-        color: #64748b;
-        text-decoration: none;
-        font-size: 13px;
-        font-weight: 600;
-        transition: color 0.2s;
-    }
-    .footer-links a:hover { color: #2563eb; }
-    .about-footer p {
-        font-size: 13px;
-        color: #94a3b8;
-        font-weight: 600;
-    }
-
     @media (min-width: 768px) {
         .hero-actions { flex-direction: row; }
         .btn { width: auto; }
@@ -458,17 +430,6 @@
             <p style="font-size: 14px; color: #475569; line-height: 1.6; margin: 0;">SRM Match is an independent passion project created by students. We are <strong>not</strong> officially affiliated with, endorsed by, or managed by SRM University or any of its administration.</p>
         </div>
     </section>
-
-    <!-- Footer -->
-    <footer class="about-footer reveal">
-        <div class="footer-links">
-            <a href="{% url 'privacy_policy' %}">Privacy Policy</a>
-            <a href="{% url 'terms_and_conditions' %}">Terms & Conditions</a>
-            <a href="{% url 'community_guidelines' %}">Community Guidelines</a>
-            <a href="mailto:admin@srmmatch.com">Contact Us</a>
-        </div>
-        <p>Made with <i class="fas fa-heart" style="color: #ec4899;"></i> for the SRM community</p>
-    </footer>
 
 {% include 'footer.html' %}
 </div>
