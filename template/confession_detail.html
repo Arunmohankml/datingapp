@@ -649,7 +649,7 @@
                 </button>
             {% endif %}
 
-            {% if request.user.email == 'arunmohankml@gmail.com' and confession.user != user %}
+            {% if is_admin and confession.user != user %}
                 <a href="{% url 'delete_confession' confession.id %}" onclick="confirmDelete(event, '{% url 'delete_confession' confession.id %}', true)" class="dc-action-btn danger spacer">
                     <span class="material-symbols-outlined">shield</span>
                     Admin Delete

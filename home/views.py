@@ -279,7 +279,11 @@ def home_hub(request):
 def more_menu(request):
     user = request.user
     profile = getattr(user, 'profile', None)
-    return render(request, "more_menu.html", {"profile": profile})
+    is_staff = is_staff_check(user)
+    return render(request, "more_menu.html", {
+        "profile": profile,
+        "is_staff": is_staff
+    })
 
 # ---------------- MATCHING FEED ----------------
 @login_required
@@ -1665,7 +1669,7 @@ def confessions_feed(request):
     campus_filter = request.GET.get('campus', '')
     page_number = request.GET.get('page', 1)
 
-    is_admin = request.user.is_authenticated and request.user.email == 'arunmohankml@gmail.com'
+    is_admin = is_staff_check(request.user)
 
     # Public feed: ONLY approved confessions for EVERYONE
     confessions_list = Confession.objects.filter(
@@ -1818,9 +1822,9 @@ def edit_confession(request, confession_id):
 @login_required
 def delete_confession(request, confession_id):
     confession = get_object_or_404(Confession, id=confession_id)
-    is_admin = request.user.email == 'arunmohankml@gmail.com'
+    is_staff = is_staff_check(request.user)
     
-    if confession.user == request.user or is_admin:
+    if confession.user == request.user or is_staff:
         confession.delete()
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'success': True})
@@ -1896,7 +1900,7 @@ def report_user(request, user_id):
 
 def confession_detail(request, confession_id):
     confession = get_object_or_404(Confession, id=confession_id)
-    is_admin = request.user.is_authenticated and (request.user.is_staff or request.user.email == 'arunmohankml@gmail.com')
+    is_admin = is_staff_check(request.user)
     return render(request, 'confession_detail.html', {'confession': confession, 'is_admin': is_admin})
 
 def add_comment(request, confession_id):
@@ -1931,8 +1935,8 @@ def add_comment(request, confession_id):
 @login_required
 def delete_comment(request, comment_id):
     comment = get_object_or_404(ConfessionComment, id=comment_id)
-    is_admin = request.user.is_authenticated and (request.user.is_staff or request.user.email == 'arunmohankml@gmail.com')
-    if is_admin:
+    is_staff = is_staff_check(request.user)
+    if is_staff:
         confession_id = comment.confession.id
         comment.delete()
         messages.success(request, "Comment deleted.")
@@ -2074,6 +2078,15 @@ def admin_view_user(request, user_id):
         Q(sender=target_user, status='accepted') | Q(receiver=target_user, status='accepted')
     ).select_related('sender__profile', 'receiver__profile')
 
+    # Privacy: Only master admin can see reported chat logs
+    if not is_admin:
+        reports_made = list(reports_made)
+        for r in reports_made:
+            r.chat_snapshot = []
+        reports_received = list(reports_received)
+        for r in reports_received:
+            r.chat_snapshot = []
+
     return render(request, 'admin_user_view.html', {
         'u': target_user,
         'p': profile,
@@ -2156,6 +2169,12 @@ def admin_dashboard(request):
     ).select_related('user').order_by('-updated_at')
     banned_identifiers = BannedIdentifier.objects.all().order_by('-created_at')[:50]
 
+    # Privacy: Only master admin can see reported chat logs
+    if not is_admin:
+        user_reports = list(user_reports)
+        for r in user_reports:
+            r.chat_snapshot = []
+
     return render(request, 'admin_dashboard.html', {
         'reported_confessions':  reported_confessions,
         'pending_confessions':   pending_confessions,
@@ -2169,14 +2188,14 @@ def admin_dashboard(request):
 
 @login_required
 def admin_all_users(request):
-    if not is_admin_check(request.user):
+    if not is_staff_check(request.user):
         return HttpResponse("Not authorized", status=403)
     profiles = Profile.objects.all().order_by('name')
     return render(request, 'admin_all_users.html', {'profiles': profiles})
 
 @login_required
 def admin_manual_verification(request):
-    if not is_admin_check(request.user):
+    if not is_staff_check(request.user):
         return HttpResponse("Not authorized", status=403)
 
     profiles_list = Profile.objects.exclude(Q(verification_image=None) | Q(verification_image="")).select_related('user').order_by('-created_at')

@@ -251,7 +251,7 @@
 
     <div class="more-body">
     <div class="more-list">
-        {% if user.is_staff or user.is_superuser or user.email == 'arunmohankml@gmail.com' %}
+        {% if is_staff or user.is_staff or user.is_superuser or user.email == 'arunmohankml@gmail.com' %}
         <a href="{% url 'admin_dashboard' %}" class="menu-card">
             <div class="menu-main">
                 <div class="menu-icon">

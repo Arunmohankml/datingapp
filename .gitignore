@@ -1,15 +1,14 @@
-*.log
+venv/
 *.pyc
 __pycache__/
 db.sqlite3
-.env
-venv/
-.vercel/
 serviceAccountKey.json
-scratch/
+.env
+.vercel/
 media/
-profile_pics/
-sync-test.txt
-generate_1000_qs.py
-seed_test_users.py
-test_flow.py
+static_root/
+
+# Cloudinary/Supabase keys usually in .env - do not commit .env
+.env
+*.log
+DS_Store

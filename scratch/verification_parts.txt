@@ -1,0 +1,798 @@
+=== HTML SECTION ===
+<div id="face-verification-section" style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 20px; padding: 24px; margin-bottom: 24px; text-align: center; transition: 0.3s;">
+                <div id="verify-initial-ui">
+                    <i class="fas fa-shield-alt" style="font-size: 32px; color: var(--primary); margin-bottom: 12px; display: block;"></i>
+                    <h4 style="margin: 0 0 8px; font-size: 16px;">Identity Verification</h4>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Quickly verify your identity to get a "Verified" badge and 2x more matches!</p>
+                    <p style="font-size: 11px; color: var(--primary); font-weight: 600; margin-bottom: 16px; background: rgba(99,102,241,0.05); padding: 8px; border-radius: 10px;">
+                        <i class="fas fa-user-shield"></i> Your verification photo is private and will not appear on your profile.
+                    </p>
+                    <button type="button" onclick="startVerification()" class="btn" style="background: var(--primary); color: white; border-radius: 12px; padding: 10px 20px; font-weight: 700; border: none; cursor: pointer;">
+                        Verify Identity
+                    </button>
+                </div>
+
+                <div id="verify-camera-ui" style="display: none;">
+                    <div style="position: relative; width: 100%; max-width: 320px; margin: 0 auto; aspect-ratio: 3/4; border-radius: 16px; overflow: hidden; background: #000; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                        <video id="verify-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                        <canvas id="verify-canvas" style="display: none;"></canvas>
+                        <div id="face-guide" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 70%; height: 60%; border: 2px dashed rgba(255,255,255,0.5); border-radius: 50% 50% 45% 45%; pointer-events: none;"></div>
+                        <div id="gesture-hint" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color: white; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 6px;">
+                            <i class="fas fa-sync-alt fa-spin"></i> Follow the prompts below
+                        </div>
+                    </div>
+                    <p id="verify-status" style="margin-top: 16px; font-size: 13px; font-weight: 700; color: var(--primary);"></p>
+                </div>
+
+                <div id="verify-loading-ui" style="display: none;">
+                    <div style="width: 60px; height: 60px; background: #e0e7ff; color: #4f46e5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 24px;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                    <h4 style="margin: 0 0 4px; color: #4f46e5;">Verifying Photo...</h4>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 0;">Analyzing your secure scan.</p>
+                </div>
+
+                <div id="verify-error-ui" style="display: none;">
+                    <div style="width: 60px; height: 60px; background: #fee2e2; color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 24px;">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <h4 style="margin: 0 0 4px; color: #ef4444;">Verification Failed</h4>
+                    <p id="verify-error-msg" style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Error processing photo.</p>
+                    <button type="button" onclick="handleVerificationRetake()" class="btn" style="background: #ef4444; color: white; border-radius: 12px; padding: 8px 16px; font-weight: 600; border: none; cursor: pointer; font-size: 13px;">
+                        Retake Verification
+                    </button>
+                </div>
+
+                <div id="verify-success-ui" style="display: none;">
+                    <div style="width: 60px; height: 60px; background: #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 24px;">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h4 style="margin: 0 0 4px; color: #16a34a;">Identity Scanned!</h4>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 0;">Verification image secured. Now upload your profile picture.</p>
+                </div>
+
+                <input type="hidden" name="verification_image_data" id="verification-image-data">
+                <input type="hidden" name="verification_image_url" id="verification-image-url" value="{{ form.instance.verification_image|default:'' }}">
+                <input type="hidden" name="verification_status" id="verification-status-input" value="{{ form.instance.verification_status|default:'pending' }}">
+                <input type="hidden" name="profile_pic_url" id="profile-pic-url-input" value="{{ form.instance.profile_pic|default:'' }}">
+                <input type="hidden" name="gallery_urls" id="gallery-urls-input">
+            </div>
+
+            <div class="form-group" id="pfp-group" style="opacity: 0.5; pointer-events: none; transition: 0.3s;">
+                <label for="id_profile_pic_file">Profile Picture <span style="color:#ef4444">*</span></label>
+                <div id="pfp-upload-area" style="border: 2px dashed var(--border); border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; background:#f8fafc;" onclick="document.getElementById('id_profile_pic_file').click()">
+                    <img id="pfp-preview" src="" alt="" style="display:none; width:120px; height:120px; border-radius:50%; object-fit:cover; margin:0 auto 12px; border: 3px solid var(--primary); box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+                    <div id="pfp-placeholder">
+                        <i class="fas fa-camera" style="font-size:32px; color:var(--primary); margin-bottom:8px; display:block;"></i>
+                        <p style="margin:0; color:var(--text-main); font-weight:600; font-size:14px;">Upload your best photo</p>
+                    </div>
+                </div>
+                {{ form.profile_pic_file }}
+            </div>
+
+            <div class="form-group" 
+
+
+=== JS SECTION ===
+VERIFICATION & GALLERY LOGIC ΓöÇΓöÇΓöÇΓöÇΓöÇ
+    let verificationCaptured = false;
+    let verificationBase64 = null;
+    let verificationDescriptor = null;
+    let galleryFiles = [];
+    let verifyStream = null;
+    let lastFaceSeenTime = Date.now();
+    
+    // Liveness states
+    const LIVENESS_STATE = {
+        WAITING_FACE: 0,
+        WAITING_FOR_LEFT: 1,
+        WAITING_FOR_STRAIGHT: 2,
+        CAPTURED: 3
+    };
+    let livenessState = LIVENESS_STATE.WAITING_FACE;
+
+    // Laplacian Variance Blur Detection
+    function checkBlurriness(canvas, threshold = 30) {
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        const imgData = ctx.getImageData(0, 0, width, height);
+        const data = imgData.data;
+        
+        // 1. Grayscale
+        const gray = new Float32Array(width * height);
+        for (let i = 0; i < data.length; i += 4) {
+            gray[i / 4] = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        }
+        
+        // 2. Laplace Kernel Convolution
+        let sum = 0;
+        const laplacian = new Float32Array(width * height);
+        for (let y = 1; y < height - 1; y++) {
+            for (let x = 1; x < width - 1; x++) {
+                const idx = y * width + x;
+                const val = (
+                    gray[idx - width] +
+                    gray[idx - 1] -
+                    4 * gray[idx] +
+                    gray[idx + 1] +
+                    gray[idx + width]
+                );
+                laplacian[idx] = val;
+                sum += val;
+            }
+        }
+        
+        const size = (width - 2) * (height - 2);
+        const mean = sum / size;
+        
+        // 3. Calculate Variance
+        let sumSqDiff = 0;
+        for (let y = 1; y < height - 1; y++) {
+            for (let x = 1; x < width - 1; x++) {
+                const idx = y * width + x;
+                const diff = laplacian[idx] - mean;
+                sumSqDiff += diff * diff;
+            }
+        }
+        
+        const variance = sumSqDiff / size;
+        console.log("Blur check - Variance of Laplacian:", variance);
+        return {
+            isBlurry: variance < threshold,
+            variance: variance
+        };
+    }
+
+    // AI Models are now loaded via global loadFaceModelsOnce() in base.html
+
+    async function startVerification() {
+        if (!window.isSecureContext && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            customAlert("Camera blocked: Browsers only allow camera access over HTTPS or localhost. Please use a secure connection.", "Security Error");
+            return;
+        }
+
+        const video = document.getElementById('verify-video');
+        const status = document.getElementById('verify-status');
+        const cameraUI = document.getElementById('verify-camera-ui');
+        const initialUI = document.getElementById('verify-initial-ui');
+
+        status.innerText = 'Requesting camera access...';
+        
+        try {
+            verifyStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } 
+            });
+            video.srcObject = verifyStream;
+            
+            cameraUI.style.display = 'block';
+            initialUI.style.display = 'none';
+            status.innerText = 'Loading AI models...';
+            
+            await loadFaceModelsOnce();
+            status.innerText = 'AI Models Loaded. Please look straight at the camera.';
+            
+            // Start our liveness check loop
+            livenessState = LIVENESS_STATE.WAITING_FACE;
+            lastFaceSeenTime = Date.now();
+            requestAnimationFrame(() => processLivenessFrame(video, status));
+        } catch (err) {
+            console.error("Camera Error:", err);
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                customAlert("Camera Access Denied: Please click the camera icon in your browser's address bar and select 'Always allow' to verify your identity.", "Permission Denied");
+            } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+                customAlert("No camera found on this device.", "Device Error");
+            } else {
+                customAlert("Camera Error: " + err.message, "Error");
+            }
+            return;
+        }
+    }
+
+    async function processLivenessFrame(video, statusEl) {
+        if (livenessState === LIVENESS_STATE.CAPTURED || verificationCaptured) return;
+        
+        if (video.readyState >= 2) {
+            // Use TinyFaceDetector with small input size for maximum speed
+            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224 })).withFaceLandmarks();
+            
+            if (!detection) {
+                // Only reset state if the face has been missing for more than 2 seconds
+                if (Date.now() - lastFaceSeenTime > 2000) {
+                    statusEl.innerText = 'Please look straight at the camera.';
+                    statusEl.style.color = '#ef4444';
+                    livenessState = LIVENESS_STATE.WAITING_FACE;
+                }
+            } else {
+                lastFaceSeenTime = Date.now();
+                const nose = detection.landmarks.getNose()[3];
+                const leftCheek = detection.landmarks.getJawOutline()[0];
+                const rightCheek = detection.landmarks.getJawOutline()[16];
+                
+                const distLeft = nose.x - leftCheek.x;
+                const distRight = rightCheek.x - nose.x;
+                
+                // Ratio tells us which way the head is turned
+                const ratio = distLeft / (distRight || 1);
+                
+                if (livenessState === LIVENESS_STATE.WAITING_FACE) {
+                    if (ratio > 0.6 && ratio < 1.6) {
+                        livenessState = LIVENESS_STATE.WAITING_FOR_LEFT;
+                    } else {
+                        statusEl.innerText = 'Look STRAIGHT to start.';
+                        statusEl.style.color = '#f59e0b';
+                    }
+                }
+                else if (livenessState === LIVENESS_STATE.WAITING_FOR_LEFT) {
+                    statusEl.innerText = 'Good! Now turn your head LEFT Γ¼à∩╕Å';
+                    statusEl.style.color = '#3b82f6';
+                    if (ratio > 1.8) { // Require a distinct left turn
+                        livenessState = LIVENESS_STATE.WAITING_FOR_STRAIGHT;
+                    }
+                }
+                else if (livenessState === LIVENESS_STATE.WAITING_FOR_STRAIGHT) {
+                    statusEl.innerText = 'Excellent! Now look STRAIGHT ≡ƒô╖';
+                    statusEl.style.color = '#10b981';
+                    if (ratio > 0.7 && ratio < 1.5) { // Require looking straight
+                        if (!verificationCaptured) {
+                            verificationCaptured = true;
+                            livenessState = LIVENESS_STATE.CAPTURED;
+                            setTimeout(() => {
+                                captureVerification();
+                            }, 200);
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (!verificationCaptured && livenessState !== LIVENESS_STATE.CAPTURED) {
+            requestAnimationFrame(() => processLivenessFrame(video, statusEl));
+        }
+    }
+
+    async function captureVerification() {
+        const video = document.getElementById('verify-video');
+        const canvas = document.getElementById('verify-canvas');
+        const status = document.getElementById('verify-status');
+        
+        function handleFailure(msg) {
+            document.getElementById('verification-status-input').value = 'rejected';
+            document.getElementById('face-verification-section').style.borderColor = '#ef4444';
+            document.getElementById('verify-camera-ui').style.display = 'none';
+            document.getElementById('verify-loading-ui').style.display = 'none';
+            document.getElementById('verify-success-ui').style.display = 'none';
+            document.getElementById('verify-error-ui').style.display = 'block';
+            document.getElementById('verify-error-msg').innerText = msg;
+        }
+
+        // STEP 1: INSTANT CAPTURE
+        const targetWidth = 400;
+        const targetHeight = video.videoWidth > 0 ? Math.floor(video.videoHeight * (targetWidth / video.videoWidth)) : 400;
+        canvas.width = targetWidth; 
+        canvas.height = targetHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, targetWidth, targetHeight);
+        verificationBase64 = canvas.toDataURL('image/jpeg', 0.8);
+        
+        // STEP 2: INSTANT CAMERA CLOSE
+        if (verifyStream) verifyStream.getTracks().forEach(t => t.stop());
+        document.getElementById('verify-camera-ui').style.display = 'none';
+        document.getElementById('verify-success-ui').style.display = 'none';
+        document.getElementById('verify-error-ui').style.display = 'none';
+        document.getElementById('verify-loading-ui').style.display = 'block';
+
+        try {
+            // STEP 3: BACKGROUND ANALYSIS
+            // Create Image object to avoid display:none canvas issues
+            const img = new Image();
+            img.src = verificationBase64;
+            await new Promise(r => { img.onload = r; img.onerror = r; });
+
+            // Use TinyFaceDetector for reliable detection on all budget devices
+            const allFaces = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 320 })).withFaceLandmarks().withFaceDescriptors();
+            
+            if (allFaces.length === 0) {
+                return handleFailure('No human face detected clearly.');
+            }
+            if (allFaces.length > 1) {
+                return handleFailure('Multiple faces detected. Please ensure you are alone.');
+            }
+            
+            const fullDetection = allFaces[0];
+            verificationDescriptor = fullDetection.descriptor;
+            document.getElementById('verification-image-data').value = verificationBase64;
+
+            // STEP 4: Upload to Cloud
+            const res = await fetch('/api/upload/base64/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify({ image: verificationBase64, path: 'verification' })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+                document.getElementById('verification-image-url').value = data.url;
+                
+                document.getElementById('verify-loading-ui').style.display = 'none';
+                document.getElementById('verify-success-ui').style.display = 'block';
+                document.getElementById('face-verification-section').style.borderColor = '#16a34a';
+                document.getElementById('face-verification-section').style.background = '#f0fdf4';
+                
+                document.getElementById('pfp-group').style.opacity = '1';
+                document.getElementById('pfp-group').style.pointerEvents = 'auto';
+            } else {
+                return handleFailure("Upload failed: " + data.message);
+            }
+
+        } catch (e) {
+            console.error("Camera analysis error", e);
+            return handleFailure("Error processing photo. Please retry.");
+        }
+    }
+
+    function clearPfp() {
+        const pfpInput = document.getElementById('id_profile_pic_file');
+        const preview = document.getElementById('pfp-preview');
+        const placeholder = document.getElementById('pfp-placeholder');
+        const urlInput = document.getElementById('id_profile_pic');
+        
+        if (pfpInput) pfpInput.value = ''; // Clear file input
+        if (urlInput) urlInput.value = ''; // Clear hidden URL input
+        if (preview) {
+            preview.src = ''; 
+            preview.style.display = 'none';
+        }
+        if (placeholder) placeholder.style.display = 'block';
+        
+        if (typeof checkStep7Validity === 'function') checkStep7Validity(); // Disable submit button
+        document.getElementById('verification-status-input').value = 'rejected';
+    }
+
+    async function compareLocally(pfpImgElement) {
+        if (!verificationDescriptor) return;
+        const statusText = document.getElementById('verify-success-ui').querySelector('p');
+        statusText.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing Face...';
+        
+        try {
+            // Use TinyFaceDetector for PFP check so it matches the verification perfectly on all devices
+            const pfpDetection = await faceapi.detectSingleFace(pfpImgElement, new faceapi.TinyFaceDetectorOptions({ inputSize: 320 })).withFaceLandmarks().withFaceDescriptor();
+            if (!pfpDetection) {
+                statusText.innerHTML = '<i class="fas fa-times-circle"></i> No face detected in PFP!';
+                statusText.style.color = '#ef4444';
+                clearPfp();
+                customAlert("No face detected in your profile picture. Please upload a clear photo of yourself.", "Verification Failed");
+                return;
+            }
+
+            const distance = faceapi.euclideanDistance(verificationDescriptor, pfpDetection.descriptor);
+            // Log removed for production
+            
+            const isMatch = distance < 0.6; // Strict threshold from test project
+            if (isMatch) {
+                statusText.innerHTML = '<i class="fas fa-check-circle"></i> Profiles Match! (Accepted)';
+                statusText.style.color = '#16a34a';
+                document.getElementById('verification-status-input').value = 'verified';
+                const vfSection = document.getElementById('face-verification-section');
+                vfSection.style.cursor = 'pointer';
+                vfSection.title = 'Click to retake verification scan';
+                checkStep7Validity();
+            } else {
+                statusText.innerHTML = '<i class="fas fa-times-circle"></i> Identity mismatch! (Rejected)';
+                statusText.style.color = '#ef4444';
+                clearPfp();
+                customAlert("Profile picture does not match verification photo. Please upload a clear photo of yourself.", "Rejected");
+            }
+        } catch (err) {
+            console.error(err);
+            statusText.innerText = 'Analysis failed. Try again.';
+            clearPfp();
+        }
+    }
+
+    function showRetakeConfirmationModal(onConfirm) {
+        // Create the modal overlay container
+        const overlay = document.createElement('div');
+        overlay.id = 'custom-confirm-modal';
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.backgroundColor = 'rgba(15, 23, 42, 0.4)'; // Dark slate with low opacity
+        overlay.style.backdropFilter = 'blur(12px)';
+        overlay.style.display = 'flex';
+        overlay.style.alignItems = 'center';
+        overlay.style.justifyContent = 'center';
+        overlay.style.zIndex = '100000';
+        overlay.style.opacity = '0';
+        overlay.style.transition = 'opacity 0.3s ease';
+
+        // Modal card
+        const card = document.createElement('div');
+        card.style.background = 'rgba(255, 255, 255, 0.9)';
+        card.style.backdropFilter = 'blur(20px)';
+        card.style.borderRadius = '24px';
+        card.style.padding = '32px';
+        card.style.maxWidth = '400px';
+        card.style.width = '90%';
+        card.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.5)';
+        card.style.transform = 'scale(0.9)';
+        card.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        card.style.textAlign = 'center';
+        card.style.fontFamily = "'Outfit', 'Inter', sans-serif";
+
+        // Icon (warning/retake)
+        const iconContainer = document.createElement('div');
+        iconContainer.style.width = '64px';
+        iconContainer.style.height = '64px';
+        iconContainer.style.borderRadius = '50%';
+        iconContainer.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+        iconContainer.style.color = '#ef4444';
+        iconContainer.style.display = 'flex';
+        iconContainer.style.alignItems = 'center';
+        iconContainer.style.justifyContent = 'center';
+        iconContainer.style.fontSize = '24px';
+        iconContainer.style.margin = '0 auto 20px';
+        iconContainer.innerHTML = '<i class="fas fa-redo-alt"></i>';
+        card.appendChild(iconContainer);
+
+        // Title
+        const title = document.createElement('h3');
+        title.innerText = 'Retake Verification?';
+        title.style.margin = '0 0 12px';
+        title.style.fontSize = '20px';
+        title.style.fontWeight = '800';
+        title.style.color = '#0f172a';
+        card.appendChild(title);
+
+        // Description
+        const desc = document.createElement('p');
+        desc.innerText = 'Retaking the identity scan will delete your current verified scan and profile photo. You will need to take a new scan and upload your PFP again.';
+        desc.style.margin = '0 0 24px';
+        desc.style.fontSize = '14px';
+        desc.style.lineHeight = '1.5';
+        desc.style.color = '#64748b';
+        card.appendChild(desc);
+
+        // Buttons Container
+        const btnContainer = document.createElement('div');
+        btnContainer.style.display = 'flex';
+        btnContainer.style.gap = '12px';
+        btnContainer.style.justifyContent = 'center';
+
+        // Cancel Button
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.innerText = 'Cancel';
+        cancelBtn.style.flex = '1';
+        cancelBtn.style.padding = '12px 20px';
+        cancelBtn.style.border = '1px solid #cbd5e1';
+        cancelBtn.style.borderRadius = '14px';
+        cancelBtn.style.backgroundColor = 'transparent';
+        cancelBtn.style.color = '#475569';
+        cancelBtn.style.fontSize = '14px';
+        cancelBtn.style.fontWeight = '600';
+        cancelBtn.style.cursor = 'pointer';
+        cancelBtn.style.transition = 'all 0.2s';
+        cancelBtn.onmouseenter = () => { cancelBtn.style.backgroundColor = '#f1f5f9'; };
+        cancelBtn.onmouseleave = () => { cancelBtn.style.backgroundColor = 'transparent'; };
+        
+        // Confirm Button
+        const confirmBtn = document.createElement('button');
+        confirmBtn.type = 'button';
+        confirmBtn.innerText = 'Yes, Retake';
+        confirmBtn.style.flex = '1';
+        confirmBtn.style.padding = '12px 20px';
+        confirmBtn.style.border = 'none';
+        confirmBtn.style.borderRadius = '14px';
+        confirmBtn.style.backgroundColor = '#ef4444';
+        confirmBtn.style.color = 'white';
+        confirmBtn.style.fontSize = '14px';
+        confirmBtn.style.fontWeight = '600';
+        confirmBtn.style.cursor = 'pointer';
+        confirmBtn.style.transition = 'all 0.2s';
+        confirmBtn.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)';
+        confirmBtn.onmouseenter = () => { confirmBtn.style.backgroundColor = '#dc2626'; confirmBtn.style.boxShadow = '0 6px 16px rgba(239, 68, 68, 0.3)'; };
+        confirmBtn.onmouseleave = () => { confirmBtn.style.backgroundColor = '#ef4444'; confirmBtn.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.2)'; };
+
+        btnContainer.appendChild(cancelBtn);
+        btnContainer.appendChild(confirmBtn);
+        card.appendChild(btnContainer);
+        overlay.appendChild(card);
+        document.body.appendChild(overlay);
+
+        // Trigger animations
+        setTimeout(() => {
+            overlay.style.opacity = '1';
+            card.style.transform = 'scale(1)';
+        }, 10);
+
+        // Close function
+        const closeModal = () => {
+            overlay.style.opacity = '0';
+            card.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                overlay.remove();
+            }, 300);
+        };
+
+        cancelBtn.addEventListener('click', closeModal);
+        confirmBtn.addEventListener('click', () => {
+            closeModal();
+            if (typeof onConfirm === 'function') onConfirm();
+        });
+
+        // Close on clicking overlay background
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) closeModal();
+        });
+    }
+
+    function handleVerificationRetake() {
+        // Reset states
+        verificationCaptured = false;
+        verificationBase64 = null;
+        verificationDescriptor = null;
+        
+        // Clear inputs in DOM
+        document.getElementById('verification-image-data').value = '';
+        document.getElementById('verification-image-url').value = '';
+        document.getElementById('verification-status-input').value = 'pending';
+        document.getElementById('profile-pic-url-input').value = '';
+        
+        // Reset Verification box styling
+        const vfSection = document.getElementById('face-verification-section');
+        vfSection.style.borderColor = '#cbd5e1';
+        vfSection.style.background = '#f8fafc';
+        vfSection.style.cursor = '';
+        vfSection.title = '';
+        
+        // Switch back UI elements to initial camera button view
+        document.getElementById('verify-initial-ui').style.display = 'block';
+        document.getElementById('verify-camera-ui').style.display = 'none';
+        document.getElementById('verify-success-ui').style.display = 'none';
+        document.getElementById('verify-loading-ui').style.display = 'none';
+        document.getElementById('verify-error-ui').style.display = 'none';
+        
+        // Reset status text
+        const status = document.getElementById('verify-status');
+        if (status) {
+            status.innerText = '';
+            status.style.color = '';
+        }
+        
+        // Clear PFP Preview and input
+        clearPfp();
+        
+        // Disable PFP upload section
+        const pfpGrp = document.getElementById('pfp-group');
+        pfpGrp.style.opacity = '0.5';
+        pfpGrp.style.pointerEvents = 'none';
+
+        // 2. Perform AJAX POST to delete/clear from database
+        const formData = new FormData();
+        formData.append('verification_image_url', '');
+        formData.append('verification_status', 'pending');
+        formData.append('profile_pic_url', '');
+        
+        fetch('/save_profile_progress/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                console.log("Successfully cleared verification from database.");
+            } else {
+                console.error("Failed to clear from database:", data.error);
+            }
+        })
+        .catch(err => console.error("Error calling save_profile_progress:", err));
+    }
+
+    // Attach click listener to face verification box
+    document.getElementById('face-verification-section').addEventListener('click', function(e) {
+        // Prevent trigger if they clicked inside active camera buttons or similar
+        if (e.target.closest('button') || e.target.closest('video')) return;
+        
+        const statusVal = document.getElementById('verification-status-input').value;
+        if (statusVal === 'verified') {
+            showRetakeConfirmationModal(() => {
+                handleVerificationRetake();
+            });
+        }
+    });
+
+    async function handlePfpSelect(input) {
+        if (input.files && input.files[0]) {
+            const nextBtn = document.querySelector('button[onclick="nextStep(7)"]');
+            if (nextBtn) { nextBtn.disabled = true; nextBtn.innerText = "Uploading..."; }
+            try {
+                // Compress the image before anything else
+                const compressedFile = await compressImage(input.files[0], 0.7, 800);
+
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const preview = document.getElementById('pfp-preview');
+                    const placeholder = document.getElementById('pfp-placeholder');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    placeholder.style.display = 'none';
+
+                    // Start local comparison
+                    const tempImg = new Image();
+                    tempImg.src = e.target.result;
+                    tempImg.onload = () => compareLocally(tempImg);
+
+                    // Background Upload
+                    try {
+                        const res = await fetch('/api/upload/base64/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                            body: JSON.stringify({ image: e.target.result, path: 'profile_pics' })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            document.getElementById('profile-pic-url-input').value = data.url;
+                            input.value = ""; // Remove file so it doesn't submit natively
+                            checkStep7Validity();
+                        } else {
+                            customAlert("Upload failed. Please try again.", "Error");
+                        }
+                    } catch (fetchErr) {
+                        console.error("PFP upload error:", fetchErr);
+                        customAlert("Network error. Please try uploading again.", "Error");
+                    }
+                    if (nextBtn) { nextBtn.disabled = false; nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>'; }
+                };
+                reader.readAsDataURL(compressedFile);
+            } catch (err) {
+                console.error("Compression failed:", err);
+                customAlert("Failed to process profile picture. Please try another image.", "Error");
+                if (nextBtn) { nextBtn.disabled = false; nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right" style="margin-left: 8px;"></i>'; }
+            }
+        }
+    }
+
+    let uploadedGalleryUrls = [];
+    async function handleGallerySelect(input) {
+        if (input.files && input.files.length > 0) {
+            const submitBtn = document.querySelector('button[type="submit"]');
+            if (submitBtn) { submitBtn.disabled = true; submitBtn.innerText = "Uploading Gallery..."; }
+            
+            for (let i = 0; i < input.files.length; i++) {
+                if (galleryFiles.length < 5) {
+                    try {
+                        const compressedFile = await compressImage(input.files[i], 0.7, 800);
+                        galleryFiles.push(compressedFile);
+                        
+                        // Immediate background upload
+                        const reader = new FileReader();
+                        reader.readAsDataURL(compressedFile);
+                        await new Promise((resolve) => {
+                            reader.onload = async (e) => {
+                                try {
+                                    const res = await fetch('/api/upload/base64/', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                                        body: JSON.stringify({ image: e.target.result, path: 'gallery' })
+                                    });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                        uploadedGalleryUrls.push(data.url);
+                                        document.getElementById('gallery-urls-input').value = uploadedGalleryUrls.join(',');
+                                    }
+                                } catch(e) { console.error("Gallery upload error", e); }
+                                resolve();
+                            };
+                        });
+                    } catch (err) {
+                        console.error("Failed to compress gallery image:", err);
+                    }
+                }
+            }
+            input.value = ""; // Remove files from input
+            updateGalleryUI();
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.innerText = "Submit Profile"; }
+        }
+    }
+
+    function updateGalleryUI() {
+        const grid = document.getElementById('gallery-preview-grid');
+        const countLabel = document.getElementById('gallery-count-label');
+        grid.innerHTML = '';
+        galleryFiles.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.className = 'gallery-item';
+                div.style.position = 'relative'; div.style.aspectRatio = '1/1';
+                div.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">
+                    <button type="button" onclick="removeGalleryItem(${index})" style="position:absolute; top:-5px; right:-5px; width:22px; height:22px; background:#ef4444; color:white; border:none; border-radius:50%; font-size:10px; cursor:pointer;"><i class="fas fa-times"></i></button>`;
+                grid.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+        countLabel.innerText = `${galleryFiles.length} / 2 minimum added`;
+        countLabel.style.color = galleryFiles.length >= 2 ? '#16a34a' : 'var(--primary)';
+        checkStep7Validity();
+    }
+
+    function removeGalleryItem(index) { galleryFiles.splice(index, 1); updateGalleryUI(); }
+
+    function checkStep7Validity() {
+        const submitBtn = document.getElementById('submit-btn');
+        const verificationStatus = document.getElementById('verification-status-input').value;
+        const pfpPreview = document.getElementById('pfp-preview');
+        const pfpUrl = document.getElementById('profile-pic-url-input').value;
+        const hasPfp = (pfpPreview.src && !pfpPreview.src.endsWith('/') && pfpPreview.style.display !== 'none') || (pfpUrl && pfpUrl.length > 0);
+        const isVerified = verificationStatus === 'verified';
+        const hasGallery = galleryFiles.length >= 2;
+        
+        const isValid = hasPfp && isVerified && hasGallery;
+        
+        if (submitBtn) {
+            submitBtn.disabled = !isValid;
+            submitBtn.style.opacity = isValid ? '1' : '0.5';
+        }
+    }
+
+    document.getElementById('profileForm').addEventListener('submit', function(e) {
+        // Clear local storage progress on final successful submission
+        localStorage.removeItem('complete_profile_current_step');
+
+        // No longer injecting gallery files into the form native inputs!
+        // The background fetch process handles it, and the URLs are already in the hidden inputs.
+        const submitBtn = document.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Saving Profile...";
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const pfpInput = document.getElementById('id_profile_pic_file');
+        if (pfpInput) { pfpInput.addEventListener('change', function() { handlePfpSelect(this); }); }
+
+        // Restore Verification & PFP state from database values on load
+        const verificationStatus = document.getElementById('verification-status-input').value;
+        const pfpUrlVal = document.getElementById('profile-pic-url-input').value;
+        
+        if (verificationStatus === 'verified') {
+            verificationCaptured = true;
+            const vfSection = document.getElementById('face-verification-section');
+            if (vfSection) {
+                vfSection.style.borderColor = '#16a34a';
+                vfSection.style.background = '#f0fdf4';
+                vfSection.style.cursor = 'pointer';
+                vfSection.title = 'Click to retake verification scan';
+            }
+            
+            const pfpGrp = document.getElementById('pfp-group');
+            if (pfpGrp) {
+                pfpGrp.style.opacity = '1';
+                pfpGrp.style.pointerEvents = 'auto';
+            }
+            
+            const camUI = document.getElementById('verify-camera-ui');
+            const initUI = document.getElementById('verify-initial-ui');
+            const succUI = document.getElementById('verify-success-ui');
+            if (camUI) camUI.style.display = 'none';
+            if (initUI) initUI.style.display = 'none';
+            if (succUI) succUI.style.display = 'block';
+            
+            if (pfpUrlVal) {
+                const preview = document.getElementById('pfp-preview');
+                const placeholder = document.getElementById('pfp-placeholder');
+                if (preview) {
+                    preview.src = pfpUrlVal;
+                    preview.style.display = 'block';
+                }
+                if (placeholder) placeholder.style.display = 'none';
+            }
+            checkStep7Validity();
+        }
+    });
+</script>
+{% endblock %}

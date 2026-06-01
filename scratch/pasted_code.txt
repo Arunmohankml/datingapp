@@ -1,0 +1,165 @@
+<USER_REQUEST>
+please listen carefully use the exact face verification part from this below code (take only verification and image match part ) even ui . 
+{% extends 'base.html' %}
+
+{% block head %}
+
+<style>
+    /* Hide bottom nav during profile creation */
+    nav { display: none !important; }
+    .container { padding-bottom: 20px !important; }
+
+    .profile-setup-wrap {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px 16px 60px;
+    }
+    .setup-header {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+    .setup-header .emoji {
+        font-size: 40px;
+        display: block;
+        margin-bottom: 12px;
+    }
+    .setup-header h2 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 6px;
+    }
+    .setup-header p {
+        color: var(--text-muted);
+        font-size: 14px;
+    }
+
+    /* Stepper UI */
+    .step-indicator {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 32px;
+        position: relative;
+    }
+    .step-indicator::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--border);
+        transform: translateY(-50%);
+        z-index: 0;
+    }
+    .step-progress-bar {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        height: 3px;
+        background: var(--primary);
+        transform: translateY(-50%);
+        z-index: 1;
+        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 0%;
+    }
+    .step-dot {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--surface);
+        border: 3px solid var(--border);
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-muted);
+        transition: all 0.4s ease;
+    }
+    .step-dot.active {
+        border-color: var(--primary
+<truncated 45215 bytes>
+("Auto-save network error:", err);
+        });
+        
+        localStorage.setItem('complete_profile_current_step', currentStep);
+    }
+
+    function nextStep(step) {
+        // Validation before advancing
+        if (step === 1) {
+            const name = document.getElementById('id_name').value.trim();
+            const age = document.getElementById('id_age').value.trim();
+            const gender = document.getElementById('id_gender').value;
+            if (!name || !age || !gender) { customAlert("Please fill out your Name, Gender, and Age to continue.", "Missing Info"); return; }
+        }
+        else if (step === 2) {
+            const living = document.getElementById('id_living_place').value.trim();
+            const native = document.getElementById('id_native_place').value.trim();
+            if (!living || !native) { customAlert("Current and Native places are required.", "Missing Info"); return; }
+        }
+        else if (step === 3) {
+            const languages = document.getElementById('id_languages').value.trim();
+            const motherTongue = document.getElementById('id_mother_tongues').value.trim();
+            if (!languages || !motherTongue) { customAlert("Languages spoken and Mother tongue details are mandatory.", "Missing Info"); return; }
+        }
+        else if (step === 4) {
+            const bio = document.getElementById('id_bio').value.trim();
+            const interests = document.getElementById('id_interest_tags').value.trim();
+            if (!bio) { customAlert("Please tell us a bit about yourself in the bio section.", "Missing Info"); return; }
+            if (!interests) { customAlert("Please select at least one interest to help us find matches!", "Interests Required"); return; }
+        }
+        else if (step === 5) {
+            const campus = document.getElementById('id_campus').value;
+            const year = docu
+<truncated 44621 bytes>
+
+NOTE: The output was truncated because it was too long. Use a more targeted query or a smaller range to get the information you need.Created At: 2026-05-23T09:33:12Z
+Completed At: 2026-05-23T09:33:13Z
+
+				The command completed successfully.
+				Output:
+				
+C:\Users\USER\.gemini\antigravity\brain\2882352b-16d3-40a2-8d3c-f24faa1608c9\.system_generated\logs\transcript.jsonl:32
+96:{"step_index":3350,"source":"USER_EXPLICIT","type":"USER_INPUT","status":"DONE","created_at":"2026-05-23T09:32:25Z",
+"content":"<USER_REQUEST>\nplease listen carefully use the exact face verification part from this below code (take 
+only verification and image match part ) even ui . \n{% extends 'base.html' %}\n\n{% block head %}\n\n<style>\n    /* 
+Hide bottom nav during profile creation */\n    nav { display: none !important; }\n    .container { padding-bottom: 
+20px !important; }\n\n    .profile-setup-wrap {\n        max-width: 600px;\n        margin: 0 auto;\n        padding: 
+20px 16px 60px;\n    }\n    .setup-header {\n        text-align: center;\n        margin-bottom: 24px;\n    }\n    
+.setup-header .emoji {\n        font-size: 40px;\n        display: block;\n        margin-bottom: 12px;\n    }\n    
+.setup-header h2 {\n        font-size: 22px;\n        font-weight: 700;\n        color: var(--text-main);\n        
+margin-bottom: 6px;\n    }\n    .setup-header p {\n        color: var(--text-muted);\n        font-size: 14px;\n    
+}\n\n    /* Stepper UI */\n    .step-indicator {\n        display: flex;\n        justify-content: space-between;\n    
+    margin-bottom: 32px;\n        position: relative;\n    }\n    .step-indicator::before {\n        content: '';\n    
+    position: absolute;\n        top: 50%;\n        left: 0;\n        right: 0;\n        height: 3px;\n        
+background: var(--border);\n        transform: translateY(-50%);\n        z-index: 0;\n    }\n    .step-progress-bar 
+{\n        position: absolute;\n        top: 50%;\n        left: 0;\n        height: 3px;\n        background: 
+var(--primary);\n        transform: translateY(-50%);\n        z-index: 1;\n        transition: width 0.4s 
+cubic-bezier(0.4, 0, 0.2, 1);\n       
+<truncated 1300 bytes>
+ve = 
+document.getElementById('id_native_place').value.trim();\n            if (!living || !native) { customAlert(\"Current 
+and Native places are required.\", \"Missing Info\"); return; }\n        }\n        else if (step === 3) {\n           
+ const languages = document.getElementById('id_languages').value.trim();\n            const motherTongue = 
+document.getElementById('id_mother_tongues').value.trim();\n            if (!languages || !motherTongue) { 
+customAlert(\"Languages spoken and Mother tongue details are mandatory.\", \"Missing Info\"); return; }\n        }\n   
+     else if (step === 4) {\n            const bio = document.getElementById('id_bio').value.trim();\n            
+const interests = document.getElementById('id_interest_tags').value.trim();\n            if (!bio) { 
+customAlert(\"Please tell us a bit about yourself in the bio section.\", \"Missing Info\"); return; }\n            if 
+(!interests) { customAlert(\"Please select at least one interest to help us find matches!\", \"Interests Required\"); 
+return; }\n        }\n        else if (step === 5) {\n            const campus = 
+document.getElementById('id_campus').value;\n            const year = docu\n<truncated 44621 bytes>\n\nNOTE: The 
+output was truncated because it was too long. Use a more targeted query or a smaller range to get the information you 
+need."}
+C:\Users\USER\.gemini\antigravity\brain\2882352b-16d3-40a2-8d3c-f24faa1608c9\.system_generated\logs\transcript.jsonl:33
+09:{"step_index":3363,"source":"MODEL","type":"PLANNER_RESPONSE","status":"DONE","created_at":"2026-05-23T09:33:07Z","t
+ool_calls":[{"name":"grep_search","args":{"CaseInsensitive":"true","MatchPerLine":"true","Query":"\"please listen 
+carefully use the exact face verification\"","SearchPath":"\"C:\\\\Users\\\\USER\\\\.gemini\\\\antigravity\\\\brain\\\\
+2882352b-16d3-40a2-8d3c-f24faa1608c9\\\\.system_generated\\\\logs\\\\transcript.jsonl\"","toolAction":"\"Searching 
+logs for original user prompt\"","toolSummary":"\"Semantic search\""}}]}
+
+
+
