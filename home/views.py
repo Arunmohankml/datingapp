@@ -2156,8 +2156,10 @@ def admin_giveaway_control(request):
         'current_winner_type': 'none',
         'show_timer': False,
         'timer_duration': 30,
-        'updated_by': request.user if not created else state.updated_by
     })
+    if created:
+        state.updated_by = request.user
+        state.save()
     
     # Get current winners
     try:
