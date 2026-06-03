@@ -2445,8 +2445,6 @@ def admin_dashboard(request):
 
     is_admin = is_admin_check(request.user)
 
-    from .models import GiveawayState, GiveawayWinner, GiveawayEntry
-
     reported_confessions = Confession.objects.filter(
         is_flagged=True
     ).exclude(moderation_status='rejected').order_by('-created_at')
@@ -2461,12 +2459,6 @@ def admin_dashboard(request):
         verification_status='manual_review'
     ).select_related('user').order_by('-updated_at')
     banned_identifiers = BannedIdentifier.objects.all().order_by('-created_at')[:50]
-    state, _ = GiveawayState.objects.get_or_create(pk=1)
-    giveaway_entries = GiveawayEntry.objects.all().select_related('user__profile').order_by('-created_at')
-    giveaway_winners = GiveawayWinner.objects.all().select_related('user__profile').order_by('winner_type')
-    first_winner = giveaway_winners.filter(winner_type='first').first()
-    second_winner = giveaway_winners.filter(winner_type='second').first()
-    entry_count = giveaway_entries.count()
 
     # Privacy: Only master admin can see reported chat logs
     if not is_admin:
@@ -2481,12 +2473,6 @@ def admin_dashboard(request):
         'all_users':             all_users,
         'face_reviews':          face_reviews,
         'banned_identifiers':    banned_identifiers,
-        'state':                 state,
-        'giveaway_entries':      giveaway_entries,
-        'giveaway_winners':      giveaway_winners,
-        'first_winner':          first_winner,
-        'second_winner':         second_winner,
-        'entry_count':           entry_count,
         'is_admin':              is_admin,
         'is_staff':              True,
     })
