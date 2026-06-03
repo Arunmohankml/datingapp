@@ -2461,7 +2461,7 @@ def admin_dashboard(request):
         verification_status='manual_review'
     ).select_related('user').order_by('-updated_at')
     banned_identifiers = BannedIdentifier.objects.all().order_by('-created_at')[:50]
-    state = GiveawayState.get_state()
+    state, _ = GiveawayState.objects.get_or_create(pk=1)
     giveaway_entries = GiveawayEntry.objects.all().select_related('user__profile').order_by('-created_at')
     giveaway_winners = GiveawayWinner.objects.all().select_related('user__profile').order_by('winner_type')
     first_winner = giveaway_winners.filter(winner_type='first').first()
