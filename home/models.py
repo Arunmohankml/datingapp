@@ -640,3 +640,68 @@ class StaffMember(models.Model):
             return user.profile
         except (User.DoesNotExist, Profile.DoesNotExist):
             return None
+
+
+class GiveawayEntry(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    instagram_username = models.CharField(max_length=100)
+    followed_confirmed = models.BooleanField(default=False)
+    shared_confirmed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.email} - @{self.instagram_username}"
+
+
+class GiveawayState(models.Model):
+    """Tracks the current state of the giveaway for admin control"""
+    is_active = models.BooleanField(default=False)
+    winner_selection_in_progress = models.BooleanField(default=False)
+    current_winner_type = models.CharField(
+        max_length=20,
+        choices=[
+            ('none', 'None'),
+            ('first', 'First Winner'),
+            ('second', 'Second Winner'),
+        ],
+        default='none'
+    )
+    # For scripted/manual winner setting
+    manual_first_winner_email = models.EmailField(blank=True, null=True)
+    manual_second_winner_email = models.EmailField(blank=True, null=True)
+    # Timer controls
+    show_timer = models.BooleanField(default=False)
+    timer_duration = models.PositiveIntegerField(default=30)  # seconds
+    timer_end_time = models.DateTimeField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+
+    def __str__(self):
+        return f"Giveaway State: {self.get_current_winner_type_display()}"
+
+    class Meta:
+        verbose_name = "Giveaway State"
+        verbose_name_plural = "Giveaway States"
+
+
+class GiveawayWinner(models.Model):
+    """Tracks winners of the giveaway"""
+    WINNER_TYPES = [
+        ('first', 'First Prize (₹1000)'),
+        ('second', 'Second Prize (₹500)'),
+    ]
+    
+    winner_type = models.CharField(max_length=10, choices=WINNER_TYPES, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='giveaway_wins')
+    instagram_username = models.CharField(max_length=100)
+    won_at = models.DateTimeField(auto_now_add=True)
+    won_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+                              related_name='giveaway_wins_awarded',
+                              help_text="Admin who selected this winner")
+
+    def __str__(self):
+        return f"{self.get_winner_type_display()}: {self.user.email}"
+
+    class Meta:
+        verbose_name = "Giveaway Winner"
+        verbose_name_plural = "Giveaway Winners"

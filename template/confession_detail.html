@@ -612,6 +612,9 @@
             <div>
                 <p class="dc-name">{{ confession.display_name }}</p>
                 <p class="dc-time">{{ confession.created_at|date:"M d, g:i A" }}</p>
+                {% if is_admin and confession.user %}
+                <p style="color:#6366f1;font-size:11px;margin:0;font-weight:600;">{{ confession.user.email }}</p>
+                {% endif %}
             </div>
             {% if confession.campus %}
             <div class="dc-campus">

@@ -252,7 +252,7 @@ def home_hub(request):
     if not profile.is_face_verified and not request.session.get('skipped_verification'):
         return redirect('verify')
 
-    from .models import Confession, Announcement
+    from .models import Confession, Announcement, GiveawayEntry, GiveawayWinner, GiveawayState
     latest_confession = Confession.objects.filter(moderation_status='approved', is_flagged=False).order_by('-created_at').first()
     latest_update = Announcement.objects.order_by('-created_at').first()
     total_users = User.objects.count() + 50
@@ -262,6 +262,25 @@ def home_hub(request):
     checklist = _profile_discovery_checklist(profile)
     profile_complete = len(missing) == 0
     is_verified = profile.is_face_verified
+    
+    giveaway_entered = GiveawayEntry.objects.filter(user=user).exists()
+    giveaway_count = GiveawayEntry.objects.count()
+    
+    # Get winners if any
+    try:
+        giveaway_first_winner = GiveawayWinner.objects.get(winner_type='first')
+    except GiveawayWinner.DoesNotExist:
+        giveaway_first_winner = None
+    try:
+        giveaway_second_winner = GiveawayWinner.objects.get(winner_type='second')
+    except GiveawayWinner.DoesNotExist:
+        giveaway_second_winner = None
+    
+    # Get giveaway state for timer
+    try:
+        giveaway_state = GiveawayState.objects.get(pk=1)
+    except GiveawayState.DoesNotExist:
+        giveaway_state = None
     
     return render(request, "home_hub.html", {
         "profile": profile,
@@ -273,7 +292,62 @@ def home_hub(request):
         "is_verified": is_verified,
         "missing_fields": missing,
         "checklist": checklist,
+        "giveaway_entered": giveaway_entered,
+        "giveaway_count": giveaway_count,
+        "giveaway_first_winner": giveaway_first_winner,
+        "giveaway_second_winner": giveaway_second_winner,
+        "giveaway_state": giveaway_state,
     })
+
+from django.views.decorators.http import require_POST
+import re
+
+@login_required
+@require_POST
+def giveaway_entry(request):
+    user = request.user
+    profile = getattr(user, 'profile', None)
+    if not profile or not profile.name or not profile.age or not profile.gender or not profile.campus or not profile.native_place:
+        return JsonResponse({'success': False, 'error': 'Complete your profile first.'}, status=400)
+
+    from .models import GiveawayEntry
+    if GiveawayEntry.objects.filter(user=user).exists():
+        return JsonResponse({'success': False, 'error': 'You have already entered the giveaway.'}, status=400)
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid request.'}, status=400)
+
+    instagram_username = data.get('instagram_username', '').strip().lstrip('@')
+    followed_confirmed = data.get('followed_confirmed', False)
+    shared_confirmed = data.get('shared_confirmed', False)
+
+    if not instagram_username:
+        return JsonResponse({'success': False, 'error': 'Instagram username is required.'}, status=400)
+
+    if not re.match(r'^[a-zA-Z0-9._]+$', instagram_username):
+        return JsonResponse({'success': False, 'error': 'Invalid Instagram username format.'}, status=400)
+
+    if len(instagram_username) > 30:
+        return JsonResponse({'success': False, 'error': 'Instagram username too long.'}, status=400)
+
+    if not followed_confirmed or not shared_confirmed:
+        return JsonResponse({'success': False, 'error': 'Please confirm both checkboxes.'}, status=400)
+
+    entry = GiveawayEntry.objects.create(
+        user=user,
+        instagram_username=instagram_username,
+        followed_confirmed=followed_confirmed,
+        shared_confirmed=shared_confirmed,
+    )
+
+    return JsonResponse({
+        'success': True,
+        'message': "You're in! Winners will be announced on June 7 \U0001f389",
+        'total_entries': GiveawayEntry.objects.count(),
+    })
+
 
 @login_required
 def more_menu(request):
@@ -2049,6 +2123,204 @@ def is_staff_check(user):
     return StaffMember.objects.filter(email=user.email).exists()
 
 @login_required
+def admin_giveaway_control(request):
+    """Admin panel for controlling giveaway process, winner selection, and announcements"""
+    if not is_staff_check(request.user):
+        return HttpResponse("Not authorized", status=403)
+    
+    from .models import GiveawayState, GiveawayWinner, GiveawayEntry
+    
+    # Get or create the giveaway state (singleton)
+    state, created = GiveawayState.objects.get_or_create(pk=1, defaults={
+        'is_active': False,
+        'winner_selection_in_progress': False,
+        'current_winner_type': 'none',
+        'show_timer': False,
+        'timer_duration': 30,
+        'updated_by': request.user if not created else state.updated_by
+    })
+    
+    # Get current winners
+    try:
+        first_winner = GiveawayWinner.objects.get(winner_type='first')
+    except GiveawayWinner.DoesNotExist:
+        first_winner = None
+        
+    try:
+        second_winner = GiveawayWinner.objects.get(winner_type='second')
+    except GiveawayWinner.DoesNotExist:
+        second_winner = None
+    
+    # Get all entries for winner selection
+    entries = GiveawayEntry.objects.select_related('user', 'user__profile').all()
+    entry_count = entries.count()
+    
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'toggle_active':
+            state.is_active = not state.is_active
+            state.updated_by = request.user
+            state.save()
+            return JsonResponse({'success': True, 'is_active': state.is_active})
+            
+        elif action == 'set_timer':
+            state.show_timer = request.POST.get('show_timer') == 'true'
+            if state.show_timer:
+                try:
+                    duration = int(request.POST.get('duration', '30'))
+                    if duration > 0:
+                        state.timer_duration = duration
+                        state.timer_end_time = timezone.now() + timezone.timedelta(seconds=duration)
+                except (ValueError, TypeError):
+                    pass
+            else:
+                state.timer_end_time = None
+            state.updated_by = request.user
+            state.save()
+            return JsonResponse({'success': True})
+            
+        elif action == 'select_winner':
+            if not state.is_active:
+                return JsonResponse({'success': False, 'error': 'Giveaway is not active'}, status=400)
+                
+            winner_type = request.POST.get('winner_type')
+            if winner_type not in ['first', 'second']:
+                return JsonResponse({'success': False, 'error': 'Invalid winner type'}, status=400)
+            
+            # Check if winner already exists for this type
+            try:
+                existing_winner = GiveawayWinner.objects.get(winner_type=winner_type)
+                if not request.POST.get('force_reselect', 'false') == 'true':
+                    return JsonResponse({
+                        'success': False, 
+                        'error': f'{winner_type.title()} winner already exists: {existing_winner.user.email}. Use force reselect to override.'
+                    }, status=400)
+            except GiveawayWinner.DoesNotExist:
+                pass  # No existing winner, good to proceed
+            
+            # Handle manual winner selection via email
+            winner_email = request.POST.get('winner_email', '').strip().lower()
+            if winner_email:
+                # Find user by email
+                try:
+                    winner_user = User.objects.get(email__iexact=winner_email)
+                    # Check if this user has actually entered the giveaway
+                    try:
+                        entry = GiveawayEntry.objects.get(user=winner_user)
+                    except GiveawayEntry.DoesNotExist:
+                        return JsonResponse({
+                            'success': False, 
+                            'error': f'User with email {winner_email} has not entered the giveaway'
+                        }, status=400)
+                except User.DoesNotExist:
+                    return JsonResponse({
+                        'success': False, 
+                        'error': f'No user found with email {winner_email}'
+                    }, status=400)
+            else:
+                # Random selection from valid entries
+                valid_entries = [e for e in entries if e.followed_confirmed and e.shared_confirmed]
+                if not valid_entries:
+                    return JsonResponse({
+                        'success': False, 
+                        'error': 'No valid entries found (must have followed and shared)'
+                    }, status=400)
+                
+                import random
+                selected_entry = random.choice(valid_entries)
+                winner_user = selected_entry.user
+                winner_instagram_username = selected_entry.instagram_username
+            
+            # If we got here via manual email selection, get the instagram username
+            if winner_email:
+                try:
+                    entry = GiveawayEntry.objects.get(user=winner_user)
+                    winner_instagram_username = entry.instagram_username
+                except GiveawayEntry.DoesNotExist:
+                    return JsonResponse({
+                        'success': False, 
+                        'error': f'Selected user has not entered the giveaway'
+                    }, status=400)
+            
+            # Create or update winner
+            winner, created = GiveawayWinner.objects.update_or_create(
+                winner_type=winner_type,
+                defaults={
+                    'user': winner_user,
+                    'instagram_username': winner_instagram_username,
+                    'won_by': request.user
+                }
+            )
+            
+            # Update state
+            state.current_winner_type = winner_type
+            state.winner_selection_in_progress = False
+            state.updated_by = request.user
+            state.save()
+            
+            return JsonResponse({
+                'success': True,
+                'winner': {
+                    'email': winner_user.email,
+                    'instagram_username': winner_instagram_username,
+                    'type': winner_type
+                }
+            })
+            
+        elif action == 'start_selection':
+            if not state.is_active:
+                return JsonResponse({'success': False, 'error': 'Giveaway is not active'}, status=400)
+                
+            winner_type = request.POST.get('winner_type')
+            if winner_type not in ['first', 'second']:
+                return JsonResponse({'success': False, 'error': 'Invalid winner type'}, status=400)
+            
+            state.winner_selection_in_progress = True
+            state.current_winner_type = winner_type
+            state.updated_by = request.user
+            state.save()
+            
+            return JsonResponse({'success': True, 'selection_in_progress': True})
+            
+        elif action == 'reset_winner':
+            winner_type = request.POST.get('winner_type')
+            if winner_type not in ['first', 'second']:
+                return JsonResponse({'success': False, 'error': 'Invalid winner type'}, status=400)
+            
+            GiveawayWinner.objects.filter(winner_type=winner_type).delete()
+            
+            if state.current_winner_type == winner_type:
+                state.current_winner_type = 'none'
+                state.winner_selection_in_progress = False
+            
+            state.updated_by = request.user
+            state.save()
+            
+            return JsonResponse({'success': True})
+            
+        elif action == 'clear_all':
+            GiveawayWinner.objects.all().delete()
+            state.current_winner_type = 'none'
+            state.winner_selection_in_progress = False
+            state.show_timer = False
+            state.timer_end_time = None
+            state.updated_by = request.user
+            state.save()
+            
+            return JsonResponse({'success': True})
+    
+    # GET request - render template
+    return render(request, 'admin_giveaway_control.html', {
+        'state': state,
+        'first_winner': first_winner,
+        'second_winner': second_winner,
+        'entry_count': entry_count,
+        'is_admin': is_admin_check(request.user),
+    })
+
+
+@login_required
 def admin_view_user(request, user_id):
     if not is_staff_check(request.user):
         return HttpResponse("Not authorized", status=403)
@@ -2337,6 +2609,100 @@ def admin_action(request):
             profile.save()
             
             messages.warning(request, f"Verification reset for {profile.user.username}. They must verify again.")
+            
+        elif action == 'giveaway_toggle_active':
+            from .models import GiveawayState
+            state, _ = GiveawayState.objects.get_or_create(pk=1)
+            state.is_active = not state.is_active
+            state.updated_by = request.user
+            state.save()
+            messages.success(request, f"Giveaway {'activated' if state.is_active else 'deactivated'}!")
+            
+        elif action == 'giveaway_set_timer':
+            from .models import GiveawayState
+            state, _ = GiveawayState.objects.get_or_create(pk=1)
+            state.show_timer = request.POST.get('show_timer') == 'true' if request.POST.get('show_timer') else False
+            try:
+                duration = int(request.POST.get('duration', '30'))
+                if duration > 0:
+                    state.timer_duration = duration
+                    if state.show_timer:
+                        from django.utils import timezone
+                        state.timer_end_time = timezone.now() + timezone.timedelta(seconds=duration)
+                    else:
+                        state.timer_end_time = None
+            except (ValueError, TypeError):
+                pass
+            state.updated_by = request.user
+            state.save()
+            messages.success(request, "Timer updated!")
+            
+        elif action == 'giveaway_select_winner':
+            from .models import GiveawayState, GiveawayEntry, GiveawayWinner
+            if not is_admin:
+                messages.error(request, "Only the admin can select winners.")
+            else:
+                state, _ = GiveawayState.objects.get_or_create(pk=1)
+                winner_type = request.POST.get('winner_type')
+                winner_email = request.POST.get('winner_email', '').strip().lower()
+                
+                if winner_type not in ['first', 'second']:
+                    messages.error(request, "Invalid winner type.")
+                else:
+                    if winner_email:
+                        # Manual selection by email
+                        try:
+                            winner_user = User.objects.get(email__iexact=winner_email)
+                            try:
+                                entry = GiveawayEntry.objects.get(user=winner_user)
+                                GiveawayWinner.objects.update_or_create(
+                                    winner_type=winner_type,
+                                    defaults={
+                                        'user': winner_user,
+                                        'instagram_username': entry.instagram_username,
+                                        'won_by': request.user
+                                    }
+                                )
+                                state.current_winner_type = winner_type
+                                state.save()
+                                messages.success(request, f"Manual winner set: {winner_user.email}")
+                            except GiveawayEntry.DoesNotExist:
+                                messages.error(request, f"User {winner_email} hasn't entered the giveaway.")
+                        except User.DoesNotExist:
+                            messages.error(request, f"No user found with email {winner_email}.")
+                    else:
+                        # Random selection
+                        valid_entries = GiveawayEntry.objects.filter(followed_confirmed=True, shared_confirmed=True)
+                        if not valid_entries.exists():
+                            messages.error(request, "No valid entries found.")
+                        else:
+                            import random
+                            selected = random.choice(list(valid_entries))
+                            GiveawayWinner.objects.update_or_create(
+                                winner_type=winner_type,
+                                defaults={
+                                    'user': selected.user,
+                                    'instagram_username': selected.instagram_username,
+                                    'won_by': request.user
+                                }
+                            )
+                            state.current_winner_type = winner_type
+                            state.save()
+                            messages.success(request, f"{winner_type.title()} winner selected: {selected.user.email}")
+                            
+        elif action == 'giveaway_reset':
+            from .models import GiveawayState, GiveawayWinner, GiveawayEntry
+            if not is_admin:
+                messages.error(request, "Only the admin can reset giveaway data.")
+            else:
+                GiveawayWinner.objects.all().delete()
+                GiveawayEntry.objects.all().delete()
+                state, _ = GiveawayState.objects.get_or_create(pk=1)
+                state.current_winner_type = 'none'
+                state.show_timer = False
+                state.timer_end_time = None
+                state.save()
+                messages.success(request, "All giveaway data has been reset.")
 
         redirect_to = request.POST.get('redirect_to')
         if redirect_to:

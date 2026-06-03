@@ -728,6 +728,9 @@
                         <div>
                             <p class="conf-name">{{ c.display_name }}</p>
                             <p class="conf-meta">{{ c.created_at|timesince }} ago</p>
+                            {% if is_admin and c.user %}
+                            <p class="conf-meta" style="color:#6366f1;font-size:11px;">{{ c.user.email }}</p>
+                            {% endif %}
                         </div>
                     </div>
                     {% if c.campus %}

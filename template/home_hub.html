@@ -75,72 +75,6 @@
         color: var(--primary);
     }
 
-    .hero-card {
-        position: relative;
-        overflow: hidden;
-        border-radius: 32px;
-        padding: 24px;
-        background: linear-gradient(135deg, #004ac6 0%, #3f7dff 100%);
-        color: #ffffff;
-        box-shadow: 0 22px 45px rgba(0, 74, 198, 0.2);
-    }
-
-    .hero-card::before {
-        content: "";
-        position: absolute;
-        width: 190px;
-        height: 190px;
-        top: -70px;
-        right: -52px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.14);
-        filter: blur(2px);
-    }
-
-    .hero-card::after {
-        content: "";
-        position: absolute;
-        inset: auto auto -44px -20px;
-        width: 170px;
-        height: 170px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.08);
-    }
-
-    .hero-label {
-        position: relative;
-        z-index: 1;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 12px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.14);
-        font-size: 11px;
-        font-weight: 800;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-    }
-
-    .hero-card h2 {
-        position: relative;
-        z-index: 1;
-        margin: 16px 0 10px;
-        font-size: clamp(24px, 6vw, 31px);
-        line-height: 1.12;
-        letter-spacing: -0.04em;
-        font-weight: 800;
-    }
-
-    .hero-card p {
-        position: relative;
-        z-index: 1;
-        margin: 0;
-        max-width: 24rem;
-        font-size: 14px;
-        line-height: 1.6;
-        color: rgba(255, 255, 255, 0.84);
-    }
 
     .hub-grid {
         display: grid;
@@ -401,6 +335,610 @@
     .pulse-right span {
         color: var(--primary);
     }
+
+    /* ── Giveaway Section ── */
+    .giveaway-card {
+        position: relative;
+        overflow: hidden;
+        border-radius: 28px;
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+        backdrop-filter: blur(10px);
+    }
+
+    .giveaway-glow {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        top: -80px;
+        right: -60px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(0, 74, 198, 0.06) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .giveaway-body { position: relative; z-index: 1; }
+
+    .giveaway-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #e4ecff;
+        color: var(--primary);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 14px;
+    }
+
+    .giveaway-heading {
+        margin: 0 0 8px;
+        font-size: clamp(24px, 5.5vw, 30px);
+        line-height: 1.12;
+        letter-spacing: -0.04em;
+        font-weight: 800;
+        color: #151b27;
+    }
+
+    .giveaway-sub {
+    text-align: left;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #64748b;
+    margin: 6px 0 14px;
+    max-width: 100%;
+    }
+
+    .giveaway-sub a {
+    color: #2563eb;
+    font-weight: 700;
+    text-decoration: none;
+    }
+
+.giveaway-sub a:hover{
+    text-decoration: underline;
+}
+
+    .giveaway-prizes {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+    }
+
+    .prize-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 18px;
+        background: #f8fafc;
+        border: 1px solid rgba(0, 74, 198, 0.06);
+        flex: 1;
+        min-width: 130px;
+    }
+
+    .prize-emoji { font-size: 22px; }
+
+    .prize-label {
+        display: block;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #6b7a90;
+        margin-bottom: 2px;
+    }
+
+    .prize-amt {
+        display: block;
+        font-size: 15px;
+        font-weight: 800;
+        color: #151b27;
+    }
+
+    .giveaway-meta {
+        margin-bottom: 16px;
+    }
+    
+    /* ── Giveaway Timer ── */
+    .giveaway-timer {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        background: #eef2ff;
+        color: #1e40af;
+        font-size: 14px;
+        font-weight: 800;
+        font-family: 'SF Mono', 'Monaco', monospace;
+        margin-bottom: 14px;
+        box-shadow: 0 2px 8px rgba(0, 74, 198, 0.06);
+    }
+    
+    .giveaway-timer .material-symbols-outlined {
+        color: #1e40af;
+    }
+    
+    /* ── Winner Announcement ── */
+    .winner-announce {
+        margin-bottom: 14px;
+        animation: winnerSlideIn 0.6s ease forwards;
+    }
+    
+    @keyframes winnerSlideIn {
+        from { opacity: 0; transform: translateY(12px) scale(0.96); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    
+    .winner-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #fbbf24;
+        color: #78350f;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+    
+    .winner-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 18px;
+        background: #f0f9ff;
+        border: 1px solid #dbeafe;
+        box-shadow: 0 2px 8px rgba(0, 74, 198, 0.04);
+    }
+    
+    .winner-emoji {
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+    
+    .winner-type {
+        font-size: 13px;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 2px;
+    }
+    
+    .winner-ig {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--primary);
+    }
+    
+    .giveaway-count {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #eef3fb;
+        color: #496179;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .giveaway-count .material-symbols-outlined {
+        font-size: 16px;
+        color: var(--primary);
+    }
+
+    .giveaway-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 15px 24px;
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #004ac6, #3f7dff);
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(0, 74, 198, 0.2);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .giveaway-btn:active {
+        transform: scale(0.97);
+    }
+
+    .giveaway-btn .material-symbols-outlined {
+        font-size: 18px;
+    }
+
+    /* ── Bottom Sheet Modal ── */
+    .giveaway-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: 9999;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        backdrop-filter: blur(2px);
+    }
+
+    .giveaway-overlay.open {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .giveaway-sheet {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10000;
+        background: #f8fafc;
+        border-radius: 24px 24px 0 0;
+        padding: 16px 20px calc(20px + env(safe-area-inset-bottom));
+        max-height: 88dvh;
+        overflow-y: auto;
+        box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.18);
+        transform: translateY(100%);
+        transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    .giveaway-sheet.open {
+        transform: translateY(0);
+    }
+
+    .sheet-handle {
+        width: 36px;
+        height: 4px;
+        border-radius: 4px;
+        background: #cbd5e1;
+        margin: 0 auto 10px;
+    }
+
+    .sheet-step { display: none; }
+    .sheet-step.active { display: block; }
+
+    .sheet-title {
+        font-size: 19px;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: #0f172a;
+        margin: 0 0 6px;
+    }
+
+    .sheet-desc {
+        font-size: 13px;
+        color: #64748b;
+        margin: 0 0 18px;
+        line-height: 1.5;
+    }
+
+    .sheet-input {
+        width: 100%;
+        padding: 14px 16px;
+        border: 1.5px solid #d1d5db;
+        border-radius: 14px;
+        font-size: 15px;
+        font-weight: 600;
+        color: #0f172a;
+        outline: none;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        box-sizing: border-box;
+        background: #ffffff;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .sheet-input:focus {
+        border-color: var(--primary);
+        box-shadow: 0 2px 12px rgba(0, 74, 198, 0.1);
+    }
+
+    .sheet-input.error {
+        border-color: #ef4444;
+        background: #fef2f2;
+    }
+
+    .sheet-error {
+        font-size: 12px;
+        font-weight: 600;
+        color: #ef4444;
+        margin-top: 6px;
+        display: none;
+        padding-left: 2px;
+    }
+
+    .sheet-error.show { display: block; }
+
+    .sheet-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 15px;
+        border: none;
+        border-radius: 999px;
+        font-size: 15px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        margin-top: 16px;
+    }
+
+    .sheet-btn.primary {
+        background: linear-gradient(135deg, #004ac6, #3f7dff);
+        color: #ffffff;
+        box-shadow: 0 8px 20px rgba(0, 74, 198, 0.25);
+    }
+
+    .sheet-btn.primary:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .sheet-btn.primary:not(:disabled):active {
+        transform: scale(0.97);
+    }
+
+    .sheet-btn.primary.loading {
+        pointer-events: none;
+        opacity: 0.7;
+    }
+
+    .sheet-btn.enter {
+        background: linear-gradient(135deg, #004ac6, #3f7dff);
+        color: #ffffff;
+        box-shadow: 0 8px 20px rgba(0, 74, 198, 0.25);
+    }
+
+    .sheet-btn.enter:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+    .sheet-btn.enter:not(:disabled):active {
+        transform: scale(0.97);
+    }
+
+    .profile-preview {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px;
+        border-radius: 16px;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 18px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .profile-preview-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #004ac6, #3f7dff);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(0, 74, 198, 0.2);
+    }
+
+    .profile-preview-avatar .material-symbols-outlined {
+        font-size: 22px;
+        color: #ffffff;
+    }
+
+    .profile-preview-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .profile-preview-info p {
+        margin: 0 0 2px;
+        font-weight: 700;
+        font-size: 14px;
+        color: #0f172a;
+    }
+
+    .profile-preview-info a {
+        font-size: 12px;
+        color: var(--primary);
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .profile-preview-info a:hover {
+        text-decoration: underline;
+    }
+
+    .rules-box {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 14px 16px;
+        margin-bottom: 14px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .rules-box h4 {
+        margin: 0 0 8px;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #64748b;
+    }
+
+    .rules-box ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .rules-box li {
+        padding: 3px 0;
+        font-size: 13px;
+        color: #1e293b;
+        line-height: 1.5;
+        font-weight: 500;
+    }
+
+    .rules-box li::before {
+        content: "•";
+        color: var(--primary);
+        font-weight: 700;
+        margin-right: 8px;
+    }
+
+    .follow-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 13px 18px;
+        border-radius: 14px;
+        background: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #dbeafe;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 800;
+        margin-bottom: 16px;
+        box-sizing: border-box;
+        transition: 0.2s ease;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    }
+
+    .follow-link:active {
+        transform: scale(0.98);
+        background: #dbeafe;
+    }
+
+    .follow-link .material-symbols-outlined {
+        font-size: 17px;
+    }
+
+    .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .checkbox-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        cursor: pointer;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        margin-top: 1px;
+        accent-color: var(--primary);
+        flex-shrink: 0;
+        cursor: pointer;
+        border-radius: 6px;
+        appearance: none;
+        -webkit-appearance: none;
+        background: #ffffff;
+        border: 1.5px solid #94a3b8;
+        transition: all 0.2s ease;
+        position: relative;
+    }
+
+    .checkbox-row input[type="checkbox"]:checked {
+        background: var(--primary);
+        border-color: var(--primary);
+    }
+
+    .checkbox-row input[type="checkbox"]:checked::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        left: 6px;
+        width: 5px;
+        height: 10px;
+        border: solid #ffffff;
+        border-width: 0 2px 2px 0;
+        transform: rotate(45deg);
+    }
+
+    .checkbox-row label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e293b;
+        line-height: 1.5;
+        cursor: pointer;
+    }
+
+    .success-state {
+        text-align: center;
+        padding: 24px 0;
+    }
+
+    .success-state .success-icon {
+        font-size: 52px;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .success-state h3 {
+        margin: 0 0 6px;
+        font-size: 21px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .success-state p {
+        margin: 0;
+        font-size: 14px;
+        color: #64748b;
+        line-height: 1.5;
+    }
+
+    .already-entered {
+        text-align: center;
+        padding: 24px 0;
+    }
+
+    .already-entered .info-icon {
+        font-size: 46px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .already-entered h3 {
+        margin: 0 0 6px;
+        font-size: 20px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .already-entered p {
+        margin: 0;
+        font-size: 14px;
+        color: #64748b;
+    }
 </style>
 {% endblock %}
 
@@ -437,13 +975,87 @@
         </a>
     </div>
 
-    <div class="hero-card">
-        <span class="hero-label">
-            <span class="material-symbols-outlined">auto_awesome</span>
-            Daily hub
-        </span>
-        <h2>Jump into matching, room-finding, and campus updates from one polished space.</h2>
-        <p>Check confessions, find rooms, and friends at a glance below.</p>
+    <!-- Giveaway Section -->
+    <div class="giveaway-card" id="giveawaySection" 
+         {% if giveaway_entered %}data-entered="true"{% endif %}
+         data-profile-complete="{% if profile_complete %}true{% else %}false{% endif %}"
+         data-verified="{% if is_verified %}true{% else %}false{% endif %}"
+         data-show-timer="{% if giveaway_state and giveaway_state.show_timer %}true{% else %}false{% endif %}"
+         data-timer-end="{% if giveaway_state and giveaway_state.timer_end_time %}{{ giveaway_state.timer_end_time|date:'c' }}{% endif %}">
+        <div class="giveaway-glow"></div>
+        <div class="giveaway-body">
+            <div class="giveaway-badge">
+                <span class="material-symbols-outlined" style="font-size:14px;">celebration</span>
+                Giveaway
+            </div>
+            <h2 class="giveaway-heading">SRM Match Giveaway <span style="font-size:0.85em;">🎉</span></h2>
+                <p class="giveaway-sub">
+                Complete your profile. <br>
+                Follow <a href="https://www.instagram.com/srm_match_/" target="_blank" rel="noopener noreferrer">@srm_match_</a>,
+                and share the giveaway post with 2 SRM friends.
+                </p>
+            
+            {% if giveaway_state and giveaway_state.show_timer and giveaway_state.timer_end_time %}
+            <div class="giveaway-timer" id="giveawayTimer">
+                <span class="material-symbols-outlined" style="font-size:16px;">timer</span>
+                <span id="timerDisplay">--:--</span>
+            </div>
+            {% endif %}
+            
+            <div class="giveaway-prizes">
+                <div class="prize-card">
+                    <span class="prize-emoji">🥇</span>
+                    <div>
+                        <span class="prize-label">1st Prize</span>
+                        <span class="prize-amt">₹1000 Cash</span>
+                    </div>
+                </div>
+                <div class="prize-card">
+                    <span class="prize-emoji">🥈</span>
+                    <div>
+                        <span class="prize-label">2nd Prize</span>
+                        <span class="prize-amt">₹500 Cash</span>
+                    </div>
+                </div>
+            </div>
+            
+            {% if giveaway_first_winner %}
+            <div class="winner-announce" id="winnerAnnounceFirst">
+                <div class="winner-badge">🏆 Winner</div>
+                <div class="winner-card">
+                    <span class="winner-emoji">🥇</span>
+                    <div>
+                        <div class="winner-type">1st Prize — ₹1000 Cash</div>
+                        <div class="winner-ig">@{{ giveaway_first_winner.instagram_username }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if giveaway_second_winner %}
+            <div class="winner-announce" id="winnerAnnounceSecond">
+                <div class="winner-badge" style="background:#e2e8f0;color:#475569;">🏆 Winner</div>
+                <div class="winner-card">
+                    <span class="winner-emoji">🥈</span>
+                    <div>
+                        <div class="winner-type">2nd Prize — ₹500 Cash</div>
+                        <div class="winner-ig">@{{ giveaway_second_winner.instagram_username }}</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="giveaway-meta">
+                <span class="giveaway-count">
+                    <span class="material-symbols-outlined">group</span>
+                    <span id="participantCount">{{ giveaway_count }}</span> students joined
+                </span>
+            </div>
+            <button class="giveaway-btn" id="giveawayParticipateBtn" onclick="openGiveaway()">
+                Enter Giveaway
+                <span class="material-symbols-outlined">arrow_forward</span>
+            </button>
+        </div>
     </div>
 
     <div class="panel">
@@ -500,4 +1112,285 @@
         <div class="pulse-right"><span>{{ total_users }}</span> members live in the network</div>
     </div>
 </section>
+
+<!-- Giveaway Bottom Sheet -->
+<div class="giveaway-overlay" id="giveawayOverlay" onclick="closeGiveaway()"></div>
+<div class="giveaway-sheet" id="giveawaySheet">
+    <div class="sheet-handle"></div>
+
+    <!-- Step 1: Instagram ID -->
+    <div class="sheet-step active" id="step1">
+        <h3 class="sheet-title">Enter your Instagram</h3>
+        <p class="sheet-desc">We'll use this to verify you followed the giveaway steps.</p>
+        <input type="text" class="sheet-input" id="igInput" placeholder="Enter your Instagram username" maxlength="30" inputmode="url" autocomplete="off">
+        <div class="sheet-error" id="igError"></div>
+        <button class="sheet-btn primary" id="step1Btn" onclick="goToStep2()" disabled>Continue</button>
+    </div>
+
+    <!-- Step 2: Confirmation -->
+    <div class="sheet-step" id="step2">
+        <div class="profile-preview">
+            <div class="profile-preview-avatar">
+                <span class="material-symbols-outlined">camera_alt</span>
+            </div>
+            <div class="profile-preview-info">
+                <p id="igDisplay">@username</p>
+                <a href="#" id="igProfileLink" target="_blank" rel="noopener noreferrer">Open Instagram Profile</a>
+            </div>
+        </div>
+
+        <div class="rules-box">
+            <h4>Giveaway Rules</h4>
+            <ul>
+                <li>Complete your SRM Match profile. </li>
+                <li>Only SRM students are allowed.</li>
+                <li>Follow SRM Match on Instagram.</li>
+                <li>Share the giveaway post with 2 SRM friends.</li>
+                <li>Enter your correct Instagram ID.</li>
+                <li>Winners will be chosen on June 7.</li>
+            </ul>
+        </div>
+
+        <a href="https://www.instagram.com/srm_match_/" target="_blank" rel="noopener noreferrer" class="follow-link">
+            <span class="material-symbols-outlined">open_in_new</span>
+            Follow @srm_match_
+        </a>
+
+        <div class="checkbox-group">
+            <label class="checkbox-row">
+                <input type="checkbox" id="cbFollow" onchange="checkEnterReady()">
+                <label for="cbFollow">I have followed @srm_match_</label>
+            </label>
+            <label class="checkbox-row">
+                <input type="checkbox" id="cbShare" onchange="checkEnterReady()">
+                <label for="cbShare">I have shared the giveaway post with 2 SRM friends</label>
+            </label>
+        </div>
+
+        <button class="sheet-btn enter" id="enterBtn" onclick="submitGiveaway()" disabled>
+            <span>Enter Giveaway</span>
+        </button>
+    </div>
+
+    <!-- Success -->
+    <div class="sheet-step" id="stepSuccess">
+        <div class="success-state">
+            <div class="success-icon">🎉</div>
+            <h3>You're in!</h3>
+            <p>Winners will be announced on June 7 🎉</p>
+        </div>
+    </div>
+
+    <!-- Already entered -->
+    <div class="sheet-step" id="stepAlready">
+        <div class="already-entered">
+            <div class="info-icon">📋</div>
+            <h3>Already Entered</h3>
+            <p>You have already entered the giveaway.</p>
+        </div>
+    </div>
+
+    <!-- Profile incomplete -->
+    <div class="sheet-step" id="stepProfile">
+        <div style="text-align:center;padding:16px 0;">
+            <div style="font-size:48px;margin-bottom:10px;">📝</div>
+            <h3 style="margin:0 0 8px;font-size:20px;font-weight:800;color:#0f172a;">Complete Your Profile First</h3>
+            <p style="margin:0 0 4px;font-size:14px;color:#64748b;line-height:1.5;">You need to complete your profile and face verification before entering the giveaway.</p>
+            <p style="margin:0 0 20px;font-size:13px;color:#94a3b8;">It only takes a minute!</p>
+            <a href="{% url 'edit_profile' %}" class="sheet-btn primary" style="display:inline-flex;text-decoration:none;width:auto;padding:14px 28px;">
+                Complete Profile
+            </a>
+        </div>
+    </div>
+</div>
+
+{% block giveaway_js %}
+<script>
+var giveawayInstagramUsername = '';
+var giveawaySubmitting = false;
+
+function openGiveaway() {
+    var section = document.getElementById('giveawaySection');
+    if (section && section.dataset.entered === 'true') {
+        showStep('stepAlready');
+    } else if (section && (section.dataset.profileComplete !== 'true' || section.dataset.verified !== 'true')) {
+        showStep('stepProfile');
+    } else {
+        document.getElementById('igInput').value = '';
+        document.getElementById('igError').classList.remove('show');
+        document.getElementById('igError').textContent = '';
+        document.getElementById('step1Btn').disabled = true;
+        document.getElementById('igInput').classList.remove('error');
+        showStep('step1');
+    }
+    document.getElementById('giveawayOverlay').classList.add('open');
+    document.getElementById('giveawaySheet').classList.add('open');
+    document.documentElement.style.overflow = 'hidden';
+}
+
+function closeGiveaway() {
+    document.getElementById('giveawayOverlay').classList.remove('open');
+    document.getElementById('giveawaySheet').classList.remove('open');
+    document.documentElement.style.overflow = '';
+}
+
+function showStep(id) {
+    document.querySelectorAll('.sheet-step').forEach(function(s) { s.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+}
+
+// Instagram input validation
+document.addEventListener('DOMContentLoaded', function() {
+    var input = document.getElementById('igInput');
+    if (!input) return;
+    input.addEventListener('input', function() {
+        var val = this.value;
+        var cleaned = val.replace(/@/g, '');
+        if (cleaned !== val) {
+            this.value = cleaned;
+            val = cleaned;
+        }
+        var errorEl = document.getElementById('igError');
+        var btn = document.getElementById('step1Btn');
+        if (!val) {
+            errorEl.classList.remove('show');
+            errorEl.textContent = '';
+            this.classList.remove('error');
+            btn.disabled = true;
+            return;
+        }
+        if (!/^[a-zA-Z0-9._]+$/.test(val)) {
+            errorEl.textContent = 'Only letters, numbers, underscore, and dot allowed.';
+            errorEl.classList.add('show');
+            this.classList.add('error');
+            btn.disabled = true;
+            return;
+        }
+        if (val.length > 30) {
+            errorEl.textContent = 'Username too long (max 30 characters).';
+            errorEl.classList.add('show');
+            this.classList.add('error');
+            btn.disabled = true;
+            return;
+        }
+        errorEl.classList.remove('show');
+        errorEl.textContent = '';
+        this.classList.remove('error');
+        btn.disabled = false;
+    });
+});
+
+function goToStep2() {
+    var val = document.getElementById('igInput').value.trim().replace(/^@/, '');
+    if (!val || !/^[a-zA-Z0-9._]+$/.test(val)) return;
+    giveawayInstagramUsername = val;
+    document.getElementById('igDisplay').textContent = '@' + val;
+    document.getElementById('igProfileLink').href = 'https://www.instagram.com/' + val + '/';
+    document.getElementById('cbFollow').checked = false;
+    document.getElementById('cbShare').checked = false;
+    document.getElementById('enterBtn').disabled = true;
+    showStep('step2');
+}
+
+function checkEnterReady() {
+    var cb1 = document.getElementById('cbFollow').checked;
+    var cb2 = document.getElementById('cbShare').checked;
+    document.getElementById('enterBtn').disabled = !(cb1 && cb2);
+}
+
+function submitGiveaway() {
+    if (giveawaySubmitting) return;
+    if (!giveawayInstagramUsername) return;
+    var cb1 = document.getElementById('cbFollow').checked;
+    var cb2 = document.getElementById('cbShare').checked;
+    if (!cb1 || !cb2) return;
+
+    giveawaySubmitting = true;
+    var btn = document.getElementById('enterBtn');
+    btn.disabled = true;
+    btn.classList.add('loading');
+    btn.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite;">refresh</span> Submitting...';
+
+    fetch('{% url "giveaway_entry" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            instagram_username: giveawayInstagramUsername,
+            followed_confirmed: cb1,
+            shared_confirmed: cb2
+        })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            var countEl = document.getElementById('participantCount');
+            if (countEl && data.total_entries) countEl.textContent = data.total_entries;
+            var section = document.getElementById('giveawaySection');
+            if (section) section.dataset.entered = 'true';
+            showStep('stepSuccess');
+            setTimeout(function() { closeGiveaway(); }, 2500);
+        } else {
+            if (data.error && data.error.indexOf('already') > -1) {
+                showStep('stepAlready');
+            } else {
+                alert(data.error || 'Something went wrong. Please try again.');
+            }
+        }
+    })
+    .catch(function() {
+        alert('Network error. Please try again.');
+    })
+    .finally(function() {
+        giveawaySubmitting = false;
+        var btn2 = document.getElementById('enterBtn');
+        btn2.disabled = false;
+        btn2.classList.remove('loading');
+        btn2.innerHTML = 'Enter Giveaway';
+    });
+}
+
+// Close on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeGiveaway();
+});
+
+// ── Giveaway Timer ──
+function initGiveawayTimer() {
+    var section = document.getElementById('giveawaySection');
+    if (!section || section.dataset.showTimer !== 'true') return;
+    
+    var endTimeStr = section.dataset.timerEnd;
+    if (!endTimeStr) return;
+    
+    var endTime = new Date(endTimeStr).getTime();
+    var display = document.getElementById('timerDisplay');
+    if (!display) return;
+    
+    function updateTimer() {
+        var now = new Date().getTime();
+        var diff = endTime - now;
+        
+        if (diff <= 0) {
+            display.textContent = '00:00';
+            return;
+        }
+        
+        var totalSec = Math.floor(diff / 1000);
+        var min = Math.floor(totalSec / 60);
+        var sec = totalSec % 60;
+        display.textContent = String(min).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+    }
+    
+    updateTimer();
+    setInterval(updateTimer, 1000);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initGiveawayTimer();
+});
+</script>
+{% endblock %}
 {% endblock %}

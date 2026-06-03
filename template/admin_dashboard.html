@@ -289,6 +289,7 @@
             {% if is_admin %}
             <button class="admin-tab" onclick="switchAdminTab('users', this)"><i class="fas fa-users"></i><span class="admin-tab-text">Users Directory</span></button>
             <a href="{% url 'admin_manage_staff' %}" class="admin-tab" style="text-decoration: none;"><i class="fas fa-users-cog"></i><span class="admin-tab-text">Staffs</span></a>
+            <button class="admin-tab" onclick="switchAdminTab('giveaway', this)"><i class="fas fa-gift"></i><span class="admin-tab-text">Giveaway</span></button>
             <button class="admin-tab" onclick="switchAdminTab('system', this)"><i class="fas fa-server"></i><span class="admin-tab-text">System</span></button>
             {% endif %}
         </div>
@@ -519,16 +520,206 @@
                                 <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Delete Confession</button>
                             </form>
                         </div>
-                    </div>
-                    {% endfor %}
                 </div>
-                {% else %}
-                <div class="empty-state"><i class="fas fa-check-circle" style="color:#16a34a;"></i><h3>No Reports</h3></div>
-                {% endif %}
             </div>
         </div>
+        {% else %}
+        <div class="empty-state"><i class="fas fa-check-circle" style="color:#16a34a;"></i><h3>No Reports</h3></div>
+        {% endif %}
+    </div>
 
-        <!-- ================= USERS DIRECTORY TAB ================= -->
+    <!-- ================= GIVEAWAY CONTROL ================= -->
+    {% if is_admin %}
+    <div id="tab-giveaway" class="admin-panel">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <h3><i class="fas fa-gift"></i> Giveaway Control Panel</h3>
+            </div>
+            
+            <div class="list-group">
+                <!-- Giveaway Status -->
+                <div class="list-item">
+                    <div class="item-header">
+                        <span class="item-title">Giveaway Status</span>
+                        <span class="item-meta" id="giveaway-status">
+                            {% if state.is_active %}<span style="background:#dcfce7;color:#166531;padding:2px 6px;border-radius:4px;font-size:11px;">ACTIVE</span>{% else %}<span style="background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:4px;font-size:11px;">INACTIVE</span>{% endif %}
+                        </span>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:inline-flex;gap:8px;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="giveaway_toggle_active">
+                            <button type="submit" class="btn btn-outline" style="padding:6px 12px;font-size:13px;">
+                                {% if state.is_active %}Deactivate{% else %}Activate{% endif %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Timer Controls -->
+                <div class="list-item">
+                    <div class="item-header">
+                        <span class="item-title">Timer Settings</span>
+                        <span class="item-meta">
+                            {% if state.show_timer %}
+                                {% if state.timer_end_time %}
+                                    <span id="timer-display" style="font-family:monospace;background:#eef2ff;color:#1e40af;padding:4px 8px;border-radius:4px;">
+                                        Loading...
+                                    </span>
+                                {% else %}
+                                    Not Set
+                                {% endif %}
+                            {% else %}
+                                Disabled
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div style="margin-top:8px;">
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:flex;flex-wrap:wrap;gap:8px;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="giveaway_set_timer">
+                            <label style="display:flex;align-items:center;gap:6px;font-size:13px;">
+                                <input type="checkbox" name="show_timer" value="true" {% if state.show_timer %}checked{% endif %}>
+                                Show Timer
+                            </label>
+                            <input type="number" name="duration" min="10" max="300" value="{{ state.timer_duration }}" style="width:80px;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;" placeholder="Seconds">
+                            <button type="submit" class="btn btn-primary" style="padding:8px 16px;font-size:13px;">Update Timer</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Entry Statistics -->
+                <div class="list-item">
+                    <div class="item-header">
+                        <span class="item-title">Entries</span>
+                        <span class="item-meta">{{ entry_count }} students entered</span>
+                    </div>
+                    <div style="margin-top:8px;display:flex;gap:8px;">
+                        <form action="{% url 'admin_action' %}" method="POST" style="flex:1;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="giveaway_reset">
+                            <button type="submit" class="btn btn-danger" style="padding:6px 12px;font-size:13px;">Reset All Data</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Winner Selection -->
+                <div class="list-item">
+                    <div class="item-header">
+                        <span class="item-title">Winner Selection</span>
+                        <span class="item-meta" id="selection-status">
+                            {% if state.winner_selection_in_progress %}
+                                <span style="background:#dbeafe;color:#1e40af;padding:2px 6px;border-radius:4px;font-size:11px;">SELECTING...</span>
+                            {% elif state.current_winner_type != 'none' %}
+                                <span style="background:#fbbf24;color:#78350f;padding:2px 6px;border-radius:4px;font-size:11px;">
+                                    {{ state.get_current_winner_type_display|title }} Selected
+                                </span>
+                            {% else %}
+                                <span style="background:#f3f4f6;color:#6b7280;padding:2px 6px;border-radius:4px;font-size:11px;">Ready</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    {% if state.winner_selection_in_progress %}
+                    <div style="margin-top:12px;text-align:center;">
+                        <p style="color:#64748b;font-size:13px;margin-bottom:8px;">
+                            Spinning the wheel... Please wait.
+                        </p>
+                        <div style="display:inline-block;width:40px;height:40px;border:3px solid #d1d5db;border-top-color:#2563eb;border-radius:50%;animation:spin 1s linear infinite;"></div>
+                    </div>
+                    {% else %}
+                    <div style="margin-top:12px;display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;">
+                        <!-- First Prize Button -->
+                        <form action="{% url 'admin_action' %}" method="POST" 
+                              onsubmit="return confirm('Select first prize winner? This will start the winner selection animation.')"
+                              style="flex:1;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="giveaway_select_winner">
+                            <input type="hidden" name="winner_type" value="first">
+                            <button type="submit" class="btn btn-primary btn-full" style="font-size:14px;padding:12px;">
+                                🥇 Select 1st Winner (₹1000)
+                            </button>
+                        </form>
+                        
+                        <!-- Second Prize Button -->
+                        <form action="{% url 'admin_action' %}" method="POST"
+                              onsubmit="return confirm('Select second prize winner? This will start the winner selection animation.')"
+                              style="flex:1;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="giveaway_select_winner">
+                            <input type="hidden" name="winner_type" value="second">
+                            <button type="submit" class="btn btn-primary btn-full" style="font-size:14px;padding:12px;">
+                                🥈 Select 2nd Winner (₹500)
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Manual Winner Entry -->
+                    <div style="margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0;">
+                        <div style="font-size:12px;color:#64748b;margin-bottom:8px;font-weight:600;">Or Select Winner Manually (by Email)</div>
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="giveaway_select_winner">
+                            <input type="hidden" name="winner_type" value="first" name="winner_type_first">
+                            <input type="email" name="winner_email" placeholder="Enter winner's email (must be registered)" 
+                                  style="flex:1;min-width:180px;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;">
+                            <button type="submit" class="btn btn-outline" style="padding:8px 16px;font-size:13px;">Select as 1st Winner</button>
+                        </form>
+                        <form action="{% url 'admin_action' %}" method="POST" style="display:flex;flex-wrap:wrap;gap:8px;">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="giveaway_select_winner">
+                            <input type="hidden" name="winner_type" value="second" name="winner_type_second">
+                            <input type="email" name="winner_email" placeholder="Enter winner's email (must be registered)" 
+                                  style="flex:1;min-width:180px;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;">
+                            <button type="submit" class="btn btn-outline" style="padding:8px 16px;font-size:13px;">Select as 2nd Winner</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Current Winners -->
+                <div class="list-item">
+                    <div class="item-header">
+                        <span class="item-title">Current Winners</span>
+                    </div>
+                    <div style="margin-top:8px;">
+                        {% if first_winner %}
+                        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#f0f9ff;border-radius:12px;margin-bottom:8px;">
+                            <div style="flex-shrink:0;">
+                                <span style="font-size:24px;">🥇</span>
+                            </div>
+                            <div>
+                                <div style="font-weight:700;color:#0f172a;margin-bottom:2px;">{{ first_winner.user.email }}</div>
+                                <div style="font-size:13px;color:#64748b;">@{{ first_winner.instagram_username }}</div>
+                                <div style="font-size:11px;color:#94a3b8;">Won on {{ first_winner.won_at|date:"M d, Y g:i A" }}</div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div style="text-align:center;padding:16px;color:#94a3b8;font-style:italic;">No first prize winner selected yet</div>
+                        {% endif %}
+                        
+                        {% if second_winner %}
+                        <div style="display:flex;align-items:center;gap:12px;padding:12px;background:#f0f9ff;border-radius:12px;margin-bottom:8px;">
+                            <div style="flex-shrink:0;">
+                                <span style="font-size:24px;">🥈</span>
+                            </div>
+                            <div>
+                                <div style="font-weight:700;color:#0f172a;margin-bottom:2px;">{{ second_winner.user.email }}</div>
+                                <div style="font-size:13px;color:#64748b;">@{{ second_winner.instagram_username }}</div>
+                                <div style="font-size:11px;color:#94a3b8;">Won on {{ second_winner.won_at|date:"M d, Y g:i A" }}</div>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div style="text-align:center;padding:16px;color:#94a3b8;font-style:italic;">No second prize winner selected yet</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ================= USERS DIRECTORY TAB ================= -->
         {% if is_admin %}
         <div id="tab-users" class="admin-panel">
             
