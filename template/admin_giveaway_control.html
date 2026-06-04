@@ -1,0 +1,976 @@
+{% extends 'base.html' %}
+
+{% block title %}Giveaway Control | Admin | SRM Match{% endblock %}
+
+{% block head %}
+<style>
+    html, body {
+        height: 100dvh;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        background: #f7f9fb;
+        padding: 0 !important;
+        margin: 0 !important;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100%;
+        box-sizing: border-box;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+
+    .admin-gw-wrapper {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%;
+        max-width: 560px;
+        margin: 0 auto;
+        background: linear-gradient(180deg, #fbfcff 0%, #f7f9fb 58%, #eff4fb 100%);
+        z-index: 10;
+    }
+
+    /* ── Header ── */
+    .admin-gw-topbar {
+        flex-shrink: 0;
+        padding: calc(10px + env(safe-area-inset-top)) 20px 16px;
+        background: rgba(247, 249, 251, 0.78);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-bottom: 1px solid rgba(0, 74, 198, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        z-index: 20;
+    }
+    .admin-gw-topbar-main {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+    .match-back-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.88);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-decoration: none;
+        color: var(--primary, #004ac6);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        transition: transform 0.2s ease;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .match-back-btn:active { transform: scale(0.94); }
+    .match-back-btn .material-symbols-outlined { font-size: 22px; }
+    .admin-gw-topbar h2 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 800;
+        color: #151b27;
+        letter-spacing: -0.04em;
+    }
+    .admin-gw-topbar .kicker {
+        display: block;
+        margin: 2px 0 -2px;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #6d7b8f;
+    }
+    .topbar-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        border: 1px solid transparent;
+        flex-shrink: 0;
+    }
+    .topbar-status .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: currentColor;
+        box-shadow: 0 0 0 0 currentColor;
+        animation: livePulse 1.6s ease-in-out infinite;
+    }
+    @keyframes livePulse {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+        50% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+    }
+    .topbar-status.is-active {
+        background: rgba(16, 185, 129, 0.12);
+        color: #047857;
+        border-color: rgba(16, 185, 129, 0.25);
+    }
+    .topbar-status.is-inactive {
+        background: rgba(100, 116, 139, 0.12);
+        color: #475569;
+        border-color: rgba(100, 116, 139, 0.2);
+    }
+    .topbar-status.is-inactive .dot { animation: none; }
+
+    /* ── Scrollable body ── */
+    .admin-gw-body {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 20px;
+        padding-bottom: 120px;
+        background: transparent;
+        scrollbar-width: none;
+    }
+    .admin-gw-body::-webkit-scrollbar { display: none; }
+
+    /* ── Cards ── */
+    .admin-gw-card {
+        background: rgba(255, 255, 255, 0.86);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        border-radius: 24px;
+        padding: 20px;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+        margin-bottom: 18px;
+        animation: adminCardIn 0.5s ease both;
+    }
+    @keyframes adminCardIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .card-title {
+        font-size: 16px;
+        font-weight: 800;
+        color: #151b27;
+        margin: 0 0 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        letter-spacing: -0.02em;
+    }
+    .card-title .material-symbols-outlined {
+        color: var(--primary, #004ac6);
+        font-size: 20px;
+        font-variation-settings: 'FILL' 1;
+    }
+    .card-sub {
+        font-size: 12.5px;
+        color: #64748b;
+        margin: 0 0 14px;
+        font-weight: 600;
+    }
+    .card-sub strong { color: #0f172a; }
+
+    /* ── Status banner ── */
+    .status-banner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border-radius: 18px;
+        margin-bottom: 16px;
+        font-weight: 700;
+        font-size: 13.5px;
+        border: 1px solid transparent;
+    }
+    .status-banner.active {
+        background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+        color: #166534;
+        border-color: rgba(34, 197, 94, 0.18);
+    }
+    .status-banner.inactive {
+        background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+        color: #475569;
+        border-color: rgba(100, 116, 139, 0.18);
+    }
+    .status-banner .pill-icon {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* ── Buttons ── */
+    .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    .gw-btn {
+        flex: 1;
+        min-width: 130px;
+        padding: 13px 14px;
+        border-radius: 14px;
+        border: none;
+        font-weight: 800;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 13.5px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+        text-decoration: none;
+        line-height: 1.1;
+        box-sizing: border-box;
+    }
+    .gw-btn:active { transform: scale(0.96); }
+    .gw-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .gw-btn .material-symbols-outlined { font-size: 18px; }
+    .gw-btn-primary {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: white;
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
+    }
+    .gw-btn-primary:hover:not(:disabled) { box-shadow: 0 14px 30px rgba(37, 99, 235, 0.32); }
+    .gw-btn-outline {
+        background: white;
+        border: 1.5px solid #e2e8f0;
+        color: #1e40af;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+    }
+    .gw-btn-outline:hover:not(:disabled) { background: #f1f5f9; }
+    .gw-btn-success {
+        background: linear-gradient(135deg, #16a34a, #15803d);
+        color: white;
+        box-shadow: 0 10px 24px rgba(22, 163, 74, 0.25);
+    }
+    .gw-btn-announce {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        box-shadow: 0 10px 24px rgba(245, 158, 11, 0.28);
+    }
+    .gw-btn-announce:hover:not(:disabled) { box-shadow: 0 14px 30px rgba(245, 158, 11, 0.36); }
+    .gw-btn-danger {
+        background: #fee2e2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+    }
+    .gw-btn-danger:hover:not(:disabled) { background: #fecaca; }
+    .gw-btn .spinner {
+        display: inline-block;
+        width: 14px; height: 14px;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: btnSpin 0.8s linear infinite;
+    }
+    @keyframes btnSpin { to { transform: rotate(360deg); } }
+
+    /* ── Winner slot ── */
+    .winner-slot {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border: 1.5px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 16px;
+        margin-bottom: 12px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .winner-slot:hover {
+        border-color: rgba(0, 74, 198, 0.18);
+        box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    }
+    .winner-slot h4 {
+        margin: 0 0 10px;
+        font-size: 11.5px;
+        color: #475569;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .winner-slot h4 .material-symbols-outlined { font-size: 16px; color: #f59e0b; font-variation-settings: 'FILL' 1; }
+    .winner-slot h4 .silver { color: #94a3b8; }
+
+    .winner-data {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 14px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+    }
+    .winner-data .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #004ac6, #3f7dff);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(0, 74, 198, 0.2);
+    }
+    .winner-info { flex: 1; min-width: 0; }
+    .winner-email {
+        font-weight: 800;
+        color: #0f172a;
+        font-size: 14px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .winner-ig {
+        color: var(--primary, #004ac6);
+        font-size: 12.5px;
+        font-weight: 700;
+    }
+
+    .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        cursor: pointer;
+        background: #fee2e2;
+        color: #dc2626;
+        transition: transform 0.2s ease, background 0.2s ease;
+        flex-shrink: 0;
+    }
+    .icon-btn:active { transform: scale(0.92); }
+    .icon-btn:hover { background: #fecaca; }
+    .icon-btn .material-symbols-outlined { font-size: 18px; }
+
+    /* ── Entries stat ── */
+    .entries-stat {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border-radius: 14px;
+        margin-bottom: 14px;
+        border: 1px solid #bfdbfe;
+    }
+    .entries-stat .icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary, #004ac6);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+    }
+    .entries-stat .icon .material-symbols-outlined { font-size: 18px; font-variation-settings: 'FILL' 1; }
+    .entries-stat .text { font-size: 12.5px; color: #1e40af; font-weight: 700; }
+    .entries-stat .text strong { color: #0f172a; font-size: 14px; display: block; }
+
+    /* ── Form inputs / modal ── */
+    .form-input {
+        width: 100%;
+        padding: 13px 14px;
+        border-radius: 14px;
+        border: 1.5px solid #e2e8f0;
+        outline: none;
+        margin-bottom: 12px;
+        box-sizing: border-box;
+        font-family: inherit;
+        font-size: 14.5px;
+        font-weight: 600;
+        color: #0f172a;
+        background: #f8fafc;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .form-input:focus {
+        border-color: var(--primary, #004ac6);
+        background: white;
+        box-shadow: 0 0 0 3px rgba(0, 74, 198, 0.12);
+    }
+
+    .admin-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        z-index: 9000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        animation: adminModalFade 0.25s ease;
+    }
+    .admin-modal-overlay.open { display: flex; }
+    @keyframes adminModalFade { from { opacity: 0; } to { opacity: 1; } }
+    .admin-modal {
+        background: white;
+        border-radius: 24px;
+        width: 100%;
+        max-width: 380px;
+        padding: 22px;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25);
+        animation: adminModalIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes adminModalIn {
+        from { transform: scale(0.92) translateY(8px); opacity: 0; }
+        to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    .admin-modal h3 {
+        margin: 0 0 6px;
+        font-size: 18px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.02em;
+    }
+    .admin-modal p {
+        margin: 0 0 14px;
+        font-size: 12.5px;
+        color: #64748b;
+        line-height: 1.5;
+    }
+
+    /* ── Inline toast ── */
+    .inline-toast {
+        position: fixed;
+        left: 50%;
+        bottom: 24px;
+        transform: translate(-50%, 20px);
+        background: #0f172a;
+        color: white;
+        padding: 12px 18px;
+        border-radius: 14px;
+        font-size: 13.5px;
+        font-weight: 700;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        z-index: 11000;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .inline-toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+    .inline-toast .material-symbols-outlined { font-size: 18px; }
+    .inline-toast.success { background: #16a34a; }
+    .inline-toast.error { background: #dc2626; }
+    .inline-toast.live { background: linear-gradient(135deg, #f59e0b, #d97706); }
+
+    .admin-timer-display {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 12px;
+        padding: 8px 14px;
+        border-radius: 12px;
+        background: #eef2ff;
+        color: #1e40af;
+        font-size: 13px;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+    }
+    .admin-timer-display .material-symbols-outlined {
+        font-size: 18px;
+        color: #1e40af;
+    }
+    .admin-timer-display strong {
+        font-weight: 800;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<section class="admin-gw-wrapper">
+    <header class="admin-gw-topbar">
+        <div class="admin-gw-topbar-main">
+            <a href="{% url 'admin_dashboard' %}" class="match-back-btn" aria-label="Back">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+            <div>
+                <span class="kicker">Admin</span>
+                <h2>Giveaway Control</h2>
+            </div>
+        </div>
+        <div class="topbar-status {% if state.is_active %}is-active{% else %}is-inactive{% endif %}" id="topbarStatus">
+            <span class="dot"></span>
+            <span id="topbarStatusLabel">{% if state.is_active %}Active{% else %}Inactive{% endif %}</span>
+        </div>
+    </header>
+
+    <div class="admin-gw-body">
+        <!-- State Management -->
+        <div class="admin-gw-card">
+            <h3 class="card-title">
+                <span class="material-symbols-outlined">settings</span>
+                State Management
+            </h3>
+            <div class="status-banner {% if state.is_active %}active{% else %}inactive{% endif %}" id="stateBanner">
+                <span class="pill-icon">
+                    <span class="material-symbols-outlined" id="stateBannerIcon" style="font-size:18px; font-variation-settings:'FILL' 1;">
+                        {% if state.is_active %}check_circle{% else %}pause_circle{% endif %}
+                    </span>
+                    <span id="stateBannerText">Giveaway is {% if state.is_active %}active{% else %}inactive{% endif %}</span>
+                </span>
+            </div>
+            <div class="btn-group">
+                <button type="button" id="toggleActiveBtn" class="gw-btn {% if state.is_active %}gw-btn-outline{% else %}gw-btn-primary{% endif %}">
+                    <span class="material-symbols-outlined" id="toggleActiveIcon">{% if state.is_active %}pause{% else %}play_arrow{% endif %}</span>
+                    <span id="toggleActiveLabel">{% if state.is_active %}Deactivate{% else %}Activate{% endif %}</span>
+                </button>
+                <button type="button" onclick="openTimerModal()" class="gw-btn gw-btn-outline">
+                    <span class="material-symbols-outlined">timer</span>
+                    Set Timer
+                </button>
+            </div>
+            {% if state.show_timer and state.timer_end_time %}
+            <div class="admin-timer-display" id="adminTimerDisplay">
+                <span class="material-symbols-outlined">schedule</span>
+                <span>Live countdown: <strong id="adminTimerCountdown">--:--</strong></span>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Winner Selection -->
+        <div class="admin-gw-card">
+            <h3 class="card-title">
+                <span class="material-symbols-outlined">military_tech</span>
+                Winner Selection
+            </h3>
+
+            <div class="entries-stat">
+                <div class="icon">
+                    <span class="material-symbols-outlined">group</span>
+                </div>
+                <div class="text">
+                    <strong id="entryCountVal">{{ entry_count }}</strong>
+                    valid entries
+                </div>
+            </div>
+
+            <!-- 1st Prize Slot -->
+            <div class="winner-slot" id="slotFirst" data-type="first">
+                <h4>
+                    <span class="material-symbols-outlined">emoji_events</span>
+                    1st Prize — ₹1000 Cash
+                </h4>
+                <div id="slotFirstBody">
+                    {% if first_winner %}
+                        <div class="winner-data">
+                            <div class="avatar">
+                                <span class="material-symbols-outlined" style="font-size:18px; font-variation-settings:'FILL' 1;">person</span>
+                            </div>
+                            <div class="winner-info">
+                                <div class="winner-email" data-email>{{ first_winner.user.email }}</div>
+                                <div class="winner-ig" data-ig>@{{ first_winner.instagram_username }}</div>
+                            </div>
+                            <button type="button" class="icon-btn" onclick="resetWinner('first')" title="Reset">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
+                        </div>
+                    {% else %}
+                        <div class="btn-group">
+                            <button type="button" onclick="openWinnerModal('first', false)" class="gw-btn gw-btn-primary">
+                                <span class="material-symbols-outlined">casino</span>
+                                Pick Winner
+                            </button>
+                            <button type="button" onclick="openWinnerModal('first', true)" class="gw-btn gw-btn-announce">
+                                <span class="material-symbols-outlined">campaign</span>
+                                Announce Live
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 2nd Prize Slot -->
+            <div class="winner-slot" id="slotSecond" data-type="second">
+                <h4>
+                    <span class="material-symbols-outlined silver">emoji_events</span>
+                    2nd Prize — ₹500 Cash
+                </h4>
+                <div id="slotSecondBody">
+                    {% if second_winner %}
+                        <div class="winner-data">
+                            <div class="avatar">
+                                <span class="material-symbols-outlined" style="font-size:18px; font-variation-settings:'FILL' 1;">person</span>
+                            </div>
+                            <div class="winner-info">
+                                <div class="winner-email" data-email>{{ second_winner.user.email }}</div>
+                                <div class="winner-ig" data-ig>@{{ second_winner.instagram_username }}</div>
+                            </div>
+                            <button type="button" class="icon-btn" onclick="resetWinner('second')" title="Reset">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
+                        </div>
+                    {% else %}
+                        <div class="btn-group">
+                            <button type="button" onclick="openWinnerModal('second', false)" class="gw-btn gw-btn-primary">
+                                <span class="material-symbols-outlined">casino</span>
+                                Pick Winner
+                            </button>
+                            <button type="button" onclick="openWinnerModal('second', true)" class="gw-btn gw-btn-announce">
+                                <span class="material-symbols-outlined">campaign</span>
+                                Announce Live
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if is_admin %}
+            <button type="button" onclick="confirmReset()" class="gw-btn gw-btn-danger" style="width:100%; margin-top:8px;">
+                <span class="material-symbols-outlined" style="font-size:18px;">refresh</span>
+                Reset All Data
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Winner Selection Modal -->
+<div class="admin-modal-overlay" id="winnerModal">
+    <div class="admin-modal" role="dialog" aria-modal="true" aria-labelledby="winnerModalTitle">
+        <h3 id="winnerModalTitle">Select Winner</h3>
+        <p>Enter an email to manually pick, or leave empty for a random choice.</p>
+        <input type="email" id="winnerEmail" class="form-input" placeholder="User email (optional)" autocomplete="off">
+        <div class="btn-group">
+            <button type="button" onclick="closeWinnerModal()" class="gw-btn gw-btn-outline">Cancel</button>
+            <button type="button" id="modalSubmit" class="gw-btn gw-btn-primary">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<!-- Timer Modal -->
+<div class="admin-modal-overlay" id="timerModal">
+    <div class="admin-modal" role="dialog" aria-modal="true">
+        <h3>Set Giveaway Timer</h3>
+        <p>Show a live countdown on the giveaway page. Duration in seconds.</p>
+        <input type="number" id="timerDuration" class="form-input" placeholder="Seconds" min="1" value="30">
+        <div class="btn-group">
+            <button type="button" onclick="closeTimerModal()" class="gw-btn gw-btn-outline">Cancel</button>
+            <button type="button" onclick="submitTimer(false)" class="gw-btn gw-btn-danger">Clear</button>
+            <button type="button" onclick="submitTimer(true)" class="gw-btn gw-btn-primary">Set Timer</button>
+        </div>
+    </div>
+</div>
+
+<!-- Inline toast -->
+<div class="inline-toast" id="inlineToast">
+    <span class="material-symbols-outlined" id="inlineToastIcon">check_circle</span>
+    <span id="inlineToastText">Done</span>
+</div>
+
+{% endblock %}
+
+{% block giveaway_js %}
+<script>
+(function() {
+    'use strict';
+
+    var csrfToken = '{{ csrf_token }}';
+    var targetWinnerType = '';
+    var isLiveAnnounce = false;
+    var adminStateUrl = window.location.pathname;
+
+    function getCsrf() {
+        return csrfToken;
+    }
+
+    function setBtnLoading(btn, label) {
+        if (!btn) return;
+        btn.dataset.label = btn.dataset.label || btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> ' + (label || 'Working…');
+    }
+    function restoreBtn(btn) {
+        if (!btn || !btn.dataset.label) return;
+        btn.disabled = false;
+        btn.innerHTML = btn.dataset.label;
+    }
+
+    function showToast(msg, kind) {
+        var el = document.getElementById('inlineToast');
+        var icon = document.getElementById('inlineToastIcon');
+        var txt = document.getElementById('inlineToastText');
+        if (!el) return;
+        el.classList.remove('success', 'error', 'live');
+        if (kind === 'error') el.classList.add('error');
+        else if (kind === 'live') el.classList.add('live');
+        else el.classList.add('success');
+        if (icon) icon.textContent = kind === 'error' ? 'error' : (kind === 'live' ? 'campaign' : 'check_circle');
+        if (txt) txt.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(el._t);
+        el._t = setTimeout(function() { el.classList.remove('show'); }, 2600);
+    }
+
+    // ── Activate / Deactivate ─────────────────────────────────
+    var toggleBtn = document.getElementById('toggleActiveBtn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+            setBtnLoading(toggleBtn, 'Updating…');
+            var fd = new FormData();
+            fd.append('action', 'toggle_active');
+            fd.append('csrfmiddlewaretoken', getCsrf());
+            fetch(adminStateUrl, { method: 'POST', body: fd, headers: { 'X-CSRFToken': getCsrf() } })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        applyState(data.is_active);
+                        showToast(data.is_active ? 'Giveaway is now live' : 'Giveaway paused', data.is_active ? 'success' : 'success');
+                    } else {
+                        showToast(data.error || 'Failed to update', 'error');
+                    }
+                })
+                .catch(function() { showToast('Network error', 'error'); })
+                .then(function() { restoreBtn(toggleBtn); });
+        });
+    }
+
+    function applyState(isActive) {
+        var banner = document.getElementById('stateBanner');
+        var bannerIcon = document.getElementById('stateBannerIcon');
+        var bannerText = document.getElementById('stateBannerText');
+        var top = document.getElementById('topbarStatus');
+        var topLabel = document.getElementById('topbarStatusLabel');
+        var icon = document.getElementById('toggleActiveIcon');
+        var label = document.getElementById('toggleActiveLabel');
+
+        if (isActive) {
+            banner.classList.remove('inactive');
+            banner.classList.add('active');
+            if (bannerIcon) bannerIcon.textContent = 'check_circle';
+            if (bannerText) bannerText.textContent = 'Giveaway is active';
+            top.classList.remove('is-inactive');
+            top.classList.add('is-active');
+            if (topLabel) topLabel.textContent = 'Active';
+            toggleBtn.classList.remove('gw-btn-primary');
+            toggleBtn.classList.add('gw-btn-outline');
+            if (icon) icon.textContent = 'pause';
+            if (label) label.textContent = 'Deactivate';
+        } else {
+            banner.classList.remove('active');
+            banner.classList.add('inactive');
+            if (bannerIcon) bannerIcon.textContent = 'pause_circle';
+            if (bannerText) bannerText.textContent = 'Giveaway is inactive';
+            top.classList.remove('is-active');
+            top.classList.add('is-inactive');
+            if (topLabel) topLabel.textContent = 'Inactive';
+            toggleBtn.classList.remove('gw-btn-outline');
+            toggleBtn.classList.add('gw-btn-primary');
+            if (icon) icon.textContent = 'play_arrow';
+            if (label) label.textContent = 'Activate';
+        }
+    }
+
+    // ── Winner modal ──────────────────────────────────────────
+    window.openWinnerModal = function(type, live) {
+        targetWinnerType = type;
+        isLiveAnnounce = !!live;
+        var title = document.getElementById('winnerModalTitle');
+        if (title) {
+            title.textContent = (live ? 'Announce Live — ' : 'Pick ') +
+                (type === 'first' ? '1st' : '2nd') + ' Prize Winner';
+        }
+        var email = document.getElementById('winnerEmail');
+        if (email) email.value = '';
+        var submit = document.getElementById('modalSubmit');
+        if (submit) {
+            submit.classList.remove('gw-btn-primary', 'gw-btn-announce');
+            submit.classList.add(live ? 'gw-btn-announce' : 'gw-btn-primary');
+            submit.innerHTML = live
+                ? '<span class="material-symbols-outlined">campaign</span> Announce Live'
+                : '<span class="material-symbols-outlined">check</span> Confirm';
+        }
+        document.getElementById('winnerModal').classList.add('open');
+    };
+    window.closeWinnerModal = function() {
+        document.getElementById('winnerModal').classList.remove('open');
+    };
+
+    var modalSubmitBtn = document.getElementById('modalSubmit');
+    if (modalSubmitBtn) {
+        modalSubmitBtn.addEventListener('click', function() {
+            if (!targetWinnerType) return;
+            var emailVal = (document.getElementById('winnerEmail').value || '').trim();
+            setBtnLoading(modalSubmitBtn, isLiveAnnounce ? 'Announcing…' : 'Picking…');
+            var fd = new FormData();
+            fd.append('action', 'select_winner');
+            fd.append('winner_type', targetWinnerType);
+            if (isLiveAnnounce) fd.append('is_live', 'true');
+            if (emailVal) fd.append('winner_email', emailVal);
+            fd.append('csrfmiddlewaretoken', getCsrf());
+            fetch(adminStateUrl, { method: 'POST', body: fd, headers: { 'X-CSRFToken': getCsrf() } })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) {
+                        updateSlot(targetWinnerType, data.winner);
+                        closeWinnerModal();
+                        if (isLiveAnnounce) {
+                            showToast('Live announcement pushed to all users', 'live');
+                        } else {
+                            showToast('Winner saved (not announced yet)', 'success');
+                        }
+                    } else {
+                        showToast(data.error || 'Failed to pick winner', 'error');
+                    }
+                })
+                .catch(function() { showToast('Network error', 'error'); })
+                .then(function() { restoreBtn(modalSubmitBtn); });
+        });
+    }
+
+    function updateSlot(type, winner) {
+        var bodyId = type === 'first' ? 'slotFirstBody' : 'slotSecondBody';
+        var body = document.getElementById(bodyId);
+        if (!body || !winner) return;
+        body.innerHTML =
+            '<div class="winner-data" style="animation: adminCardIn 0.5s ease both;">' +
+                '<div class="avatar">' +
+                    '<span class="material-symbols-outlined" style="font-size:18px; font-variation-settings:\'FILL\' 1;">person</span>' +
+                '</div>' +
+                '<div class="winner-info">' +
+                    '<div class="winner-email">' + escapeHtml(winner.email) + '</div>' +
+                    '<div class="winner-ig">@' + escapeHtml(winner.instagram_username) + '</div>' +
+                '</div>' +
+                '<button type="button" class="icon-btn" onclick="resetWinner(\'' + type + '\')" title="Reset">' +
+                    '<span class="material-symbols-outlined">delete</span>' +
+                '</button>' +
+            '</div>';
+    }
+
+    function escapeHtml(s) {
+        return String(s || '').replace(/[&<>"']/g, function(c) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+        });
+    }
+
+    // ── Reset winner ──────────────────────────────────────────
+    window.resetWinner = function(type) {
+        if (!window.confirm('Reset this winner slot?')) return;
+        var fd = new FormData();
+        fd.append('action', 'reset_winner');
+        fd.append('winner_type', type);
+        fd.append('csrfmiddlewaretoken', getCsrf());
+        fetch(adminStateUrl, { method: 'POST', body: fd, headers: { 'X-CSRFToken': getCsrf() } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var body = document.getElementById(type === 'first' ? 'slotFirstBody' : 'slotSecondBody');
+                    if (body) {
+                        body.innerHTML = renderEmptySlot(type);
+                    }
+                    showToast('Winner slot reset', 'success');
+                } else {
+                    showToast(data.error || 'Failed to reset', 'error');
+                }
+            })
+            .catch(function() { showToast('Network error', 'error'); });
+    };
+
+    function renderEmptySlot(type) {
+        return '' +
+            '<div class="btn-group">' +
+                '<button type="button" onclick="openWinnerModal(\'' + type + '\', false)" class="gw-btn gw-btn-primary">' +
+                    '<span class="material-symbols-outlined">casino</span> Pick Winner' +
+                '</button>' +
+                '<button type="button" onclick="openWinnerModal(\'' + type + '\', true)" class="gw-btn gw-btn-announce">' +
+                    '<span class="material-symbols-outlined">campaign</span> Announce Live' +
+                '</button>' +
+            '</div>';
+    }
+
+    // ── Timer ─────────────────────────────────────────────────
+    window.openTimerModal = function() {
+        document.getElementById('timerModal').classList.add('open');
+    };
+    window.closeTimerModal = function() {
+        document.getElementById('timerModal').classList.remove('open');
+    };
+    window.submitTimer = function(show) {
+        var dur = document.getElementById('timerDuration').value;
+        var fd = new FormData();
+        fd.append('action', 'set_timer');
+        fd.append('show_timer', show ? 'true' : 'false');
+        if (show) fd.append('duration', dur);
+        fd.append('csrfmiddlewaretoken', getCsrf());
+        fetch(adminStateUrl, { method: 'POST', body: fd, headers: { 'X-CSRFToken': getCsrf() } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    closeTimerModal();
+                    showToast(show ? 'Timer set' : 'Timer cleared', 'success');
+                } else {
+                    showToast(data.error || 'Failed', 'error');
+                }
+            })
+            .catch(function() { showToast('Network error', 'error'); });
+    };
+
+    // ── Reset all ─────────────────────────────────────────────
+    window.confirmReset = function() {
+        window.customConfirm(
+            'This will delete ALL entries and winners. Are you 100% sure?',
+            'Hard Reset',
+            'Yes, Reset',
+            'Cancel'
+        ).then(function(ok) {
+            if (!ok) return;
+            var fd = new FormData();
+            fd.append('action', 'clear_all');
+            fd.append('csrfmiddlewaretoken', getCsrf());
+            fetch(adminStateUrl, { method: 'POST', body: fd, headers: { 'X-CSRFToken': getCsrf() } })
+                .then(function() { location.reload(); });
+        });
+    };
+
+    // ── Admin Timer ──────────────────────────────────────────
+    (function() {
+        var el = document.getElementById('adminTimerCountdown');
+        if (!el) return;
+        var endTimeStr = '{{ state.timer_end_time|date:"c"|default:"" }}';
+        if (!endTimeStr) return;
+        var endTime = new Date(endTimeStr).getTime();
+        function tick() {
+            var diff = endTime - new Date().getTime();
+            if (diff <= 0) { el.textContent = '0:00'; return; }
+            var totalSec = Math.floor(diff / 1000);
+            var m = Math.floor(totalSec / 60);
+            var s = totalSec % 60;
+            el.textContent = String(m) + ':' + String(s).padStart(2, '0');
+        }
+        tick();
+        setInterval(tick, 1000);
+    })();
+
+    // ── Close modals on backdrop click ────────────────────────
+    document.addEventListener('click', function(e) {
+        if (e.target === document.getElementById('winnerModal')) closeWinnerModal();
+        if (e.target === document.getElementById('timerModal')) closeTimerModal();
+    });
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeWinnerModal();
+            closeTimerModal();
+        }
+    });
+})();
+</script>
+{% endblock %}

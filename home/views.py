@@ -252,7 +252,7 @@ def home_hub(request):
     if not profile.is_face_verified and not request.session.get('skipped_verification'):
         return redirect('verify')
 
-    from .models import Confession, Announcement, GiveawayEntry
+    from .models import Confession, Announcement, GiveawayEntry, GiveawayState
     latest_confession = Confession.objects.filter(moderation_status='approved', is_flagged=False).order_by('-created_at').first()
     latest_update = Announcement.objects.order_by('-created_at').first()
     total_users = User.objects.count() + 50
@@ -265,6 +265,15 @@ def home_hub(request):
     
     giveaway_entered = GiveawayEntry.objects.filter(user=user).exists()
     giveaway_count = GiveawayEntry.objects.count()
+
+    show_giveaway = False
+    giveaway_state = None
+    try:
+        state = GiveawayState.objects.get(pk=1)
+        show_giveaway = state.is_active
+        giveaway_state = state
+    except GiveawayState.DoesNotExist:
+        pass
     
     return render(request, "home_hub.html", {
         "profile": profile,
@@ -278,6 +287,8 @@ def home_hub(request):
         "checklist": checklist,
         "giveaway_entered": giveaway_entered,
         "giveaway_count": giveaway_count,
+        "show_giveaway": show_giveaway,
+        "giveaway_state": giveaway_state,
     })
 
 
@@ -292,11 +303,20 @@ def giveaway_page(request):
     giveaway_entered = GiveawayEntry.objects.filter(user=user).exists()
     giveaway_count = GiveawayEntry.objects.count()
     
+    # Fetch participant names for the shuffle noise — all entries so everyone appears
+    shuffle_noise = list(
+        GiveawayEntry.objects.exclude(user=user)
+        .select_related('user__profile')
+        .order_by('?')[:2000]
+    )
+    shuffle_noise = [e.user.profile.name for e in shuffle_noise if e.user.profile and e.user.profile.name]
+
     # Get winners if any
     try:
         giveaway_first_winner = GiveawayWinner.objects.get(winner_type='first')
     except GiveawayWinner.DoesNotExist:
         giveaway_first_winner = None
+
     try:
         giveaway_second_winner = GiveawayWinner.objects.get(winner_type='second')
     except GiveawayWinner.DoesNotExist:
@@ -315,6 +335,7 @@ def giveaway_page(request):
         "giveaway_first_winner": giveaway_first_winner,
         "giveaway_second_winner": giveaway_second_winner,
         "giveaway_state": giveaway_state,
+        "shuffle_noise": json.dumps(shuffle_noise or ["@srm_student", "@campus_hero", "@match_king", "@winner_x"]),
     })
 
 
@@ -2242,12 +2263,17 @@ def admin_giveaway_control(request):
             else:
                 # Random selection from valid entries
                 valid_entries = [e for e in entries if e.followed_confirmed and e.shared_confirmed]
+                # Exclude users who are already winners (1st prize winner can't also be 2nd)
+                existing_winner_user_ids = set(
+                    GiveawayWinner.objects.values_list('user_id', flat=True)
+                )
+                valid_entries = [e for e in valid_entries if e.user_id not in existing_winner_user_ids]
                 if not valid_entries:
                     return JsonResponse({
-                        'success': False, 
-                        'error': 'No valid entries found (must have followed and shared)'
+                        'success': False,
+                        'error': 'No valid entries remaining (all valid entries are already winners)'
                     }, status=400)
-                
+
                 import random
                 selected_entry = random.choice(valid_entries)
                 winner_user = selected_entry.user
@@ -2280,6 +2306,44 @@ def admin_giveaway_control(request):
             state.updated_by = request.user
             state.save()
             
+            # Only broadcast if this was triggered as a "Live Announcement"
+            if request.POST.get('is_live') == 'true':
+                try:
+                    # Shuffle noise: pull participant names
+                    noise_list = list(
+                        GiveawayEntry.objects.exclude(user=winner_user)
+                        .select_related('user__profile')
+                        .order_by('?')[:500]
+                    )
+                    noise_list = [e.user.profile.name for e in noise_list if e.user.profile and e.user.profile.name]
+
+                    masked_email = (
+                        winner_user.email.split('@')[0][:3] + '***@' + winner_user.email.split('@')[1]
+                        if '@' in winner_user.email else winner_user.email
+                    )
+
+                    # Profile name (for the congrats line) — never expose IG handle publicly
+                    try:
+                        winner_name = (winner_user.profile.name or '').strip()
+                        winner_pic = winner_user.profile.get_profile_pic_url
+                    except Exception:
+                        winner_name = ''
+                        winner_pic = ''
+                    if not winner_name:
+                        winner_name = 'Winner'
+
+                    broadcast_event('giveaway', 'winner_announced', {
+                        'winner_type': winner_type,
+                        'user_id': winner_user.id,
+                        'name': winner_name,
+                        'pic': winner_pic,
+                        'email': masked_email,
+                        'ig': winner_instagram_username,
+                        'noise': noise_list
+                    })
+                except Exception as e:
+                    print(f"Pusher Giveaway Error: {e}")
+
             return JsonResponse({
                 'success': True,
                 'winner': {

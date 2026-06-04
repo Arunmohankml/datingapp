@@ -339,12 +339,13 @@
     /* ── Giveaway Section (Card Link) ── */
     .giveaway-card {
         position: relative;
+        margin-top: 6px;
         overflow: hidden;
         border-radius: 28px;
-        padding: 24px;
+        padding: 26px;
         background: rgba(255, 255, 255, 0.84);
         border: 1px solid rgba(0, 74, 198, 0.08);
-        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
         backdrop-filter: blur(10px);
         text-decoration: none;
         display: block;
@@ -416,6 +417,28 @@
         font-size: 12px;
         font-weight: 700;
     }
+    .giveaway-count .material-symbols-outlined {
+        font-size: 16px;
+        color: #496179;
+    }
+    .giveaway-timer {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #eef2ff;
+        color: #1e40af;
+        font-size: 12px;
+        font-weight: 700;
+        margin-left: 8px;
+        font-variant-numeric: tabular-nums;
+    }
+    .giveaway-timer .material-symbols-outlined {
+        font-size: 16px;
+        color: #1e40af;
+        font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 20;
+    }
 
     .giveaway-count .material-symbols-outlined {
         font-size: 16px;
@@ -432,7 +455,7 @@
         border: none;
         border-radius: 999px;
         background: linear-gradient(135deg, #004ac6, #3f7dff);
-        color: #ffffff;
+        color: #ffffff !important;
         font-size: 15px;
         font-weight: 800;
         cursor: pointer;
@@ -444,6 +467,12 @@
 
     .giveaway-btn:active {
         transform: scale(0.97);
+    }
+
+    .giveaway-btn.entered {
+        background: #f1f5f9;
+        color: #475569 !important;
+        box-shadow: none;
     }
 
     .giveaway-btn .material-symbols-outlined {
@@ -485,6 +514,7 @@
         </a>
     </div>
 
+    {% if show_giveaway %}
     <a href="{% url 'giveaway_page' %}" class="giveaway-card">
         <div class="giveaway-glow"></div>
         <div class="giveaway-body">
@@ -492,23 +522,29 @@
                 <span class="material-symbols-outlined" style="font-size:14px;">celebration</span>
                 Giveaway
             </div>
-            <h2 class="giveaway-heading">SRM Match Giveaway 🎉</h2>
+            <h2 class="giveaway-heading">SRM Match Giveaway</h2>
             <p class="giveaway-sub">
-                Complete your profile, follow <a href="https://www.instagram.com/srm_match_/" target="_blank" rel="noopener noreferrer">@srm_match_</a>,
-                and share the giveaway post with 2 SRM friends to win cash prizes!
+                Win cash prizes! Follow us, complete your profile, and share with your campus friends.
             </p>
             <div class="giveaway-meta">
                 <span class="giveaway-count">
-                    <span class="material-symbols-outlined">group</span>
+                    <span class="material-symbols-outlined">groups</span>
                     <span>{{ giveaway_count }}</span> students joined
                 </span>
+                {% if giveaway_state and giveaway_state.show_timer and giveaway_state.timer_end_time %}
+                <span class="giveaway-timer" id="hubGiveawayTimer">
+                    <span class="material-symbols-outlined">schedule</span>
+                    <span id="hubTimerDisplay">--:--</span>
+                </span>
+                {% endif %}
             </div>
-            <span class="giveaway-btn">
-                {% if giveaway_entered %}View Results{% else %}Enter Giveaway{% endif %}
+            <div class="giveaway-btn entered">
+                Go to Giveaway
                 <span class="material-symbols-outlined">arrow_forward</span>
-            </span>
+            </div>
         </div>
     </a>
+    {% endif %}
 
     <div class="panel">
         <div class="panel-head">
@@ -564,4 +600,26 @@
         <div class="pulse-right"><span>{{ total_users }}</span> members live in the network</div>
     </div>
 </section>
+
+{% if giveaway_state and giveaway_state.show_timer and giveaway_state.timer_end_time %}
+<script>
+(function() {
+    var endTimeStr = '{{ giveaway_state.timer_end_time|date:"c"|default:"" }}';
+    if (!endTimeStr) return;
+    var endTime = new Date(endTimeStr).getTime();
+    var display = document.getElementById('hubTimerDisplay');
+    if (!display) return;
+    function update() {
+        var diff = endTime - new Date().getTime();
+        if (diff <= 0) { display.textContent = '0:00'; return; }
+        var totalSec = Math.floor(diff / 1000);
+        var m = Math.floor(totalSec / 60);
+        var s = totalSec % 60;
+        display.textContent = String(m) + ':' + String(s).padStart(2, '0');
+    }
+    update();
+    setInterval(update, 1000);
+})();
+</script>
+{% endif %}
 {% endblock %}

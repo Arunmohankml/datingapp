@@ -184,7 +184,6 @@
     .btn:active { transform: scale(0.96); }
     .btn-primary { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; box-shadow: 0 4px 12px rgba(37,99,235,0.2); }
     .btn-success { background: #16a34a; color: white; }
-    .btn-warning { background: #f59e0b; color: white; }
     .btn-danger { background: #ef4444; color: white; }
     .btn-outline { background: transparent; border: 1px solid #cbd5e1; color: #475569; }
     .btn-outline:hover { background: #f1f5f9; }
@@ -283,14 +282,15 @@
             <button class="admin-tab active" onclick="switchAdminTab('overview', this)"><i class="fas fa-chart-pie"></i><span class="admin-tab-text">Overview</span></button>
             <button class="admin-tab" onclick="switchAdminTab('moderation', this)">
                 <i class="fas fa-shield-alt"></i><span class="admin-tab-text">Moderation</span>
-                {% if face_reviews.count > 0 or pending_confessions.count > 0 or user_reports.count > 0 %}
-                <span class="tab-badge">{{ face_reviews.count|add:pending_confessions.count|add:user_reports.count }}</span>
+                {% with total_mod=face_reviews.count|add:pending_confessions.count|add:user_reports.count %}
+                {% if total_mod > 0 %}
+                <span class="tab-badge">{{ total_mod }}</span>
                 {% endif %}
+                {% endwith %}
             </button>
             {% if is_admin %}
             <button class="admin-tab" onclick="switchAdminTab('users', this)"><i class="fas fa-users"></i><span class="admin-tab-text">Users Directory</span></button>
-            <a href="{% url 'admin_manage_staff' %}" class="admin-tab" style="text-decoration: none;"><i class="fas fa-users-cog"></i><span class="admin-tab-text">Staffs</span></a>
-            <button class="admin-tab" onclick="switchAdminTab('system', this)"><i class="fas fa-server"></i><span class="admin-tab-text">System</span></button>
+            <button class="admin-tab" onclick="switchAdminTab('system', this)"><i class="fas fa-terminal"></i><span class="admin-tab-text">System</span></button>
             {% endif %}
         </div>
     </div>
@@ -326,13 +326,13 @@
                 <div class="admin-card-header">
                     <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
                 </div>
-                <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                    <a href="{% url 'announcements' %}" class="btn btn-primary"><i class="fas fa-bullhorn"></i> Post Announcement</a>
+                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:12px;">
+                    <a href="{% url 'announcements' %}" class="btn btn-outline" style="border-color: rgba(0,74,198,0.15);"><i class="fas fa-bullhorn"></i> Announcements</a>
+                    <a href="{% url 'admin_giveaway_control' %}" class="btn btn-primary"><i class="fas fa-gift"></i> Giveaway Control</a>
                     {% if is_admin %}
+                    <a href="{% url 'admin_manage_staff' %}" class="btn btn-outline"><i class="fas fa-users-cog"></i> Manage Staff</a>
                     <a href="{% url 'admin_manual_verification' %}" class="btn btn-success"><i class="fas fa-user-check"></i> Manual Verify Page</a>
-                    <a href="{% url 'admin_giveaway_control' %}" class="btn btn-warning"><i class="fas fa-gift"></i> Giveaway Control</a>
                     {% endif %}
-                    <button onclick="switchAdminTab('moderation', document.querySelector('[onclick*=\'moderation\']'))" class="btn btn-outline"><i class="fas fa-broom"></i> Clear Queue</button>
                 </div>
             </div>
         </div>
@@ -524,14 +524,13 @@
                     </div>
                     {% endfor %}
                 </div>
+                {% else %}
+                <div class="empty-state"><i class="fas fa-check-circle" style="color:#16a34a;"></i><h3>No Reports</h3></div>
+                {% endif %}
             </div>
         </div>
-        {% else %}
-        <div class="empty-state"><i class="fas fa-check-circle" style="color:#16a34a;"></i><h3>No Reports</h3></div>
-        {% endif %}
-    </div>
 
-    <!-- ================= USERS DIRECTORY TAB ================= -->
+        <!-- ================= USERS DIRECTORY TAB ================= -->
         {% if is_admin %}
         <div id="tab-users" class="admin-panel">
             

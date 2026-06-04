@@ -702,6 +702,16 @@ class GiveawayWinner(models.Model):
     def __str__(self):
         return f"{self.get_winner_type_display()}: {self.user.email}"
 
+    @property
+    def display_name(self):
+        """Return the profile's full name if set, never the IG handle."""
+        try:
+            profile = self.user.profile
+            name = (getattr(profile, 'name', '') or '').strip()
+        except Exception:
+            name = ''
+        return name if name else 'Winner'
+
     class Meta:
         verbose_name = "Giveaway Winner"
         verbose_name_plural = "Giveaway Winners"
