@@ -293,49 +293,6 @@
         color: #5d7aa8;
     }
 
-    .pulse-widget {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 18px 20px;
-        border-radius: 24px;
-        background: rgba(255, 255, 255, 0.74);
-        border: 1px solid rgba(0, 74, 198, 0.08);
-        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
-    }
-
-    .pulse-left {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .pulse-left .material-symbols-outlined {
-        font-size: 21px;
-        color: #006242;
-        font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
-    }
-
-    .pulse-label {
-        font-size: 12px;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: #4d6b58;
-    }
-
-    .pulse-right {
-        font-size: 15px;
-        font-weight: 700;
-        color: #151b27;
-        text-align: right;
-    }
-
-    .pulse-right span {
-        color: var(--primary);
-    }
-
     /* ── Giveaway Section (Card Link) ── */
     .giveaway-card {
         position: relative;
@@ -592,13 +549,6 @@
         {% endif %}
     </div>
 
-    <div class="pulse-widget">
-        <div class="pulse-left">
-            <span class="material-symbols-outlined">verified_user</span>
-            <div class="pulse-label">Campus Pulse</div>
-        </div>
-        <div class="pulse-right"><span>{{ total_users }}</span> members live in the network</div>
-    </div>
 </section>
 
 {% if giveaway_state and giveaway_state.show_timer and giveaway_state.timer_end_time %}

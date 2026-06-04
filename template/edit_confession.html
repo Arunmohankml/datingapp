@@ -2,36 +2,135 @@
 
 {% block head %}
 <style>
-    .edit-page {
-        padding: 20px 0;
+    html, body {
+        height: 100%;
+        height: 100dvh;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+        background: #f7f9fb;
+        padding: 0 !important;
+        margin: 0 !important;
     }
+
+    .container {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        height: 100%;
+        box-sizing: border-box;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+
+    .edit-page {
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%;
+        max-width: 560px;
+        margin: 0 auto;
+        background: linear-gradient(180deg, #fbfcff 0%, #f7f9fb 58%, #eff4fb 100%);
+        z-index: 10;
+    }
+
+    .edit-topbar {
+        flex-shrink: 0;
+        background: rgba(247, 249, 251, 0.78);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-bottom: 1px solid rgba(0, 74, 198, 0.08);
+        padding: calc(10px + env(safe-area-inset-top)) 20px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        z-index: 20;
+    }
+    .edit-topbar-main {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+    }
+    .edit-topbar h2 {
+        margin: 0;
+        font-size: 22px;
+        color: #151b27;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+    }
+    .match-back-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.88);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-decoration: none;
+        color: var(--primary, #004ac6);
+        border: 1px solid rgba(0, 74, 198, 0.08);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+        transition: 0.2s ease;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    .match-back-btn:active {
+        transform: scale(0.94);
+    }
+
+    .edit-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 14px 14px 24px;
+        min-height: 0;
+        overflow-y: auto;
+        scrollbar-width: none;
+    }
+    .edit-body::-webkit-scrollbar { display: none; }
+
     .edit-card {
         background: var(--surface);
         border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 24px;
-        box-shadow: var(--shadow-sm);
+        border-radius: 24px;
+        padding: 16px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
     }
-    .edit-card h2 {
-        margin-top: 0;
-        margin-bottom: 20px;
-        font-size: 20px;
-        color: var(--primary);
-    }
+
     textarea {
+        display: block;
         width: 100%;
+        min-height: 96px;
+        max-height: 60vh;
         border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 12px;
+        border-radius: 16px;
+        padding: 14px 16px;
         font-family: inherit;
         font-size: 15px;
-        margin-bottom: 20px;
+        line-height: 1.55;
+        margin-bottom: 14px;
         outline: none;
         resize: none;
+        overflow-y: auto;
+        background: #fbfcff;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        box-sizing: border-box;
+        height: auto;
     }
     textarea:focus {
         border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(0, 74, 198, 0.1);
     }
+    textarea::-webkit-scrollbar { width: 6px; }
+    textarea::-webkit-scrollbar-thumb { background: rgba(0, 74, 198, 0.2); border-radius: 999px; }
+
     .actions {
         display: flex;
         gap: 12px;
@@ -42,36 +141,80 @@
         color: white;
         border: none;
         padding: 12px;
-        border-radius: 12px;
+        border-radius: 14px;
         font-weight: 700;
         cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
     }
+    .btn-save:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(0, 74, 198, 0.25);
+    }
+    .btn-save:active { transform: scale(0.98); }
     .btn-cancel {
         flex: 1;
         background: #f1f5f9;
         color: #64748b;
         border: none;
         padding: 12px;
-        border-radius: 12px;
+        border-radius: 14px;
         font-weight: 700;
         text-align: center;
         text-decoration: none;
+        transition: background 0.2s;
     }
+    .btn-cancel:hover { background: #e2e8f0; }
 </style>
 {% endblock %}
 
 {% block body %}
-<div class="edit-page">
-    <div class="edit-card">
-        <h2>Edit Confession</h2>
+<section class="edit-page">
+    <div class="edit-topbar">
+        <div class="edit-topbar-main">
+            <a href="{% url 'confession_detail' confession.id %}" class="match-back-btn" aria-label="Back">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+            <h2>Edit Confession</h2>
+        </div>
+    </div>
+
+    <div class="edit-body">
         <form method="POST">
             {% csrf_token %}
-            <textarea name="content" rows="6">{{ confession.content }}</textarea>
-            <div class="actions">
-                <a href="{% url 'confession_detail' confession.id %}" class="btn-cancel">Cancel</a>
-                <button type="submit" class="btn-save">Save Changes</button>
+            <div class="edit-card">
+                <textarea id="confession-textarea" name="content" placeholder="Edit your confession…">{{ confession.content }}</textarea>
+                <div class="actions">
+                    <a href="{% url 'confession_detail' confession.id %}" class="btn-cancel">Cancel</a>
+                    <button type="submit" class="btn-save">Save Changes</button>
+                </div>
             </div>
         </form>
     </div>
-</div>
+</section>
+
+<script>
+(function() {
+    const ta = document.getElementById('confession-textarea');
+    if (!ta) return;
+
+    function getMaxHeight() {
+        const m = window.getComputedStyle(ta).maxHeight;
+        if (!m || m === 'none') return Infinity;
+        if (m.endsWith('px')) return parseFloat(m);
+        if (m.endsWith('vh')) return (parseFloat(m) / 100) * window.innerHeight;
+        return Infinity;
+    }
+
+    function autoGrow() {
+        const maxH = getMaxHeight();
+        ta.style.height = 'auto';
+        const needed = ta.scrollHeight;
+        ta.style.height = Math.min(needed, maxH) + 'px';
+    }
+
+    ta.addEventListener('input', autoGrow);
+    window.addEventListener('resize', autoGrow);
+    autoGrow();
+})();
+</script>
 {% endblock %}
