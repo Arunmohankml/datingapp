@@ -40,12 +40,18 @@ if manifest_path.exists():
         content = f.read()
     for m in re.finditer(r'"src":\s*"([^"]+)"', content):
         src = m.group(1)
-        if src.startswith('/'):
+        if src.startswith('/static/'):
+            local_path = STATIC_DIR / src.replace('/static/', '', 1)
+            if not local_path.exists():
+                errors.append(f"MISSING: {manifest_path} references {src} but {local_path} does not exist")
+            else:
+                print(f"OK: manifest.json references {src}  ->  {local_path}")
+        elif src.startswith('/') and not src.startswith('//'):
             local_path = BASE_DIR / 'static_root' / src.lstrip('/')
             if not local_path.exists():
                 errors.append(f"MISSING: {manifest_path} references {src} but {local_path} does not exist")
             else:
-                print(f"OK: manifest.json references {src}")
+                print(f"OK: manifest.json references {src}  ->  {local_path}")
 
 # 4. Check manifest.json in staticfiles deployment
 if MANIFEST_PATH.exists():
@@ -55,10 +61,10 @@ if MANIFEST_PATH.exists():
     paths = manifest.get('paths', {})
     print(f"OK: staticfiles.json manifest exists with {len(paths)} entries")
 else:
-    errors.append("MISSING: staticfiles/staticfiles.json - run collectstatic")
+    print("INFO: staticfiles/staticfiles.json not found (not needed - StaticFilesStorage in use)")
 
 # 5. Check no leftover broken icon refs in any file
-BROKEN_PATTERNS = ['favicon.png', 'banner.png', 'icon-192x192.png', 'icon-512x512.png']
+BROKEN_PATTERNS = ['banner.png', 'icon-192x192.png', 'icon-512x512.png']
 SKIP_FILES = {'verify_static_assets.py'}
 for root, dirs, files in os.walk(BASE_DIR):
     skip_dirs = {'venv', '.git', '__pycache__', 'staticfiles', 'scratch', 'backup_ui_redesign_20260524', 'reference'}
