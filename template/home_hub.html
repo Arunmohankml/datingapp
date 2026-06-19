@@ -1362,7 +1362,9 @@
     var ME = {
         id: {{ request.user.id }},
         name: '{{ request.user.profile.name|escapejs|default:"" }}',
-        pic: '{{ request.user.profile.profile_pic|escapejs|default:"" }}'
+        username: '{{ request.user.username|escapejs }}',
+        pic: '{{ request.user.profile.profile_pic|escapejs|default:"" }}',
+        sessionPeerId: '{{ request.user.username|escapejs }}-' + Math.random().toString(36).substr(2,5)
     };
 
     function LOG(tag, msg) { if (console) console.log('[VC]', tag, msg); }
@@ -1456,18 +1458,22 @@
                         var uid = d.id || d.user_id;
                         if (uid !== ME.id) { self._playSound('/static/join.mp3'); }
                         LOG('user_joined', d.name+'('+uid+')');
+                        var spid = d.session_peer_id || '';
                         self._upsertPart(roomId, uid, {
-                            id: uid, name: d.name, pic: d.profile_pic||'', muted: d.is_muted||false
+                            id: uid, name: d.name, pic: d.profile_pic||'', session_peer_id: spid, muted: d.is_muted||false
                         });
                         self._updateRoomAvatar(roomId);
-                        if (uid !== ME.id) {
-                            (function retryCall(uid2, tries) {
-                                if (self.pwOk && window.PW.callUser) {
-                                    try { window.PW.callUser(String(uid2)); } catch(e) {}
-                                } else if (tries < 20) {
-                                    setTimeout(function(){ retryCall(uid2, tries+1); }, 500);
-                                }
-                            })(uid, 0);
+                        if (uid !== ME.id && spid && ME.sessionPeerId) {
+                            // Caller election rule: only call peers whose session_peer_id is SMALLER than mine
+                            if (spid < ME.sessionPeerId) {
+                                (function retryCall(uid2, tries) {
+                                    if (self.pwOk && window.PW.callUser) {
+                                        try { window.PW.callUser(String(uid2)); } catch(e) {}
+                                    } else if (tries < 20) {
+                                        setTimeout(function(){ retryCall(uid2, tries+1); }, 500);
+                                    }
+                                })(uid, 0);
+                            }
                         }
                     });
 
@@ -1500,7 +1506,7 @@
                         var rd = self.rooms[roomId];
                         if (rd) {
                             rd.count = d.participants.length;
-                            rd.avatars = d.participants.map(function(p){return {id:p.id, name:p.name, profile_pic:p.profile_pic||'', is_muted:p.is_muted||false};});
+                            rd.avatars = d.participants.map(function(p){return {id:p.id, name:p.name, profile_pic:p.profile_pic||'', session_peer_id:p.session_peer_id||'', is_muted:p.is_muted||false};});
                             self._render();
                         }
                     });
@@ -1553,7 +1559,7 @@
         },
 
         _setParts: function(roomId, serverParts) {
-            var parts = serverParts.map(function(p){return {id:p.id, name:p.name, pic:p.profile_pic||'', muted:p.is_muted||false};});
+            var parts = serverParts.map(function(p){return {id:p.id, name:p.name, pic:p.profile_pic||'', session_peer_id:p.session_peer_id||'', muted:p.is_muted||false};});
             this._setPartsRaw(roomId, parts);
         },
 
@@ -1577,7 +1583,7 @@
             if (!rd) return;
             var parts = this._getParts(roomId);
             rd.count = parts.length;
-            rd.avatars = parts.map(function(p){return {id:p.id, name:p.name, profile_pic:p.pic||'', is_muted:p.muted||false};});
+            rd.avatars = parts.map(function(p){return {id:p.id, name:p.name, profile_pic:p.pic||'', session_peer_id:p.session_peer_id||'', is_muted:p.muted||false};});
             this._render();
         },
 
@@ -1590,13 +1596,13 @@
             document.getElementById('voiceParticipants').innerHTML = '<div class="voice-loading"><div class="spinner"></div>Connecting...</div>';
             document.getElementById('voicePanelRoomName').textContent = this.rooms[roomId] ? this.rooms[roomId].name : 'Room';
             ov.classList.add('open');
-            this._post('/api/voice/join/', { room_id: roomId, join_muted: false }).then(function(data) {
+            this._post('/api/voice/join/', { room_id: roomId, join_muted: false, session_peer_id: ME.sessionPeerId }).then(function(data) {
                 if (!data.success) { toast(data.error||'Failed'); ov.classList.remove('open'); return; }
                 self._playSound('/static/join.mp3');
                 self.curId = data.room_id;
                 LOG('join', 'joined room '+self.curId);
                 // Initialize participants from server
-                var parts = (data.participants||[]).map(function(p){return {id:p.id, name:p.name, pic:p.profile_pic||'', muted:false};});
+                var parts = (data.participants||[]).map(function(p){return {id:p.id, name:p.name, pic:p.profile_pic||'', session_peer_id:p.session_peer_id||'', muted:p.is_muted||false};});
                 self._setPartsRaw(self.curId, parts);
                 // Sync room data
                 self._updateRoomAvatar(self.curId);
@@ -1752,9 +1758,14 @@
                     var onReady = function() {
                         self.pwOk = true;
                         peers.forEach(function(p) {
-                            if (p.id !== ME.id) { try { window.PW.callUser(String(p.id)); } catch(e) {} }
+                            if (p.id !== ME.id && p.session_peer_id && ME.sessionPeerId) {
+                                // Caller election rule: only call peers whose session_peer_id is SMALLER than mine
+                                if (p.session_peer_id < ME.sessionPeerId) {
+                                    try { window.PW.callUser(String(p.id)); } catch(e) {}
+                                }
+                            }
                         });
-                        LOG('pw', 'peers called');
+                        LOG('pw', 'peers called with election rule');
                     };
                     if (window.PW.peer && window.PW.peer._open) {
                         onReady();

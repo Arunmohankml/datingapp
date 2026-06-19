@@ -737,6 +737,7 @@ class VoiceParticipant(models.Model):
     joined_at = models.DateTimeField(auto_now_add=True)
     is_muted = models.BooleanField(default=False)
     last_heartbeat = models.DateTimeField(null=True, blank=True)
+    session_peer_id = models.CharField(max_length=50, blank=True, null=True)
 
     class Meta:
         unique_together = ('user', 'room')

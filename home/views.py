@@ -3835,6 +3835,19 @@ def _clean_stale_participants():
             _broadcast_room_counts(rid)
 
 
+def _build_participant_dict(participant):
+    """Build full participant dict from a VoiceParticipant instance."""
+    user = participant.user
+    profile = getattr(user, 'profile', None)
+    return {
+        'id': user.id,
+        'name': profile.name if profile else user.username,
+        'profile_pic': profile.profile_pic if profile and profile.profile_pic else '',
+        'session_peer_id': participant.session_peer_id or '',
+        'is_muted': participant.is_muted,
+    }
+
+
 def _broadcast_room_counts(target_room_id=None):
     rooms = VoiceRoom.objects.all()
     data = []
@@ -3843,13 +3856,8 @@ def _broadcast_room_counts(target_room_id=None):
         count = entries.count()
         avatars = []
         for p in entries:
-            profile = getattr(p.user, 'profile', None)
-            avatars.append({
-                'id': p.user.id,
-                'name': profile.name if profile else p.user.username,
-                'profile_pic': profile.profile_pic if profile and profile.profile_pic else '',
-                'is_muted': p.is_muted,
-            })
+            d = _build_participant_dict(p)
+            avatars.append(d)
         data.append({
             'id': room.id,
             'name': room.name,
@@ -3864,15 +3872,7 @@ def _broadcast_room_counts(target_room_id=None):
         try:
             room = VoiceRoom.objects.get(id=target_room_id)
             entries = VoiceParticipant.objects.filter(room=room).select_related('user__profile')
-            participants = []
-            for p in entries:
-                profile = getattr(p.user, 'profile', None)
-                participants.append({
-                    'id': p.user.id,
-                    'name': profile.name if profile else p.user.username,
-                    'profile_pic': profile.profile_pic if profile and profile.profile_pic else '',
-                    'is_muted': p.is_muted,
-                })
+            participants = [_build_participant_dict(p) for p in entries]
             broadcast_event(f'voice_room_{room.id}', 'participant_list', {'participants': participants})
         except VoiceRoom.DoesNotExist:
             pass
@@ -3915,7 +3915,7 @@ def api_voice_rooms(request):
         avatars = []
         friends_in_room = []
         for p in entries:
-            pd = _get_participant_data(p.user)
+            pd = _build_participant_dict(p)
             avatars.append(pd)
             if p.user_id in friend_ids:
                 friends_in_room.append(pd['name'])
@@ -3942,6 +3942,7 @@ def api_voice_join(request):
         body = json.loads(request.body)
         room_id = body.get('room_id')
         join_muted = body.get('join_muted', False)
+        session_peer_id = body.get('session_peer_id', '')
         room = VoiceRoom.objects.get(id=room_id)
 
         current_count = VoiceParticipant.objects.filter(room=room).count()
@@ -3954,16 +3955,15 @@ def api_voice_join(request):
             user=request.user,
             room=room,
             is_muted=join_muted,
-            last_heartbeat=timezone.now()
+            last_heartbeat=timezone.now(),
+            session_peer_id=session_peer_id,
         )
 
         entries = VoiceParticipant.objects.filter(room=room).select_related('user__profile')
-        participants = [_get_participant_data(p.user) for p in entries]
+        participants = [_build_participant_dict(p) for p in entries]
 
-        my_data = _get_participant_data(request.user)
         broadcast_event(f'voice_room_{room.id}', 'user_joined', {
-            **my_data,
-            'is_muted': join_muted,
+            **_build_participant_dict(participant),
         })
         _broadcast_room_counts(room.id)
 
@@ -3998,15 +3998,7 @@ def api_voice_participants(request, room_id):
     try:
         room = VoiceRoom.objects.get(id=room_id)
         entries = VoiceParticipant.objects.filter(room=room).select_related('user__profile')
-        participants = []
-        for p in entries:
-            profile = getattr(p.user, 'profile', None)
-            participants.append({
-                'id': p.user.id,
-                'name': profile.name if profile else p.user.username,
-                'profile_pic': profile.profile_pic if profile and profile.profile_pic else '',
-                'is_muted': p.is_muted,
-            })
+        participants = [_build_participant_dict(p) for p in entries]
         return JsonResponse({'success': True, 'participants': participants, 'count': len(participants), 'max': room.max_capacity})
     except VoiceRoom.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Room not found'})

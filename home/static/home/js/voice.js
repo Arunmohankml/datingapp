@@ -136,6 +136,19 @@ function connectToServer(mid) {
                 });
             }
         });
+
+        call.on('close', function () {
+            activeCalls.delete(pid);
+            updList(pid, call, "remove");
+            var el = document.getElementById(pid + "-audio");
+            if (el) { try { el.pause(); el.srcObject = null; } catch(e) {} el.remove(); }
+            console.log("INCOMING CALL CLOSED with " + pid);
+        });
+
+        call.on('error', function (err) {
+            console.log("INCOMING CALL ERROR with " + pid + ": " + err);
+            activeCalls.delete(pid);
+        });
     });
 }
 
