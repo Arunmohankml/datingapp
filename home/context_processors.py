@@ -5,6 +5,7 @@ def unread_messages_count(request):
     base_ctx = {
         'PUSHER_KEY': getattr(settings, 'PUSHER_KEY', ''),
         'PUSHER_CLUSTER': getattr(settings, 'PUSHER_CLUSTER', 'ap2'),
+        'admin_emails': getattr(settings, 'ADMIN_EMAILS', []),
     }
     if request.user.is_authenticated:
         unread_count = Message.objects.filter(receiver=request.user, is_read=False).count()

@@ -529,7 +529,7 @@ def match_feed(request):
             score, reasons, cand_ans_count, debug_info = calculate_intelligent_match(profile, c, user_dict, cand_dict)
             
             admin_reasons = []
-            if request.user.email == 'arunmohankml@gmail.com':
+            if request.user.email in settings.ADMIN_EMAILS:
                 admin_reasons = reasons + ["======== ADMIN DEBUG ========"] + debug_info
             
             # Age preference bool
@@ -547,7 +547,7 @@ def match_feed(request):
             matches_list.append({
                 'profile': c, 
                 'score': score,
-                'reasons': admin_reasons if request.user.email == 'arunmohankml@gmail.com' else [],
+                'reasons': admin_reasons if request.user.email in settings.ADMIN_EMAILS else [],
                 'mutual_age_ok': mutual_age_ok,
                 'looking_for_match': looking_for_match,
                 'campus_match': campus_match,
@@ -753,13 +753,13 @@ def check_match(request):
             score, reasons, _, debug_info = calculate_intelligent_match(profile, best_match, user_dict, cand_dict)
             
             admin_reasons = []
-            if request.user.email == 'arunmohankml@gmail.com':
+            if request.user.email in settings.ADMIN_EMAILS:
                 admin_reasons = reasons + ["======== ADMIN DEBUG ========"] + debug_info
                 
             return render(request, "match_popup.html", {
                 "match": best_match,
                 "score": score,
-                "reasons": admin_reasons if request.user.email == 'arunmohankml@gmail.com' else []
+                "reasons": admin_reasons if request.user.email in settings.ADMIN_EMAILS else []
             })
 
     # IDs of users already shown to this user in previous rounds (stored in session)
@@ -799,7 +799,7 @@ def check_match(request):
             score, reasons, cand_ans_count, debug_info = calculate_intelligent_match(profile, c, user_dict, cand_dict)
 
             admin_reasons = []
-            if request.user.email == 'arunmohankml@gmail.com':
+            if request.user.email in settings.ADMIN_EMAILS:
                 admin_reasons = reasons + ["======== ADMIN DEBUG ========"] + debug_info
 
             # Age range check (both ways)
@@ -817,7 +817,7 @@ def check_match(request):
             matches_list.append({
                 'profile': c, 
                 'score': score,
-                'reasons': admin_reasons if request.user.email == 'arunmohankml@gmail.com' else [],
+                'reasons': admin_reasons if request.user.email in settings.ADMIN_EMAILS else [],
                 'mutual_age_ok': mutual_age_ok,
                 'looking_for_match': looking_for_match,
                 'campus_match': campus_match,
@@ -1687,7 +1687,7 @@ def wall_api(request):
             
             if 'image_url' in data:
                 # Handle image upload (Admin only check in frontend, but could add here too)
-                if not request.user.is_superuser and request.user.email != 'arunmohankml@gmail.com':
+                if not request.user.is_superuser and request.user.email not in settings.ADMIN_EMAILS:
                     return JsonResponse({'error': 'Unauthorized'}, status=403)
                     
                 obj = WallImage.objects.create(
@@ -1728,7 +1728,7 @@ def wall_api(request):
             return JsonResponse({'error': str(e)}, status=400)
 
     elif request.method == 'DELETE':
-        if not request.user.is_superuser and request.user.email != 'arunmohankml@gmail.com':
+        if not request.user.is_superuser and request.user.email not in settings.ADMIN_EMAILS:
             return JsonResponse({'error': 'Unauthorized'}, status=403)
         
         try:
@@ -1848,7 +1848,7 @@ def create_confession(request):
         user = request.user
 
     # ── 2. Rate limit ──
-    is_admin = user and user.email == 'arunmohankml@gmail.com'
+    is_admin = user and user.email in settings.ADMIN_EMAILS
     if not is_admin:
         allowed, wait = check_rate_limit(fingerprint, ip)
         if not allowed:
@@ -2163,7 +2163,7 @@ def save_quiz_batch(request):
 # ---------------- ADMIN MENU ----------------
 
 def is_admin_check(user):
-    return user.is_authenticated and user.email == 'arunmohankml@gmail.com'
+    return user.is_authenticated and user.email in settings.ADMIN_EMAILS
 
 def is_staff_check(user):
     if not user or not user.is_authenticated:
@@ -3155,7 +3155,7 @@ def api_edit_room(request, id):
         try:
             listing = RoomListing.objects.get(id=id)
             # Authorization check
-            if not (request.user == listing.user or request.user.is_staff or request.user.email == 'arunmohankml@gmail.com'):
+            if not (request.user == listing.user or request.user.is_staff or request.user.email in settings.ADMIN_EMAILS):
                 return JsonResponse({'success': False, 'error': 'Unauthorized to edit this listing.'})
             
             # Update fields
@@ -3204,7 +3204,7 @@ def api_delete_room(request, id):
         try:
             listing = RoomListing.objects.get(id=id)
             # Authorization check
-            if not (request.user == listing.user or request.user.is_staff or request.user.email == 'arunmohankml@gmail.com'):
+            if not (request.user == listing.user or request.user.is_staff or request.user.email in settings.ADMIN_EMAILS):
                 return JsonResponse({'success': False, 'error': 'Unauthorized to delete this listing.'})
             
             listing.is_active = False # soft delete
@@ -3611,7 +3611,7 @@ def api_get_room_requests(request):
                     'extra_note': r.extra_note,
                     'created_at': r.created_at.strftime("%b %d, %Y"),
                     'is_owner': request.user.is_authenticated and r.user == request.user,
-                    'is_admin': request.user.is_authenticated and (request.user.is_staff or request.user.email == 'arunmohankml@gmail.com'),
+                    'is_admin': request.user.is_authenticated and (request.user.is_staff or request.user.email in settings.ADMIN_EMAILS),
                     'user': {
                         'id': r.user.id,
                         'name': profile.name if profile else r.user.username,
@@ -3637,7 +3637,7 @@ def api_delete_room_request(request, id):
     if request.method == 'POST':
         try:
             req = RoomRequest.objects.get(id=id)
-            if not (request.user == req.user or request.user.is_staff or request.user.email == 'arunmohankml@gmail.com'):
+            if not (request.user == req.user or request.user.is_staff or request.user.email in settings.ADMIN_EMAILS):
                 return JsonResponse({'success': False, 'error': 'Unauthorized.'})
                 
             req.is_active = False # soft delete
@@ -3657,7 +3657,7 @@ def api_edit_room_request(request, id):
     if request.method == 'POST':
         try:
             req = RoomRequest.objects.get(id=id, is_active=True)
-            if not (request.user == req.user or request.user.is_staff or request.user.email == 'arunmohankml@gmail.com'):
+            if not (request.user == req.user or request.user.is_staff or request.user.email in settings.ADMIN_EMAILS):
                 return JsonResponse({'success': False, 'error': 'Unauthorized.'})
             
             import json
@@ -3727,7 +3727,7 @@ def roomrequest_detail(request, id):
     
     profile = req.user.profile
     is_owner = request.user == req.user
-    is_admin = request.user.is_authenticated and (request.user.is_staff or request.user.email == 'arunmohankml@gmail.com')
+    is_admin = request.user.is_authenticated and (request.user.is_staff or request.user.email in settings.ADMIN_EMAILS)
     
     return render(request, 'roomrequest_detail.html', {
         'req': req,

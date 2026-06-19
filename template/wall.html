@@ -225,7 +225,7 @@ body {
     <div class="size-btn active" data-size="1">1x</div>
     <div class="size-btn" data-size="2">2x</div>
 
-    {% if request.user.email == 'arunmohankml@gmail.com' %}
+    {% if request.user.email in admin_emails %}
     <div class="sep"></div>
     <button class="size-btn" style="width: auto; padding: 0 8px;" onclick="document.getElementById('adminImageInput').click()" title="Admin: Upload Image">
         <i class="fas fa-image"></i>

@@ -472,7 +472,7 @@ body {
         <button onclick="history.back()" class="match-back-btn" style="border:none; cursor:pointer;"><span class="material-symbols-outlined">arrow_back</span></button>
         <h2>Room Details</h2>
     </div>
-    {% if request.user == listing.user or request.user.is_staff or request.user.email == 'arunmohankml@gmail.com' %}
+    {% if request.user == listing.user or request.user.is_staff or request.user.email in admin_emails %}
     <div class="rfd-header-actions">
         <button type="button" class="rfd-header-btn edit" onclick="openEditModal()" title="Edit"><i class="fas fa-edit"></i></button>
         <button type="button" class="rfd-header-btn delete" onclick="deleteListing()" title="Delete"><i class="fas fa-trash-alt"></i></button>
@@ -558,7 +558,7 @@ body {
 </div>
  
 <!-- Edit Modal -->
-{% if request.user == listing.user or request.user.is_staff or request.user.email == 'arunmohankml@gmail.com' %}
+{% if request.user == listing.user or request.user.is_staff or request.user.email in admin_emails %}
 <div class="rfd-modal-overlay" id="editModalOverlay" onclick="if(event.target===this)closeEditModal()">
 <div class="rfd-modal" id="editModal">
     <div class="rfd-modal-header">
@@ -749,7 +749,7 @@ body {
         gallery.scrollBy({ left: dir * scrollAmount, behavior: 'smooth' });
     }
 
-    {% if request.user == listing.user or request.user.is_staff or request.user.email == 'arunmohankml@gmail.com' %}
+    {% if request.user == listing.user or request.user.is_staff or request.user.email in admin_emails %}
     function openEditModal() {
         document.getElementById('editModalOverlay').classList.add('active');
         document.getElementById('editModal').classList.add('active');

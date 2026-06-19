@@ -34,6 +34,8 @@ if not SECRET_KEY and not os.environ.get('VERCEL'):
 
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
+ADMIN_EMAILS = [e.strip() for e in os.environ.get('ADMIN_EMAILS', '').split(',') if e.strip()]
+
 # Split allowed hosts from environment variable
 ALLOWED_HOSTS = ['*']
 
