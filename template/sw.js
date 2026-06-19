@@ -1,8 +1,7 @@
-const CACHE_NAME = 'srm-match-v1.1'; // Version bump to clear old broken cache
+const CACHE_NAME = 'srm-match-v2.0'; // v2: cleaned icons, removed root-level icon paths
 const STATIC_ASSETS = [
   '/manifest.json',
-  '/icon-192x192.png',
-  '/icon-512x512.png'
+  '/static/favicon.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -93,8 +92,8 @@ self.addEventListener('push', function(event) {
 
     const options = {
         body: body,
-        icon: '/icon-192x192.png',
-        badge: '/icon-192x192.png',
+        icon: '/static/favicon.png',
+        badge: '/static/favicon.png',
         vibrate: [100, 50, 100],
         data: { url: url }
     };

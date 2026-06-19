@@ -19,13 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView, RedirectView
-from django.http import FileResponse
-import os
 from home import views
-
-def serve_template_file(request, filename, content_type):
-    filepath = os.path.join(settings.BASE_DIR, 'template', filename)
-    return FileResponse(open(filepath, 'rb'), content_type=content_type)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -37,7 +31,4 @@ urlpatterns = [
     path('contact/', views.contact_view, name='contact'),
     path('manifest.json', TemplateView.as_view(template_name='manifest.json', content_type='application/json')),
     path('sw.js', TemplateView.as_view(template_name='sw.js', content_type='application/javascript')),
-    path('icon-192x192.png', lambda r: serve_template_file(r, 'icon-192x192.png', 'image/png')),
-    path('icon-512x512.png', lambda r: serve_template_file(r, 'icon-512x512.png', 'image/png')),
-    path('favicon.png', lambda r: serve_template_file(r, 'favicon.png', 'image/png')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

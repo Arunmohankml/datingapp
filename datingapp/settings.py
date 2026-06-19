@@ -29,8 +29,8 @@ if not os.environ.get('VERCEL'):
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY')
-if not SECRET_KEY and not os.environ.get('VERCEL'):
-    SECRET_KEY = 'django-insecure-local-dev-only'
+if not SECRET_KEY:
+    SECRET_KEY = 'django-insecure-216tlt-jzkigd^5*g2g+(nd1qli0dsqq8de^7@)z6#+k7i2(jn'
 
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
