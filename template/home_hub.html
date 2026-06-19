@@ -1431,11 +1431,16 @@
                         self._upsertPart(roomId, d.user_id, {
                             id: d.user_id, name: d.name, pic: d.profile_pic||'', muted: d.is_muted||false
                         });
-                        // Also update avatar in room data
                         self._updateRoomAvatar(roomId);
-                        // Call peer if PW ready
-                        if (self.pwOk && d.user_id !== ME.id) {
-                            try { window.PW.callUser(String(d.user_id)); } catch(e) {}
+                        // Call peer, retry if peer not yet open
+                        if (d.user_id !== ME.id) {
+                            (function retryCall(uid, tries) {
+                                if (self.pwOk && window.PW.callUser) {
+                                    try { window.PW.callUser(String(uid)); } catch(e) {}
+                                } else if (tries < 20) {
+                                    setTimeout(function(){ retryCall(uid, tries+1); }, 500);
+                                }
+                            })(d.user_id, 0);
                         }
                     });
 
@@ -1547,6 +1552,7 @@
         join: function(roomId) {
             if (this.curId) { toast('Already in a room. Leave first.'); return; }
             var self = this;
+            self.resetVoiceSession();
             var ov = document.getElementById('voicePanelOverlay');
             document.getElementById('voiceParticipants').innerHTML = '<div class="voice-loading"><div class="spinner"></div>Connecting...</div>';
             document.getElementById('voicePanelRoomName').textContent = this.rooms[roomId] ? this.rooms[roomId].name : 'Room';
@@ -1583,17 +1589,33 @@
         },
 
         _fullCleanup: function() {
+            // Bug #2: NEVER wipe _parts for all users — only remove self
+            if (this.curId && this.rooms[this.curId] && ME) {
+                this._removePart(this.curId, ME.id);
+                this._updateRoomAvatar(this.curId);
+            }
             this._stopVAD();
             this._stopHB();
             this._unsubRoom();
             if (this.mic) { this.mic.getTracks().forEach(function(t){t.stop()}); this.mic=null; }
-            if (this.curId && this.rooms[this.curId]) {
-                this.rooms[this.curId]._parts = [];
-                this._updateRoomAvatar(this.curId);
+            // Close PW calls, destroy peer, remove audio elements
+            if (window.PW) {
+                try {
+                    if (window.PW.disconnectAll) { window.PW.disconnectAll(); }
+                    if (window.PW.peer) { try { window.PW.peer.destroy(); } catch(e){} }
+                } catch(e) {}
+                try { delete window.PW; } catch(e) { window.PW = undefined; }
             }
+            document.querySelectorAll('audio').forEach(function(el){
+                if (el.srcObject) {
+                    try { el.srcObject.getTracks().forEach(function(t){t.stop()}); } catch(e) {}
+                }
+                el.remove();
+            });
             this.curId = null;
             this.pwOk = false;
             this.muted = false;
+            this.vols = {};
             document.getElementById('voicePanelOverlay').classList.remove('open');
             this._render();
             LOG('cleanup', 'full cleanup done');
@@ -1624,28 +1646,78 @@
             if (s) s.classList.toggle('open');
         },
 
+        /* ── VOICE SESSION RESET (call before every join) ── */
+        resetVoiceSession: function() {
+            LOG('RESET', 'destroying voice session');
+            // Close PW calls & destroy peer
+            if (window.PW) {
+                try {
+                    if (window.PW.disconnectAll) { window.PW.disconnectAll(); }
+                    if (window.PW.peer) { try { window.PW.peer.destroy(); } catch(e){} }
+                } catch(e) { LOG('RESET err', 'pw: '+e.message); }
+            }
+            // Remove audio elements & stop remote streams
+            document.querySelectorAll('audio').forEach(function(el){
+                if (el.srcObject) {
+                    try { el.srcObject.getTracks().forEach(function(t){t.stop()}); } catch(e) {}
+                }
+                el.remove();
+            });
+            // Stop our mic
+            if (this.mic) {
+                try { this.mic.getTracks().forEach(function(t){t.stop()}); } catch(e) {}
+                this.mic = null;
+            }
+            this._stopVAD();
+            this._stopHB();
+            this._unsubRoom();
+            this.vols = {};
+            this.pwOk = false;
+            this.muted = false;
+            if (window.PW) { try { delete window.PW; } catch(e) { window.PW = undefined; } }
+            LOG('RESET', 'done');
+        },
+
         /* ── PEERWAVE ── */
         _initPW: function() {
             var self = this;
-            if (window.PW && window.PW.connectToVoice) { this.pwOk = true; doConnect(); return; }
+            if (window.PW && window.PW.connectToVoice) { doConnect(); return; }
             var pj = document.createElement('script');
             pj.src = 'https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js';
             pj.onload = function() {
                 var pw = document.createElement('script');
-                pw.src = 'https://arunmohankml.github.io/PeerWave-server/voice.js';
-                pw.onload = function(){ self.pwOk = true; doConnect(); };
+                pw.src = '{% static "home/js/voice.js" %}';
+                pw.onload = function(){ doConnect(); };
                 document.head.appendChild(pw);
             };
             document.head.appendChild(pj);
             function doConnect() {
                 try {
                     window.PW.connectToVoice(String(ME.id));
-                    var peers = self._getParts(self.curId);
-                    peers.forEach(function(p) {
-                        if (p.id !== ME.id) { try { window.PW.callUser(String(p.id)); } catch(e) {} }
-                    });
-                    LOG('pw', 'connected');
+                    LOG('pw', 'initiating connection');
                     self._startVAD();
+                    // Bug #1: Wait for peer to be open before calling users
+                    var peers = self._getParts(self.curId);
+                    var onReady = function() {
+                        self.pwOk = true;
+                        peers.forEach(function(p) {
+                            if (p.id !== ME.id) { try { window.PW.callUser(String(p.id)); } catch(e) {} }
+                        });
+                        LOG('pw', 'peers called');
+                    };
+                    if (window.PW.peer && window.PW.peer._open) {
+                        onReady();
+                    } else if (window.PW.peer) {
+                        window.PW.peer.on('open', onReady);
+                    } else {
+                        var iv = setInterval(function() {
+                            if (window.PW && window.PW.peer && window.PW.peer._open) {
+                                clearInterval(iv);
+                                onReady();
+                            }
+                        }, 300);
+                        setTimeout(function() { clearInterval(iv); onReady(); }, 8000);
+                    }
                 } catch(e) { LOG('pw err', e); toast('Voice connection failed'); }
             }
         },
