@@ -1,8 +1,13 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, RedirectView
+from django.contrib.staticfiles.storage import staticfiles_storage
 from . import views
 urlpatterns = [
+    path("favicon.ico", RedirectView.as_view(url=staticfiles_storage.url('favicon.png')), name="favicon_ico"),
+    path("favicon.png", RedirectView.as_view(url=staticfiles_storage.url('favicon.png')), name="favicon_png"),
+    path("icon-192x192.png", RedirectView.as_view(url=staticfiles_storage.url('favicon.png')), name="icon_192"),
+    path("icon-512x512.png", RedirectView.as_view(url=staticfiles_storage.url('favicon.png')), name="icon_512"),
     path("login/", views.login_view, name="login"),
     path("logout/", auth_views.LogoutView.as_view(next_page='login'), name="logout"),
     path("api/verify-token/", views.api_verify_token, name="api_verify_token"),

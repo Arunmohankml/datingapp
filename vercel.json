@@ -5,10 +5,6 @@
     { "src": "index.py", "use": "@vercel/python" }
   ],
   "routes": [
-    { "src": "/favicon.ico", "dest": "/favicon.ico" },
-    { "src": "/favicon.png", "dest": "/favicon.png" },
-    { "src": "/icon-192x192.png", "dest": "/icon-192x192.png" },
-    { "src": "/icon-512x512.png", "dest": "/icon-512x512.png" },
     { "src": "/(.*)", "dest": "index.py" }
   ]
 }
