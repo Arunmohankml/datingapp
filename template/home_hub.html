@@ -1591,6 +1591,7 @@
             ov.classList.add('open');
             this._post('/api/voice/join/', { room_id: roomId, join_muted: false }).then(function(data) {
                 if (!data.success) { toast(data.error||'Failed'); ov.classList.remove('open'); return; }
+                self._playSound('/static/join.mp3');
                 self.curId = data.room_id;
                 LOG('join', 'joined room '+self.curId);
                 // Initialize participants from server
