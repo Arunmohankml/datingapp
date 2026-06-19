@@ -1629,13 +1629,14 @@
             this._stopHB();
             this._unsubRoom();
             if (this.mic) { this.mic.getTracks().forEach(function(t){t.stop()}); this.mic=null; }
-            // Close PW calls, destroy peer, remove audio elements
+            // ⚠️ NEVER delete window.PW — same closure context needed
             if (window.PW) {
                 try {
                     if (window.PW.disconnectAll) { window.PW.disconnectAll(); }
-                    if (window.PW.peer) { try { window.PW.peer.destroy(); } catch(e){} }
+                    else if (window.PW.getConnectedUsers) {
+                        window.PW.getConnectedUsers().forEach(function(u){ try{u.call.close()}catch(e){} });
+                    }
                 } catch(e) {}
-                try { delete window.PW; } catch(e) { window.PW = undefined; }
             }
             document.querySelectorAll('audio').forEach(function(el){
                 if (el.srcObject) {
@@ -1680,12 +1681,14 @@
         /* ── VOICE SESSION RESET (call before every join) ── */
         resetVoiceSession: function() {
             LOG('RESET', 'destroying voice session');
-            // Close PW calls & destroy peer
-            if (window.PW) {
-                try {
-                    if (window.PW.disconnectAll) { window.PW.disconnectAll(); }
-                    if (window.PW.peer) { try { window.PW.peer.destroy(); } catch(e){} }
-                } catch(e) { LOG('RESET err', 'pw: '+e.message); }
+            // Stop VAD (closes AudioContext used for local mic analysis)
+            this._stopVAD();
+            this._stopHB();
+            this._unsubRoom();
+            // Stop our mic tracks
+            if (this.mic) {
+                try { this.mic.getTracks().forEach(function(t){t.stop()}); } catch(e) {}
+                this.mic = null;
             }
             // Remove audio elements & stop remote streams
             document.querySelectorAll('audio').forEach(function(el){
@@ -1694,18 +1697,21 @@
                 }
                 el.remove();
             });
-            // Stop our mic
-            if (this.mic) {
-                try { this.mic.getTracks().forEach(function(t){t.stop()}); } catch(e) {}
-                this.mic = null;
+            // ⚠️ NEVER delete window.PW — we need the SAME closure context
+            // so PW.connectToVoice() → cleanSession() can destroy the old peer
+            // within the same script execution. Deleting PW forces script reload,
+            // creating a new closure that can't reach the old peer's connections.
+            if (window.PW) {
+                try {
+                    if (window.PW.disconnectAll) { window.PW.disconnectAll(); }
+                    else if (window.PW.getConnectedUsers) {
+                        window.PW.getConnectedUsers().forEach(function(u){ try{u.call.close()}catch(e){} });
+                    }
+                } catch(e) { LOG('RESET err', 'pw: '+e.message); }
             }
-            this._stopVAD();
-            this._stopHB();
-            this._unsubRoom();
             this.vols = {};
             this.pwOk = false;
             this.muted = false;
-            if (window.PW) { try { delete window.PW; } catch(e) { window.PW = undefined; } }
             LOG('RESET', 'done');
         },
 
