@@ -1463,17 +1463,20 @@
                             id: uid, name: d.name, pic: d.profile_pic||'', session_peer_id: spid, muted: d.is_muted||false
                         });
                         self._updateRoomAvatar(roomId);
-                        if (uid !== ME.id && spid && ME.sessionPeerId) {
-                            // Caller election rule: only call peers whose session_peer_id is SMALLER than mine
-                            if (spid < ME.sessionPeerId) {
+                        if (uid !== ME.id && spid && ME.sessionPeerId && spid < ME.sessionPeerId) {
+                            // Election rule: I call peers with SMALLER spid than mine.
+                            // Delay call to let new peer register on PeerJS server.
+                            setTimeout(function() {
                                 (function retryCall(uid2, tries) {
-                                    if (self.pwOk && window.PW.callUser) {
-                                        try { window.PW.callUser(String(uid2)); } catch(e) {}
-                                    } else if (tries < 20) {
-                                        setTimeout(function(){ retryCall(uid2, tries+1); }, 500);
-                                    }
+                                    if (tries > 20) return;
+                                    try {
+                                        if (window.PW && window.PW.callUser) {
+                                            window.PW.callUser(String(uid2));
+                                        }
+                                    } catch(e) {}
+                                    setTimeout(function() { retryCall(uid2, tries+1); }, 500);
                                 })(uid, 0);
-                            }
+                            }, 1500);
                         }
                     });
 
