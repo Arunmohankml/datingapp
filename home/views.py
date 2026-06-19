@@ -3839,7 +3839,17 @@ def _broadcast_room_counts(target_room_id=None):
     rooms = VoiceRoom.objects.all()
     data = []
     for room in rooms:
-        count = VoiceParticipant.objects.filter(room=room).count()
+        entries = VoiceParticipant.objects.filter(room=room).select_related('user__profile').order_by('joined_at')
+        count = entries.count()
+        avatars = []
+        for p in entries:
+            profile = getattr(p.user, 'profile', None)
+            avatars.append({
+                'id': p.user.id,
+                'name': profile.name if profile else p.user.username,
+                'profile_pic': profile.profile_pic if profile and profile.profile_pic else '',
+                'is_muted': p.is_muted,
+            })
         data.append({
             'id': room.id,
             'name': room.name,
@@ -3847,6 +3857,7 @@ def _broadcast_room_counts(target_room_id=None):
             'count': count,
             'max': room.max_capacity,
             'is_full': count >= room.max_capacity,
+            'avatars': avatars,
         })
     broadcast_event('voice_counts', 'update', {'rooms': data})
     if target_room_id:

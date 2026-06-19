@@ -1332,377 +1332,524 @@
 (function() {
     'use strict';
 
-    var U = {
+    /* ── User ── */
+    var ME = {
         id: {{ request.user.id }},
         name: '{{ request.user.profile.name|escapejs|default:"" }}',
         pic: '{{ request.user.profile.profile_pic|escapejs|default:"" }}'
     };
 
-    var S = {
-        room: null,          // {id, name}
-        muted: false,
-        parts: [],           // [{id, name, pic, is_muted}]
-        pwLoaded: false,
-        pwReady: false,
-        pCh: null,           // Pusher room channel
-        countsCh: null,      // Pusher counts channel
-        hbInt: null,         // heartbeat interval
-        vadInt: null,
-        vadAn: null,
-        vadArr: null,
-        mic: null,
-        vols: {},
-        roomData: {}         // {roomId: {count, max, avatars, friends}}
-    };
+    function LOG(tag, msg) { if (console) console.log('[VC]', tag, msg); }
 
-    function ajax(url, data) {
-        return fetch(url, { method: 'POST', headers: { 'Content-Type':'application/json' }, body: JSON.stringify(data||{}) }).then(function(r){return r.json()});
-    }
+    /* ════════════════════════════════════════════════════════
+       VoiceRoomState — single source of truth
+       ════════════════════════════════════════════════════════ */
+    var VRS = {
+        // ── State ──
+        rooms: {},         // {roomId: {id, name, slug, count, max, is_full, avatars:[], friends:[]}}
+        curId: null,       // current room id or null
+        muted: false,      // am I muted?
+        pwOk: false,       // PeerWave ready?
+        vols: {},          // {peerId: volume}
+        mic: null,         // MediaStream
+        _pch: null,        // Pusher room channel
+        _cch: null,        // Pusher counts channel
+        _hb: null,         // heartbeat interval
+        _vad: null,        // VAD interval
+        _van: null,        // AnalyserNode
 
-    // ── Room List ──
-    function loadRooms() {
-        fetch('/api/voice/rooms/').then(function(r){return r.json()}).then(function(d) {
-            if (d.rooms) {
-                d.rooms.forEach(function(r) { S.roomData[r.id] = r; });
-                renderRooms();
-            }
-        }).catch(function(){});
-    }
+        /* ── Server API ── */
+        _post: function(url, data) {
+            return fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data||{}) }).then(function(r){return r.json()});
+        },
 
-    function renderRooms() {
-        var el = document.getElementById('voiceRoomList');
-        if (!el) return;
-        var rooms = Object.values(S.roomData);
-        if (!rooms.length) { el.innerHTML = '<div class="voice-loading"><div class="spinner"></div>Loading rooms...</div>'; return; }
-        var maxCount = Math.max.apply(null, rooms.map(function(r){return r.count}));
-        var html = '';
-        rooms.sort(function(a,b){return a.id-b.id}).forEach(function(r) {
-            var pct = r.max > 0 ? Math.round((r.count/r.max)*100) : 0;
-            var fillCls = pct >= 100 ? 'full' : (pct >= 75 ? 'warn' : '');
-            var cntCls = r.count >= r.max ? 'num full' : 'num';
-            var inRoom = S.room && S.room.id === r.id;
-            var icon = 'forum', icCls = '';
-            if (r.slug === 'study-room') { icon = 'menu_book'; icCls = 'study'; }
-            if (r.slug === 'night-owls') { icon = 'dark_mode'; icCls = 'night'; }
-            var isMostActive = r.count > 0 && r.count === maxCount;
+        /* ── INIT ── */
+        init: function() {
+            LOG('init', 'starting');
+            this.fetchRooms();
+            this._subCounts();
+            this._bindLifecycle();
+        },
 
-            // Avatar stack
-            var avHtml = '';
-            if (r.avatars && r.avatars.length) {
-                avHtml += '<div class="voice-avatar-stack">';
-                var maxAv = 4;
-                var avs = r.avatars.slice(0, maxAv);
-                var overflow = r.avatars.length - maxAv;
-                avs.reverse().forEach(function(a, i) {
-                    var init = (a.name||'?').charAt(0).toUpperCase();
-                    var img = a.profile_pic ? '<img src="'+a.profile_pic+'" alt="" onerror="this.style.display=\'none\'">' : '';
-                    avHtml += '<div class="voice-avatar-item" title="'+(a.name||'')+'" style="z-index:'+(avs.length-i)+'">'+img+'<span'+(img?' style="display:none"':'')+'>'+init+'</span></div>';
-                });
-                if (overflow > 0) avHtml += '<div class="voice-avatar-overflow">+'+overflow+'</div>';
-                avHtml += '</div>';
-            }
-
-            // Friends
-            var friendsHtml = '';
-            if (r.friends && r.friends.length) {
-                var btn = '';
-                if (!inRoom) btn = '<button class="voice-friend-join" onclick="VL.join('+r.id+',\''+r.name+'\')"><span class="material-symbols-outlined" style="font-size:14px;">headset</span>Join '+r.friends[0]+'</button>';
-                friendsHtml = '<div class="voice-friends-inside"><span class="material-symbols-outlined" style="font-size:14px;color:var(--primary);">group</span>'+r.friends.map(function(f){return '<span class="friend-name">'+f+'</span>'}).join(', ')+btn+'</div>';
-            }
-
-            html += '<div class="voice-room-row">';
-            html += '<div class="voice-room-left">';
-            html += '<div class="voice-room-name"><span class="room-icon '+icCls+'"><span class="material-symbols-outlined">'+icon+'</span></span>'+r.name;
-            if (isMostActive) html += '<span class="voice-most-active"><span class="material-symbols-outlined">local_fire_department</span>Active</span>';
-            html += '</div>';
-            html += avHtml;
-            html += '<div class="voice-room-meta">';
-            html += '<span class="voice-room-count"><span class="'+cntCls+'">'+r.count+'</span>/'+r.max+'</span>';
-            html += '<div class="voice-room-cap"><div class="voice-room-cap-track"><div class="voice-room-cap-fill '+fillCls+'" style="width:'+pct+'%"></div></div></div>';
-            if (r.is_full) html += '<span class="voice-room-full-badge"><span class="material-symbols-outlined" style="font-size:14px;">block</span>Full</span>';
-            html += '</div>'+friendsHtml+'</div>';
-            if (inRoom) {
-                html += '<button class="voice-join-btn in-room" onclick="VL.open()">In Room</button>';
-            } else {
-                html += '<button class="voice-join-btn" onclick="VL.join('+r.id+',\''+r.name+'\')"'+(r.is_full?' disabled':'')+'>Join</button>';
-            }
-            html += '</div>';
-        });
-        el.innerHTML = html;
-    }
-
-    // ── Subscribe to Pusher Counts Channel ──
-    function subscribeCounts() {
-        try {
-            S.countsCh = window.pusher.subscribe('voice_counts');
-            S.countsCh.bind('update', function(d) {
+        /* ── FETCH ROOMS ── */
+        fetchRooms: function() {
+            var self = this;
+            fetch('/api/voice/rooms/').then(function(r){return r.json()}).then(function(d) {
                 if (d.rooms) {
-                    d.rooms.forEach(function(r) {
-                        if (S.roomData[r.id]) {
-                            var old = S.roomData[r.id];
-                            S.roomData[r.id] = { id: r.id, name: old.name, slug: old.slug, count: r.count, max: r.max, is_full: r.is_full, avatars: old.avatars, friends: old.friends };
+                    d.rooms.forEach(function(r) { self.rooms[r.id] = r; });
+                    LOG('rooms loaded', Object.keys(self.rooms).length + ' rooms');
+                    self._render();
+                }
+            }).catch(function(e){ LOG('fetch err', e); });
+        },
+
+        /* ── PUSHER COUNTS CHANNEL ── */
+        _subCounts: function() {
+            var self = this;
+            function trySub() {
+                if (!window.pusher) { LOG('counts', 'pusher not ready, retry in 1s'); setTimeout(trySub, 1000); return; }
+                try {
+                    self._cch = window.pusher.subscribe('voice_counts');
+                    self._cch.bind('update', function(d) {
+                        if (!d.rooms) return;
+                        LOG('counts update', d.rooms.map(function(r){return r.name+':'+r.count}).join(', '));
+                        d.rooms.forEach(function(r) {
+                            if (self.rooms[r.id]) {
+                                var o = self.rooms[r.id];
+                                // Preserve fields not in broadcast (name, slug, friends)
+                                // Update avatars from broadcast data (now includes avatars)
+                                self.rooms[r.id] = {
+                                    id: r.id, name: o.name, slug: o.slug,
+                                    count: r.count, max: r.max, is_full: r.is_full,
+                                    avatars: r.avatars || o.avatars || [],
+                                    friends: o.friends || []
+                                };
+                            } else {
+                                // New room from broadcast
+                                self.rooms[r.id] = r;
+                            }
+                        });
+                        self._render();
+                    });
+                    LOG('counts', 'subscribed');
+                } catch(e) { LOG('counts err', e); setTimeout(trySub, 2000); }
+            }
+            trySub();
+        },
+
+        /* ── PUSHER ROOM CHANNEL ── */
+        _subRoom: function(roomId) {
+            var self = this;
+            this._unsubRoom();
+            function trySub() {
+                if (!window.pusher) { LOG('room', 'pusher not ready, retry'); setTimeout(trySub, 500); return; }
+                try {
+                    self._pch = window.pusher.subscribe('voice_room_'+roomId);
+
+                    self._pch.bind('user_joined', function(d) {
+                        LOG('user_joined', d.name+'('+d.user_id+')');
+                        self._upsertPart(roomId, d.user_id, {
+                            id: d.user_id, name: d.name, pic: d.profile_pic||'', muted: d.is_muted||false
+                        });
+                        // Also update avatar in room data
+                        self._updateRoomAvatar(roomId);
+                        // Call peer if PW ready
+                        if (self.pwOk && d.user_id !== ME.id) {
+                            try { window.PW.callUser(String(d.user_id)); } catch(e) {}
                         }
                     });
-                    renderRooms();
-                }
-            });
-        } catch(e) { console.error('Counts channel:', e); }
-    }
 
-    // ── Heartbeat ──
-    function startHeartbeat() {
-        if (S.hbInt) return;
-        S.hbInt = setInterval(function() {
-            ajax('/api/voice/heartbeat/', {}).then(function(d) {
-                if (d.in_room === null && S.room) {
-                    // Server removed us (ghost cleanup) — clean up client
-                    fullCleanup();
-                }
-            }).catch(function(){});
-        }, 10000);
-    }
-
-    // ── Join Room ──
-    function joinRoom(roomId, roomName) {
-        if (S.room) { toast('Already in a room. Leave first.'); return; }
-        var ov = document.getElementById('voicePanelOverlay');
-        document.getElementById('voiceParticipants').innerHTML = '<div class="voice-loading"><div class="spinner"></div>Connecting...</div>';
-        document.getElementById('voicePanelRoomName').textContent = roomName;
-        ov.classList.add('open');
-        ajax('/api/voice/join/', { room_id: roomId, join_muted: false }).then(function(data) {
-            if (!data.success) { toast(data.error||'Failed'); ov.classList.remove('open'); return; }
-            S.room = { id: data.room_id, name: roomName };
-            S.parts = data.participants || [];
-            document.getElementById('voicePanelCount').textContent = S.parts.length;
-            renderParts(S.parts);
-            initPW(data.room_id);
-            subRoom(data.room_id);
-            startHeartbeat();
-        }).catch(function(){ toast('Connection error'); ov.classList.remove('open'); });
-    }
-
-    // ── PeerWave ──
-    function initPW(roomId) {
-        if (window.PW && window.PW.connectToVoice) { S.pwLoaded = true; doPW(); return; }
-        var pj = document.createElement('script');
-        pj.src = 'https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js';
-        pj.onload = function() {
-            var pw = document.createElement('script');
-            pw.src = 'https://arunmohankml.github.io/PeerWave-server/voice.js';
-            pw.onload = function(){ S.pwLoaded = true; doPW(); };
-            document.head.appendChild(pw);
-        };
-        document.head.appendChild(pj);
-        function doPW() {
-            try {
-                window.PW.connectToVoice(String(U.id));
-                S.parts.forEach(function(p) { if (p.id!==U.id) { try{window.PW.callUser(String(p.id))}catch(e){} } });
-                S.pwReady = true;
-                startVAD();
-            } catch(e) { toast('Voice connection failed'); }
-        }
-    }
-
-    // ── Pusher Room Channel ──
-    function subRoom(roomId) {
-        if (S.pCh) { try{window.pusher.unsubscribe(S.pCh.name)}catch(e){} S.pCh=null; }
-        try {
-            S.pCh = window.pusher.subscribe('voice_room_'+roomId);
-            S.pCh.bind('user_joined', function(d) {
-                if (d.user_id !== U.id) {
-                    var exists = S.parts.some(function(p){return p.id===d.user_id});
-                    if (!exists) {
-                        S.parts.push({id:d.user_id, name:d.name, pic:d.profile_pic||'', is_muted:d.is_muted||false});
-                        document.getElementById('voicePanelCount').textContent = S.parts.length;
-                        renderParts(S.parts);
-                        if (S.pwReady) { try{window.PW.callUser(String(d.user_id))}catch(e){} }
-                        // Update room card avatar
-                        var rd = S.roomData[roomId];
-                        if (rd) {
-                            if (!rd.avatars) rd.avatars = [];
-                            rd.avatars.push({id:d.user_id, name:d.name, profile_pic:d.profile_pic||''});
-                            rd.count = S.parts.length;
-                            renderRooms();
+                    self._pch.bind('user_left', function(d) {
+                        LOG('user_left', d.user_id);
+                        self._removePart(roomId, d.user_id);
+                        self._updateRoomAvatar(roomId);
+                        if (self._getParts(roomId).length === 0 && self.curId === roomId) {
+                            self._fullCleanup();
                         }
-                    }
-                }
-            });
-            S.pCh.bind('user_left', function(d) {
-                S.parts = S.parts.filter(function(p){return p.id!==d.user_id});
-                var cnt = document.getElementById('voicePanelCount');
-                if (cnt) cnt.textContent = S.parts.length;
-                renderParts(S.parts);
-                // Update room card
-                var rd = S.roomData[roomId];
-                if (rd && rd.avatars) {
-                    rd.avatars = rd.avatars.filter(function(a){return a.id!==d.user_id});
-                    rd.count = S.parts.length;
-                    renderRooms();
-                }
-                if (S.parts.length === 0) { document.getElementById('voicePanelOverlay').classList.remove('open'); fullCleanup(); }
-            });
-            S.pCh.bind('user_muted', function(d) {
-                S.parts.forEach(function(p) { if (p.id===d.user_id) p.is_muted = d.is_muted; });
-                renderParts(S.parts);
-                // Update avatar mute badge in room card
-                var rd = S.roomData[roomId];
-                if (rd && rd.avatars) {
-                    rd.avatars.forEach(function(a){if(a.id===d.user_id)a.is_muted=d.is_muted});
-                    renderRooms();
-                }
-            });
-            S.pCh.bind('participant_list', function(d) {
-                if (d.participants) {
-                    S.parts = d.participants.map(function(p){return {id:p.id, name:p.name, pic:p.profile_pic||'', is_muted:p.is_muted||false};});
-                    var cnt = document.getElementById('voicePanelCount');
-                    if (cnt) cnt.textContent = S.parts.length;
-                    renderParts(S.parts);
-                    // Sync room card
-                    var rd = S.roomData[roomId];
-                    if (rd) {
-                        rd.count = S.parts.length;
-                        rd.avatars = d.participants.map(function(p){return {id:p.id, name:p.name, profile_pic:p.profile_pic||''};});
-                        renderRooms();
-                    }
-                }
-            });
-        } catch(e) { console.error('Pusher room:', e); }
-    }
+                    });
 
-    // ── Leave Room ──
-    function leaveRoom() {
-        showReconnect(false);
-        ajax('/api/voice/leave/', {}).then(doCleanup).catch(doCleanup);
-        function doCleanup() {
-            if (S.pCh) { try{window.pusher.unsubscribe(S.pCh.name)}catch(e){} S.pCh=null; }
-            if (S.mic) { S.mic.getTracks().forEach(function(t){t.stop()}); S.mic=null; }
-            stopVAD(); stopHeartbeat();
-            S.room = null; S.parts = []; S.pwReady = false;
+                    self._pch.bind('user_muted', function(d) {
+                        LOG('user_muted', d.user_id+' muted='+d.is_muted);
+                        self._updatePart(roomId, d.user_id, {muted: d.is_muted});
+                        // Update avatar mute state
+                        var rd = self.rooms[roomId];
+                        if (rd && rd.avatars) {
+                            rd.avatars.forEach(function(a) { if (a.id===d.user_id) a.is_muted = d.is_muted; });
+                            self._render();
+                        }
+                    });
+
+                    self._pch.bind('participant_list', function(d) {
+                        if (!d.participants) return;
+                        LOG('participant_list', d.participants.length+' users');
+                        self._setParts(roomId, d.participants);
+                        // Sync room data avatars
+                        var rd = self.rooms[roomId];
+                        if (rd) {
+                            rd.count = d.participants.length;
+                            rd.avatars = d.participants.map(function(p){return {id:p.id, name:p.name, profile_pic:p.profile_pic||'', is_muted:p.is_muted||false};});
+                            self._render();
+                        }
+                    });
+
+                    LOG('room', 'subscribed to voice_room_'+roomId);
+                } catch(e) { LOG('room err', e); setTimeout(trySub, 2000); }
+            }
+            trySub();
+        },
+
+        _unsubRoom: function() {
+            if (this._pch) {
+                try { window.pusher.unsubscribe(this._pch.name); } catch(e) {}
+                this._pch = null;
+            }
+        },
+
+        /* ── STATE MUTATIONS (pure data updates) ── */
+        _upsertPart: function(roomId, userId, data) {
+            var parts = this._getParts(roomId);
+            var idx = -1;
+            for (var i=0; i<parts.length; i++) { if (parts[i].id === userId) { idx = i; break; } }
+            if (idx >= 0) {
+                for (var k in data) { if (data.hasOwnProperty(k)) parts[idx][k] = data[k]; }
+            } else {
+                parts.push(data);
+            }
+            this._setPartsRaw(roomId, parts);
+        },
+
+        _removePart: function(roomId, userId) {
+            var parts = this._getParts(roomId).filter(function(p){return p.id!==userId});
+            this._setPartsRaw(roomId, parts);
+        },
+
+        _updatePart: function(roomId, userId, updates) {
+            var parts = this._getParts(roomId);
+            for (var i=0; i<parts.length; i++) {
+                if (parts[i].id === userId) {
+                    for (var k in updates) { if (updates.hasOwnProperty(k)) parts[i][k] = updates[k]; }
+                    break;
+                }
+            }
+            this._renderPanel();
+        },
+
+        _setParts: function(roomId, serverParts) {
+            var parts = serverParts.map(function(p){return {id:p.id, name:p.name, pic:p.profile_pic||'', muted:p.is_muted||false};});
+            this._setPartsRaw(roomId, parts);
+        },
+
+        _setPartsRaw: function(roomId, parts) {
+            // Store participants on the room object
+            if (!this.rooms[roomId]) return;
+            this.rooms[roomId]._parts = parts;
+            this.rooms[roomId].count = parts.length;
+            this._renderPanel();
+            this._render();
+        },
+
+        _getParts: function(roomId) {
+            if (!this.rooms[roomId]) return [];
+            if (!this.rooms[roomId]._parts) this.rooms[roomId]._parts = [];
+            return this.rooms[roomId]._parts;
+        },
+
+        _updateRoomAvatar: function(roomId) {
+            var rd = this.rooms[roomId];
+            if (!rd) return;
+            var parts = this._getParts(roomId);
+            rd.count = parts.length;
+            rd.avatars = parts.map(function(p){return {id:p.id, name:p.name, profile_pic:p.pic||'', is_muted:p.muted||false};});
+            this._render();
+        },
+
+        /* ── JOIN ── */
+        join: function(roomId) {
+            if (this.curId) { toast('Already in a room. Leave first.'); return; }
+            var self = this;
+            var ov = document.getElementById('voicePanelOverlay');
+            document.getElementById('voiceParticipants').innerHTML = '<div class="voice-loading"><div class="spinner"></div>Connecting...</div>';
+            document.getElementById('voicePanelRoomName').textContent = this.rooms[roomId] ? this.rooms[roomId].name : 'Room';
+            ov.classList.add('open');
+            this._post('/api/voice/join/', { room_id: roomId, join_muted: false }).then(function(data) {
+                if (!data.success) { toast(data.error||'Failed'); ov.classList.remove('open'); return; }
+                self.curId = data.room_id;
+                LOG('join', 'joined room '+self.curId);
+                // Initialize participants from server
+                var parts = (data.participants||[]).map(function(p){return {id:p.id, name:p.name, pic:p.profile_pic||'', muted:false};});
+                self._setPartsRaw(self.curId, parts);
+                // Sync room data
+                self._updateRoomAvatar(self.curId);
+                // Init PeerWave
+                self._initPW();
+                // Subscribe to room channel
+                self._subRoom(self.curId);
+                // Start heartbeat
+                self._startHB();
+                // Render
+                self._render();
+            }).catch(function(){ toast('Connection error'); ov.classList.remove('open'); });
+        },
+
+        /* ── LEAVE ── */
+        leave: function() {
+            var self = this;
+            this._showReconnect(false);
+            this._post('/api/voice/leave/', {}).then(clean).catch(clean);
+            function clean() {
+                self._fullCleanup();
+                LOG('leave', 'done');
+            }
+        },
+
+        _fullCleanup: function() {
+            this._stopVAD();
+            this._stopHB();
+            this._unsubRoom();
+            if (this.mic) { this.mic.getTracks().forEach(function(t){t.stop()}); this.mic=null; }
+            if (this.curId && this.rooms[this.curId]) {
+                this.rooms[this.curId]._parts = [];
+                this._updateRoomAvatar(this.curId);
+            }
+            this.curId = null;
+            this.pwOk = false;
+            this.muted = false;
             document.getElementById('voicePanelOverlay').classList.remove('open');
-        }
-    }
+            this._render();
+            LOG('cleanup', 'full cleanup done');
+        },
 
-    function fullCleanup() {
-        if (S.pCh) { try{window.pusher.unsubscribe(S.pCh.name)}catch(e){} S.pCh=null; }
-        if (S.mic) { S.mic.getTracks().forEach(function(t){t.stop()}); S.mic=null; }
-        stopVAD(); stopHeartbeat();
-        S.room = null; S.parts = []; S.pwReady = false;
-        document.getElementById('voicePanelOverlay').classList.remove('open');
-    }
+        /* ── MUTE ── */
+        toggleMic: function() {
+            this.muted = !this.muted;
+            if (this.pwOk && window.PW.setMyVolume) {
+                try { window.PW.setMyVolume(this.muted ? 0 : 1); } catch(e) {}
+            }
+            // Broadcast to server — this only updates is_muted, NEVER removes user
+            this._post('/api/voice/mute/', { is_muted: this.muted }).catch(function(){});
+            this._renderMicBtn();
+            LOG('mute', this.muted ? 'muted' : 'unmuted');
+        },
 
-    function stopVAD() {
-        if (S.vadInt) { clearInterval(S.vadInt); S.vadInt=null; }
-        S.vadAn = null; S.vadArr = null;
-    }
+        /* ── VOLUME ── */
+        setVol: function(peerId, val) {
+            this.vols[peerId] = parseInt(val, 10);
+            if (this.pwOk && window.PW.setUserVolume) {
+                try { window.PW.setUserVolume(String(peerId), parseInt(val,10)/100); } catch(e) {}
+            }
+        },
 
-    function stopHeartbeat() {
-        if (S.hbInt) { clearInterval(S.hbInt); S.hbInt=null; }
-    }
+        toggleVol: function(el) {
+            var s = document.getElementById('vslider_'+el.getAttribute('data-peer'));
+            if (s) s.classList.toggle('open');
+        },
 
-    // ── Participant Render ──
-    function renderParts(list) {
-        var el = document.getElementById('voiceParticipants');
-        var html = '';
-        list.forEach(function(p) {
-            var init = (p.name||'?').charAt(0).toUpperCase();
-            var img = p.pic ? '<img src="'+p.pic+'" alt="" onerror="this.style.display=\'none\'">' : '';
-            var me = p.id === U.id;
-            var muteIcon = p.is_muted ? ' <span class="material-symbols-outlined" style="font-size:14px;color:#ef4444;vertical-align:middle;">mic_off</span>' : '';
-            html += '<div class="voice-participant" data-peer="'+p.id+'" onclick="VL.toggleVol(this)">';
-            html += '<div class="voice-participant-avatar" id="pava_'+p.id+'">'+img+'<span'+(img?' style="display:none"':'')+'>'+init+'</span></div>';
-            html += '<div class="voice-participant-info">';
-            html += '<div class="voice-participant-name">'+(p.name||'User')+muteIcon+(me?' <span style="font-size:11px;color:#94a3b8;font-weight:600;">(you)</span>':'')+'</div>';
-            html += '<div class="voice-participant-status"><span class="dot '+(p.is_muted?'muted':'silent')+'" id="sdot_'+p.id+'"></span><span id="slbl_'+p.id+'">'+(p.is_muted?'Muted':'Silent')+'</span></div>';
-            html += '</div>';
-            html += '<div class="voice-participant-vol"><span class="vol-icon material-symbols-outlined">volume_up</span></div>';
-            html += '</div>';
-            var vol = S.vols[p.id] !== undefined ? S.vols[p.id] : 100;
-            html += '<div class="voice-room-volume-slider" id="vslider_'+p.id+'"><label>Volume</label><input type="range" min="0" max="100" value="'+vol+'" oninput="VL.setVol('+p.id+',this.value)"></div>';
-        });
-        el.innerHTML = html;
-    }
+        /* ── PEERWAVE ── */
+        _initPW: function() {
+            var self = this;
+            if (window.PW && window.PW.connectToVoice) { this.pwOk = true; doConnect(); return; }
+            var pj = document.createElement('script');
+            pj.src = 'https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js';
+            pj.onload = function() {
+                var pw = document.createElement('script');
+                pw.src = 'https://arunmohankml.github.io/PeerWave-server/voice.js';
+                pw.onload = function(){ self.pwOk = true; doConnect(); };
+                document.head.appendChild(pw);
+            };
+            document.head.appendChild(pj);
+            function doConnect() {
+                try {
+                    window.PW.connectToVoice(String(ME.id));
+                    var peers = self._getParts(self.curId);
+                    peers.forEach(function(p) {
+                        if (p.id !== ME.id) { try { window.PW.callUser(String(p.id)); } catch(e) {} }
+                    });
+                    LOG('pw', 'connected');
+                    self._startVAD();
+                } catch(e) { LOG('pw err', e); toast('Voice connection failed'); }
+            }
+        },
 
-    // ── Mic ──
-    function toggleMic() {
-        S.muted = !S.muted;
-        if (S.pwReady && window.PW.setMyVolume) { try{window.PW.setMyVolume(S.muted?0:1)}catch(e){} }
-        // Broadcast mute to server
-        ajax('/api/voice/mute/', { is_muted: S.muted }).catch(function(){});
-        var btn = document.getElementById('voiceMicBtn');
-        var ico = document.getElementById('voiceMicIcon');
-        var lbl = document.getElementById('voiceMicLabel');
-        btn.classList.toggle('muted', S.muted);
-        ico.textContent = S.muted ? 'mic_off' : 'mic';
-        lbl.textContent = S.muted ? 'Mic Off' : 'Mic On';
-    }
+        /* ── VAD ── */
+        _startVAD: function() {
+            if (this._vad) return;
+            var self = this;
+            try {
+                var ac = new (window.AudioContext || window.webkitAudioContext)();
+                navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function(stream) {
+                    var src = ac.createMediaStreamSource(stream);
+                    var an = ac.createAnalyser(); an.fftSize = 256;
+                    src.connect(an);
+                    self._van = an;
+                    self._vadArr = new Uint8Array(an.frequencyBinCount);
+                    self.mic = stream;
+                    self._vad = setInterval(function() {
+                        if (!self._van || !self._vadArr) return;
+                        self._van.getByteFrequencyData(self._vadArr);
+                        var sum=0; for(var i=0;i<self._vadArr.length;i++) sum+=self._vadArr[i];
+                        var sp = (sum/self._vadArr.length) > 15;
+                        var dot = document.getElementById('sdot_'+ME.id);
+                        var lbl = document.getElementById('slbl_'+ME.id);
+                        if (dot && lbl) {
+                            if (self.muted) { dot.className='dot muted'; lbl.textContent='Muted'; }
+                            else if (sp) { dot.className='dot speaking'; lbl.textContent='Speaking'; }
+                            else { dot.className='dot silent'; lbl.textContent='Silent'; }
+                        }
+                        var ava = document.getElementById('pava_'+ME.id);
+                        if (ava) { ava.classList.toggle('speaking', sp && !self.muted); }
+                        var pe = document.querySelector('.voice-participant[data-peer="'+ME.id+'"]');
+                        if (pe) { pe.classList.toggle('speaking', sp && !self.muted); }
+                    }, 200);
+                    LOG('vad', 'started');
+                }).catch(function(e){ LOG('vad mic err', e); });
+            } catch(e) { LOG('vad err', e); }
+        },
 
-    // ── VAD ──
-    function startVAD() {
-        if (S.vadInt) return;
-        try {
-            var ac = new (window.AudioContext || window.webkitAudioContext)();
-            navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function(stream) {
-                var src = ac.createMediaStreamSource(stream);
-                var an = ac.createAnalyser(); an.fftSize = 256;
-                src.connect(an);
-                S.vadAn = an; S.vadArr = new Uint8Array(an.frequencyBinCount); S.mic = stream;
-                S.vadInt = setInterval(function() {
-                    if (!S.vadAn || !S.vadArr) return;
-                    S.vadAn.getByteFrequencyData(S.vadArr);
-                    var sum=0; for(var i=0;i<S.vadArr.length;i++) sum+=S.vadArr[i];
-                    var sp = (sum/S.vadArr.length) > 15;
-                    var dot = document.getElementById('sdot_'+U.id);
-                    var lbl = document.getElementById('slbl_'+U.id);
-                    if (dot && lbl) {
-                        if (S.muted) { dot.className='dot muted'; lbl.textContent='Muted'; }
-                        else if (sp) { dot.className='dot speaking'; lbl.textContent='Speaking'; }
-                        else { dot.className='dot silent'; lbl.textContent='Silent'; }
+        _stopVAD: function() {
+            if (this._vad) { clearInterval(this._vad); this._vad=null; }
+            this._van = null; this._vadArr = null;
+        },
+
+        /* ── HEARTBEAT ── */
+        _startHB: function() {
+            var self = this;
+            if (this._hb) return;
+            this._hb = setInterval(function() {
+                self._post('/api/voice/heartbeat/', {}).then(function(d) {
+                    if (d.in_room === null && self.curId) {
+                        LOG('hb', 'server removed us, cleaning up');
+                        self._fullCleanup();
                     }
-                    var ava = document.getElementById('pava_'+U.id);
-                    if (ava) ava.classList.toggle('speaking', sp && !S.muted);
-                    var pe = document.querySelector('.voice-participant[data-peer="'+U.id+'"]');
-                    if (pe) pe.classList.toggle('speaking', sp && !S.muted);
-                }, 200);
-            }).catch(function(){});
-        } catch(e) {}
-    }
+                }).catch(function(){});
+            }, 10000);
+            LOG('hb', 'started');
+        },
 
-    // ── Volume ──
-    function setVol(peerId, val) {
-        S.vols[peerId] = parseInt(val, 10);
-        if (S.pwReady && window.PW.setUserVolume) {
-            try{window.PW.setUserVolume(String(peerId), parseInt(val,10)/100)}catch(e){}
-        }
-    }
-    function toggleVol(el) {
-        var s = document.getElementById('vslider_'+el.getAttribute('data-peer'));
-        if (s) s.classList.toggle('open');
-    }
+        _stopHB: function() {
+            if (this._hb) { clearInterval(this._hb); this._hb=null; }
+        },
 
-    // ── Open Panel ──
-    function openPanel() {
-        document.getElementById('voicePanelOverlay').classList.add('open');
-        if (S.room) {
-            fetch('/api/voice/participants/'+S.room.id+'/').then(function(r){return r.json()}).then(function(d) {
-                if (d.success) {
-                    S.parts = d.participants.map(function(p){return {id:p.id, name:p.name, pic:p.profile_pic||'', is_muted:p.is_muted||false};});
-                    document.getElementById('voicePanelCount').textContent = S.parts.length;
-                    renderParts(S.parts);
+        /* ── PANEL ── */
+        openPanel: function() {
+            document.getElementById('voicePanelOverlay').classList.add('open');
+            // Always render from VRS state
+            this._renderPanel();
+        },
+
+        /* ── RENDER ROOM LIST ── */
+        _render: function() {
+            var el = document.getElementById('voiceRoomList');
+            if (!el) return;
+            var rooms = Object.values(this.rooms);
+            if (!rooms.length) { el.innerHTML = '<div class="voice-loading"><div class="spinner"></div>Loading rooms...</div>'; return; }
+            var maxCount = rooms.reduce(function(m,r){return r.count>m ? r.count : m}, 0);
+            var self = this;
+            var html = '';
+            rooms.sort(function(a,b){return a.id-b.id}).forEach(function(r) {
+                var pct = r.max > 0 ? Math.round((r.count/r.max)*100) : 0;
+                var fillCls = pct >= 100 ? 'full' : (pct >= 75 ? 'warn' : '');
+                var cntCls = r.count >= r.max ? 'num full' : 'num';
+                var inRoom = self.curId === r.id;
+                var icon = 'forum', icCls = '';
+                if (r.slug === 'study-room') { icon = 'menu_book'; icCls = 'study'; }
+                if (r.slug === 'night-owls') { icon = 'dark_mode'; icCls = 'night'; }
+                var isMostActive = r.count > 0 && r.count === maxCount;
+
+                // ── Avatar stack from room data ──
+                var avHtml = '';
+                var avs = r.avatars || [];
+                if (avs.length) {
+                    avHtml += '<div class="voice-avatar-stack">';
+                    var show = avs.slice(0, 4);
+                    var overflow = avs.length - 4;
+                    show.reverse().forEach(function(a) {
+                        var init = (a.name||'?').charAt(0).toUpperCase();
+                        var img = a.profile_pic ? '<img src="'+a.profile_pic+'" alt="" onerror="this.style.display=\'none\'">' : '';
+                        var mutedBadge = a.is_muted ? '<span class="mute-badge"><span class="material-symbols-outlined" style="font-size:7px;">mic_off</span></span>' : '';
+                        avHtml += '<div class="voice-avatar-item" title="'+(a.name||'')+'">'+img+'<span'+(img?' style="display:none"':'')+'>'+init+'</span>'+mutedBadge+'</div>';
+                    });
+                    if (overflow > 0) avHtml += '<div class="voice-avatar-overflow">+'+overflow+'</div>';
+                    avHtml += '</div>';
                 }
-            }).catch(function(){});
+
+                // ── Friends ──
+                var friendsHtml = '';
+                if (r.friends && r.friends.length) {
+                    var btn = '';
+                    if (!inRoom) btn = '<button class="voice-friend-join" onclick="VRS.join('+r.id+')"><span class="material-symbols-outlined" style="font-size:14px;">headset</span>Join '+r.friends[0]+'</button>';
+                    friendsHtml = '<div class="voice-friends-inside"><span class="material-symbols-outlined" style="font-size:14px;color:var(--primary);">group</span>'+r.friends.map(function(f){return '<span class="friend-name">'+f+'</span>'}).join(', ')+btn+'</div>';
+                }
+
+                html += '<div class="voice-room-row">';
+                html += '<div class="voice-room-left">';
+                html += '<div class="voice-room-name"><span class="room-icon '+icCls+'"><span class="material-symbols-outlined">'+icon+'</span></span>'+r.name;
+                if (isMostActive) html += '<span class="voice-most-active"><span class="material-symbols-outlined">local_fire_department</span>Active</span>';
+                html += '</div>';
+                html += avHtml;
+                html += '<div class="voice-room-meta">';
+                html += '<span class="voice-room-count"><span class="'+cntCls+'">'+r.count+'</span>/'+r.max+'</span>';
+                html += '<div class="voice-room-cap"><div class="voice-room-cap-track"><div class="voice-room-cap-fill '+fillCls+'" style="width:'+pct+'%"></div></div></div>';
+                if (r.is_full) html += '<span class="voice-room-full-badge"><span class="material-symbols-outlined" style="font-size:14px;">block</span>Full</span>';
+                html += '</div>'+friendsHtml+'</div>';
+                if (inRoom) {
+                    html += '<button class="voice-join-btn in-room" onclick="VRS.openPanel()">In Room</button>';
+                } else {
+                    html += '<button class="voice-join-btn" onclick="VRS.join('+r.id+')"'+(r.is_full?' disabled':'')+'>Join</button>';
+                }
+                html += '</div>';
+            });
+            el.innerHTML = html;
+        },
+
+        /* ── RENDER PARTICIPANT PANEL ── */
+        _renderPanel: function() {
+            var parts = this.curId ? this._getParts(this.curId) : [];
+            var el = document.getElementById('voiceParticipants');
+            if (!el) return;
+            var cnt = document.getElementById('voicePanelCount');
+            if (cnt) cnt.textContent = parts.length;
+            var html = '';
+            var self = this;
+            parts.forEach(function(p) {
+                var init = (p.name||'?').charAt(0).toUpperCase();
+                var img = p.pic ? '<img src="'+p.pic+'" alt="" onerror="this.style.display=\'none\'">' : '';
+                var me = p.id === ME.id;
+                var muteIcon = p.muted ? ' <span class="material-symbols-outlined" style="font-size:14px;color:#ef4444;vertical-align:middle;">mic_off</span>' : '';
+                html += '<div class="voice-participant" data-peer="'+p.id+'" onclick="VRS.toggleVol(this)">';
+                html += '<div class="voice-participant-avatar" id="pava_'+p.id+'">'+img+'<span'+(img?' style="display:none"':'')+'>'+init+'</span></div>';
+                html += '<div class="voice-participant-info">';
+                html += '<div class="voice-participant-name">'+(p.name||'User')+muteIcon+(me?' <span style="font-size:11px;color:#94a3b8;font-weight:600;">(you)</span>':'')+'</div>';
+                html += '<div class="voice-participant-status"><span class="dot '+(p.muted?'muted':'silent')+'" id="sdot_'+p.id+'"></span><span id="slbl_'+p.id+'">'+(p.muted?'Muted':'Silent')+'</span></div>';
+                html += '</div>';
+                html += '<div class="voice-participant-vol"><span class="vol-icon material-symbols-outlined">volume_up</span></div>';
+                html += '</div>';
+                var vol = self.vols[p.id] !== undefined ? self.vols[p.id] : 100;
+                html += '<div class="voice-room-volume-slider" id="vslider_'+p.id+'"><label>Volume</label><input type="range" min="0" max="100" value="'+vol+'" oninput="VRS.setVol('+p.id+',this.value)"></div>';
+            });
+            el.innerHTML = html;
+            this._renderMicBtn();
+        },
+
+        _renderMicBtn: function() {
+            var btn = document.getElementById('voiceMicBtn');
+            var ico = document.getElementById('voiceMicIcon');
+            var lbl = document.getElementById('voiceMicLabel');
+            if (!btn) return;
+            btn.classList.toggle('muted', this.muted);
+            ico.textContent = this.muted ? 'mic_off' : 'mic';
+            lbl.textContent = this.muted ? 'Mic Off' : 'Mic On';
+        },
+
+        _showReconnect: function(yes) {
+            var el = document.getElementById('voiceReconnect');
+            if (el) el.classList.toggle('show', yes);
+        },
+
+        /* ── LIFECYCLE ── */
+        _bindLifecycle: function() {
+            var self = this;
+            window.addEventListener('beforeunload', function() {
+                if (self.curId) navigator.sendBeacon('/api/voice/leave/', JSON.stringify({}));
+                if (self.mic) self.mic.getTracks().forEach(function(t){t.stop()});
+            });
+            window.addEventListener('pagehide', function() {
+                if (self.curId) navigator.sendBeacon('/api/voice/leave/', JSON.stringify({}));
+            });
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'hidden' && self.curId) {
+                    navigator.sendBeacon('/api/voice/leave/', JSON.stringify({}));
+                }
+            });
         }
-    }
+    };
 
-    // ── Reconnect ──
-    function showReconnect(yes) {
-        var el = document.getElementById('voiceReconnect');
-        if (el) el.classList.toggle('show', yes);
-    }
-
-    // ── Toast ──
+    /* ── TOAST ── */
     function toast(msg) {
         if (window.showGlobalToast) { window.showGlobalToast(msg); return; }
-        var c = document.querySelector('.messages-toast-container') || function(){var d=document.createElement('div');d.className='messages-toast-container';var ct=document.querySelector('.container');if(ct)ct.prepend(d);return d;}();
+        var c = document.querySelector('.messages-toast-container') || function(){
+            var d=document.createElement('div'); d.className='messages-toast-container';
+            var ct=document.querySelector('.container'); if(ct) ct.prepend(d); return d;
+        }();
         var t = document.createElement('div');
         t.className = 'message-toast info';
         t.innerHTML = '<span>'+msg+'</span><button onclick="this.parentElement.remove()" style="margin-left:auto;background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;">&times;</button>';
@@ -1710,29 +1857,14 @@
         setTimeout(function(){t.style.opacity='0';setTimeout(function(){t.remove()},500)},4000);
     }
 
-    // ── Cleanup Events ──
-    window.addEventListener('beforeunload', function() {
-        if (S.room) navigator.sendBeacon('/api/voice/leave/', JSON.stringify({}));
-        if (S.mic) S.mic.getTracks().forEach(function(t){t.stop()});
-    });
-    window.addEventListener('pagehide', function() {
-        if (S.room) navigator.sendBeacon('/api/voice/leave/', JSON.stringify({}));
-    });
-    document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState === 'hidden' && S.room) {
-            navigator.sendBeacon('/api/voice/leave/', JSON.stringify({}));
-        }
-    });
+    /* ── INIT ── */
+    VRS.init();
+    window.VRS = VRS;
 
-    // ── Init ──
-    loadRooms();
-    subscribeCounts();
-
-    window.VL = { join: joinRoom, leave: leaveRoom, open: openPanel, toggleMic: toggleMic, setVol: setVol, toggleVol: toggleVol };
-
+    /* ── WIRE UI ── */
     document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('voiceLeaveBtn').addEventListener('click', function(){ window.VL.leave(); });
-        document.getElementById('voiceMicBtn').addEventListener('click', function(){ window.VL.toggleMic(); });
+        document.getElementById('voiceLeaveBtn').addEventListener('click', function(){ VRS.leave(); });
+        document.getElementById('voiceMicBtn').addEventListener('click', function(){ VRS.toggleMic(); });
         document.getElementById('voicePanelClose').addEventListener('click', function(){ document.getElementById('voicePanelOverlay').classList.remove('open'); });
         document.getElementById('voicePanelOverlay').addEventListener('click', function(e){ if(e.target===this) this.classList.remove('open'); });
     });
