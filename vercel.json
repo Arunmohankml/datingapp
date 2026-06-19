@@ -9,6 +9,14 @@
   ],
   "routes": [
     {
+      "src": "/favicon.ico",
+      "dest": "/favicon.ico"
+    },
+    {
+      "src": "/favicon.png",
+      "dest": "/static/favicon.png"
+    },
+    {
       "src": "/(.*)",
       "dest": "index.py"
     }
