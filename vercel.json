@@ -2,35 +2,13 @@
   "version": 2,
   "buildCommand": "python manage.py collectstatic --noinput && python manage.py migrate",
   "builds": [
-    {
-      "src": "index.py",
-      "use": "@vercel/python"
-    }
+    { "src": "index.py", "use": "@vercel/python" }
   ],
   "routes": [
-    {
-      "src": "/favicon.ico",
-      "dest": "/favicon.ico"
-    },
-    {
-      "src": "/favicon.png",
-      "dest": "/static/favicon.png"
-    },
-    {
-      "src": "/icon-192x192.png",
-      "dest": "/static/favicon.png"
-    },
-    {
-      "src": "/icon-512x512.png",
-      "dest": "/static/favicon.png"
-    },
-    {
-      "src": "/icon-maskable.png",
-      "dest": "/static/favicon.png"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "index.py"
-    }
+    { "src": "/favicon.ico", "dest": "/favicon.ico" },
+    { "src": "/favicon.png", "dest": "/favicon.png" },
+    { "src": "/icon-192x192.png", "dest": "/icon-192x192.png" },
+    { "src": "/icon-512x512.png", "dest": "/icon-512x512.png" },
+    { "src": "/(.*)", "dest": "index.py" }
   ]
 }
