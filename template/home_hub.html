@@ -1613,6 +1613,7 @@
         leave: function() {
             var self = this;
             this._showReconnect(false);
+            self._playSound('/static/leave.mp3');
             this._post('/api/voice/leave/', {}).then(clean).catch(clean);
             function clean() {
                 self._fullCleanup();
