@@ -971,8 +971,8 @@ def send_push_to_user(user, title, body, url='/'):
         webpush=messaging.WebpushConfig(
             headers={'Urgency': 'high'},
             notification=messaging.WebpushNotification(
-                icon='/icon-192x192.png',
-                badge='/icon-192x192.png',
+                icon='https://srm-match.vercel.app/favicon.ico',
+                badge='https://srm-match.vercel.app/favicon.ico',
                 tag='chat-msg',
                 renotify=True
             ),

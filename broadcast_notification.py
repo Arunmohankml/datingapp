@@ -91,8 +91,8 @@ def run_broadcast():
             tokens=token_batch,
             webpush=messaging.WebpushConfig(
                 notification=messaging.WebpushNotification(
-                    icon='/icon-192x192.png',
-                    badge='/icon-192x192.png',
+                    icon='https://srm-match.vercel.app/favicon.ico',
+                    badge='https://srm-match.vercel.app/favicon.ico',
                 ),
                 fcm_options=messaging.WebpushFCMOptions(link=absolute_url)
             )

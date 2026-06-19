@@ -16,4 +16,4 @@ test_flow.py
 generate_1000_qs.py
 serviceAccountKey.json
 *.log
-staticfiles
+
