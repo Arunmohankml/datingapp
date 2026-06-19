@@ -4056,3 +4056,14 @@ def api_voice_mute(request):
 def api_voice_cleanup(request):
     VoiceParticipant.objects.filter(user=request.user).delete()
     return JsonResponse({'success': True})
+
+
+from django.http import HttpResponse
+
+def voice_js(request):
+    path = os.path.join(settings.BASE_DIR, 'home', 'static', 'home', 'js', 'voice.js')
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return HttpResponse(f.read(), content_type='application/javascript')
+    except FileNotFoundError:
+        return HttpResponse('/* voice.js not found */', content_type='application/javascript', status=404)

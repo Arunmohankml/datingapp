@@ -1453,20 +1453,20 @@
                     self._pch = window.pusher.subscribe('voice_room_'+roomId);
 
                     self._pch.bind('user_joined', function(d) {
-                        LOG('user_joined', d.name+'('+d.user_id+')');
-                        self._upsertPart(roomId, d.user_id, {
-                            id: d.user_id, name: d.name, pic: d.profile_pic||'', muted: d.is_muted||false
+                        var uid = d.id || d.user_id;
+                        LOG('user_joined', d.name+'('+uid+')');
+                        self._upsertPart(roomId, uid, {
+                            id: uid, name: d.name, pic: d.profile_pic||'', muted: d.is_muted||false
                         });
                         self._updateRoomAvatar(roomId);
-                        // Call peer, retry if peer not yet open
-                        if (d.user_id !== ME.id) {
-                            (function retryCall(uid, tries) {
+                        if (uid !== ME.id) {
+                            (function retryCall(uid2, tries) {
                                 if (self.pwOk && window.PW.callUser) {
-                                    try { window.PW.callUser(String(uid)); } catch(e) {}
+                                    try { window.PW.callUser(String(uid2)); } catch(e) {}
                                 } else if (tries < 20) {
-                                    setTimeout(function(){ retryCall(uid, tries+1); }, 500);
+                                    setTimeout(function(){ retryCall(uid2, tries+1); }, 500);
                                 }
-                            })(d.user_id, 0);
+                            })(uid, 0);
                         }
                     });
 
@@ -1723,7 +1723,7 @@
             pj.src = 'https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js';
             pj.onload = function() {
                 var pw = document.createElement('script');
-                pw.src = '{% static "home/js/voice.js" %}';
+                pw.src = '/api/voice/voice.js';
                 pw.onload = function(){ doConnect(); };
                 document.head.appendChild(pw);
             };

@@ -87,6 +87,7 @@ urlpatterns = [
     path("api/voice/heartbeat/", views.api_voice_heartbeat, name="api_voice_heartbeat"),
     path("api/voice/mute/", views.api_voice_mute, name="api_voice_mute"),
     path("api/voice/cleanup/", views.api_voice_cleanup, name="api_voice_cleanup"),
+    path("api/voice/voice.js", views.voice_js, name="voice_js"),
     path("sitemap.xml", views.sitemap_view, name="sitemap"),
     path("robots.txt", views.robots_txt_view, name="robots_txt"),
 ]
