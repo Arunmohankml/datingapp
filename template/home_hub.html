@@ -1793,7 +1793,12 @@
                 self._vadCtx = ac;
                 self._remoteVans = {};
                 self._remoteVadArrs = {};
-                navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(function(stream) {
+                function getMicStream() {
+                    var pwStream = window.PW && window.PW.getMediaStream ? window.PW.getMediaStream() : null;
+                    if (pwStream) return Promise.resolve(pwStream);
+                    return navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                }
+                getMicStream().then(function(stream) {
                     var src = ac.createMediaStreamSource(stream);
                     var an = ac.createAnalyser(); an.fftSize = 256;
                     src.connect(an);

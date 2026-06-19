@@ -2,11 +2,10 @@ let myPeerId = null;
 let peer = null;
 let myMediaStream = null;
 let connectedPeers = [];
-
 let audioContext = null;
 let gainNode = null;
-
 let activeCalls = new Map();
+let mediaReady = false;
 
 function removeAllAudio() {
     document.querySelectorAll('audio').forEach(function(el) {
@@ -31,9 +30,11 @@ function cleanSession() {
     removeAllAudio();
     myPeerId = null;
     gainNode = null;
+    mediaReady = false;
 }
 
-async function getMedia() {
+async function initMedia() {
+    if (mediaReady && myMediaStream) return;
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -41,10 +42,10 @@ async function getMedia() {
         gainNode = audioContext.createGain();
         gainNode.gain.value = 1.0;
         source.connect(gainNode);
-
         const destination = audioContext.createMediaStreamDestination();
         gainNode.connect(destination);
         myMediaStream = destination.stream;
+        mediaReady = true;
     } catch (err) {
         console.log("Error accessing microphone:", err);
     }
@@ -52,36 +53,18 @@ async function getMedia() {
 
 function connectToServer(mid) {
     cleanSession();
-
     if (mid === "") {
         console.log("Input is empty");
         return;
     }
-
     peer = new Peer(mid, {
         config: {
             iceServers: [
                 { urls: "stun:stun.relay.metered.ca:80" },
-                {
-                    urls: "turn:global.relay.metered.ca:80",
-                    username: "42c77072861dbb07cf20ec03",
-                    credential: "CnxHreDWSoBxZUev"
-                },
-                {
-                    urls: "turn:global.relay.metered.ca:80?transport=tcp",
-                    username: "42c77072861dbb07cf20ec03",
-                    credential: "CnxHreDWSoBxZUev"
-                },
-                {
-                    urls: "turn:global.relay.metered.ca:443",
-                    username: "42c77072861dbb07cf20ec03",
-                    credential: "CnxHreDWSoBxZUev"
-                },
-                {
-                    urls: "turns:global.relay.metered.ca:443?transport=tcp",
-                    username: "42c77072861dbb07cf20ec03",
-                    credential: "CnxHreDWSoBxZUev"
-                }
+                { urls: "turn:global.relay.metered.ca:80", username: "42c77072861dbb07cf20ec03", credential: "CnxHreDWSoBxZUev" },
+                { urls: "turn:global.relay.metered.ca:80?transport=tcp", username: "42c77072861dbb07cf20ec03", credential: "CnxHreDWSoBxZUev" },
+                { urls: "turn:global.relay.metered.ca:443", username: "42c77072861dbb07cf20ec03", credential: "CnxHreDWSoBxZUev" },
+                { urls: "turns:global.relay.metered.ca:443?transport=tcp", username: "42c77072861dbb07cf20ec03", credential: "CnxHreDWSoBxZUev" }
             ]
         },
         debug: 3
@@ -102,39 +85,17 @@ function connectToServer(mid) {
         }
         console.log("Got call from " + pid);
         activeCalls.set(pid, call);
-        await getMedia();
+        await initMedia();
         call.answer(myMediaStream);
 
         call.on('stream', function (stream) {
-            console.log("STREAM ATTACHED from " + pid);
             updList(pid, call, "add");
-
-            if (document.getElementById(pid + "-audio")) {
-                console.log("AUDIO ALREADY EXISTS for " + pid);
-                return;
-            }
-
-            const audioElement = document.createElement('audio');
-            audioElement.srcObject = stream;
-            audioElement.id = pid + "-audio";
-            audioElement.autoplay = true;
-            document.body.appendChild(audioElement);
-            console.log("AUDIO CREATED for " + pid);
-
-            if (call.peerConnection) {
-                call.peerConnection.addEventListener('icecandidate', event => {
-                    if (event.candidate) {
-                        const cand = event.candidate.candidate;
-                        if (cand.includes('typ relay')) {
-                            console.log('TURN relay candidate used:', cand);
-                        } else if (cand.includes('typ srflx')) {
-                            console.log('STUN (reflexive) candidate:', cand);
-                        } else if (cand.includes('typ host')) {
-                            console.log('Local host candidate:', cand);
-                        }
-                    }
-                });
-            }
+            if (document.getElementById(pid + "-audio")) return;
+            var el = document.createElement('audio');
+            el.srcObject = stream;
+            el.id = pid + "-audio";
+            el.autoplay = true;
+            document.body.appendChild(el);
         });
 
         call.on('close', function () {
@@ -146,91 +107,59 @@ function connectToServer(mid) {
         });
 
         call.on('error', function (err) {
-            console.log("INCOMING CALL ERROR with " + pid + ": " + err);
+            console.log("INCOMING CALL ERROR " + pid + ": " + err);
             activeCalls.delete(pid);
         });
     });
 }
 
 async function callPeer(pid) {
-    if (!peer) return console.log("havnt connected to server");
-
+    if (!peer) return console.log("not connected to server");
     var key = String(pid);
     if (activeCalls.has(key)) {
         console.log("DUPLICATE CALL BLOCKED to " + key);
         return;
     }
-
-    await getMedia();
-    const call = peer.call(pid, myMediaStream);
+    await initMedia();
+    var call = peer.call(pid, myMediaStream);
     activeCalls.set(key, call);
-    console.log("CALL CREATED to " + key);
 
     call.on('stream', function (stream) {
-        console.log("STREAM ATTACHED from " + key);
+        console.log("Connected with " + key);
         updList(key, call, "add");
-
-        if (document.getElementById(key + "-audio")) {
-            console.log("AUDIO ALREADY EXISTS for " + key);
-            return;
-        }
-
-        const audioElement = document.createElement('audio');
-        audioElement.srcObject = stream;
-        audioElement.id = key + "-audio";
-        audioElement.autoplay = true;
-        document.body.appendChild(audioElement);
-        console.log("AUDIO CREATED for " + key);
-
-        if (call.peerConnection) {
-            call.peerConnection.addEventListener('icecandidate', event => {
-                if (event.candidate) {
-                    const cand = event.candidate.candidate;
-                    if (cand.includes('typ relay')) {
-                        console.log('TURN relay candidate used:', cand);
-                    } else if (cand.includes('typ srflx')) {
-                        console.log('STUN (reflexive) candidate:', cand);
-                    } else if (cand.includes('typ host')) {
-                        console.log('Local host candidate:', cand);
-                    }
-                }
-            });
-        }
+        if (document.getElementById(key + "-audio")) return;
+        var el = document.createElement('audio');
+        el.srcObject = stream;
+        el.id = key + "-audio";
+        el.autoplay = true;
+        document.body.appendChild(el);
     });
 
-    call.on('iceStateChanged', () => {
-        console.log("ICE connection state changed");
-    });
-
+    call.on('iceStateChanged', function () {});
     call.on('error', function (err) {
-        console.log("Call error: " + err);
+        console.log("CALL ERROR " + key + ": " + err);
+        activeCalls.delete(key);
     });
-
     call.on('close', function () {
         activeCalls.delete(key);
         updList(key, call, "remove");
         var el = document.getElementById(key + "-audio");
         if (el) { try { el.pause(); el.srcObject = null; } catch(e) {} el.remove(); }
-        console.log("CALL CLOSED with " + key);
+        console.log("CALL CLOSED " + key);
     });
-
-    console.log("Calling " + pid + "...");
 }
 
 function updList(id, call, type) {
     if (type === "add") {
         connectedPeers.push({ peer_id: id, call: call });
     } else {
-        connectedPeers = connectedPeers.filter(i => i.peer_id !== call.peer);
+        connectedPeers = connectedPeers.filter(function(i) { return i.peer_id !== id; });
     }
 }
 
 function setUserVolume(id, value) {
-    const audio = document.getElementById(id + "-audio");
-    if (audio) {
-        audio.volume = value;
-        console.log(id + " volume set to", value);
-    }
+    var el = document.getElementById(id + "-audio");
+    if (el) el.volume = value;
 }
 
 function getAllUsers() {
@@ -238,14 +167,7 @@ function getAllUsers() {
 }
 
 function setMyVolume(value) {
-    if (gainNode) {
-        gainNode.gain.value = value;
-    }
-    if (myMediaStream) {
-        myMediaStream.getAudioTracks().forEach(function(t) {
-            t.enabled = value > 0;
-        });
-    }
+    if (gainNode) gainNode.gain.value = value;
 }
 
 window.PW = {
@@ -254,6 +176,7 @@ window.PW = {
     setUserVolume: setUserVolume,
     getConnectedUsers: getAllUsers,
     setMyVolume: setMyVolume,
+    getMediaStream: function() { return myMediaStream; },
     peer: null,
     disconnectAll: cleanSession
 };
