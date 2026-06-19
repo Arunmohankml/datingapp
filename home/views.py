@@ -84,7 +84,7 @@ import base64
 import math
 from django.utils import timezone
 
-from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier, Conversation, RoomRequest, StaffMember
+from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier, Conversation, RoomRequest, StaffMember, VoiceRoom, VoiceParticipant
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm, ProfileInitForm
 from .supabase_utils import delete_from_supabase_by_url
 from .cloudinary_utils import upload_to_cloudinary, upload_base64_to_cloudinary
@@ -3814,7 +3814,118 @@ def about_view(request):
 
 def contact_view(request):
     return render(request, 'contact.html')
-def contact_view(request):
-    return render(request, 'contact.html')
-def contact_view(request):
-    return render(request, 'contact.html')
+
+
+# ── Voice Lounge API ──
+
+@csrf_exempt
+@login_required
+def api_voice_rooms(request):
+    rooms = VoiceRoom.objects.all()
+    data = []
+    for room in rooms:
+        count = VoiceParticipant.objects.filter(room=room).count()
+        data.append({
+            'id': room.id,
+            'name': room.name,
+            'slug': room.slug,
+            'count': count,
+            'max': room.max_capacity,
+            'is_full': count >= room.max_capacity,
+        })
+    return JsonResponse({'rooms': data})
+
+
+@csrf_exempt
+@login_required
+def api_voice_join(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST required'})
+    try:
+        body = json.loads(request.body)
+        room_id = body.get('room_id')
+        join_muted = body.get('join_muted', False)
+        room = VoiceRoom.objects.get(id=room_id)
+
+        current_count = VoiceParticipant.objects.filter(room=room).count()
+        if current_count >= room.max_capacity:
+            return JsonResponse({'success': False, 'error': 'Room Full'})
+
+        # Remove from any other room first
+        VoiceParticipant.objects.filter(user=request.user).delete()
+
+        participant, created = VoiceParticipant.objects.get_or_create(
+            user=request.user,
+            room=room,
+            defaults={'is_muted': join_muted}
+        )
+        if not created:
+            participant.is_muted = join_muted
+            participant.save()
+
+        existing = VoiceParticipant.objects.filter(room=room).select_related('user__profile')
+        participants = []
+        for p in existing:
+            profile = getattr(p.user, 'profile', None)
+            participants.append({
+                'id': p.user.id,
+                'name': profile.name if profile else p.user.username,
+                'profile_pic': profile.profile_pic if profile and profile.profile_pic else '',
+            })
+
+        broadcast_event(f'voice_room_{room.id}', 'user_joined', {
+            'user_id': request.user.id,
+            'name': getattr(getattr(request.user, 'profile', None), 'name', request.user.username),
+            'profile_pic': getattr(getattr(request.user, 'profile', None), 'profile_pic', ''),
+        })
+
+        return JsonResponse({'success': True, 'room_id': room.id, 'participants': participants})
+    except VoiceRoom.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Room not found'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@csrf_exempt
+@login_required
+def api_voice_leave(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST required'})
+    try:
+        entry = VoiceParticipant.objects.filter(user=request.user).first()
+        if entry:
+            room_id = entry.room_id
+            entry.delete()
+            broadcast_event(f'voice_room_{room_id}', 'user_left', {
+                'user_id': request.user.id,
+            })
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+def api_voice_participants(request, room_id):
+    try:
+        room = VoiceRoom.objects.get(id=room_id)
+        entries = VoiceParticipant.objects.filter(room=room).select_related('user__profile')
+        participants = []
+        for p in entries:
+            profile = getattr(p.user, 'profile', None)
+            participants.append({
+                'id': p.user.id,
+                'name': profile.name if profile else p.user.username,
+                'profile_pic': profile.profile_pic if profile and profile.profile_pic else '',
+                'is_muted': p.is_muted,
+            })
+        return JsonResponse({'success': True, 'participants': participants, 'count': len(participants), 'max': room.max_capacity})
+    except VoiceRoom.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Room not found'})
+
+
+@csrf_exempt
+@login_required
+def api_voice_cleanup(request):
+    """Remove any stale participant entries for the current user."""
+    VoiceParticipant.objects.filter(user=request.user).delete()
+    return JsonResponse({'success': True})

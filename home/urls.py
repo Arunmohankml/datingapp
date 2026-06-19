@@ -80,6 +80,11 @@ urlpatterns = [
     path("api/roomrequests/<int:id>/delete/", views.api_delete_room_request, name="api_delete_room_request"),
     path("api/roomrequests/<int:id>/edit/", views.api_edit_room_request, name="api_edit_room_request"),
     path("roomrequest/<int:id>/", views.roomrequest_detail, name="roomrequest_detail"),
+    path("api/voice/rooms/", views.api_voice_rooms, name="api_voice_rooms"),
+    path("api/voice/join/", views.api_voice_join, name="api_voice_join"),
+    path("api/voice/leave/", views.api_voice_leave, name="api_voice_leave"),
+    path("api/voice/participants/<int:room_id>/", views.api_voice_participants, name="api_voice_participants"),
+    path("api/voice/cleanup/", views.api_voice_cleanup, name="api_voice_cleanup"),
     path("sitemap.xml", views.sitemap_view, name="sitemap"),
     path("robots.txt", views.robots_txt_view, name="robots_txt"),
 ]

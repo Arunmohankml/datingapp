@@ -715,3 +715,32 @@ class GiveawayWinner(models.Model):
     class Meta:
         verbose_name = "Giveaway Winner"
         verbose_name_plural = "Giveaway Winners"
+
+
+class VoiceRoom(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
+    max_capacity = models.PositiveIntegerField(default=8)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Voice Room"
+        verbose_name_plural = "Voice Rooms"
+
+
+class VoiceParticipant(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    room = models.ForeignKey(VoiceRoom, on_delete=models.CASCADE, related_name='participants')
+    joined_at = models.DateTimeField(auto_now_add=True)
+    is_muted = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('user', 'room')
+        verbose_name = "Voice Participant"
+        verbose_name_plural = "Voice Participants"
+
+    def __str__(self):
+        return f"{self.user.username} in {self.room.name}"
