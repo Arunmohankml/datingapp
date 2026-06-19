@@ -1478,12 +1478,13 @@
                     });
 
                     self._pch.bind('user_left', function(d) {
+                        if (d.user_id === ME.id) return;  // self-leave handled locally
                         LOG('user_left', d.user_id);
-                        if (d.user_id !== ME.id) { self._playSound('/static/leave.mp3'); }
+                        self._playSound('/static/leave.mp3');
                         self._removePart(roomId, d.user_id);
                         self._updateRoomAvatar(roomId);
                         if (self._getParts(roomId).length === 0 && self.curId === roomId) {
-                            self._fullCleanup();
+                            self._stopVoiceSession();
                         }
                     });
 
@@ -1591,76 +1592,59 @@
         join: function(roomId) {
             if (this.curId) { toast('Already in a room. Leave first.'); return; }
             var self = this;
-            self.resetVoiceSession();
             var ov = document.getElementById('voicePanelOverlay');
-            document.getElementById('voiceParticipants').innerHTML = '<div class="voice-loading"><div class="spinner"></div>Connecting...</div>';
+            var loadHtml = '<div class="voice-loading"><div class="spinner"></div>Connecting...</div>';
+            document.getElementById('voiceParticipants').innerHTML = loadHtml;
             document.getElementById('voicePanelRoomName').textContent = this.rooms[roomId] ? this.rooms[roomId].name : 'Room';
             ov.classList.add('open');
             this._post('/api/voice/join/', { room_id: roomId, join_muted: false, session_peer_id: ME.sessionPeerId }).then(function(data) {
                 if (!data.success) { toast(data.error||'Failed'); ov.classList.remove('open'); return; }
-                self._playSound('/static/join.mp3');
                 self.curId = data.room_id;
                 LOG('join', 'joined room '+self.curId);
-                // Initialize participants from server
                 var parts = (data.participants||[]).map(function(p){return {id:p.id, name:p.name, pic:p.profile_pic||'', session_peer_id:p.session_peer_id||'', muted:p.is_muted||false};});
                 self._setPartsRaw(self.curId, parts);
-                // Sync room data
                 self._updateRoomAvatar(self.curId);
-                // Init PeerWave
-                self._initPW();
-                // Subscribe to room channel
-                self._subRoom(self.curId);
-                // Start heartbeat
-                self._startHB();
-                // Render
-                self._render();
+                self._initPW(function() {
+                    self._subRoom(self.curId);
+                    self._startHB();
+                    self._playSound('/static/join.mp3');
+                });
             }).catch(function(){ toast('Connection error'); ov.classList.remove('open'); });
         },
 
         /* ── LEAVE ── */
         leave: function() {
             var self = this;
-            this._showReconnect(false);
             self._playSound('/static/leave.mp3');
-            this._post('/api/voice/leave/', {}).then(clean).catch(clean);
-            function clean() {
-                self._fullCleanup();
+            self._stopVoiceSession();
+            this._post('/api/voice/leave/', {}).then(function() {
                 LOG('leave', 'done');
-            }
+            }).catch(function(){});
         },
 
-        _fullCleanup: function() {
-            // Bug #2: NEVER wipe _parts for all users — only remove self
-            if (this.curId && this.rooms[this.curId] && ME) {
-                this._removePart(this.curId, ME.id);
-                this._updateRoomAvatar(this.curId);
-            }
+        _stopVoiceSession: function() {
+            LOG('stopVS', 'stopping voice session');
             this._stopVAD();
             this._stopHB();
             this._unsubRoom();
-            if (this.mic) { this.mic.getTracks().forEach(function(t){t.stop()}); this.mic=null; }
-            // ⚠️ NEVER delete window.PW — same closure context needed
-            if (window.PW) {
-                try {
-                    if (window.PW.disconnectAll) { window.PW.disconnectAll(); }
-                    else if (window.PW.getConnectedUsers) {
-                        window.PW.getConnectedUsers().forEach(function(u){ try{u.call.close()}catch(e){} });
-                    }
-                } catch(e) {}
-            }
-            document.querySelectorAll('audio').forEach(function(el){
-                if (el.srcObject) {
-                    try { el.srcObject.getTracks().forEach(function(t){t.stop()}); } catch(e) {}
-                }
-                el.remove();
-            });
+            // Remove self from local parts so sidebar updates immediately
+            if (this.curId && ME) this._removePart(this.curId, ME.id);
+            if (this.curId) this._updateRoomAvatar(this.curId);
             this.curId = null;
             this.pwOk = false;
             this.muted = false;
             this.vols = {};
+            if (this.mic) { try { this.mic.getTracks().forEach(function(t){t.stop()}); } catch(e) {} this.mic = null; }
+            if (window.PW) {
+                try { if (window.PW.disconnectAll) window.PW.disconnectAll(); } catch(e) {}
+            }
+            document.querySelectorAll('audio').forEach(function(el){
+                if (el.srcObject) { try { el.srcObject.getTracks().forEach(function(t){t.stop()}); } catch(e) {} }
+                el.remove();
+            });
             document.getElementById('voicePanelOverlay').classList.remove('open');
             this._render();
-            LOG('cleanup', 'full cleanup done');
+            LOG('stopVS', 'done');
         },
 
         /* ── MUTE ── */
@@ -1670,10 +1654,8 @@
             if (this.pwOk && window.PW.setMyVolume) {
                 try { window.PW.setMyVolume(this.muted ? 0 : 1); } catch(e) {}
             }
-            // Broadcast to server — this only updates is_muted, NEVER removes user
             this._post('/api/voice/mute/', { is_muted: this.muted }).catch(function(){});
             this._renderMicBtn();
-            LOG('mute', this.muted ? 'muted' : 'unmuted');
         },
 
         /* ── SOUND ── */
@@ -1698,74 +1680,25 @@
             if (s) s.classList.toggle('open');
         },
 
-        /* ── VOICE SESSION RESET (call before every join) ── */
-        resetVoiceSession: function() {
-            LOG('RESET', 'destroying voice session');
-            // Stop VAD (closes AudioContext used for local mic analysis)
-            this._stopVAD();
-            this._stopHB();
-            this._unsubRoom();
-            // Stop our mic tracks
-            if (this.mic) {
-                try { this.mic.getTracks().forEach(function(t){t.stop()}); } catch(e) {}
-                this.mic = null;
-            }
-            // Remove audio elements & stop remote streams
-            document.querySelectorAll('audio').forEach(function(el){
-                if (el.srcObject) {
-                    try { el.srcObject.getTracks().forEach(function(t){t.stop()}); } catch(e) {}
-                }
-                el.remove();
-            });
-            // ⚠️ NEVER delete window.PW — we need the SAME closure context
-            // so PW.connectToVoice() → cleanSession() can destroy the old peer
-            // within the same script execution. Deleting PW forces script reload,
-            // creating a new closure that can't reach the old peer's connections.
-            if (window.PW) {
-                try {
-                    if (window.PW.disconnectAll) { window.PW.disconnectAll(); }
-                    else if (window.PW.getConnectedUsers) {
-                        window.PW.getConnectedUsers().forEach(function(u){ try{u.call.close()}catch(e){} });
-                    }
-                } catch(e) { LOG('RESET err', 'pw: '+e.message); }
-            }
-            this.vols = {};
-            this.pwOk = false;
-            this.muted = false;
-            LOG('RESET', 'done');
-        },
-
         /* ── PEERWAVE ── */
-        _initPW: function() {
+        _initPW: function(cb) {
             var self = this;
-            if (window.PW && window.PW.connectToVoice) { doConnect(); return; }
-            var pj = document.createElement('script');
-            pj.src = 'https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js';
-            pj.onload = function() {
-                var pw = document.createElement('script');
-                pw.src = '/api/voice/voice.js';
-                pw.onload = function(){ doConnect(); };
-                document.head.appendChild(pw);
-            };
-            document.head.appendChild(pj);
             function doConnect() {
                 try {
                     window.PW.connectToVoice(String(ME.id));
-                    LOG('pw', 'initiating connection');
                     self._startVAD();
-                    // Bug #1: Wait for peer to be open before calling users
                     var peers = self._getParts(self.curId);
                     var onReady = function() {
                         self.pwOk = true;
                         peers.forEach(function(p) {
                             if (p.id !== ME.id && p.session_peer_id && ME.sessionPeerId) {
-                                // Caller election rule: only call peers whose session_peer_id is SMALLER than mine
                                 if (p.session_peer_id < ME.sessionPeerId) {
                                     try { window.PW.callUser(String(p.id)); } catch(e) {}
                                 }
                             }
                         });
-                        LOG('pw', 'peers called with election rule');
+                        LOG('pw', 'ready, peers called via election');
+                        if (cb) cb();
                     };
                     if (window.PW.peer && window.PW.peer._open) {
                         onReady();
@@ -1782,6 +1715,16 @@
                     }
                 } catch(e) { LOG('pw err', e); toast('Voice connection failed'); }
             }
+            if (window.PW && window.PW.connectToVoice) { doConnect(); return; }
+            var pj = document.createElement('script');
+            pj.src = 'https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js';
+            pj.onload = function() {
+                var pw = document.createElement('script');
+                pw.src = '/api/voice/voice.js';
+                pw.onload = function(){ doConnect(); };
+                document.head.appendChild(pw);
+            };
+            document.head.appendChild(pj);
         },
 
         /* ── VAD ── */
@@ -1793,12 +1736,12 @@
                 self._vadCtx = ac;
                 self._remoteVans = {};
                 self._remoteVadArrs = {};
-                function getMicStream() {
-                    var pwStream = window.PW && window.PW.getMediaStream ? window.PW.getMediaStream() : null;
-                    if (pwStream) return Promise.resolve(pwStream);
-                    return navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-                }
-                getMicStream().then(function(stream) {
+                var pwStream = window.PW && window.PW.getMediaStream ? window.PW.getMediaStream() : null;
+                if (pwStream) { setupVAD(pwStream); return; }
+                navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(setupVAD).catch(function(e){ LOG('vad mic err', e); });
+            } catch(e) { LOG('vad err', e); }
+            function setupVAD(stream) {
+                try {
                     var src = ac.createMediaStreamSource(stream);
                     var an = ac.createAnalyser(); an.fftSize = 256;
                     src.connect(an);
@@ -1809,7 +1752,6 @@
                         var parts = self.curId ? self._getParts(self.curId) : [];
                         parts.forEach(function(p) {
                             var isMe = p.id === ME.id;
-                            // Set up remote VAD for this peer if not yet done
                             if (!isMe && !self._remoteVans[p.id]) {
                                 var audioEl = document.getElementById(p.id+'-audio');
                                 if (audioEl && audioEl.srcObject) {
@@ -1828,24 +1770,21 @@
                             anl.getByteFrequencyData(arr);
                             var sum = 0; for (var i=0; i<arr.length; i++) sum+=arr[i];
                             var speaking = (sum/arr.length) > 15;
-                            // Update dot on avatar
                             var dot = document.getElementById('sdot_'+p.id);
                             if (dot) {
                                 if (p.muted) { dot.className = 'vad-dot muted'; }
                                 else if (speaking) { dot.className = 'vad-dot speaking'; }
                                 else { dot.className = 'vad-dot silent'; }
                             }
-                            // Update avatar green ring
                             var ava = document.getElementById('pava_'+p.id);
                             if (ava) { ava.classList.toggle('speaking', speaking && !p.muted); }
-                            // Update participant row highlight
                             var pe = document.querySelector('.voice-participant[data-peer="'+p.id+'"]');
                             if (pe) { pe.classList.toggle('speaking', speaking && !p.muted); }
                         });
                     }, 200);
-                    LOG('vad', 'started with remote detection');
-                }).catch(function(e){ LOG('vad mic err', e); });
-            } catch(e) { LOG('vad err', e); }
+                    LOG('vad', 'started');
+                } catch(e) { LOG('vad setup err', e); }
+            }
         },
 
         _stopVAD: function() {
@@ -1862,12 +1801,11 @@
             this._hb = setInterval(function() {
                 self._post('/api/voice/heartbeat/', {}).then(function(d) {
                     if (d.in_room === null && self.curId) {
-                        LOG('hb', 'server removed us, cleaning up');
-                        self._fullCleanup();
+                        LOG('hb', 'server removed us');
+                        self._stopVoiceSession();
                     }
                 }).catch(function(){});
             }, 10000);
-            LOG('hb', 'started');
         },
 
         _stopHB: function() {
@@ -1877,7 +1815,6 @@
         /* ── PANEL ── */
         openPanel: function() {
             document.getElementById('voicePanelOverlay').classList.add('open');
-            // Always render from VRS state
             this._renderPanel();
         },
 
@@ -1899,8 +1836,6 @@
                 if (r.slug === 'study-room') { icon = 'menu_book'; icCls = 'study'; }
                 if (r.slug === 'night-owls') { icon = 'dark_mode'; icCls = 'night'; }
                 var isMostActive = r.count > 0 && r.count === maxCount;
-
-                // ── Avatar stack from room data ──
                 var avHtml = '';
                 var avs = r.avatars || [];
                 if (avs.length) {
@@ -1916,15 +1851,12 @@
                     if (overflow > 0) avHtml += '<div class="voice-avatar-overflow">+'+overflow+'</div>';
                     avHtml += '</div>';
                 }
-
-                // ── Friends ──
                 var friendsHtml = '';
                 if (r.friends && r.friends.length) {
                     var btn = '';
                     if (!inRoom) btn = '<button class="voice-friend-join" onclick="VRS.join('+r.id+')"><span class="material-symbols-outlined" style="font-size:14px;">headset</span>Join '+r.friends[0]+'</button>';
                     friendsHtml = '<div class="voice-friends-inside"><span class="material-symbols-outlined" style="font-size:14px;color:var(--primary);">group</span>'+r.friends.map(function(f){return '<span class="friend-name">'+f+'</span>'}).join(', ')+btn+'</div>';
                 }
-
                 html += '<div class="voice-room-row">';
                 html += '<div class="voice-room-left">';
                 html += '<div class="voice-room-name"><span class="room-icon '+icCls+'"><span class="material-symbols-outlined">'+icon+'</span></span>'+r.name;

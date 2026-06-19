@@ -1,25 +1,34 @@
-let myPeerId = null;
-let peer = null;
-let myMediaStream = null;
-let connectedPeers = [];
-let audioContext = null;
-let gainNode = null;
-let activeCalls = new Map();
-let mediaReady = false;
+var myPeerId = null;
+var peer = null;
+var myMediaStream = null;
+var connectedPeers = [];
+var audioContext = null;
+var gainNode = null;
+var activeCalls = new Map();
+var mediaReady = false;
 
-function removeAllAudio() {
-    document.querySelectorAll('audio').forEach(function(el) {
-        if (el.srcObject) {
-            try { el.srcObject.getTracks().forEach(function(t){t.stop()}); } catch(e) {}
-        }
-        el.remove();
+function enableMedia() {
+    if (mediaReady && myMediaStream) return Promise.resolve();
+    return navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        var source = audioContext.createMediaStreamSource(stream);
+        gainNode = audioContext.createGain();
+        gainNode.gain.value = 1.0;
+        source.connect(gainNode);
+        var dest = audioContext.createMediaStreamDestination();
+        gainNode.connect(dest);
+        myMediaStream = dest.stream;
+        mediaReady = true;
+    }).catch(function(err) {
+        console.log("PW mic error:", err);
+        mediaReady = false;
     });
 }
 
 function cleanSession() {
-    activeCalls.forEach(function(call) { try { call.close(); } catch(e) {} });
+    activeCalls.forEach(function(c) { try { c.close(); } catch(e) {} });
     activeCalls.clear();
-    connectedPeers.forEach(function(u){ try { u.call.close(); } catch(e) {} });
+    connectedPeers.forEach(function(u) { try { u.call.close(); } catch(e) {} });
     connectedPeers = [];
     if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
     if (audioContext) { try { audioContext.close(); } catch(e) {} audioContext = null; }
@@ -27,36 +36,18 @@ function cleanSession() {
         try { myMediaStream.getTracks().forEach(function(t){t.stop()}); } catch(e) {}
         myMediaStream = null;
     }
-    removeAllAudio();
+    document.querySelectorAll('audio').forEach(function(el) {
+        if (el.srcObject) { try { el.srcObject.getTracks().forEach(function(t){t.stop()}); } catch(e) {} }
+        el.remove();
+    });
     myPeerId = null;
     gainNode = null;
     mediaReady = false;
 }
 
-async function initMedia() {
-    if (mediaReady && myMediaStream) return;
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const source = audioContext.createMediaStreamSource(stream);
-        gainNode = audioContext.createGain();
-        gainNode.gain.value = 1.0;
-        source.connect(gainNode);
-        const destination = audioContext.createMediaStreamDestination();
-        gainNode.connect(destination);
-        myMediaStream = destination.stream;
-        mediaReady = true;
-    } catch (err) {
-        console.log("Error accessing microphone:", err);
-    }
-}
-
 function connectToServer(mid) {
     cleanSession();
-    if (mid === "") {
-        console.log("Input is empty");
-        return;
-    }
+    if (!mid) { console.log("PW: empty id"); return; }
     peer = new Peer(mid, {
         config: {
             iceServers: [
@@ -70,91 +61,66 @@ function connectToServer(mid) {
         debug: 3
     });
     window.PW.peer = peer;
-
-    peer.on('open', function (id) {
-        myPeerId = id;
-        console.log("Your peer id is " + id);
-    });
-
-    peer.on('call', async function (call) {
+    peer.on('open', function(id) { myPeerId = id; console.log("PW peer open:", id); });
+    peer.on('call', function(call) {
         var pid = call.peer;
-        if (activeCalls.has(pid)) {
-            console.log("DUPLICATE INCOMING CALL REJECTED from " + pid);
-            call.close();
-            return;
-        }
-        console.log("Got call from " + pid);
+        if (activeCalls.has(pid)) { console.log("PW reject dup inbound", pid); call.close(); return; }
         activeCalls.set(pid, call);
-        await initMedia();
-        call.answer(myMediaStream);
-
-        call.on('stream', function (stream) {
-            updList(pid, call, "add");
-            if (document.getElementById(pid + "-audio")) return;
-            var el = document.createElement('audio');
-            el.srcObject = stream;
-            el.id = pid + "-audio";
-            el.autoplay = true;
-            document.body.appendChild(el);
+        enableMedia().then(function() {
+            call.answer(myMediaStream);
+            call.on('stream', function(stream) {
+                connectPeer(pid, call, stream);
+            });
         });
-
-        call.on('close', function () {
+        call.on('close', function() {
             activeCalls.delete(pid);
-            updList(pid, call, "remove");
-            var el = document.getElementById(pid + "-audio");
-            if (el) { try { el.pause(); el.srcObject = null; } catch(e) {} el.remove(); }
-            console.log("INCOMING CALL CLOSED with " + pid);
+            disconnectPeer(pid);
         });
-
-        call.on('error', function (err) {
-            console.log("INCOMING CALL ERROR " + pid + ": " + err);
+        call.on('error', function(err) {
+            console.log("PW inbound err", pid, err);
             activeCalls.delete(pid);
+            disconnectPeer(pid);
         });
     });
 }
 
-async function callPeer(pid) {
-    if (!peer) return console.log("not connected to server");
+function callPeer(pid) {
+    if (!peer) return console.log("PW: no peer");
     var key = String(pid);
-    if (activeCalls.has(key)) {
-        console.log("DUPLICATE CALL BLOCKED to " + key);
-        return;
-    }
-    await initMedia();
-    var call = peer.call(pid, myMediaStream);
-    activeCalls.set(key, call);
-
-    call.on('stream', function (stream) {
-        console.log("Connected with " + key);
-        updList(key, call, "add");
-        if (document.getElementById(key + "-audio")) return;
-        var el = document.createElement('audio');
-        el.srcObject = stream;
-        el.id = key + "-audio";
-        el.autoplay = true;
-        document.body.appendChild(el);
-    });
-
-    call.on('iceStateChanged', function () {});
-    call.on('error', function (err) {
-        console.log("CALL ERROR " + key + ": " + err);
-        activeCalls.delete(key);
-    });
-    call.on('close', function () {
-        activeCalls.delete(key);
-        updList(key, call, "remove");
-        var el = document.getElementById(key + "-audio");
-        if (el) { try { el.pause(); el.srcObject = null; } catch(e) {} el.remove(); }
-        console.log("CALL CLOSED " + key);
+    if (activeCalls.has(key)) { console.log("PW block dup call", key); return; }
+    enableMedia().then(function() {
+        var call = peer.call(pid, myMediaStream);
+        if (!call) return;
+        activeCalls.set(key, call);
+        call.on('stream', function(stream) {
+            connectPeer(key, call, stream);
+        });
+        call.on('close', function() {
+            activeCalls.delete(key);
+            disconnectPeer(key);
+        });
+        call.on('error', function(err) {
+            console.log("PW outbound err", key, err);
+            activeCalls.delete(key);
+            disconnectPeer(key);
+        });
     });
 }
 
-function updList(id, call, type) {
-    if (type === "add") {
-        connectedPeers.push({ peer_id: id, call: call });
-    } else {
-        connectedPeers = connectedPeers.filter(function(i) { return i.peer_id !== id; });
-    }
+function connectPeer(id, call, stream) {
+    if (document.getElementById(id + "-audio")) return;
+    var el = document.createElement('audio');
+    el.srcObject = stream;
+    el.id = id + "-audio";
+    el.autoplay = true;
+    document.body.appendChild(el);
+    connectedPeers.push({ peer_id: id, call: call });
+}
+
+function disconnectPeer(id) {
+    connectedPeers = connectedPeers.filter(function(p) { return p.peer_id !== id; });
+    var el = document.getElementById(id + "-audio");
+    if (el) { try { el.pause(); el.srcObject = null; } catch(e) {} el.remove(); }
 }
 
 function setUserVolume(id, value) {
@@ -162,20 +128,20 @@ function setUserVolume(id, value) {
     if (el) el.volume = value;
 }
 
-function getAllUsers() {
-    return connectedPeers;
-}
-
 function setMyVolume(value) {
     if (gainNode) gainNode.gain.value = value;
+}
+
+function getAllUsers() {
+    return connectedPeers;
 }
 
 window.PW = {
     connectToVoice: connectToServer,
     callUser: callPeer,
     setUserVolume: setUserVolume,
-    getConnectedUsers: getAllUsers,
     setMyVolume: setMyVolume,
+    getConnectedUsers: getAllUsers,
     getMediaStream: function() { return myMediaStream; },
     peer: null,
     disconnectAll: cleanSession
