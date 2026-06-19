@@ -1384,6 +1384,7 @@
         _cch: null,        // Pusher counts channel
         _hb: null,         // heartbeat interval
         _vad: null,        // VAD interval
+        _wakeLock: null,   // Screen Wake Lock
         _van: null,        // AnalyserNode
 
         /* ── Server API ── */
@@ -1611,6 +1612,7 @@
                     self._subRoom(self.curId);
                     self._startHB();
                     self._playSound('/static/join.mp3');
+                    self._acquireWakeLock();
                 });
             }).catch(function(){ toast('Connection error'); ov.classList.remove('open'); });
         },
@@ -1645,6 +1647,7 @@
                 if (el.srcObject) { try { el.srcObject.getTracks().forEach(function(t){t.stop()}); } catch(e) {} }
                 el.remove();
             });
+            this._releaseWakeLock();
             document.getElementById('voicePanelOverlay').classList.remove('open');
             this._render();
             LOG('stopVS', 'done');
@@ -1920,6 +1923,21 @@
             lbl.textContent = this.muted ? 'Mic Off' : 'Mic On';
         },
 
+        _acquireWakeLock: function() {
+            if (this._wakeLock) return;
+            var self = this;
+            if ('wakeLock' in navigator) {
+                navigator.wakeLock.request('screen').then(function(lock) {
+                    self._wakeLock = lock;
+                    lock.addEventListener('release', function() { self._wakeLock = null; });
+                }).catch(function(){});
+            }
+        },
+
+        _releaseWakeLock: function() {
+            if (this._wakeLock) { try { this._wakeLock.release(); } catch(e) {} this._wakeLock = null; }
+        },
+
         _showReconnect: function(yes) {
             var el = document.getElementById('voiceReconnect');
             if (el) el.classList.toggle('show', yes);
@@ -1935,9 +1953,13 @@
             window.addEventListener('pagehide', function() {
                 if (self.curId) navigator.sendBeacon('/api/voice/leave/', JSON.stringify({}));
             });
+            // Voice continues in background. Heartbeat + server-side stale
+            // cleanup keeps session alive. On return, verify server state.
             document.addEventListener('visibilitychange', function() {
-                if (document.visibilityState === 'hidden' && self.curId) {
-                    navigator.sendBeacon('/api/voice/leave/', JSON.stringify({}));
+                if (document.visibilityState === 'visible' && self.curId) {
+                    self._post('/api/voice/heartbeat/', {}).then(function(d) {
+                        if (d.in_room === null) self._stopVoiceSession();
+                    }).catch(function(){});
                 }
             });
         }

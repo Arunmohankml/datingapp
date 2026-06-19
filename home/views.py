@@ -3821,7 +3821,7 @@ def contact_view(request):
 from django.utils import timezone
 from datetime import timedelta
 
-STALE_HEARTBEAT_SECONDS = 35
+STALE_HEARTBEAT_SECONDS = 120
 
 
 def _clean_stale_participants():
