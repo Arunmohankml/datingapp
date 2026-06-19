@@ -185,14 +185,26 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Django 5.2 uses STORAGES dict (STATICFILES_STORAGE is removed)
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+# Prevent 500 errors when a manifest entry is missing on serverless cold starts
+WHITENOISE_MANIFEST_STRICT = False
+
+# Serve root-level files (favicon.ico, robots.txt) from project root
+WHITENOISE_ROOT = os.path.join(BASE_DIR, 'static_root')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 

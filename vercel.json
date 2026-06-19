@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "python manage.py collectstatic --noinput",
+  "buildCommand": "python manage.py collectstatic --noinput && python manage.py migrate",
   "builds": [
     {
       "src": "index.py",
@@ -8,10 +8,6 @@
     }
   ],
   "routes": [
-    {
-      "src": "/static/(.*)",
-      "dest": "/staticfiles/$1"
-    },
     {
       "src": "/(.*)",
       "dest": "index.py"
