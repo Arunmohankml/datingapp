@@ -6,6 +6,8 @@ let connectedPeers = [];
 let audioContext = null;
 let gainNode = null;
 
+let activeCalls = new Map();
+
 function removeAllAudio() {
     document.querySelectorAll('audio').forEach(function(el) {
         if (el.srcObject) {
@@ -16,6 +18,8 @@ function removeAllAudio() {
 }
 
 function cleanSession() {
+    activeCalls.forEach(function(call) { try { call.close(); } catch(e) {} });
+    activeCalls.clear();
     connectedPeers.forEach(function(u){ try { u.call.close(); } catch(e) {} });
     connectedPeers = [];
     if (peer) { try { peer.destroy(); } catch(e) {} peer = null; }
@@ -90,18 +94,32 @@ function connectToServer(mid) {
     });
 
     peer.on('call', async function (call) {
-        console.log("Got call from " + call.peer);
+        var pid = call.peer;
+        if (activeCalls.has(pid)) {
+            console.log("DUPLICATE INCOMING CALL REJECTED from " + pid);
+            call.close();
+            return;
+        }
+        console.log("Got call from " + pid);
+        activeCalls.set(pid, call);
         await getMedia();
         call.answer(myMediaStream);
 
         call.on('stream', function (stream) {
-            updList(call.peer, call, "add");
+            console.log("STREAM ATTACHED from " + pid);
+            updList(pid, call, "add");
+
+            if (document.getElementById(pid + "-audio")) {
+                console.log("AUDIO ALREADY EXISTS for " + pid);
+                return;
+            }
 
             const audioElement = document.createElement('audio');
             audioElement.srcObject = stream;
-            audioElement.id = call.peer + "-audio";
+            audioElement.id = pid + "-audio";
             audioElement.autoplay = true;
             document.body.appendChild(audioElement);
+            console.log("AUDIO CREATED for " + pid);
 
             if (call.peerConnection) {
                 call.peerConnection.addEventListener('icecandidate', event => {
@@ -124,18 +142,32 @@ function connectToServer(mid) {
 async function callPeer(pid) {
     if (!peer) return console.log("havnt connected to server");
 
+    var key = String(pid);
+    if (activeCalls.has(key)) {
+        console.log("DUPLICATE CALL BLOCKED to " + key);
+        return;
+    }
+
     await getMedia();
     const call = peer.call(pid, myMediaStream);
+    activeCalls.set(key, call);
+    console.log("CALL CREATED to " + key);
 
     call.on('stream', function (stream) {
-        console.log("Successfully connected with " + call.peer);
-        updList(call.peer, call, "add");
+        console.log("STREAM ATTACHED from " + key);
+        updList(key, call, "add");
+
+        if (document.getElementById(key + "-audio")) {
+            console.log("AUDIO ALREADY EXISTS for " + key);
+            return;
+        }
 
         const audioElement = document.createElement('audio');
         audioElement.srcObject = stream;
-        audioElement.id = call.peer + "-audio";
+        audioElement.id = key + "-audio";
         audioElement.autoplay = true;
         document.body.appendChild(audioElement);
+        console.log("AUDIO CREATED for " + key);
 
         if (call.peerConnection) {
             call.peerConnection.addEventListener('icecandidate', event => {
@@ -162,8 +194,11 @@ async function callPeer(pid) {
     });
 
     call.on('close', function () {
-        updList(call.peer, call, "remove");
-        console.log("Disconnected from " + call.peer);
+        activeCalls.delete(key);
+        updList(key, call, "remove");
+        var el = document.getElementById(key + "-audio");
+        if (el) { try { el.pause(); el.srcObject = null; } catch(e) {} el.remove(); }
+        console.log("CALL CLOSED with " + key);
     });
 
     console.log("Calling " + pid + "...");
@@ -192,7 +227,11 @@ function getAllUsers() {
 function setMyVolume(value) {
     if (gainNode) {
         gainNode.gain.value = value;
-        console.log("set my volume to ",value)
+    }
+    if (myMediaStream) {
+        myMediaStream.getAudioTracks().forEach(function(t) {
+            t.enabled = value > 0;
+        });
     }
 }
 
