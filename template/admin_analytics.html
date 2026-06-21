@@ -1,0 +1,596 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<style>
+html, body {
+    height: 100dvh; overflow: hidden; position: fixed; width: 100%;
+    background: #f7f9fb; padding: 0 !important; margin: 0 !important;
+}
+.container { max-width:100% !important; width:100% !important; padding:0 !important; margin:0 !important; height:100%; box-sizing:border-box; background:transparent !important; border:none !important; box-shadow:none !important; }
+.analytics-wrapper { display:flex; flex-direction:column; position:fixed; top:0; left:0; right:0; bottom:0; width:100%; max-width:1200px; margin:0 auto; background:linear-gradient(180deg,#fbfcff 0%,#f7f9fb 58%,#eff4fb 100%); z-index:10; }
+.an-header { flex-shrink:0; padding:calc(10px + env(safe-area-inset-top)) 20px 16px; background:rgba(247,249,251,0.85); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-bottom:1px solid rgba(0,74,198,0.08); display:flex; align-items:center; gap:12px; z-index:20; }
+.an-header-main { display:flex; align-items:center; gap:12px; flex:1; }
+.an-back-btn { width:44px; height:44px; border-radius:16px; background:#fff; display:flex; align-items:center; justify-content:center; text-decoration:none; color:#2563eb; border:1px solid rgba(0,74,198,0.08); box-shadow:0 10px 24px rgba(15,23,42,0.06); transition:0.2s; cursor:pointer; }
+.an-back-btn:active { transform:scale(0.94); }
+.an-header h2 { margin:0; font-size:22px; font-weight:800; color:#0f172a; letter-spacing:-0.5px; }
+.an-header p { margin:0; font-size:11px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; color:#64748b; }
+.an-body { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:20px; padding-bottom:120px; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.an-section { animation:fadeIn 0.4s ease; margin-bottom:28px; }
+.an-section-title { font-size:18px; font-weight:800; color:#0f172a; margin:0 0 16px; display:flex; align-items:center; gap:8px; letter-spacing:-0.3px; }
+.an-section-title i { color:#2563eb; }
+.an-grid { display:grid; gap:12px; }
+.an-grid-2 { grid-template-columns:1fr 1fr; }
+.an-grid-3 { grid-template-columns:1fr 1fr 1fr; }
+.an-grid-4 { grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); }
+.an-card { background:#fff; border:1px solid rgba(0,74,198,0.08); border-radius:20px; padding:18px; box-shadow:0 10px 30px rgba(15,23,42,0.04); }
+.an-card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.an-card-header h3 { margin:0; font-size:14px; font-weight:700; color:#0f172a; display:flex; align-items:center; gap:6px; }
+.an-stat { display:flex; flex-direction:column; gap:2px; }
+.an-stat-val { font-size:28px; font-weight:800; color:#0f172a; line-height:1.1; }
+.an-stat-label { font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; }
+.an-stat-change { font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px; display:inline-block; margin-top:4px; }
+.an-change-up { background:#d1fae5; color:#16a34a; }
+.an-change-down { background:#fee2e2; color:#ef4444; }
+.an-big-stat { font-size:36px; font-weight:900; color:#0f172a; line-height:1; letter-spacing:-1px; }
+.an-metric { background:#fff; border:1px solid rgba(0,74,198,0.08); border-radius:20px; padding:16px; box-shadow:0 10px 30px rgba(15,23,42,0.04); }
+.an-metric-icon { width:36px; height:36px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:16px; margin-bottom:8px; }
+.an-metric .an-stat-val { font-size:22px; }
+.an-table { width:100%; border-collapse:collapse; font-size:13px; }
+.an-table th { text-align:left; font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; padding:8px 10px; border-bottom:2px solid #f1f5f9; }
+.an-table td { padding:8px 10px; border-bottom:1px solid #f1f5f9; color:#1e293b; font-weight:600; }
+.an-table tr:hover td { background:#f8fafc; }
+.an-rank { font-weight:800; color:#2563eb; }
+.an-rank-1 { color:#f59e0b; } .an-rank-2 { color:#94a3b8; } .an-rank-3 { color:#cd7f32; }
+.an-tabs { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+.an-tab { padding:6px 14px; border-radius:10px; font-size:12px; font-weight:700; border:1px solid #e2e8f0; background:#fff; color:#475569; cursor:pointer; transition:0.2s; font-family:'Plus Jakarta Sans',sans-serif; }
+.an-tab.active { background:#2563eb; color:#fff; border-color:#2563eb; }
+.an-tab:active { transform:scale(0.96); }
+.an-flex { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.an-badge { font-size:10px; font-weight:800; padding:3px 8px; border-radius:8px; text-transform:uppercase; letter-spacing:0.3px; }
+.an-bar { height:6px; background:#f1f5f9; border-radius:4px; overflow:hidden; margin-top:4px; }
+.an-bar-fill { height:100%; border-radius:4px; transition:width 0.6s ease; }
+.an-progress-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+.an-progress-label { font-size:12px; font-weight:600; color:#475569; min-width:80px; }
+.an-progress-bar { flex:1; height:8px; background:#f1f5f9; border-radius:6px; overflow:hidden; }
+.an-progress-fill { height:100%; border-radius:6px; transition:width 0.8s ease; }
+.an-progress-pct { font-size:11px; font-weight:800; color:#0f172a; min-width:36px; text-align:right; }
+.an-funnel { display:flex; flex-direction:column; gap:6px; }
+.an-funnel-step { display:flex; align-items:center; gap:12px; padding:10px 14px; background:#f8fafc; border-radius:12px; border:1px solid #e2e8f0; }
+.an-funnel-num { font-size:12px; font-weight:800; color:#2563eb; width:20px; }
+.an-funnel-name { flex:1; font-size:13px; font-weight:700; color:#0f172a; }
+.an-funnel-count { font-size:12px; font-weight:700; color:#64748b; }
+.an-funnel-pct { font-size:12px; font-weight:800; color:#16a34a; min-width:40px; text-align:right; }
+.an-funnel-bar { width:60px; height:6px; background:#e2e8f0; border-radius:4px; overflow:hidden; }
+.an-funnel-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,#2563eb,#3b82f6); }
+.an-activity { max-height:400px; overflow-y:auto; }
+.an-activity-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid #f1f5f9; font-size:12px; }
+.an-activity-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+.an-activity-text { flex:1; color:#1e293b; font-weight:600; }
+.an-activity-time { color:#94a3b8; font-weight:600; font-size:10px; }
+.an-filter-bar { display:flex; gap:8px; padding:12px 20px; background:#fff; border-bottom:1px solid #e2e8f0; flex-wrap:wrap; align-items:center; position:sticky; top:0; z-index:15; }
+.an-filter-select { padding:6px 10px; border-radius:10px; border:1px solid #e2e8f0; font-size:12px; font-weight:600; font-family:inherit; background:#fff; color:#1e293b; outline:none; }
+.an-filter-select:focus { border-color:#2563eb; }
+.an-refresh-btn { margin-left:auto; padding:6px 14px; border-radius:10px; border:1px solid #2563eb; background:#eff6ff; color:#2563eb; font-size:12px; font-weight:700; cursor:pointer; }
+.empty-state { text-align:center; padding:30px 20px; color:#94a3b8; font-size:13px; }
+.an-chart-container { position:relative; height:200px; }
+@media(max-width:768px) {
+    .an-grid-2 { grid-template-columns:1fr; }
+    .an-grid-3 { grid-template-columns:1fr; }
+    .an-filter-bar { overflow-x:auto; flex-wrap:nowrap; }
+}
+@media(max-width:480px) {
+    .an-header h2 { font-size:18px; }
+    .an-stat-val { font-size:22px; }
+    .an-big-stat { font-size:28px; }
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block body %}
+<div class="analytics-wrapper">
+    <div class="an-header">
+        <div class="an-header-main">
+            <a href="{% url 'admin_dashboard' %}" class="an-back-btn"><span class="material-symbols-outlined">arrow_back</span></a>
+            <div>
+                <p>Data & Insights</p>
+                <h2>Analytics</h2>
+            </div>
+        </div>
+        <button class="an-refresh-btn" onclick="location.reload()"><span class="material-symbols-outlined" style="font-size:16px;">refresh</span></button>
+    </div>
+
+    <div class="an-body" id="anBody">
+
+        <!-- ════════ OVERVIEW ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-chart-pie"></i> Overview</h3>
+            <div class="an-grid an-grid-4">
+                <div class="an-metric"><div class="an-metric-icon" style="background:#eff6ff;color:#2563eb;"><i class="fas fa-users"></i></div><div class="an-stat-val">{{ overview.total_users }}</div><div class="an-stat-label">Total Users</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#f0fdf4;color:#16a34a;"><i class="fas fa-check-circle"></i></div><div class="an-stat-val">{{ overview.total_verified }}</div><div class="an-stat-label">Email Verified</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#fef2f2;color:#ef4444;"><i class="fas fa-camera"></i></div><div class="an-stat-val">{{ overview.total_face_verified }}</div><div class="an-stat-label">Face Verified</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#fffbeb;color:#d97706;"><i class="fas fa-eye"></i></div><div class="an-stat-val">{{ overview.total_active_users }}</div><div class="an-stat-label">Active (Discoverable)</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#f0fdf4;color:#16a34a;"><i class="fas fa-calendar-day"></i></div><div class="an-stat-val">{{ overview.dau }}</div><div class="an-stat-label">DAU</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#dbeafe;color:#2563eb;"><i class="fas fa-calendar-week"></i></div><div class="an-stat-val">{{ overview.wau }}</div><div class="an-stat-label">WAU</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#e0e7ff;color:#4f46e5;"><i class="fas fa-calendar-alt"></i></div><div class="an-stat-val">{{ overview.mau }}</div><div class="an-stat-label">MAU</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#f0fdf4;color:#16a34a;"><i class="fas fa-user-plus"></i></div><div class="an-stat-val">{{ overview.new_users_today }}</div><div class="an-stat-label">New Today</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#dbeafe;color:#2563eb;"><i class="fas fa-user-plus"></i></div><div class="an-stat-val">{{ overview.new_users_week }} <span class="an-badge" style="background:#d1fae5;color:#16a34a;font-size:9px;">+{{ overview.new_users_change }}%</span></div><div class="an-stat-label">New This Week</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#e0e7ff;color:#4f46e5;"><i class="fas fa-user-plus"></i></div><div class="an-stat-val">{{ overview.new_users_month }}</div><div class="an-stat-label">New This Month</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#fef2f2;color:#ef4444;"><i class="fas fa-heart"></i></div><div class="an-stat-val">{{ overview.total_matches }}</div><div class="an-stat-label">Total Matches</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#fdf2f8;color:#db2777;"><i class="fas fa-heart"></i></div><div class="an-stat-val">{{ overview.matches_today }}</div><div class="an-stat-label">Matches Today</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#dbeafe;color:#2563eb;"><i class="fas fa-comment-dots"></i></div><div class="an-stat-val">{{ overview.total_messages }}</div><div class="an-stat-label">Total Messages</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#f0fdf4;color:#16a34a;"><i class="fas fa-comment-dots"></i></div><div class="an-stat-val">{{ overview.messages_today }}</div><div class="an-stat-label">Messages Today</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#fffbeb;color:#d97706;"><i class="fas fa-mask"></i></div><div class="an-stat-val">{{ overview.total_confessions }}</div><div class="an-stat-label">Total Confessions</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#fce7f3;color:#db2777;"><i class="fas fa-mask"></i></div><div class="an-stat-val">{{ overview.confessions_today }}</div><div class="an-stat-label">Confessions Today</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#e0e7ff;color:#4f46e5;"><i class="fas fa-headset"></i></div><div class="an-stat-val">{{ overview.voice_joins_today }}</div><div class="an-stat-label">Voice Joins Today</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#f0fdf4;color:#16a34a;"><i class="fas fa-home"></i></div><div class="an-stat-val">{{ overview.total_listings }}</div><div class="an-stat-label">Active Listings</div></div>
+                <div class="an-metric"><div class="an-metric-icon" style="background:#fef2f2;color:#ef4444;"><i class="fas fa-file-text"></i></div><div class="an-stat-val">{{ overview.total_requests }}</div><div class="an-stat-label">Room Requests</div></div>
+            </div>
+        </div>
+
+        <!-- ════════ USER ANALYTICS ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-user-friends"></i> User Demographics</h3>
+            <div class="an-grid an-grid-2">
+                <div class="an-card">
+                    <div class="an-card-header"><h3><i class="fas fa-venus-mars"></i> Gender Distribution</h3></div>
+                    <div style="position:relative;height:180px;"><canvas id="genderChart"></canvas></div>
+                </div>
+                <div class="an-card">
+                    <div class="an-card-header"><h3><i class="fas fa-birthday-cake"></i> Age Distribution</h3></div>
+                    <div style="position:relative;height:180px;"><canvas id="ageChart"></canvas></div>
+                </div>
+                <div class="an-card">
+                    <div class="an-card-header"><h3><i class="fas fa-university"></i> Top Campuses</h3></div>
+                    {% if users.campus %}
+                    <div style="max-height:200px;overflow-y:auto;">
+                    {% for c in users.campus|slice:":10" %}
+                    <div class="an-progress-row">
+                        <span class="an-progress-label">{{ c.name }}</span>
+                        <div class="an-progress-bar"><div class="an-progress-fill" style="width:{{ c.pct }}%;background:linear-gradient(90deg,#2563eb,#3b82f6);"></div></div>
+                        <span class="an-progress-pct">{{ c.pct }}%</span>
+                    </div>
+                    {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">No campus data</div>
+                    {% endif %}
+                </div>
+                <div class="an-card">
+                    <div class="an-card-header"><h3><i class="fas fa-graduation-cap"></i> Courses</h3></div>
+                    <table class="an-table">
+                        <thead><tr><th>Course</th><th>Users</th></tr></thead>
+                        <tbody>
+                        {% for c in users.course|slice:":10" %}
+                        <tr><td>{{ c.name }}</td><td>{{ c.count }}</td></tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="empty-state">No data</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="an-card">
+                    <div class="an-card-header"><h3><i class="fas fa-globe"></i> Languages</h3></div>
+                    <table class="an-table">
+                        <thead><tr><th>Language</th><th>Users</th></tr></thead>
+                        <tbody>
+                        {% for l in users.languages|slice:":10" %}
+                        <tr><td>{{ l.name }}</td><td>{{ l.count }}</td></tr>
+                        {% empty %}
+                        <tr><td colspan="2" class="empty-state">No data</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="an-card">
+                    <div class="an-card-header"><h3><i class="fas fa-heart"></i> Looking For</h3></div>
+                    <div style="position:relative;height:180px;"><canvas id="lookingChart"></canvas></div>
+                </div>
+                <div class="an-card">
+                    <div class="an-card-header"><h3><i class="fas fa-shield-alt"></i> Verification Status</h3></div>
+                    <div style="position:relative;height:150px;"><canvas id="verifChart"></canvas></div>
+                </div>
+                <div class="an-card">
+                    <div class="an-card-header"><h3><i class="fas fa-eye"></i> Discoverability</h3></div>
+                    <div style="position:relative;height:150px;"><canvas id="discChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════ GROWTH ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-chart-line"></i> Growth</h3>
+            <div class="an-card">
+                <div class="an-tabs" id="growthTabs">
+                    <button class="an-tab" data-period="today" onclick="loadGrowth('today')">Today</button>
+                    <button class="an-tab active" data-period="30d" onclick="loadGrowth('30d')">30 Days</button>
+                    <button class="an-tab" data-period="90d" onclick="loadGrowth('90d')">90 Days</button>
+                    <button class="an-tab" data-period="1y" onclick="loadGrowth('1y')">1 Year</button>
+                    <button class="an-tab" data-period="all" onclick="loadGrowth('all')">All Time</button>
+                </div>
+                <div style="position:relative;height:250px;"><canvas id="growthChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- ════════ ENGAGEMENT ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-rocket"></i> Engagement</h3>
+            <div class="an-grid an-grid-4">
+                <div class="an-metric"><div class="an-stat-val">{{ engagement.dau }}</div><div class="an-stat-label">DAU</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ engagement.wau }}</div><div class="an-stat-label">WAU</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ engagement.mau }}</div><div class="an-stat-label">MAU</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ engagement.avg_messages_per_user }}</div><div class="an-stat-label">Avg Msgs/User</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ engagement.avg_matches_per_user }}</div><div class="an-stat-label">Avg Matches/User</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ engagement.avg_completion }}%</div><div class="an-stat-label">Avg Profile Completion</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ engagement.avg_photos }}</div><div class="an-stat-label">Avg Photos/User</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ engagement.active_conversations }}</div><div class="an-stat-label">Active Conversations</div></div>
+            </div>
+        </div>
+
+        <!-- ════════ FEATURE USAGE ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-star"></i> Feature Usage Ranking</h3>
+            <div class="an-card" style="overflow-x:auto;">
+                <table class="an-table">
+                    <thead><tr><th>Rank</th><th>Feature</th><th>Unique Users</th><th>Total</th><th>Today</th><th>This Week</th><th>This Month</th></tr></thead>
+                    <tbody>
+                    {% for f in features %}
+                    <tr>
+                        <td><span class="an-rank{% if f.rank == 1 %} an-rank-1{% elif f.rank == 2 %} an-rank-2{% elif f.rank == 3 %} an-rank-3{% endif %}">#{{ f.rank }}</span></td>
+                        <td><strong>{{ f.name }}</strong></td>
+                        <td>{{ f.unique_users }}</td>
+                        <td>{{ f.total }}</td>
+                        <td>{{ f.today }}</td>
+                        <td>{{ f.week }}</td>
+                        <td>{{ f.month }}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ════════ MATCHING ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-heart"></i> Matching Analytics</h3>
+            <div class="an-grid an-grid-4">
+                <div class="an-metric"><div class="an-stat-val">{{ matching.total }}</div><div class="an-stat-label">Total Requests</div></div>
+                <div class="an-metric"><div class="an-stat-val" style="color:#16a34a;">{{ matching.accepted }}</div><div class="an-stat-label">Accepted</div></div>
+                <div class="an-metric"><div class="an-stat-val" style="color:#ef4444;">{{ matching.rejected }}</div><div class="an-stat-label">Rejected</div></div>
+                <div class="an-metric"><div class="an-stat-val" style="color:#d97706;">{{ matching.pending }}</div><div class="an-stat-label">Pending</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ matching.skipped }}</div><div class="an-stat-label">Skipped</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ matching.acceptance_rate }}%</div><div class="an-stat-label">Acceptance Rate</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ matching.conversion_rate }}%</div><div class="an-stat-label">Conversion Rate</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ matching.sparks_sent }}</div><div class="an-stat-label">Sparks Sent</div></div>
+            </div>
+        </div>
+
+        <!-- ════════ CHAT ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-comments"></i> Chat Analytics</h3>
+            <div class="an-grid an-grid-2">
+                <div>
+                    <div class="an-grid an-grid-4" style="margin-bottom:12px;">
+                        <div class="an-metric"><div class="an-stat-val">{{ chat.today }}</div><div class="an-stat-label">Today</div></div>
+                        <div class="an-metric"><div class="an-stat-val">{{ chat.week }}</div><div class="an-stat-label">This Week</div></div>
+                        <div class="an-metric"><div class="an-stat-val">{{ chat.month }}</div><div class="an-stat-label">This Month</div></div>
+                        <div class="an-metric"><div class="an-stat-val">{{ chat.total }}</div><div class="an-stat-label">Total Messages</div></div>
+                        <div class="an-metric"><div class="an-stat-val">{{ chat.conversations }}</div><div class="an-stat-label">Conversations</div></div>
+                        <div class="an-metric"><div class="an-stat-val">{{ chat.avg_per_conversation }}</div><div class="an-stat-label">Avg/Conversation</div></div>
+                    </div>
+                </div>
+                <div class="an-card">
+                    <div class="an-card-header"><h3><i class="fas fa-chart-line"></i> Message Growth (30d)</h3></div>
+                    <div style="position:relative;height:150px;"><canvas id="msgGrowthChart"></canvas></div>
+                </div>
+                <div class="an-card" style="grid-column:1/-1;">
+                    <div class="an-card-header"><h3><i class="fas fa-trophy"></i> Most Active Users</h3></div>
+                    <table class="an-table">
+                        <thead><tr><th>#</th><th>User</th><th>Messages</th></tr></thead>
+                        <tbody>
+                        {% for u in chat.most_active_users|slice:":5" %}
+                        <tr><td>{{ forloop.counter }}</td><td>{{ u.name }}</td><td>{{ u.count }}</td></tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="empty-state">No data</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════ VOICE ROOMS ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-headset"></i> Voice Rooms</h3>
+            <div class="an-grid an-grid-4">
+                <div class="an-metric"><div class="an-stat-val">{{ voice.total_rooms }}</div><div class="an-stat-label">Total Rooms</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ voice.active_rooms }}</div><div class="an-stat-label">Active Now</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ voice.joins_today }}</div><div class="an-stat-label">Joins Today</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ voice.joins_week }}</div><div class="an-stat-label">Joins This Week</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ voice.joins_month }}</div><div class="an-stat-label">Joins This Month</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ voice.peak_concurrent }}</div><div class="an-stat-label">Peak Concurrent</div></div>
+            </div>
+            {% if voice.popular_rooms %}
+            <div class="an-card" style="margin-top:12px;">
+                <div class="an-card-header"><h3><i class="fas fa-trophy"></i> Most Popular Rooms</h3></div>
+                <table class="an-table">
+                    <thead><tr><th>#</th><th>Room</th><th>Total Participants</th></tr></thead>
+                    <tbody>
+                    {% for r in voice.popular_rooms %}
+                    <tr><td>{{ forloop.counter }}</td><td>{{ r.name }}</td><td>{{ r.count }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ════════ CONFESSIONS ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-mask"></i> Confessions</h3>
+            <div class="an-grid an-grid-4">
+                <div class="an-metric"><div class="an-stat-val">{{ confessions.total }}</div><div class="an-stat-label">Total Posts</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ confessions.today }}</div><div class="an-stat-label">Posts Today</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ confessions.total_comments }}</div><div class="an-stat-label">Total Comments</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ confessions.comments_today }}</div><div class="an-stat-label">Comments Today</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ confessions.total_likes }}</div><div class="an-stat-label">Total Likes</div></div>
+                <div class="an-metric"><div class="an-stat-val" style="color:#ef4444;">{{ confessions.reports }}</div><div class="an-stat-label">Reports</div></div>
+                <div class="an-metric"><div class="an-stat-val" style="color:#d97706;">{{ confessions.flagged }}</div><div class="an-stat-label">Flagged</div></div>
+                <div class="an-metric"><div class="an-stat-val" style="color:#ef4444;">{{ confessions.pending_review }}</div><div class="an-stat-label">Pending Review</div></div>
+            </div>
+            {% if confessions.most_liked %}
+            <div class="an-card" style="margin-top:12px;">
+                <div class="an-card-header"><h3><i class="fas fa-fire"></i> Most Liked Posts</h3></div>
+                <table class="an-table">
+                    <thead><tr><th>Post</th><th>Likes</th></tr></thead>
+                    <tbody>
+                    {% for c in confessions.most_liked %}
+                    <tr><td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ c.content }}</td><td>{{ c.likes }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ════════ ROOM FINDER ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-home"></i> Room Finder</h3>
+            <div class="an-grid an-grid-4">
+                <div class="an-metric"><div class="an-stat-val">{{ roomfinder.total }}</div><div class="an-stat-label">Total Listings</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ roomfinder.active }}</div><div class="an-stat-label">Active</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ roomfinder.today }}</div><div class="an-stat-label">Listed Today</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ roomfinder.total_requests }}</div><div class="an-stat-label">Room Requests</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ roomfinder.requests_today }}</div><div class="an-stat-label">Requests Today</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ roomfinder.saved }}</div><div class="an-stat-label">Saved Listings</div></div>
+            </div>
+            {% if roomfinder.by_campus %}
+            <div class="an-card" style="margin-top:12px;">
+                <div class="an-card-header"><h3><i class="fas fa-university"></i> By Campus</h3></div>
+                <table class="an-table">
+                    <thead><tr><th>Campus</th><th>Listings</th></tr></thead>
+                    <tbody>
+                    {% for c in roomfinder.by_campus %}
+                    <tr><td>{{ c.name }}</td><td>{{ c.count }}</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ════════ PROFILE ANALYTICS ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-id-card"></i> Profile Analytics</h3>
+            <div class="an-grid an-grid-4">
+                <div class="an-metric"><div class="an-stat-val">{{ profiles.created_today }}</div><div class="an-stat-label">Created Today</div></div>
+                <div class="an-metric"><div class="an-stat-val" style="color:#ef4444;">{{ profiles.missing_photos }}</div><div class="an-stat-label">Missing Photos</div></div>
+                <div class="an-metric"><div class="an-stat-val" style="color:#d97706;">{{ profiles.missing_bio }}</div><div class="an-stat-label">Missing Bio</div></div>
+                <div class="an-metric"><div class="an-stat-val" style="color:#d97706;">{{ profiles.pending_verification }}</div><div class="an-stat-label">Pending Verification</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ profiles.complete_profiles }}/{{ profiles.total_profiles }}</div><div class="an-stat-label">Complete Profiles</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ profiles.completion_pct }}%</div><div class="an-stat-label">Completion Rate</div></div>
+            </div>
+        </div>
+
+        <!-- ════════ USER JOURNEY FUNNEL ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-filter"></i> User Journey Funnel</h3>
+            <div class="an-card">
+                <div class="an-funnel">
+                    {% for step in funnel.steps %}
+                    <div class="an-funnel-step">
+                        <span class="an-funnel-num">{{ forloop.counter }}</span>
+                        <span class="an-funnel-name">{{ step.0 }}</span>
+                        <span class="an-funnel-count">{{ step.1 }}</span>
+                        <div class="an-funnel-bar"><div class="an-funnel-fill" style="width:{{ step.2 }}%;"></div></div>
+                        <span class="an-funnel-pct">{{ step.2 }}%</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ════════ RETENTION ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-history"></i> Retention (Recent Cohorts)</h3>
+            <div class="an-grid an-grid-4">
+                <div class="an-metric"><div class="an-stat-val" style="color:#16a34a;">{{ retention.day1 }}%</div><div class="an-stat-label">Day 1 Retention</div></div>
+                <div class="an-metric"><div class="an-stat-val" style="color:#2563eb;">{{ retention.day7 }}%</div><div class="an-stat-label">Day 7 Retention</div></div>
+                <div class="an-metric"><div class="an-stat-val" style="color:#4f46e5;">{{ retention.day30 }}%</div><div class="an-stat-label">Day 30 Retention</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ retention.cohort_size }}</div><div class="an-stat-label">Cohort Size</div></div>
+            </div>
+        </div>
+
+        <!-- ════════ MODERATION ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-shield-alt"></i> Safety & Moderation</h3>
+            <div class="an-grid an-grid-4">
+                <div class="an-metric"><div class="an-stat-val" style="color:#ef4444;">{{ moderation.reports_today }}</div><div class="an-stat-label">Reports Today</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ moderation.user_reports }}</div><div class="an-stat-label">User Reports</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ moderation.confession_reports }}</div><div class="an-stat-label">Confession Reports</div></div>
+                <div class="an-metric"><div class="an-stat-val" style="color:#ef4444;">{{ moderation.banned_users }}</div><div class="an-stat-label">Banned Users</div></div>
+                <div class="an-metric"><div class="an-stat-val" style="color:#d97706;">{{ moderation.shadow_banned }}</div><div class="an-stat-label">Shadow Banned</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ moderation.blocked }}</div><div class="an-stat-label">Blocked Users</div></div>
+                <div class="an-metric"><div class="an-stat-val" style="color:#ef4444;">{{ moderation.pending_moderation }}</div><div class="an-stat-label">Pending Moderation</div></div>
+                <div class="an-metric"><div class="an-stat-val" style="color:#d97706;">{{ moderation.flagged_content }}</div><div class="an-stat-label">Flagged Content</div></div>
+            </div>
+        </div>
+
+        <!-- ════════ SYSTEM HEALTH ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-server"></i> System Health</h3>
+            <div class="an-grid an-grid-4">
+                <div class="an-metric"><div class="an-stat-val">{{ health.total_records }}</div><div class="an-stat-label">Database Records</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ health.image_count }}</div><div class="an-stat-label">Images</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ health.fcm_tokens }}</div><div class="an-stat-label">FCM Tokens</div></div>
+                <div class="an-metric"><div class="an-stat-val">{{ health.voice_online }}</div><div class="an-stat-label">Voice Online Now</div></div>
+            </div>
+        </div>
+
+        <!-- ════════ LIVE ACTIVITY ════════ -->
+        <div class="an-section">
+            <h3 class="an-section-title"><i class="fas fa-bolt"></i> Live Activity <span style="font-size:10px;color:#16a34a;font-weight:700;">● Auto-refresh</span></h3>
+            <div class="an-card" style="padding:12px;">
+                <div class="an-activity" id="liveFeed">
+                    {% for e in live_activity|slice:":30" %}
+                    <div class="an-activity-item">
+                        <div class="an-activity-icon" style="background:
+                        {% if e.type == 'registration' %}#dbeafe;color:#2563eb
+                        {% elif e.type == 'match' %}#fce7f3;color:#db2777
+                        {% elif e.type == 'message' %}#f0fdf4;color:#16a34a
+                        {% elif e.type == 'confession' %}#fffbeb;color:#d97706
+                        {% elif e.type == 'voice' %}#e0e7ff;color:#4f46e5
+                        {% else %}#f1f5f9;color:#64748b{% endif %}">
+                        <span class="material-symbols-outlined" style="font-size:16px;">{{ e.icon }}</span></div>
+                        <span class="an-activity-text">{{ e.text }}</span>
+                        <span class="an-activity-time">{{ e.time|timesince }} ago</span>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state">No recent activity</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// ── Chart colors ──
+const colors = { blue:'#2563eb', green:'#16a34a', red:'#ef4444', amber:'#d97706', purple:'#7c3aed', pink:'#db2777', gray:'#64748b', indigo:'#4f46e5' };
+const colorPalette = ['#2563eb','#16a34a','#ef4444','#d97706','#7c3aed','#db2777','#0ea5e9','#84cc16','#f59e0b','#6366f1'];
+
+// ── Gender ──
+new Chart(document.getElementById('genderChart'), {
+    type:'doughnut',
+    data:{ labels:['Male','Female','Other'],
+    datasets:[{ data:[{{ users.gender.Male.count }},{{ users.gender.Female.count }},{{ users.gender.Other.count }}],
+    backgroundColor:['#2563eb','#db2777','#94a3b8'] }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:11,weight:'bold'}}}} }
+});
+
+// ── Age ──
+new Chart(document.getElementById('ageChart'), {
+    type:'bar',
+    data:{ labels:[{% for k,v in users.age_groups.items %}{% if k != 'avg' %}'{{ k }}',{% endif %}{% endfor %}],
+    datasets:[{ label:'Users', data:[{% for k,v in users.age_groups.items %}{% if k != 'avg' %}{{ v }},{% endif %}{% endfor %}],
+    backgroundColor:colorPalette }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+    scales:{ y:{beginAtZero:true,grid:{color:'#f1f5f9'}}, x:{grid:{display:false}} } }
+});
+
+// ── Looking For ──
+new Chart(document.getElementById('lookingChart'), {
+    type:'doughnut',
+    data:{ labels:[{% for k,v in users.looking_for.items %}'{{ k }}',{% endfor %}],
+    datasets:[{ data:[{% for k,v in users.looking_for.items %}{{ v.count }},{% endfor %}],
+    backgroundColor:colorPalette }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:10,weight:'bold'}}}} }
+});
+
+// ── Verification ──
+new Chart(document.getElementById('verifChart'), {
+    type:'doughnut',
+    data:{ labels:[{% for k,v in users.verification.items %}'{{ k }}',{% endfor %}],
+    datasets:[{ data:[{% for k,v in users.verification.items %}{{ v }},{% endfor %}],
+    backgroundColor:['#16a34a','#d97706','#ef4444','#f59e0b'] }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:10,weight:'bold'}}}} }
+});
+
+// ── Discoverability ──
+new Chart(document.getElementById('discChart'), {
+    type:'doughnut',
+    data:{ labels:['Discoverable','Hidden'],
+    datasets:[{ data:[{{ users.discoverable }},{{ users.hidden }}],
+    backgroundColor:['#2563eb','#e2e8f0'] }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:11,weight:'bold'}}}} }
+});
+
+// ── Growth Chart ──
+var growthChart = null;
+function loadGrowth(period) {
+    document.querySelectorAll('#growthTabs .an-tab').forEach(function(t){ t.classList.remove('active'); });
+    document.querySelector('#growthTabs .an-tab[data-period="'+period+'"]').classList.add('active');
+    fetch('/master/dashboard/analytics/data/?section=growth&period='+period)
+    .then(function(r){return r.json()}).then(function(d){
+        if(growthChart) growthChart.destroy();
+        var ctx = document.getElementById('growthChart').getContext('2d');
+        growthChart = new Chart(ctx, {
+            type:'line',
+            data:{ labels:d.labels, datasets:[{ label:'New Users', data:d.counts, borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,0.08)', fill:true, tension:0.3, pointRadius:3 }] },
+            options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+            scales:{ y:{beginAtZero:true,grid:{color:'#f1f5f9'}}, x:{grid:{display:false}} } }
+        });
+    });
+}
+
+// Load default growth (30d)
+var growthDefault = null;
+(function(){
+    var labels = [{% for g in growth_data.labels %}'{{ g }}',{% endfor %}];
+    var counts = [{% for c in growth_data.counts %}{{ c }},{% endfor %}];
+    if(labels.length){
+        growthDefault = new Chart(document.getElementById('growthChart'), {
+            type:'line',
+            data:{ labels:labels, datasets:[{ label:'New Users', data:counts, borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,0.08)', fill:true, tension:0.3, pointRadius:3 }] },
+            options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+            scales:{ y:{beginAtZero:true,grid:{color:'#f1f5f9'}}, x:{grid:{display:false}} } }
+        });
+    }
+})();
+
+// ── Message Growth ──
+(function(){
+    var labels = [{% for l in chat.growth_chart.labels %}'{{ l }}',{% endfor %}];
+    var counts = [{% for c in chat.growth_chart.counts %}{{ c }},{% endfor %}];
+    if(labels.length){
+        new Chart(document.getElementById('msgGrowthChart'), {
+            type:'line',
+            data:{ labels:labels, datasets:[{ label:'Messages', data:counts, borderColor:'#16a34a', backgroundColor:'rgba(22,163,74,0.08)', fill:true, tension:0.3, pointRadius:2 }] },
+            options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+            scales:{ y:{beginAtZero:true,grid:{color:'#f1f5f9'}}, x:{grid:{display:false}} } }
+        });
+    }
+})();
+
+// ── Live Activity Auto-refresh ──
+setInterval(function(){
+    fetch('/master/dashboard/analytics/data/?section=live')
+    .then(function(r){return r.json()}).then(function(d){
+        if(!d.events) return;
+        var html = '';
+        d.events.slice(0,30).forEach(function(e){
+            var bg = '#f1f5f9;color:#64748b';
+            if(e.type==='registration') bg='#dbeafe;color:#2563eb';
+            else if(e.type==='match') bg='#fce7f3;color:#db2777';
+            else if(e.type==='message') bg='#f0fdf4;color:#16a34a';
+            else if(e.type==='confession') bg='#fffbeb;color:#d97706';
+            else if(e.type==='voice') bg='#e0e7ff;color:#4f46e5';
+            html += '<div class="an-activity-item"><div class="an-activity-icon" style="background:'+bg+'"><span class="material-symbols-outlined" style="font-size:16px;">'+e.icon+'</span></div><span class="an-activity-text">'+e.text+'</span><span class="an-activity-time">'+e.time+'</span></div>';
+        });
+        document.getElementById('liveFeed').innerHTML = html || '<div class="empty-state">No recent activity</div>';
+    }).catch(function(){});
+}, 15000);
+</script>
+{% endblock %}

@@ -3,6 +3,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from .analytics import (overview, user_analytics, growth, engagement,
+                        feature_usage, matching_analytics, chat_analytics,
+                        voice_analytics, confession_analytics,
+                        room_finder_analytics, profile_analytics,
+                        user_journey, moderation_analytics, system_health,
+                        live_activity, retention)
 from django.contrib.auth.models import User
 from django.contrib.auth import login as auth_login
 from django.http import JsonResponse, HttpResponse
@@ -2594,6 +2600,51 @@ def admin_dashboard(request):
         'is_admin':              is_admin,
         'is_staff':              True,
     })
+
+@login_required
+def admin_analytics(request):
+    if not is_staff_check(request.user):
+        return HttpResponse("Not authorized", status=403)
+    is_admin = is_admin_check(request.user)
+    ctx = {
+        'overview': overview(),
+        'users': user_analytics(),
+        'growth_data': growth('30d'),
+        'engagement': engagement(),
+        'features': feature_usage(),
+        'matching': matching_analytics(),
+        'chat': chat_analytics(),
+        'voice': voice_analytics(),
+        'confessions': confession_analytics(),
+        'roomfinder': room_finder_analytics(),
+        'profiles': profile_analytics(),
+        'funnel': user_journey(),
+        'moderation': moderation_analytics(),
+        'health': system_health(),
+        'retention': retention(),
+        'live_activity': live_activity(),
+        'is_admin': is_admin,
+        'is_staff': True,
+    }
+    return render(request, 'admin_analytics.html', ctx)
+
+@login_required
+def admin_analytics_data(request):
+    if not is_staff_check(request.user):
+        return JsonResponse({'error': 'Not authorized'}, status=403)
+    import json
+    section = request.GET.get('section', 'overview')
+    if section == 'live':
+        events = live_activity()
+        data = [{'type': e['type'], 'icon': e['icon'], 'text': e['text'],
+                 'time': e['time'].strftime('%Y-%m-%d %H:%M') if hasattr(e['time'], 'strftime') else str(e['time'])}
+                for e in events]
+        return JsonResponse({'events': data})
+    if section == 'growth':
+        period = request.GET.get('period', '30d')
+        g = growth(period)
+        return JsonResponse(g)
+    return JsonResponse({'error': 'Unknown section'})
 
 @login_required
 def admin_all_users(request):
