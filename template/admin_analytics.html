@@ -98,7 +98,10 @@ html, body {
                 <h2>Analytics</h2>
             </div>
         </div>
-        <button class="an-refresh-btn" onclick="location.reload()"><span class="material-symbols-outlined" style="font-size:16px;">refresh</span></button>
+        <div style="display:flex;gap:8px;">
+            <a href="{% url 'admin_analytics_export' %}" class="an-refresh-btn" style="text-decoration:none;"><span class="material-symbols-outlined" style="font-size:16px;">download</span> Export</a>
+            <button class="an-refresh-btn" onclick="location.reload()"><span class="material-symbols-outlined" style="font-size:16px;">refresh</span></button>
+        </div>
     </div>
 
     <div class="an-body" id="anBody">

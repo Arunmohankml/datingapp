@@ -2647,6 +2647,34 @@ def admin_analytics_data(request):
     return JsonResponse({'error': 'Unknown section'})
 
 @login_required
+def admin_analytics_export(request):
+    if not is_staff_check(request.user):
+        return HttpResponse("Not authorized", status=403)
+    import json
+    data = {
+        'overview': overview(),
+        'users': user_analytics(),
+        'growth': growth('all'),
+        'engagement': engagement(),
+        'features': feature_usage(),
+        'matching': matching_analytics(),
+        'chat': chat_analytics(),
+        'voice': voice_analytics(),
+        'confessions': confession_analytics(),
+        'roomfinder': room_finder_analytics(),
+        'profiles': profile_analytics(),
+        'funnel': user_journey(),
+        'moderation': moderation_analytics(),
+        'health': system_health(),
+        'retention': retention(),
+        'live_activity': live_activity(),
+        'generated_at': timezone.now().isoformat(),
+    }
+    response = HttpResponse(json.dumps(data, indent=2, default=str), content_type='application/json')
+    response['Content-Disposition'] = 'attachment; filename="analytics_export.json"'
+    return response
+
+@login_required
 def admin_all_users(request):
     if not is_staff_check(request.user):
         return HttpResponse("Not authorized", status=403)

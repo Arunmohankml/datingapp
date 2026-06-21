@@ -58,6 +58,7 @@ urlpatterns = [
     path("master/dashboard/", views.admin_dashboard, name="admin_dashboard"),
     path("master/dashboard/analytics/", views.admin_analytics, name="admin_analytics"),
     path("master/dashboard/analytics/data/", views.admin_analytics_data, name="admin_analytics_data"),
+    path("master/dashboard/analytics/export/", views.admin_analytics_export, name="admin_analytics_export"),
     path("master/dashboard/allusers", views.admin_all_users, name="admin_all_users"),
     path("master/dashboard/verification/", views.admin_manual_verification, name="admin_manual_verification"),
     path("master/dashboard/staffs/", views.admin_manage_staff, name="admin_manage_staff"),
