@@ -886,6 +886,38 @@ class CampusSpotlight(models.Model):
         return f"{self.user.profile.name} (@{self.instagram_handle})"
 
 
+class Event(models.Model):
+    EVENT_STATUS = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+    FEE_TYPE = [
+        ('free', 'Free'),
+        ('paid', 'Paid'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='events')
+    title = models.CharField(max_length=200)
+    poster = models.URLField(max_length=500, blank=True)
+    description = models.TextField()
+    campus = models.CharField(max_length=100, blank=True)
+    event_date = models.DateField()
+    last_reg_date = models.DateField(blank=True, null=True)
+    fee_type = models.CharField(max_length=10, choices=FEE_TYPE, default='free')
+    fee_amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    reg_link = models.URLField(max_length=500, blank=True)
+    page_link = models.URLField(max_length=500, blank=True)
+    status = models.CharField(max_length=10, choices=EVENT_STATUS, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-event_date', '-created_at']
+
+    def __str__(self):
+        return self.title
+
+
 class Advertisement(models.Model):
     title = models.CharField(max_length=200, blank=True)
     image_url = models.URLField(max_length=500)

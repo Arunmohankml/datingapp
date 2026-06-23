@@ -1,0 +1,175 @@
+{% load static %}
+
+<div class="ev-modal-overlay" id="eventFormModal">
+    <div class="ev-modal">
+        <div class="ev-modal-header">
+            <div>
+                <h2 id="eventFormTitle">Create Event</h2>
+                <p id="eventFormSubtitle" style="margin:2px 0 0; font-size:12px; color:#94a3b8;">Share your campus event</p>
+            </div>
+            <button class="ev-modal-close" onclick="closeEventForm()">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <form id="eventForm" method="post" action="{% url 'submit_event' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="event_id" id="editEventId" value="">
+
+            <div class="ev-form-group">
+                <label>Title <span style="color:#ef4444;">*</span></label>
+                <input type="text" name="title" id="evTitle" required maxlength="120" placeholder="Event title">
+            </div>
+
+            <div class="ev-form-group">
+                <label>Description <span style="color:#ef4444;">*</span></label>
+                <textarea name="description" id="evDesc" required maxlength="2000" placeholder="Tell people about your event..."></textarea>
+            </div>
+
+            <div class="ev-form-group">
+                <label>Poster Image</label>
+                <input type="file" name="poster" id="evPoster" accept="image/*" onchange="previewEventPoster(this)">
+                <img id="evPosterPreview" class="ev-form-preview" style="display:none;">
+            </div>
+
+            <div class="ev-form-group">
+                <label>Campus</label>
+                <input type="text" name="campus" id="evCampus" placeholder="e.g. KTR, RMP, VDP">
+            </div>
+
+            <div style="display:flex; gap:12px;">
+                <div class="ev-form-group" style="flex:1;">
+                    <label>Event Date <span style="color:#ef4444;">*</span></label>
+                    <input type="date" name="event_date" id="evEventDate" required>
+                </div>
+                <div class="ev-form-group" style="flex:1;">
+                    <label>Last Reg. Date</label>
+                    <input type="date" name="last_reg_date" id="evLastRegDate">
+                </div>
+            </div>
+
+            <div class="ev-form-group">
+                <label>Fee</label>
+                <div class="ev-fee-toggle">
+                    <button type="button" class="ev-fee-opt active" data-fee="free" onclick="toggleFee('free')">
+                        <span class="material-symbols-outlined" style="font-size:16px;">money_off</span> Free
+                    </button>
+                    <button type="button" class="ev-fee-opt" data-fee="paid" onclick="toggleFee('paid')">
+                        <span class="material-symbols-outlined" style="font-size:16px;">currency_rupee</span> Paid
+                    </button>
+                </div>
+                <input type="hidden" name="fee_type" id="evFeeType" value="free">
+                <div class="ev-fee-amount-wrap" id="evFeeAmountWrap" style="display:none;">
+                    <input type="number" name="fee_amount" id="evFeeAmount" min="0" placeholder="Amount in &#8377;">
+                </div>
+            </div>
+
+            <div class="ev-form-group">
+                <label>Registration Link</label>
+                <input type="url" name="reg_link" id="evRegLink" placeholder="https://forms.gle/...">
+            </div>
+
+            <div class="ev-form-group">
+                <label>Page Link</label>
+                <input type="url" name="page_link" id="evPageLink" placeholder="https://example.com/event">
+            </div>
+
+            <div class="ev-form-msg" id="eventFormMsg"></div>
+
+            <button type="submit" class="ev-btn-submit">
+                <span class="material-symbols-outlined" style="font-size:16px;">check</span> Submit Event
+            </button>
+        </form>
+    </div>
+</div>
+
+<style>
+.ev-form-group {
+    margin-bottom: 14px;
+}
+.ev-form-group label {
+    display: block; font-size: 11px; font-weight: 700; color: #475569;
+    margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px;
+}
+.ev-form-group input,
+.ev-form-group select,
+.ev-form-group textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0;
+    border-radius: 12px; background: #ffffff; font-size: 13px;
+    font-family: 'Plus Jakarta Sans', sans-serif; outline: none;
+    transition: border-color 0.3s; box-sizing: border-box;
+}
+.ev-form-group input:focus,
+.ev-form-group select:focus,
+.ev-form-group textarea:focus { border-color: #2563eb; }
+.ev-form-group textarea { resize: vertical; min-height: 80px; }
+.ev-form-group input[type="file"] {
+    padding: 9px; border: 1px dashed #cbd5e1; border-radius: 12px;
+    background: #f8fafc; cursor: pointer;
+}
+.ev-form-preview {
+    max-width: 100%; max-height: 160px; border-radius: 12px; margin-top: 8px;
+    object-fit: contain; background: #f8fafc;
+}
+.ev-fee-toggle {
+    display: flex; background: #f1f5f9; padding: 4px; border-radius: 100px;
+    gap: 4px; margin-bottom: 8px;
+}
+.ev-fee-opt {
+    flex: 1; border: none; background: none; padding: 10px 16px;
+    border-radius: 100px; font-size: 12px; font-weight: 700; color: #64748b;
+    cursor: pointer; transition: all 0.3s; display: flex; align-items: center;
+    justify-content: center; gap: 6px; font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.ev-fee-opt.active {
+    background: #ffffff; color: #2563eb; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.ev-fee-opt .material-symbols-outlined { font-size: 16px; }
+.ev-fee-amount-wrap { transition: all 0.2s ease; }
+.ev-form-msg {
+    font-size: 12px; font-weight: 600; margin-bottom: 10px; display: none;
+}
+.ev-btn-submit {
+    width: 100%; padding: 14px; border-radius: 100px; border: none;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: all 0.2s; display: flex; align-items: center;
+    justify-content: center; gap: 8px;
+}
+.ev-btn-submit:hover { box-shadow: 0 4px 16px rgba(37,99,235,0.3); }
+.ev-btn-submit:active { transform: scale(0.97); }
+.ev-btn-submit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+.ev-spinner {
+    display: inline-block; width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+    border-radius: 50%; animation: ev-spin 0.6s linear infinite; vertical-align: middle;
+}
+</style>
+
+<script>
+function toggleFee(type) {
+    document.querySelectorAll('.ev-fee-opt').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.fee === type);
+    });
+    document.getElementById('evFeeType').value = type;
+    document.getElementById('evFeeAmountWrap').style.display = type === 'paid' ? 'block' : 'none';
+    if (type === 'free') document.getElementById('evFeeAmount').value = '';
+}
+
+function previewEventPoster(input) {
+    var preview = document.getElementById('evPosterPreview');
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) { preview.src = e.target.result; preview.style.display = 'block'; };
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+function closeEventForm() {
+    document.getElementById('eventFormModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+</script>

@@ -90,7 +90,7 @@ import base64
 import math
 from django.utils import timezone
 
-from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier, Conversation, RoomRequest, StaffMember, VoiceRoom, VoiceParticipant, BugReport, FeatureSuggestion, SupportTicket, TicketMessage, FeedbackNotification, Advertisement, CampusSpotlight
+from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier, Conversation, RoomRequest, StaffMember, VoiceRoom, VoiceParticipant, BugReport, FeatureSuggestion, SupportTicket, TicketMessage, FeedbackNotification, Advertisement, CampusSpotlight, Event
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm, ProfileInitForm
 from .supabase_utils import delete_from_supabase_by_url
 from .cloudinary_utils import upload_to_cloudinary, upload_base64_to_cloudinary
@@ -258,7 +258,7 @@ def home_hub(request):
     if not profile.is_face_verified and not request.session.get('skipped_verification'):
         return redirect('verify')
 
-    from .models import Confession, Announcement, GiveawayEntry, GiveawayState, Advertisement, CampusSpotlight
+    from .models import Confession, Announcement, GiveawayEntry, GiveawayState, Advertisement, CampusSpotlight, Event
     latest_confession = Confession.objects.filter(moderation_status='approved', is_flagged=False).order_by('-created_at').first()
     latest_update = Announcement.objects.order_by('-created_at').first()
     total_users = User.objects.count() + 50
@@ -284,6 +284,7 @@ def home_hub(request):
     
     ads = Advertisement.objects.filter(is_active=True)[:10]
     spotlights = CampusSpotlight.objects.filter(is_active=True)[:15]
+    upcoming_events = Event.objects.filter(status='approved', event_date__gte=timezone.now().date()).order_by('event_date')[:5]
     
     return render(request, "home_hub.html", {
         "profile": profile,
@@ -301,6 +302,7 @@ def home_hub(request):
         "giveaway_state": giveaway_state,
         "ads": ads,
         "spotlights": spotlights,
+        "upcoming_events": upcoming_events,
     })
 
 
@@ -4603,6 +4605,199 @@ def spotlight_page(request):
     page = request.GET.get('page', 1)
     spotlights = paginator.get_page(page)
     return render(request, 'spotlight_page.html', {'spotlights': spotlights, 'paginator': paginator})
+
+
+def event_list(request):
+    now = timezone.now()
+    user = request.user if request.user.is_authenticated else None
+
+    approved = Event.objects.filter(status='approved')
+    pending_own = Event.objects.none()
+    if user:
+        pending_own = Event.objects.filter(status='pending', user=user)
+
+    campus_filter = request.GET.get('campus', '')
+    date_filter = request.GET.get('date', '')
+    fee_filter = request.GET.get('fee', '')
+
+    if campus_filter:
+        approved = approved.filter(campus=campus_filter)
+    if date_filter == 'upcoming':
+        approved = approved.filter(event_date__gte=now.date())
+    elif date_filter == 'today':
+        approved = approved.filter(event_date=now.date())
+    elif date_filter == 'past':
+        approved = approved.filter(event_date__lt=now.date())
+    if fee_filter in ('free', 'paid'):
+        approved = approved.filter(fee_type=fee_filter)
+
+    approved = approved.order_by('event_date')
+    campuses = Event.objects.filter(status='approved').values_list('campus', flat=True).distinct().order_by('campus')
+
+    return render(request, 'event_list.html', {
+        'events': approved,
+        'pending_events': pending_own,
+        'campuses': campuses,
+        'current_campus': campus_filter,
+        'current_date': date_filter,
+        'current_fee': fee_filter,
+    })
+
+
+def event_detail(request, id):
+    try:
+        event = Event.objects.select_related('user__profile').get(id=id)
+    except Event.DoesNotExist:
+        raise Http404("Event not found")
+    if event.status == 'pending' and event.user != request.user and not is_staff_check(request.user):
+        raise Http404("Event not found")
+    return render(request, 'event_detail.html', {'event': event})
+
+
+@csrf_exempt
+def submit_event(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Login required'}, status=403)
+    if request.method == 'POST':
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        campus = request.POST.get('campus', '').strip()
+        event_date = request.POST.get('event_date', '').strip()
+        last_reg_date = request.POST.get('last_reg_date', '').strip()
+        fee_type = request.POST.get('fee_type', 'free')
+        fee_amount = request.POST.get('fee_amount', '').strip()
+        reg_link = request.POST.get('reg_link', '').strip()
+        page_link = request.POST.get('page_link', '').strip()
+
+        if not title or not description or not event_date:
+            return JsonResponse({'success': False, 'error': 'Title, description and event date are required'})
+
+        poster = ''
+        if request.FILES.get('poster'):
+            uploaded = upload_to_cloudinary(request.FILES['poster'], folder='knotspot/events')
+            if uploaded:
+                poster = uploaded
+
+        is_staff = is_staff_check(request.user)
+        status = 'approved' if is_staff else 'pending'
+
+        event = Event.objects.create(
+            user=request.user,
+            title=title,
+            poster=poster,
+            description=description,
+            campus=campus,
+            event_date=event_date,
+            last_reg_date=last_reg_date if last_reg_date else None,
+            fee_type=fee_type,
+            fee_amount=fee_amount if fee_amount else None,
+            reg_link=reg_link,
+            page_link=page_link,
+            status=status,
+        )
+        return JsonResponse({'success': True, 'id': event.id, 'message': 'Event submitted!' if status == 'pending' else 'Event published!', 'status': status})
+    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+
+
+@csrf_exempt
+def edit_event(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Login required'}, status=403)
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+    import json
+    data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+    event_id = data.get('event_id')
+    try:
+        event = Event.objects.get(id=event_id)
+    except Event.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Event not found'})
+    if event.user != request.user and not is_staff_check(request.user):
+        return JsonResponse({'success': False, 'error': 'Not authorized'}, status=403)
+
+    event.title = data.get('title', event.title)
+    event.description = data.get('description', event.description)
+    event.campus = data.get('campus', event.campus)
+    event.event_date = data.get('event_date', event.event_date)
+    event.last_reg_date = data.get('last_reg_date', event.last_reg_date) if data.get('last_reg_date') else None
+    event.fee_type = data.get('fee_type', event.fee_type)
+    event.fee_amount = data.get('fee_amount', event.fee_amount) if data.get('fee_amount') else None
+    event.reg_link = data.get('reg_link', event.reg_link)
+    event.page_link = data.get('page_link', event.page_link)
+
+    if request.FILES.get('cover_image'):
+        uploaded = upload_to_cloudinary(request.FILES['cover_image'], folder='knotspot/events')
+        if uploaded:
+            event.poster = uploaded
+
+    if not is_staff_check(request.user):
+        event.status = 'pending'
+    event.save()
+    return JsonResponse({'success': True, 'message': 'Event updated!'})
+
+
+@csrf_exempt
+def delete_event(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'success': False, 'error': 'Login required'}, status=403)
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+    import json
+    data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+    event_id = data.get('id')
+    try:
+        event = Event.objects.get(id=event_id)
+    except Event.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Event not found'})
+    if event.user != request.user and not is_staff_check(request.user):
+        return JsonResponse({'success': False, 'error': 'Not authorized'}, status=403)
+    event.delete()
+    return JsonResponse({'success': True, 'message': 'Event deleted!'})
+
+
+@login_required
+def admin_events(request):
+    if not is_staff_check(request.user):
+        return HttpResponse("Not authorized", status=403)
+    if request.method == 'POST':
+        try:
+            import json
+            data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+            event_id = data.get('event_id')
+            new_status = data.get('status')
+            if new_status not in ('approved', 'rejected'):
+                return JsonResponse({'success': False, 'error': 'Invalid status'})
+            Event.objects.filter(id=event_id).update(status=new_status)
+            return JsonResponse({'success': True})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    status_filter = request.GET.get('status', '')
+    events_qs = Event.objects.select_related('user__profile').all().order_by('-created_at')
+    if status_filter:
+        events_qs = events_qs.filter(status=status_filter)
+    paginator = Paginator(events_qs, 20)
+    page = request.GET.get('page', 1)
+    events_page = paginator.get_page(page)
+    return render(request, 'admin_events.html', {
+        'events': events_page,
+        'status_filter': status_filter,
+        'is_staff': True,
+    })
+
+
+def upcoming_events_api(request):
+    now = timezone.now()
+    events = Event.objects.filter(status='approved', event_date__gte=now.date()).order_by('event_date')[:5]
+    data = [{
+        'id': e.id,
+        'title': e.title,
+        'poster': e.poster,
+        'event_date': e.event_date.isoformat(),
+        'campus': e.campus,
+        'fee_type': e.fee_type,
+        'fee_amount': str(e.fee_amount) if e.fee_amount else None,
+    } for e in events]
+    return JsonResponse(data, safe=False)
 
 
 def _notify_user(user, message, link=''):
