@@ -3217,7 +3217,7 @@ def roomfinder_feed(request):
 
 def roomfinder_detail(request, id):
     try:
-        listing = RoomListing.objects.get(id=id, is_active=True)
+        listing = RoomListing.objects.select_related('user__profile').prefetch_related('images').get(id=id, is_active=True)
     except RoomListing.DoesNotExist:
         messages.error(request, "Listing not found or is no longer available.")
         return redirect('roomfinder_feed')
@@ -3233,7 +3233,7 @@ def roomfinder_detail(request, id):
 def api_toggle_save_room(request, id):
     if request.method == 'POST':
         try:
-        listing = RoomListing.objects.select_related('user__profile').prefetch_related('images').get(id=id, is_active=True)
+            listing = RoomListing.objects.get(id=id, is_active=True)
             saved_item, created = SavedRoomListing.objects.get_or_create(user=request.user, listing=listing)
             if not created:
                 saved_item.delete()
