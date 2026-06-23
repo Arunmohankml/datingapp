@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load cloudinary_tags %}
 
 {% block title %}Spotlight | SRM Match{% endblock %}
 
@@ -559,7 +560,7 @@
             {% for s in spotlights %}
             <div class="sp-card{% if not s.cover_image %} no-cover{% endif %}" style="animation-delay:{{ forloop.counter0|divisibleby:1|yesno:'0.05,0.1' }}s;">
                 {% if s.cover_image %}
-                <img class="sp-cover" src="{{ s.cover_image }}" alt="" onerror="this.style.display='none'">
+                <img class="sp-cover" src="{{ s.cover_image|cloudinary_optimize }}" alt="" onerror="this.style.display='none'" loading="lazy" decoding="async">
                 {% endif %}
                 <div class="sp-card-body">
                     {% with is_website=s.instagram_handle|slice:':4' %}
