@@ -75,7 +75,7 @@ def run_broadcast():
     print(f"Found {len(tokens)} unique tokens. Preparing broadcast...")
 
     # Build the absolute URL for the notification link
-    domain = os.environ.get('VERCEL_URL', 'knotspot.vercel.app')
+    domain = os.environ.get('VERCEL_URL', 'knotspot.online')
     if not domain.startswith('http'):
         domain = f"https://{domain}"
     absolute_url = f"{domain.rstrip('/')}/{url.lstrip('/')}"
@@ -91,8 +91,8 @@ def run_broadcast():
             tokens=token_batch,
             webpush=messaging.WebpushConfig(
                 notification=messaging.WebpushNotification(
-                    icon='https://knotspot.vercel.app/favicon.ico',
-                    badge='https://knotspot.vercel.app/favicon.ico',
+                    icon='https://knotspot.online/favicon.ico',
+                    badge='https://knotspot.online/favicon.ico',
                 ),
                 fcm_options=messaging.WebpushFCMOptions(link=absolute_url)
             )
