@@ -2133,7 +2133,6 @@ def get_quiz_batch(request):
     data = []
     for q in questions:
         options = [{'id': opt.id, 'text': opt.text} for opt in q.options.all()]
-            options.append({'id': opt.id, 'text': opt.text})
         data.append({
             'id': q.id,
             'text': q.text,
