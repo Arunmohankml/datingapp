@@ -436,10 +436,12 @@
             description: { enabled: true },
             liveness: { enabled: false }
         },
-        body: { enabled: false },
+        body: { enabled: true, modelPath: 'movenet-lightning' },
         hand: { enabled: false },
         object: { enabled: false },
-        gesture: { enabled: false }
+        gesture: { enabled: false },
+        iris: { enabled: false },
+        emotion: { enabled: false }
     };
     const human = new Human.Human(humanConfig);
 
