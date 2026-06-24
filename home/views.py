@@ -260,7 +260,13 @@ def home_hub(request):
     if not profile.is_face_verified and not request.session.get('skipped_verification'):
         return redirect('verify')
 
-    from .models import Confession, Announcement, GiveawayEntry, GiveawayState, Advertisement, CampusSpotlight, Event
+    from .models import Confession, Announcement, GiveawayEntry, GiveawayState, Advertisement, CampusSpotlight, Event, MatchRequest
+    
+    # Connection state for voice panel connect button
+    friend_ids = _get_user_friend_ids(user)
+    pending_sent = MatchRequest.objects.filter(sender=user, status='pending').values_list('receiver_id', flat=True)
+    pending_received = MatchRequest.objects.filter(receiver=user, status='pending').values_list('sender_id', flat=True)
+    
     latest_confession = Confession.objects.filter(moderation_status='approved', is_flagged=False).order_by('-created_at').first()
     latest_update = Announcement.objects.order_by('-created_at').first()
     total_users = User.objects.count() + 50
@@ -305,6 +311,9 @@ def home_hub(request):
         "ads": ads,
         "spotlights": spotlights,
         "upcoming_events": upcoming_events,
+        "friend_ids_json": list(friend_ids),
+        "pending_sent_ids_json": list(pending_sent),
+        "pending_received_ids_json": list(pending_received),
     })
 
 
@@ -1014,14 +1023,31 @@ def send_match_request(request, receiver_id):
     if request.method == 'POST':
         receiver = get_object_or_404(User, id=receiver_id)
         if receiver != request.user:
-            req, created = MatchRequest.objects.get_or_create(sender=request.user, receiver=receiver)
-            if created:
-                messages.success(request, "Connection request sent!")
+            req, created = MatchRequest.objects.get_or_create(sender=request.user, receiver=receiver, defaults={'status': 'pending'})
+            
+            # Check for mutual match: if receiver already sent a pending request to sender
+            mutual = MatchRequest.objects.filter(sender=receiver, receiver=request.user, status='pending').first()
+            
+            if mutual and (created or req.status == 'pending'):
+                # Accept both
+                req.status = 'accepted'
+                req.save()
+                mutual.status = 'accepted'
+                mutual.save()
+                broadcast_event(f'chat_{receiver.id}', 'connection_accepted', {
+                    'receiver_id': request.user.id,
+                    'receiver_name': request.user.profile.name if hasattr(request.user, 'profile') else request.user.username
+                })
+                broadcast_event(f'chat_{request.user.id}', 'connection_accepted', {
+                    'receiver_id': receiver.id,
+                    'receiver_name': receiver.profile.name if hasattr(receiver, 'profile') else receiver.username
+                })
+                status = 'matched'
+            elif created:
                 broadcast_event(f'chat_{receiver.id}', 'new_connection', {
                     'sender_id': request.user.id,
                     'sender_name': request.user.profile.name if hasattr(request.user, 'profile') else request.user.username
                 })
-                # Send Push Notification
                 try:
                     send_push_to_user(
                         receiver,
@@ -1031,11 +1057,24 @@ def send_match_request(request, receiver_id):
                     )
                 except Exception as e:
                     print(f"Push Error (Connection Request): {e}")
+                status = 'sent'
             else:
+                status = 'already_sent'
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({'success': True, 'status': status, 'mutual': status == 'matched'})
+            if status == 'sent':
+                messages.success(request, "Connection request sent!")
+            elif status == 'already_sent':
                 messages.info(request, "Connection request already sent.")
+            elif status == 'matched':
+                messages.success(request, "It's a match! You are now connected!")
         
-        # Reset last_match_count so they can continue answering
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': False, 'error': 'Invalid request'})
     
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': False, 'error': 'Invalid method'})
     return redirect('match_feed')
     
 @login_required

@@ -853,6 +853,47 @@
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
 
+    .voice-connect-btn {
+        background: none;
+        border: 1px solid #475569;
+        color: #94a3b8;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+        flex-shrink: 0;
+        line-height: 1.4;
+    }
+    .voice-connect-btn:hover {
+        background: #334155;
+        color: #e2e8f0;
+        border-color: #64748b;
+    }
+    .voice-connect-btn.connected {
+        border-color: #059669;
+        color: #34d399;
+        background: rgba(5,150,105,0.1);
+        cursor: default;
+        pointer-events: none;
+    }
+    .voice-connect-btn.pending {
+        border-color: #f59e0b;
+        color: #fbbf24;
+        background: rgba(245,158,11,0.1);
+        cursor: default;
+        pointer-events: none;
+    }
+    .voice-connect-btn.mutual {
+        border-color: #8b5cf6;
+        color: #a78bfa;
+        background: rgba(139,92,246,0.1);
+        cursor: default;
+        pointer-events: none;
+    }
+
     .voice-actions {
         display: flex;
         gap: 12px;
@@ -1570,7 +1611,10 @@ document.getElementById('spotlightForm').addEventListener('submit', function(e) 
         name: '{{ request.user.profile.name|escapejs|default:"" }}',
         username: '{{ request.user.username|escapejs }}',
         pic: '{{ request.user.profile.profile_pic|escapejs|default:"" }}',
-        sessionPeerId: '{{ request.user.username|escapejs }}-' + Math.random().toString(36).substr(2,5)
+        sessionPeerId: '{{ request.user.username|escapejs }}-' + Math.random().toString(36).substr(2,5),
+        friendIds: {{ friend_ids_json|safe }},
+        pendingSentIds: {{ pending_sent_ids_json|safe }},
+        pendingReceivedIds: {{ pending_received_ids_json|safe }}
     };
 
     function LOG(tag, msg) { if (console) console.log('[VC]', tag, msg); }
@@ -2091,6 +2135,61 @@ document.getElementById('spotlightForm').addEventListener('submit', function(e) 
         },
 
         /* ── RENDER PARTICIPANT PANEL ── */
+        _getConnectBtnHtml: function(userId) {
+            if (ME.friendIds.indexOf(userId) !== -1) return '<button class="voice-connect-btn connected" disabled>Connected</button>';
+            if (ME.pendingSentIds.indexOf(userId) !== -1) return '<button class="voice-connect-btn pending" disabled>Pending</button>';
+            if (ME.pendingReceivedIds.indexOf(userId) !== -1) return '<button class="voice-connect-btn mutual" onclick="event.stopPropagation();VRS._acceptConnect('+userId+')">Accept</button>';
+            return '<button class="voice-connect-btn" onclick="event.stopPropagation();VRS._sendConnect('+userId+')">Connect</button>';
+        },
+
+        _sendConnect: function(userId) {
+            if (!confirm('Send connection request to this person?')) return;
+            var self = this;
+            var csrf = (document.querySelector('[name=csrfmiddlewaretoken]') || {}).value || '';
+            fetch('/match/send/'+userId+'/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrf,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(function(r){ return r.json(); }).then(function(d) {
+                if (!d.success) { toast('Failed to send request'); return; }
+                if (d.status === 'matched') {
+                    ME.friendIds.push(userId);
+                    ME.pendingReceivedIds = ME.pendingReceivedIds.filter(function(id){ return id !== userId; });
+                    toast("It's a match! You are now connected!");
+                } else if (d.status === 'sent') {
+                    ME.pendingSentIds.push(userId);
+                    toast('Connection request sent!');
+                }
+                self._renderPanel();
+            }).catch(function() {
+                toast('Network error. Try again.');
+            });
+        },
+
+        _acceptConnect: function(userId) {
+            var self = this;
+            var csrf = (document.querySelector('[name=csrfmiddlewaretoken]') || {}).value || '';
+            fetch('/match/send/'+userId+'/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrf,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(function(r){ return r.json(); }).then(function(d) {
+                if (!d.success) { toast('Failed to accept'); return; }
+                if (d.status === 'matched' || d.status === 'sent') {
+                    ME.friendIds.push(userId);
+                    ME.pendingReceivedIds = ME.pendingReceivedIds.filter(function(id){ return id !== userId; });
+                    toast('You are now connected!');
+                }
+                self._renderPanel();
+            }).catch(function() {
+                toast('Network error. Try again.');
+            });
+        },
+
         _renderPanel: function() {
             var parts = this.curId ? this._getParts(this.curId) : [];
             var el = document.getElementById('voiceParticipants');
@@ -2110,7 +2209,11 @@ document.getElementById('spotlightForm').addEventListener('submit', function(e) 
                 html += '<div class="voice-participant-name">'+(p.name||'User')+muteIcon+(me?' <span style="font-size:11px;color:#94a3b8;font-weight:600;">(you)</span>':'')+'</div>';
                 html += '<div class="voice-participant-status" id="sstat_'+p.id+'">&nbsp;</div>';
                 html += '</div>';
-                html += '<div class="voice-participant-vol"><span class="vol-icon material-symbols-outlined">volume_up</span></div>';
+                if (!me) {
+                    html += '<div class="voice-participant-vol">'+self._getConnectBtnHtml(p.id)+'</div>';
+                } else {
+                    html += '<div class="voice-participant-vol"><span class="vol-icon material-symbols-outlined">volume_up</span></div>';
+                }
                 html += '</div>';
                 var vol = self.vols[p.id] !== undefined ? self.vols[p.id] : 100;
                 html += '<div class="voice-room-volume-slider" id="vslider_'+p.id+'"><label>Volume</label><input type="range" min="0" max="100" value="'+vol+'" oninput="VRS.setVol('+p.id+',this.value)"></div>';
