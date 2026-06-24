@@ -4792,8 +4792,8 @@ def edit_event(request):
     event.reg_link = data.get('reg_link', event.reg_link)
     event.page_link = data.get('page_link', event.page_link)
 
-    if request.FILES.get('cover_image'):
-        uploaded = upload_to_cloudinary(request.FILES['cover_image'], folder='knotspot/events')
+    if request.FILES.get('poster'):
+        uploaded = upload_to_cloudinary(request.FILES['poster'], folder='knotspot/events')
         if uploaded:
             event.poster = uploaded
 
