@@ -877,12 +877,12 @@ def check_match(request):
 # ---------------- FIREBASE LOGIN ----------------
 def login_view(request):
     if request.user.is_authenticated:
-        # Check if profile is set up — if not, send to complete_profile
         profile = getattr(request.user, 'profile', None)
         if profile and profile.name and profile.age and profile.gender and profile.campus and profile.native_place:
             return redirect('home')
         return redirect('complete_profile')
-    return render(request, "login.html")
+    recent_confessions = Confession.objects.filter(moderation_status='approved').order_by('-created_at')[:5]
+    return render(request, "login.html", {'recent_confessions': recent_confessions})
 
 @csrf_exempt
 def api_verify_token(request):
