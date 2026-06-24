@@ -1431,7 +1431,10 @@ spinBtn.onclick = async () => {
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
             body: JSON.stringify({ text: signal })
         });
-    } catch (e) {}; // suppress fetch errors for XOX moves
+        runSpinAnimation(winnerId, winnerName);
+    } catch (e) {
+        runSpinAnimation(winnerId, winnerName);
+    }
 };
 
 document.querySelectorAll('.message-row').forEach(row => {
