@@ -1180,10 +1180,7 @@ window.makeXoxMove = async function(index) {
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
             body: JSON.stringify({ text: signal })
         });
-        runSpinAnimation(winnerId, winnerName);
-    } catch (e) {
-        runSpinAnimation(winnerId, winnerName);
-    }
+    } catch (e) {};
 };
 
 function applyXoxMove(index, role) {
@@ -1434,10 +1431,7 @@ spinBtn.onclick = async () => {
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
             body: JSON.stringify({ text: signal })
         });
-        runSpinAnimation(winnerId, winnerName);
-    } catch (e) {
-        runSpinAnimation(winnerId, winnerName);
-    }
+    } catch (e) {}; // suppress fetch errors for XOX moves
 };
 
 document.querySelectorAll('.message-row').forEach(row => {
