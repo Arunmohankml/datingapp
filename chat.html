@@ -959,6 +959,7 @@ spinBtn.onclick = async () => {
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
             body: JSON.stringify({ text: signal })
         });
+        runSpinAnimation(winnerId, winnerName);
     } catch (e) {
         runSpinAnimation(winnerId, winnerName);
     }
