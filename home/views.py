@@ -4718,10 +4718,13 @@ def event_detail(request, slug):
 
 
 @csrf_exempt
+@csrf_exempt
 def submit_event(request):
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'error': 'Login required'}, status=403)
-    if request.method == 'POST':
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+    try:
         title = request.POST.get('title', '').strip()
         description = request.POST.get('description', '').strip()
         campus = request.POST.get('campus', '').strip()
@@ -4759,7 +4762,8 @@ def submit_event(request):
             status=status,
         )
         return JsonResponse({'success': True, 'id': event.id, 'message': 'Event submitted!' if status == 'pending' else 'Event published!', 'status': status})
-    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
 
 
 @csrf_exempt
