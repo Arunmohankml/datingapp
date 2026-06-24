@@ -269,7 +269,7 @@ body {
 const wallPusherKey = "{{ PUSHER_KEY|default:'' }}";
 const wallPusherCluster = "{{ PUSHER_CLUSTER|default:'ap2' }}";
 
-if (wallPusherKey) {
+if (wallPusherKey && typeof Pusher !== 'undefined') {
     const wallPusher = new Pusher(wallPusherKey, { cluster: wallPusherCluster });
     const wallChannel = wallPusher.subscribe('wall');
     wallChannel.bind('new_stroke', (data) => {
