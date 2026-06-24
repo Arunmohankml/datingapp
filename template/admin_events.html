@@ -68,6 +68,37 @@ html, body { height:100dvh; overflow:hidden; position:fixed; width:100%; backgro
 .aev-detail-value { font-size:13px; color:#0f172a; font-weight:500; }
 .aev-detail-actions { display:flex; gap:8px; margin-top:16px; padding-top:14px; border-top:1px solid #f1f5f9; }
 .aev-detail-actions .btn { flex:1; padding:12px; text-align:center; font-size:13px; }
+
+.ev-modal-overlay {
+    display:none;position:fixed;top:0;left:0;right:0;bottom:0;
+    background:rgba(15,23,42,0.5);backdrop-filter:blur(4px);
+    z-index:100;align-items:flex-end;justify-content:center;
+}
+.ev-modal-overlay.open { display:flex; }
+.ev-modal {
+    background:#ffffff;border-radius:24px 24px 0 0;width:100%;
+    max-width:500px;max-height:85vh;overflow-y:auto;
+    padding:20px 20px 24px;animation:ev-slideUp 0.3s ease;
+}
+@keyframes ev-slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.ev-modal-header {
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;
+}
+.ev-modal-header h2 { margin:0;font-size:18px;font-weight:800;color:#0f172a; }
+.ev-modal-close {
+    width:32px;height:32px;border-radius:50%;border:none;
+    background:#f1f5f9;display:flex;align-items:center;
+    justify-content:center;cursor:pointer;transition:all 0.2s;
+}
+.ev-modal-close:hover { background:#e2e8f0; }
+.ev-modal-close .material-symbols-outlined { font-size:18px;color:#64748b; }
+.ev-modal::-webkit-scrollbar { width:4px; }
+.ev-modal::-webkit-scrollbar-track { background:transparent; }
+.ev-modal::-webkit-scrollbar-thumb { background:#cbd5e1;border-radius:100px; }
+@media (min-width: 768px) {
+    .ev-modal { border-radius:24px;margin-bottom:40px; }
+    .ev-modal-overlay { align-items:center; }
+}
 </style>
 {% endblock %}
 
@@ -76,6 +107,7 @@ html, body { height:100dvh; overflow:hidden; position:fixed; width:100%; backgro
     <div class="aev-header">
         <a href="{% url 'admin_dashboard' %}" class="aev-back-btn"><span class="material-symbols-outlined">arrow_back</span></a>
         <h2>Event Management</h2>
+        <button class="btn btn-primary" onclick="openAdminEventForm()" style="padding:8px 16px;border-radius:10px;border:none;background:#2563eb;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0;"><span class="material-symbols-outlined" style="font-size:16px;">add</span> Create</button>
     </div>
     <div class="aev-body">
         <div class="aev-tabs">
@@ -234,5 +266,58 @@ function deleteEvent(id) {
         else alert(d.error || "Failed to delete");
     }).catch(function(){ alert("Network error"); });
 }
+</script>
+
+{% include 'event_form_modal.html' %}
+
+<script>
+function openAdminEventForm() {
+    document.getElementById('editEventId').value = '';
+    document.getElementById('eventFormTitle').textContent = 'Create Event';
+    document.getElementById('eventFormSubtitle').textContent = 'Share a campus event';
+    document.getElementById('eventForm').action = "{% url 'submit_event' %}";
+    document.getElementById('eventForm').reset();
+    document.getElementById('evPosterPreview').style.display = 'none';
+    document.getElementById('evFeeAmountWrap').style.display = 'none';
+    document.getElementById('evFeeType').value = 'free';
+    document.querySelectorAll('.ev-fee-opt').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.fee === 'free');
+    });
+    document.getElementById('eventFormModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+document.getElementById('eventFormModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        document.getElementById('eventFormModal').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+});
+
+document.getElementById('eventForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var f = this, msg = document.getElementById('eventFormMsg');
+    var btn = f.querySelector('.ev-btn-submit');
+    var origText = btn.innerHTML;
+    msg.style.display = 'none';
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ev-spinner" style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:ev-spin 0.6s linear infinite;vertical-align:middle;margin-right:6px;"></span> Submitting...';
+    var fd = new FormData(f);
+    fetch(f.action, {method:'POST', body:fd, headers:{'X-CSRFToken':fd.get('csrfmiddlewaretoken')}})
+    .then(function(r){return r.json()}).then(function(d){
+        if (d.success) {
+            btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">check</span> Done!';
+            setTimeout(function(){ location.reload(); }, 600);
+        } else {
+            btn.disabled = false; btn.innerHTML = origText;
+            msg.style.display = 'block'; msg.style.color = '#dc2626';
+            msg.textContent = d.error || 'Something went wrong';
+        }
+    }).catch(function(){
+        btn.disabled = false; btn.innerHTML = origText;
+        msg.style.display = 'block'; msg.style.color = '#dc2626';
+        msg.textContent = 'Network error';
+    });
+});
 </script>
 {% endblock %}

@@ -4845,10 +4845,14 @@ def admin_events(request):
     paginator = Paginator(events_qs, 20)
     page = request.GET.get('page', 1)
     events_page = paginator.get_page(page)
+    event_campuses = Event.objects.values_list('campus', flat=True)
+    profile_campuses = Profile.objects.exclude(campus='').values_list('campus', flat=True)
+    campuses = sorted(set(c for c in list(event_campuses) + list(profile_campuses) if c))
     return render(request, 'admin_events.html', {
         'events': events_page,
         'status_filter': status_filter,
         'is_staff': True,
+        'campuses': campuses,
     })
 
 
