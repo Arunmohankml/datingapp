@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block head %}
 <style>
@@ -451,7 +452,7 @@
         width: 280px; height: 280px;
         display: flex; align-items: center; justify-content: center;
     }
-    .bottle { font-size: 72px; filter: drop-shadow(0 0 30px rgba(255,255,255,0.3)); }
+    .bottle { width: 80px; height: auto; filter: drop-shadow(0 0 30px rgba(255,255,255,0.3)); }
     .user-labels {
         position: absolute; inset: 0;
         display: flex; flex-direction: column;
@@ -701,7 +702,7 @@
             <span class="label-me">{{ request.user.profile.name|default:request.user.username }}</span>
             <span class="label-partner">{{ partner.profile.name|default:partner.username }}</span>
         </div>
-        <div id="bottle" class="bottle">🍾</div>
+        <img id="bottle" class="bottle" src="{% static 'bottle.webp' %}" alt="Bottle">
     </div>
     <div class="spin-result" id="spinResult"></div>
 </div>
