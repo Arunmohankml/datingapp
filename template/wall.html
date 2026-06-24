@@ -265,40 +265,43 @@ body {
 
 <script>
 (function() {
-// Pusher Setup — use wallPusher to avoid conflict with base.html
-const wallPusherKey = "{{ PUSHER_KEY|default:'' }}";
-const wallPusherCluster = "{{ PUSHER_CLUSTER|default:'ap2' }}";
-
-if (wallPusherKey && typeof Pusher !== 'undefined') {
-    const wallPusher = new Pusher(wallPusherKey, { cluster: wallPusherCluster });
-    const wallChannel = wallPusher.subscribe('wall');
-    wallChannel.bind('new_stroke', (data) => {
-        if (!allStrokes.some(s => s.id === data.id)) {
+// Pusher Setup — retry until the library loads (loaded in base.html after body block)
+(function initWallPusher(tries) {
+    if (tries > 30) return;
+    var key = "{{ PUSHER_KEY|default:'' }}";
+    var cluster = "{{ PUSHER_CLUSTER|default:'ap2' }}";
+    if (!key || typeof Pusher === 'undefined') {
+        return setTimeout(function() { initWallPusher(tries + 1); }, 200);
+    }
+    var wp = new Pusher(key, { cluster: cluster });
+    var ch = wp.subscribe('wall');
+    ch.bind('new_stroke', function(data) {
+        if (!allStrokes.some(function(s){ return s.id === data.id; })) {
             allStrokes.push(data);
             redraw();
         }
     });
-    wallChannel.bind('new_image', (data) => {
-        if (!allImages.some(img => img.id === data.id)) {
-            const imgObj = new Image();
+    ch.bind('new_image', function(data) {
+        if (!allImages.some(function(img){ return img.id === data.id; })) {
+            var imgObj = new Image();
             imgObj.crossOrigin = "Anonymous";
             imgObj.src = data.image_url;
-            imgObj.onload = () => {
+            imgObj.onload = function() {
                 data.imgElement = imgObj;
                 allImages.push(data);
                 redraw();
             };
         }
     });
-    wallChannel.bind('delete_strokes', (data) => {
-        allStrokes = allStrokes.filter(s => !data.ids.includes(s.id));
+    ch.bind('delete_strokes', function(data) {
+        allStrokes = allStrokes.filter(function(s){ return !data.ids.includes(s.id); });
         redraw();
     });
-    wallChannel.bind('delete_images', (data) => {
-        allImages = allImages.filter(img => !data.ids.includes(img.id));
+    ch.bind('delete_images', function(data) {
+        allImages = allImages.filter(function(img){ return !data.ids.includes(img.id); });
         redraw();
     });
-}
+})(0);
 
 function showWarningModal(id, title, contentHTML, buttonsOptions) {
     const overlay = document.getElementById('global-warning-overlay');
