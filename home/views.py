@@ -11,7 +11,7 @@ from .analytics import (overview, user_analytics, growth, engagement,
                         live_activity, retention)
 from django.contrib.auth.models import User
 from django.contrib.auth import login as auth_login
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.core.management import call_command
 import json
 import os
@@ -26,6 +26,7 @@ from .moderation import (
     check_rate_limit, record_rate_limit, check_shadow_ban
 )
 from django.core.paginator import Paginator
+from datetime import datetime
 
 def get_firebase_app():
     """Helper to initialize or get the Firebase app with robust config parsing."""
@@ -283,8 +284,8 @@ def home_hub(request):
         pass
     
     ads = Advertisement.objects.filter(is_active=True)[:10]
-    spotlights = CampusSpotlight.objects.filter(is_active=True)[:15]
-    upcoming_events = Event.objects.filter(status='approved', event_date__gte=timezone.now().date()).order_by('event_date')[:5]
+    spotlights = CampusSpotlight.objects.filter(is_active=True).select_related('user__profile')[:15]
+    upcoming_events = Event.objects.filter(status='approved', event_date__gte=timezone.now().date()).order_by('event_date').select_related('user__profile')[:5]
     
     return render(request, "home_hub.html", {
         "profile": profile,
@@ -1129,7 +1130,7 @@ def chat_list_view(request):
     all_msgs = Message.objects.filter(
         (Q(sender=user, receiver__in=partners, sender_deleted=False)) |
         (Q(sender__in=partners, receiver=user, receiver_deleted=False))
-    ).exclude(text__startswith='__SPIN__:').order_by('-timestamp').select_related('sender')
+    ).exclude(text__startswith='__SPIN__:').order_by('-timestamp').select_related('sender__profile')
 
     # Group latest messages and unread counts in memory
     latest_msg_map = {}
@@ -2152,16 +2153,19 @@ def save_quiz_batch(request):
             data = json.loads(request.body)
             answers = data.get('answers', [])
             
+            q_ids = [a['question_id'] for a in answers if a.get('question_id')]
+            o_ids = [a['option_id'] for a in answers if a.get('option_id')]
+            questions = {q.id: q for q in Question.objects.filter(id__in=q_ids)}
+            options = {o.id: o for o in Option.objects.filter(id__in=o_ids)}
+
             for ans in answers:
                 question_id = ans.get('question_id')
                 option_id = ans.get('option_id')
-                if question_id and option_id:
-                    question = get_object_or_404(Question, id=question_id)
-                    option = get_object_or_404(Option, id=option_id)
+                if question_id and option_id and question_id in questions and option_id in options:
                     UserAnswer.objects.get_or_create(
                         user=request.user,
-                        question=question,
-                        defaults={'option': option}
+                        question=questions[question_id],
+                        defaults={'option': options[option_id]}
                     )
             
             # Reset rounds_shown to trigger 'check_match' redirect on next home load
@@ -2430,8 +2434,7 @@ def admin_giveaway_control(request):
     # GET JSON endpoint for participants
     if request.GET.get('participants') == '1':
         from django.db.models import Q
-        from django.core.paginator import Paginator
-        
+
         q = request.GET.get('q', '').strip()
         page_num = request.GET.get('page', 1)
         
@@ -2496,14 +2499,14 @@ def admin_view_user(request, user_id):
     gallery_images = ProfileImage.objects.filter(profile=profile)
     match_requests_sent = MatchRequest.objects.filter(sender=target_user).select_related('receiver__profile')
     match_requests_received = MatchRequest.objects.filter(receiver=target_user).select_related('sender__profile')
-    messages_sent = Message.objects.filter(sender=target_user).order_by('-timestamp')[:50]
-    messages_received = Message.objects.filter(receiver=target_user).order_by('-timestamp')[:50]
-    confessions = Confession.objects.filter(user=target_user).order_by('-created_at')
+    messages_sent = Message.objects.filter(sender=target_user).select_related('receiver__profile').order_by('-timestamp')[:50]
+    messages_received = Message.objects.filter(receiver=target_user).select_related('sender__profile').order_by('-timestamp')[:50]
+    confessions = Confession.objects.filter(user=target_user).select_related('user__profile').order_by('-created_at')
     reports_made = UserReport.objects.filter(reporter=target_user).select_related('reported_user')
     reports_received = UserReport.objects.filter(reported_user=target_user).select_related('reporter')
     answers = UserAnswer.objects.filter(user=target_user).select_related('question', 'option')
-    fav_movies = FavoriteMovie.objects.filter(user=target_user)
-    fav_songs = FavoriteSong.objects.filter(user=target_user)
+    fav_movies = FavoriteMovie.objects.filter(user=target_user).select_related('user')
+    fav_songs = FavoriteSong.objects.filter(user=target_user).select_related('user')
     connections = MatchRequest.objects.filter(
         Q(sender=target_user, status='accepted') | Q(receiver=target_user, status='accepted')
     ).select_related('sender__profile', 'receiver__profile')
@@ -2586,13 +2589,13 @@ def admin_dashboard(request):
 
     reported_confessions = Confession.objects.filter(
         is_flagged=True
-    ).exclude(moderation_status='rejected').order_by('-created_at')
+    ).exclude(moderation_status='rejected').select_related('user__profile').order_by('-created_at')
 
     pending_confessions = Confession.objects.filter(
         moderation_status='pending_review'
-    ).order_by('-created_at')
+    ).select_related('user__profile').order_by('-created_at')
 
-    user_reports  = UserReport.objects.all().order_by('-created_at')
+    user_reports  = UserReport.objects.select_related('reporter', 'reported_user').all().order_by('-created_at')
     all_users     = Profile.objects.all().select_related('user').order_by('-created_at')
     face_reviews  = Profile.objects.filter(
         verification_status='manual_review'
@@ -2605,6 +2608,8 @@ def admin_dashboard(request):
         for r in user_reports:
             r.chat_snapshot = []
 
+    pending_events_count = Event.objects.filter(status='pending').count()
+
     return render(request, 'admin_dashboard.html', {
         'reported_confessions':  reported_confessions,
         'pending_confessions':   pending_confessions,
@@ -2612,6 +2617,7 @@ def admin_dashboard(request):
         'all_users':             all_users,
         'face_reviews':          face_reviews,
         'banned_identifiers':    banned_identifiers,
+        'pending_events_count':  pending_events_count,
         'is_admin':              is_admin,
         'is_staff':              True,
     })
@@ -2864,7 +2870,6 @@ def admin_action(request):
                 if duration > 0:
                     state.timer_duration = duration
                     if state.show_timer:
-                        from django.utils import timezone
                         state.timer_end_time = timezone.now() + timezone.timedelta(seconds=duration)
                     else:
                         state.timer_end_time = None
@@ -3848,7 +3853,10 @@ def sitemap_view(request):
         {"loc": "/about/", "changefreq": "monthly", "priority": "0.5"},
         {"loc": "/confessions/", "changefreq": "hourly", "priority": "0.9"},
         {"loc": "/roomfinder/", "changefreq": "daily", "priority": "0.9"},
+        {"loc": "/events/", "changefreq": "daily", "priority": "0.9"},
         {"loc": "/wall/", "changefreq": "hourly", "priority": "0.8"},
+        {"loc": "/spotlights/", "changefreq": "daily", "priority": "0.7"},
+        {"loc": "/giveaway/", "changefreq": "weekly", "priority": "0.6"},
         {"loc": "/privacy-policy/", "changefreq": "monthly", "priority": "0.5"},
         {"loc": "/community-guidelines/", "changefreq": "monthly", "priority": "0.5"},
         {"loc": "/terms-and-conditions/", "changefreq": "monthly", "priority": "0.5"},
@@ -3879,6 +3887,16 @@ def sitemap_view(request):
             xml += '    <priority>0.7</priority>\n'
             xml += '  </url>\n'
             
+        # Dynamic Events
+        events = Event.objects.filter(status='approved').order_by('-created_at')
+        for e in events:
+            xml += '  <url>\n'
+            xml += f'    <loc>{base_url}/events/{e.slug}/</loc>\n'
+            xml += f'    <lastmod>{e.created_at.strftime("%Y-%m-%d")}</lastmod>\n'
+            xml += '    <changefreq>weekly</changefreq>\n'
+            xml += '    <priority>0.8</priority>\n'
+            xml += '  </url>\n'
+
         # Dynamic Room Listings
         listings = RoomListing.objects.filter(is_active=True).order_by('-created_at')
         for listing in listings:
@@ -4611,47 +4629,91 @@ def event_list(request):
     now = timezone.now()
     user = request.user if request.user.is_authenticated else None
 
-    approved = Event.objects.filter(status='approved')
+    approved = Event.objects.filter(status='approved').select_related('user__profile')
     pending_own = Event.objects.none()
     if user:
         pending_own = Event.objects.filter(status='pending', user=user)
 
+    q = request.GET.get('q', '').strip()
     campus_filter = request.GET.get('campus', '')
-    date_filter = request.GET.get('date', '')
     fee_filter = request.GET.get('fee', '')
+    sort = request.GET.get('sort', 'latest')
+    include_past = request.GET.get('include_past', '') == '1'
+    month = request.GET.get('month', '')
 
+    if q:
+        approved = approved.filter(title__icontains=q)
     if campus_filter:
         approved = approved.filter(campus=campus_filter)
-    if date_filter == 'upcoming':
+    if not include_past:
         approved = approved.filter(event_date__gte=now.date())
-    elif date_filter == 'today':
-        approved = approved.filter(event_date=now.date())
-    elif date_filter == 'past':
-        approved = approved.filter(event_date__lt=now.date())
+    if month:
+        try:
+            ym = month.split('-')
+            y, m = int(ym[0]), int(ym[1])
+            approved = approved.filter(event_date__year=y, event_date__month=m)
+        except (ValueError, IndexError):
+            pass
     if fee_filter in ('free', 'paid'):
         approved = approved.filter(fee_type=fee_filter)
 
-    approved = approved.order_by('event_date')
-    campuses = Event.objects.filter(status='approved').values_list('campus', flat=True).distinct().order_by('campus')
+    if sort == 'earliest':
+        approved = approved.order_by('event_date', '-created_at')
+    else:
+        approved = approved.order_by('-created_at')
+
+    paginator = Paginator(approved, 16)
+    page = request.GET.get('page', 1)
+    try:
+        events_page = paginator.page(page)
+    except (EmptyPage, PageNotAnInteger):
+        events_page = paginator.page(1)
+
+    event_campuses = Event.objects.filter(status='approved').values_list('campus', flat=True)
+    profile_campuses = Profile.objects.exclude(campus='').values_list('campus', flat=True)
+    campuses = sorted(set(c for c in list(event_campuses) + list(profile_campuses) if c))
+
+    months = []
+    for m in range(1, 13):
+        months.append({
+            'value': f'{now.year}-{m:02d}',
+            'label': datetime(now.year, m, 1).strftime('%B %Y'),
+        })
+
+    qs_parts = []
+    if q: qs_parts.append(f'q={quote(q)}')
+    if campus_filter: qs_parts.append(f'campus={quote(campus_filter)}')
+    if fee_filter: qs_parts.append(f'fee={quote(fee_filter)}')
+    if sort != 'latest': qs_parts.append(f'sort={quote(sort)}')
+    if include_past: qs_parts.append('include_past=1')
+    if month: qs_parts.append(f'month={quote(month)}')
+    query_string = '&'.join(qs_parts)
 
     return render(request, 'event_list.html', {
-        'events': approved,
+        'events': events_page,
         'pending_events': pending_own,
         'campuses': campuses,
+        'q': q,
         'current_campus': campus_filter,
-        'current_date': date_filter,
         'current_fee': fee_filter,
+        'current_sort': sort,
+        'include_past': include_past,
+        'current_month': month,
+        'months': months,
+        'query_string': query_string,
     })
 
 
-def event_detail(request, id):
+def event_detail(request, slug):
     try:
-        event = Event.objects.select_related('user__profile').get(id=id)
+        event = Event.objects.select_related('user__profile').get(slug=slug)
     except Event.DoesNotExist:
         raise Http404("Event not found")
     if event.status == 'pending' and event.user != request.user and not is_staff_check(request.user):
         raise Http404("Event not found")
-    return render(request, 'event_detail.html', {'event': event})
+    profile_campuses = Profile.objects.exclude(campus='').values_list('campus', flat=True)
+    campuses = sorted(set(c for c in list(profile_campuses) if c))
+    return render(request, 'event_detail.html', {'event': event, 'campuses': campuses})
 
 
 @csrf_exempt
@@ -4773,7 +4835,7 @@ def admin_events(request):
             return JsonResponse({'success': False, 'error': str(e)})
     status_filter = request.GET.get('status', '')
     events_qs = Event.objects.select_related('user__profile').all().order_by('-created_at')
-    if status_filter:
+    if status_filter and status_filter != 'all':
         events_qs = events_qs.filter(status=status_filter)
     paginator = Paginator(events_qs, 20)
     page = request.GET.get('page', 1)
@@ -4783,6 +4845,26 @@ def admin_events(request):
         'status_filter': status_filter,
         'is_staff': True,
     })
+
+
+def event_api_get(request, id):
+    try:
+        event = Event.objects.get(id=id)
+    except Event.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Not found'}, status=404)
+    return JsonResponse({'success': True, 'event': {
+        'id': event.id,
+        'title': event.title,
+        'description': event.description,
+        'poster': event.poster,
+        'campus': event.campus,
+        'event_date': event.event_date.isoformat(),
+        'last_reg_date': event.last_reg_date.isoformat() if event.last_reg_date else None,
+        'fee_type': event.fee_type,
+        'fee_amount': str(event.fee_amount) if event.fee_amount else None,
+        'reg_link': event.reg_link,
+        'page_link': event.page_link,
+    }})
 
 
 def upcoming_events_api(request):

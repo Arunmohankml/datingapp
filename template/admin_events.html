@@ -14,133 +14,106 @@ html, body { height:100dvh; overflow:hidden; position:fixed; width:100%; backgro
 .aev-back-btn:active { transform:scale(0.94); }
 .aev-header h2 { margin:0; font-size:18px; font-weight:800; color:#0f172a; flex:1; }
 .aev-body { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:20px; }
-
-/* Tab pills */
-.aev-tabs {
-    display:flex; background:#f1f5f9; padding:4px; border-radius:100px;
-    gap:4px; margin-bottom:20px;
-}
-.aev-tab {
-    flex:1; padding:10px 0; border:none; background:none; border-radius:100px;
-    font-size:12px; font-weight:700; color:#64748b; cursor:pointer;
-    text-align:center; transition:all 0.3s;
-    font-family:'Plus Jakarta Sans',sans-serif;
-}
+.aev-tabs { display:flex; background:#f1f5f9; padding:4px; border-radius:100px; gap:4px; margin-bottom:20px; }
+.aev-tab { flex:1; padding:10px 0; border:none; background:none; border-radius:100px; font-size:12px; font-weight:700; color:#64748b; cursor:pointer; text-align:center; transition:all 0.3s; font-family:'Plus Jakarta Sans',sans-serif; }
 .aev-tab.active { background:#ffffff; color:#2563eb; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
 
-/* Admin card */
-.aev-card {
-    background:#fff; border-radius:20px; padding:16px;
-    box-shadow:0 8px 24px rgba(15,23,42,0.04); border:1px solid rgba(0,74,198,0.06);
-    margin-bottom:12px; display:flex; align-items:center; gap:14px;
-    animation:aev-cardIn 0.3s ease backwards;
-}
-@keyframes aev-cardIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-.aev-card-thumb {
-    width:48px; height:48px; border-radius:12px; object-fit:cover;
-    background:#e2e8f0; flex-shrink:0;
-}
-.aev-card-thumb-placeholder {
-    width:48px; height:48px; border-radius:12px; background:#f1f5f9;
-    display:flex; align-items:center; justify-content:center; flex-shrink:0;
-}
-.aev-card-thumb-placeholder .material-symbols-outlined { font-size:20px; color:#94a3b8; }
+.aev-card { background:#fff; border-radius:16px; padding:14px; box-shadow:0 4px 16px rgba(15,23,42,0.04); border:1px solid rgba(0,74,198,0.06); margin-bottom:10px; cursor:pointer; transition:all 0.2s; }
+.aev-card:active { transform:scale(0.98); }
+.aev-card-top { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.aev-card-thumb { width:52px; height:52px; border-radius:14px; object-fit:cover; background:#f1f5f9; flex-shrink:0; }
+.aev-card-thumb-placeholder { width:52px; height:52px; border-radius:14px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.aev-card-thumb-placeholder .material-symbols-outlined { font-size:22px; color:#94a3b8; }
 .aev-card-info { flex:1; min-width:0; }
-.aev-card-title { font-size:14px; font-weight:700; color:#0f172a; margin-bottom:2px; display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
-.aev-card-meta { font-size:11px; color:#94a3b8; display:flex; gap:10px; flex-wrap:wrap; }
+.aev-card-title { font-size:14px; font-weight:700; color:#0f172a; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.aev-card-meta { font-size:11px; color:#94a3b8; display:flex; gap:8px; flex-wrap:wrap; }
 .aev-card-meta span { display:inline-flex; align-items:center; gap:3px; }
 .aev-card-meta .material-symbols-outlined { font-size:13px; }
-.aev-status {
-    display:inline-flex; padding:3px 10px; border-radius:100px;
-    font-size:10px; font-weight:700; flex-shrink:0;
-}
+.aev-status { display:inline-flex; padding:3px 10px; border-radius:100px; font-size:10px; font-weight:700; flex-shrink:0; }
 .aev-status-pending { background:#fef3c7; color:#d97706; }
 .aev-status-approved { background:#dcfce7; color:#16a34a; }
 .aev-status-rejected { background:#fef2f2; color:#dc2626; }
-.aev-card-actions {
-    display:flex; gap:4px; flex-shrink:0; align-items:center;
-}
-.btn { padding:8px 14px; border-radius:10px; border:none; font-size:11px; font-weight:700; cursor:pointer; transition:0.2s; font-family:inherit; white-space:nowrap; }
+.aev-card-desc { font-size:12px; color:#64748b; line-height:1.5; margin-bottom:10px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.aev-card-links { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+.aev-card-link { font-size:11px; color:#2563eb; text-decoration:underline; word-break:break-all; }
+.aev-card-actions { display:flex; gap:8px; align-items:center; }
+.btn { padding:8px 16px; border-radius:10px; border:none; font-size:11px; font-weight:700; cursor:pointer; transition:0.2s; font-family:inherit; white-space:nowrap; }
 .btn:active { transform:scale(0.96); }
 .btn-approve { background:#dcfce7; color:#16a34a; }
-.btn-approve:hover { background:#bbf7d0; }
 .btn-reject { background:#fef2f2; color:#dc2626; }
-.btn-reject:hover { background:#fee2e2; }
-.btn-delete { background:#fef2f2; color:#dc2626; }
-.btn-delete:hover { background:#fee2e2; }
-.btn-icon { width:32px; height:32px; border-radius:8px; border:none; cursor:pointer; font-size:15px; display:flex; align-items:center; justify-content:center; transition:0.15s; }
-.btn-icon:active { transform:scale(0.88); }
+.btn-delete { background:#fee2e2; color:#dc2626; }
+.btn-view { background:#eef2ff; color:#4f46e5; }
 
-/* Pagination */
-.aev-pagination {
-    display:flex; align-items:center; justify-content:center; gap:6px;
-    padding:20px 0 30px;
-}
-.aev-page-btn {
-    width:34px; height:34px; border-radius:50%; border:1px solid #e2e8f0;
-    background:#fff; color:#475569; font-size:12px; font-weight:700;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer; transition:all 0.2s; text-decoration:none;
-}
-.aev-page-btn:active { transform:scale(0.94); }
+.aev-pagination { display:flex; align-items:center; justify-content:center; gap:6px; padding:20px 0 30px; }
+.aev-page-btn { width:34px; height:34px; border-radius:50%; border:1px solid #e2e8f0; background:#fff; color:#475569; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s; text-decoration:none; }
 .aev-page-btn.active { background:#2563eb; color:#fff; border-color:#2563eb; }
-.aev-page-arrow {
-    width:34px; height:34px; border-radius:50%; border:1px solid #e2e8f0;
-    background:#fff; color:#2563eb; font-size:16px;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer; transition:all 0.2s; text-decoration:none;
-}
-.aev-page-arrow:active { transform:scale(0.94); }
+.aev-page-arrow { width:34px; height:34px; border-radius:50%; border:1px solid #e2e8f0; background:#fff; color:#2563eb; font-size:16px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:all 0.2s; text-decoration:none; }
 .aev-page-arrow.disabled { opacity:0.3; pointer-events:none; }
 
-/* Empty state */
-.aev-empty { text-align:center; padding:40px 20px; color:#94a3b8; font-size:13px; }
-.aev-empty .material-symbols-outlined { font-size:48px; color:#cbd5e1; margin-bottom:10px; }
+.aev-empty { text-align:center; padding:60px 20px; color:#94a3b8; }
+.aev-empty .material-symbols-outlined { font-size:56px; color:#cbd5e1; margin-bottom:12px; }
 .aev-empty h3 { font-size:16px; font-weight:700; color:#0f172a; margin:0 0 4px; }
+.aev-empty p { font-size:13px; }
+
+.aev-detail-overlay { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.5); backdrop-filter:blur(4px); z-index:50; align-items:flex-end; justify-content:center; }
+.aev-detail-overlay.open { display:flex; }
+.aev-detail-panel { background:#fff; border-radius:24px 24px 0 0; width:100%; max-width:560px; max-height:85vh; overflow-y:auto; padding:20px; animation:aev-slideUp 0.3s ease; }
+@keyframes aev-slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.aev-detail-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.aev-detail-head h3 { margin:0; font-size:17px; font-weight:800; color:#0f172a; }
+.aev-detail-close { width:32px; height:32px; border-radius:50%; border:none; background:#f1f5f9; display:flex; align-items:center; justify-content:center; cursor:pointer; }
+.aev-detail-poster { width:100%; border-radius:14px; object-fit:contain; max-height:250px; background:#f1f5f9; margin-bottom:14px; }
+.aev-detail-field { margin-bottom:10px; }
+.aev-detail-label { font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:2px; }
+.aev-detail-value { font-size:13px; color:#0f172a; font-weight:500; }
+.aev-detail-actions { display:flex; gap:8px; margin-top:16px; padding-top:14px; border-top:1px solid #f1f5f9; }
+.aev-detail-actions .btn { flex:1; padding:12px; text-align:center; font-size:13px; }
 </style>
 {% endblock %}
 
 {% block body %}
-<section class="aev-wrapper">
+<section class="aev-wrapper">{% csrf_token %}
     <div class="aev-header">
         <a href="{% url 'admin_dashboard' %}" class="aev-back-btn"><span class="material-symbols-outlined">arrow_back</span></a>
         <h2>Event Management</h2>
     </div>
     <div class="aev-body">
         <div class="aev-tabs">
-            <button class="aev-tab{% if status == 'all' %} active{% endif %}" onclick="location.href='?status=all'">All</button>
-            <button class="aev-tab{% if status == 'pending' %} active{% endif %}" onclick="location.href='?status=pending'">Pending</button>
-            <button class="aev-tab{% if status == 'approved' %} active{% endif %}" onclick="location.href='?status=approved'">Approved</button>
-            <button class="aev-tab{% if status == 'rejected' %} active{% endif %}" onclick="location.href='?status=rejected'">Rejected</button>
+            <button class="aev-tab{% if status_filter == 'all' or not status_filter %} active{% endif %}" onclick="location.href='?status=all'">All</button>
+            <button class="aev-tab{% if status_filter == 'pending' %} active{% endif %}" onclick="location.href='?status=pending'">Pending</button>
+            <button class="aev-tab{% if status_filter == 'approved' %} active{% endif %}" onclick="location.href='?status=approved'">Approved</button>
+            <button class="aev-tab{% if status_filter == 'rejected' %} active{% endif %}" onclick="location.href='?status=rejected'">Rejected</button>
         </div>
 
-        {% if events %}
+        {% if events.object_list %}
         <div id="aevList">
-            {% for e in events %}
-            <div class="aev-card" style="animation-delay:{{ forloop.counter0|divisibleby:1|yesno:'0.05,0.1' }}s;">
-                {% if e.poster %}
-                <img class="aev-card-thumb" src="{{ e.poster }}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                <div class="aev-card-thumb-placeholder" style="display:none;"><span class="material-symbols-outlined">event</span></div>
-                {% else %}
-                <div class="aev-card-thumb-placeholder"><span class="material-symbols-outlined">event</span></div>
-                {% endif %}
-                <div class="aev-card-info">
-                    <div class="aev-card-title">{{ e.title }}</div>
-                    <div class="aev-card-meta">
-                        <span><span class="material-symbols-outlined">person</span> {{ e.creator_name|default:"Unknown" }}</span>
-                        {% if e.campus %}<span><span class="material-symbols-outlined">location_on</span> {{ e.campus }}</span>{% endif %}
-                        <span><span class="material-symbols-outlined">calendar_month</span> {{ e.event_date|date:"d M Y" }}</span>
+            {% for e in events.object_list %}
+            <div class="aev-card" onclick="viewEvent({{ e.id }}, '{{ e.title|escapejs }}', '{{ e.description|escapejs }}', '{{ e.poster|escapejs }}', '{{ e.campus|escapejs }}', '{{ e.event_date|date:"d M Y" }}', '{{ e.fee_type }}', '{% if e.fee_amount %}&#8377;{{ e.fee_amount }}{% endif %}', '{{ e.reg_link|escapejs }}', '{{ e.page_link|escapejs }}', '{{ e.status }}', '{{ e.user.username|escapejs }}')" style="animation-delay:{{ forloop.counter0 }}00ms;">
+                <div class="aev-card-top">
+                    {% if e.poster %}
+                    <img class="aev-card-thumb" src="{{ e.poster }}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                    <div class="aev-card-thumb-placeholder" style="display:none;"><span class="material-symbols-outlined">event</span></div>
+                    {% else %}
+                    <div class="aev-card-thumb-placeholder"><span class="material-symbols-outlined">event</span></div>
+                    {% endif %}
+                    <div class="aev-card-info">
+                        <div class="aev-card-title">{{ e.title }}</div>
+                        <div class="aev-card-meta">
+                            <span><span class="material-symbols-outlined">person</span> {{ e.user.username }}</span>
+                            {% if e.campus %}<span><span class="material-symbols-outlined">location_on</span> {{ e.campus }}</span>{% endif %}
+                            <span><span class="material-symbols-outlined">calendar_month</span> {{ e.event_date|date:"d M Y" }}</span>
+                        </div>
                     </div>
+                    <span class="aev-status aev-status-{{ e.status }}">{{ e.get_status_display }}</span>
                 </div>
-                <span class="aev-status aev-status-{{ e.status }}">{{ e.get_status_display }}</span>
                 <div class="aev-card-actions">
                     {% if e.status == 'pending' %}
-                    <button class="btn btn-approve" onclick="approveEvent({{ e.id }})">Approve</button>
-                    <button class="btn btn-reject" onclick="rejectEvent({{ e.id }})">Reject</button>
+                    <button class="btn btn-approve" onclick="event.stopPropagation();approveEvent({{ e.id }})">Approve</button>
+                    <button class="btn btn-reject" onclick="event.stopPropagation();rejectEvent({{ e.id }})">Reject</button>
                     {% endif %}
-                    <button class="btn-icon btn-delete" onclick="deleteEvent({{ e.id }})" title="Delete">
-                        <span class="material-symbols-outlined" style="font-size:16px;">delete</span>
-                    </button>
+                    {% if e.status == 'approved' or e.status == 'rejected' %}
+                    <button class="btn btn-delete" onclick="event.stopPropagation();deleteEvent({{ e.id }})">Delete</button>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
@@ -149,15 +122,15 @@ html, body { height:100dvh; overflow:hidden; position:fixed; width:100%; backgro
         {% if events.has_other_pages %}
         <div class="aev-pagination">
             {% if events.has_previous %}
-            <a href="?page={{ events.previous_page_number }}&status={{ status }}" class="aev-page-arrow"><span class="material-symbols-outlined" style="font-size:16px;">chevron_left</span></a>
+            <a href="?page={{ events.previous_page_number }}&status={{ status_filter }}" class="aev-page-arrow"><span class="material-symbols-outlined" style="font-size:16px;">chevron_left</span></a>
             {% else %}
             <span class="aev-page-arrow disabled"><span class="material-symbols-outlined" style="font-size:16px;">chevron_left</span></span>
             {% endif %}
             {% for p in events.paginator.page_range %}
-            <a href="?page={{ p }}&status={{ status }}" class="aev-page-btn{% if p == events.number %} active{% endif %}">{{ p }}</a>
+            <a href="?page={{ p }}&status={{ status_filter }}" class="aev-page-btn{% if p == events.number %} active{% endif %}">{{ p }}</a>
             {% endfor %}
             {% if events.has_next %}
-            <a href="?page={{ events.next_page_number }}&status={{ status }}" class="aev-page-arrow"><span class="material-symbols-outlined" style="font-size:16px;">chevron_right</span></a>
+            <a href="?page={{ events.next_page_number }}&status={{ status_filter }}" class="aev-page-arrow"><span class="material-symbols-outlined" style="font-size:16px;">chevron_right</span></a>
             {% else %}
             <span class="aev-page-arrow disabled"><span class="material-symbols-outlined" style="font-size:16px;">chevron_right</span></span>
             {% endif %}
@@ -167,59 +140,99 @@ html, body { height:100dvh; overflow:hidden; position:fixed; width:100%; backgro
         <div class="aev-empty">
             <span class="material-symbols-outlined">event_busy</span>
             <h3>No events found</h3>
-            <p>{% if status == 'pending' %}No pending events to review.{% else %}No events match this filter.{% endif %}</p>
+            <p>{% if status_filter == 'pending' %}No pending events to review.{% elif status_filter == 'approved' %}No approved events.{% elif status_filter == 'rejected' %}No rejected events.{% else %}No events exist yet.{% endif %}</p>
         </div>
         {% endif %}
     </div>
 </section>
 
+<div class="aev-detail-overlay" id="eventDetailOverlay" onclick="closeDetail()">
+    <div class="aev-detail-panel" onclick="event.stopPropagation()">
+        <div class="aev-detail-head">
+            <h3 id="detailTitle"></h3>
+            <button class="aev-detail-close" onclick="closeDetail()"><span class="material-symbols-outlined" style="font-size:18px;color:#64748b;">close</span></button>
+        </div>
+        <img class="aev-detail-poster" id="detailPoster" src="" alt="" onerror="this.style.display='none'">
+        <div class="aev-detail-field"><div class="aev-detail-label">Created by</div><div class="aev-detail-value" id="detailCreator"></div></div>
+        <div class="aev-detail-field"><div class="aev-detail-label">Campus</div><div class="aev-detail-value" id="detailCampus"></div></div>
+        <div class="aev-detail-field"><div class="aev-detail-label">Date</div><div class="aev-detail-value" id="detailDate"></div></div>
+        <div class="aev-detail-field"><div class="aev-detail-label">Fee</div><div class="aev-detail-value" id="detailFee"></div></div>
+        <div class="aev-detail-field"><div class="aev-detail-label">Description</div><div class="aev-detail-value" id="detailDesc" style="white-space:pre-wrap;line-height:1.6;"></div></div>
+        <div class="aev-detail-field" id="detailLinksWrap" style="display:none;"><div class="aev-detail-label">Links</div><div class="aev-detail-value" id="detailLinks"></div></div>
+        <div class="aev-detail-actions" id="detailActions"></div>
+    </div>
+</div>
+
 <script>
+var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+function viewEvent(id, title, desc, poster, campus, date, feeType, feeAmount, regLink, pageLink, status, creator) {
+    document.getElementById('detailTitle').textContent = title;
+    document.getElementById('detailCreator').textContent = creator;
+    document.getElementById('detailCampus').textContent = campus || 'N/A';
+    document.getElementById('detailDate').textContent = date;
+    document.getElementById('detailFee').textContent = feeType === 'free' ? 'Free' : feeAmount;
+    document.getElementById('detailDesc').textContent = desc || 'No description';
+    if (poster) { document.getElementById('detailPoster').src = poster; document.getElementById('detailPoster').style.display = 'block'; }
+    else { document.getElementById('detailPoster').style.display = 'none'; }
+    var linksWrap = document.getElementById('detailLinksWrap');
+    var linksEl = document.getElementById('detailLinks');
+    linksEl.innerHTML = '';
+    if (regLink) { linksEl.innerHTML += '<div><a class="aev-card-link" href="' + regLink + '" target="_blank">Registration Link</a></div>'; }
+    if (pageLink) { linksEl.innerHTML += '<div><a class="aev-card-link" href="' + pageLink + '" target="_blank">Event Page</a></div>'; }
+    linksWrap.style.display = linksEl.innerHTML ? 'block' : 'none';
+    var actions = document.getElementById('detailActions');
+    actions.innerHTML = '';
+    if (status === 'pending') {
+        actions.innerHTML = '<button class="btn btn-approve" onclick="approveEvent(' + id + ');closeDetail();">Approve</button><button class="btn btn-reject" onclick="rejectEvent(' + id + ');closeDetail();">Reject</button>';
+    }
+    actions.innerHTML += '<button class="btn btn-delete" onclick="deleteEvent(' + id + ');closeDetail();">Delete</button>';
+    document.getElementById('eventDetailOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeDetail() {
+    document.getElementById('eventDetailOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
 function approveEvent(id) {
-    customConfirm("Approve this event? It will be visible to everyone.", "Approve Event", "Approve", "Cancel")
-    .then(function(res) {
-        if (!res) return;
-        var fd = new FormData();
-        fd.append('id', id);
-        fetch("{% url 'approve_event' %}", {
-            method: 'POST', body: fd,
-            headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value}
-        }).then(function(r){return r.json()}).then(function(d){
-            if (d.success) location.reload();
-            else customAlert(d.error || "Failed to approve");
-        });
-    });
+    var fd = new FormData();
+    fd.append('event_id', id);
+    fd.append('status', 'approved');
+    fetch("{% url 'admin_events' %}", {
+        method: 'POST', body: fd,
+        headers: {'X-CSRFToken': csrfToken}
+    }).then(function(r){return r.json()}).then(function(d){
+        if (d.success) location.reload();
+        else alert(d.error || "Failed to approve");
+    }).catch(function(){ alert("Network error"); });
 }
 
 function rejectEvent(id) {
-    customConfirm("Reject this event? It will not be visible to users.", "Reject Event", "Reject", "Cancel")
-    .then(function(res) {
-        if (!res) return;
-        var fd = new FormData();
-        fd.append('id', id);
-        fetch("{% url 'reject_event' %}", {
-            method: 'POST', body: fd,
-            headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value}
-        }).then(function(r){return r.json()}).then(function(d){
-            if (d.success) location.reload();
-            else customAlert(d.error || "Failed to reject");
-        });
-    });
+    var fd = new FormData();
+    fd.append('event_id', id);
+    fd.append('status', 'rejected');
+    fetch("{% url 'admin_events' %}", {
+        method: 'POST', body: fd,
+        headers: {'X-CSRFToken': csrfToken}
+    }).then(function(r){return r.json()}).then(function(d){
+        if (d.success) location.reload();
+        else alert(d.error || "Failed to reject");
+    }).catch(function(){ alert("Network error"); });
 }
 
 function deleteEvent(id) {
-    customConfirm("Permanently delete this event?", "Delete Event", "Delete", "Cancel")
-    .then(function(res) {
-        if (!res) return;
-        var fd = new FormData();
-        fd.append('id', id);
-        fetch("{% url 'delete_event' %}", {
-            method: 'POST', body: fd,
-            headers: {'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value}
-        }).then(function(r){return r.json()}).then(function(d){
-            if (d.success) location.reload();
-            else customAlert(d.error || "Failed to delete");
-        });
-    });
+    if (!confirm("Permanently delete this event?")) return;
+    var fd = new FormData();
+    fd.append('id', id);
+    fetch("{% url 'delete_event' %}", {
+        method: 'POST', body: fd,
+        headers: {'X-CSRFToken': csrfToken}
+    }).then(function(r){return r.json()}).then(function(d){
+        if (d.success) location.reload();
+        else alert(d.error || "Failed to delete");
+    }).catch(function(){ alert("Network error"); });
 }
 </script>
 {% endblock %}

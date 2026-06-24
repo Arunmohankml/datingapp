@@ -135,15 +135,11 @@ if os.environ.get('DATABASE_URL'):
     DATABASES = {
         'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL'),
-            conn_max_age=600,
-            ssl_require=True if os.environ.get('VERCEL') else False
+            conn_max_age=60,
+            ssl_require=True
         )
     }
-    # Ensure SSL options are correctly set for Supabase/Vercel
-    if os.environ.get('VERCEL'):
-        DATABASES['default']['OPTIONS'] = {
-            'sslmode': 'require',
-        }
+    DATABASES['default']['CONN_HEALTH_CHECKS'] = True
 else:
     # Fallback to SQLite for local development if no DB URL is set
     DATABASES = {
@@ -255,6 +251,17 @@ LOGOUT_REDIRECT_URL = '/'
 
 # Set COOP to allow popup communication for Firebase Auth (fixes Brave/Chrome issues)
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
+
+# Security Headers
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'DENY'
+CSRF_COOKIE_HTTPONLY = False  # Kept False for JS access in Google Sign-In flow
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Lax'
 
 # TMDB API
 TMDB_API_KEY = os.environ.get('TMDB_API_KEY')

@@ -4,222 +4,353 @@
 
 {% block title %}{{ event.title }} | KnotSpot{% endblock %}
 
+{% block meta_description %}{% if event.description %}{{ event.description|truncatechars:160 }}{% else %}Join {{ event.title }} at KnotSpot. {% if event.fee_type == 'free' %}Free entry{% else %}Entry &#8377;{{ event.fee_amount }}{% endif %} on {{ event.event_date|date:'d M Y' }}.{% endif %}{% endblock %}
+
+{% block og_title %}{{ event.title }} | KnotSpot{% endblock %}
+
+{% block og_description %}{% if event.description %}{{ event.description|truncatechars:200 }}{% else %}Campus event at KnotSpot{% endif %}{% endblock %}
+
+{% block og_image %}{% if event.poster %}{{ event.poster }}{% else %}https://knotspot.online/static/favicon.png{% endif %}{% endblock %}
+
+{% block canonical_url %}{{ request.build_absolute_uri }}{% endblock %}
+
 {% block head %}
+<meta property="og:type" content="event">
+<meta name="twitter:title" content="{{ event.title }} | KnotSpot">
+<meta name="twitter:description" content="{% if event.description %}{{ event.description|truncatechars:200 }}{% endif %}">
+<meta name="twitter:image" content="{% if event.poster %}{{ event.poster }}{% endif %}">
 <style>
 nav { display: none !important; }
 html, body {
     height: 100dvh; overflow: hidden; position: fixed; width: 100%;
-    background: #f7f9fb; padding: 0 !important; margin: 0 !important;
+    background: #f5f7fa; padding: 0 !important; margin: 0 !important;
 }
 .container {
     max-width: 100% !important; width: 100% !important; padding: 0 !important;
     margin: 0 !important; height: 100%; box-sizing: border-box;
     background: transparent !important; border: none !important; box-shadow: none !important;
 }
+
+/* Layout */
 .evd-wrapper {
     display: flex; flex-direction: column; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    width: 100%; max-width: 560px; margin: 0 auto;
-    background: linear-gradient(180deg, #fbfcff 0%, #f7f9fb 58%, #eff4fb 100%); z-index: 10;
+    width: 100%; max-width: 560px; margin: 0 auto; background: #f5f7fa; z-index: 10;
 }
+
+/* Header */
 .evd-header {
-    flex-shrink: 0; padding: calc(10px + env(safe-area-inset-top)) 20px 16px;
-    background: rgba(247,249,251,0.78); backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px); border-bottom: 1px solid rgba(0,74,198,0.08);
+    flex-shrink: 0; padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
     display: flex; align-items: center; gap: 12px; z-index: 20;
-}
-.evd-header-main {
-    display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;
+    background: rgba(245,247,250,0.88); backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 .evd-back-btn {
-    width: 44px; height: 44px; border-radius: 16px;
+    width: 40px; height: 40px; border-radius: 14px; border: none;
     background: rgba(255,255,255,0.88); display: flex; align-items: center;
-    justify-content: center; text-decoration: none; color: #2563eb;
-    border: 1px solid rgba(0,74,198,0.08); box-shadow: 0 10px 24px rgba(15,23,42,0.06);
-    transition: 0.2s ease; flex-shrink: 0; cursor: pointer;
+    justify-content: center; text-decoration: none; color: #1e293b;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04); flex-shrink: 0;
+    transition: 0.2s;
 }
-.evd-back-btn:active { transform: scale(0.94); }
+.evd-back-btn:active { transform: scale(0.92); }
 .evd-header h2 {
-    margin: 0; font-size: 18px; font-weight: 800; color: #0f172a;
+    margin: 0; font-size: 16px; font-weight: 700; color: #0f172a;
     flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.evd-header-actions {
-    display: flex; gap: 6px; flex-shrink: 0;
-}
+.evd-header-actions { display: flex; gap: 6px; flex-shrink: 0; }
 .evd-header-btn {
-    width: 44px; height: 44px; border-radius: 12px; border: none;
+    width: 40px; height: 40px; border-radius: 14px; border: none;
     background: rgba(255,255,255,0.88); color: #64748b;
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all 0.2s;
-    border: 1px solid rgba(0,74,198,0.08); box-shadow: 0 10px 24px rgba(15,23,42,0.06);
+    cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
 }
-.evd-header-btn:active { transform: scale(0.94); }
+.evd-header-btn:active { transform: scale(0.92); }
 .evd-header-btn.edit:hover { color: #2563eb; }
 .evd-header-btn.delete:hover { color: #ef4444; }
 
-.evd-body {
+/* Scrollable Body */
+.evd-scroll {
     flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-    padding: 0 0 120px; background: transparent;
+    padding: 0 16px 100px;
 }
-.evd-body::-webkit-scrollbar { width: 4px; }
-.evd-body::-webkit-scrollbar-track { background: transparent; }
-.evd-body::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 100px; }
+.evd-scroll::-webkit-scrollbar { width: 4px; }
+.evd-scroll::-webkit-scrollbar-track { background: transparent; }
+.evd-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 100px; }
 
-.evd-poster-wrap { padding: 16px 20px 0; }
+/* Poster */
+.evd-poster-wrap {
+    background: #ffffff; border-radius: 20px; overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04); margin-bottom: 16px;
+}
 .evd-poster {
-    width: 100%; aspect-ratio: 16/9; object-fit: cover;
-    border-radius: 20px; background: #f1f5f9; display: block;
+    width: 100%; max-height: 320px; object-fit: contain; display: block;
+    background: #f1f4f8;
 }
+.evd-poster-placeholder {
+    width: 100%; height: 180px; display: flex; align-items: center;
+    justify-content: center; background: #f1f4f8; color: #cbd5e1;
+}
+.evd-poster-placeholder .material-symbols-outlined { font-size: 48px; }
 
-.evd-content { padding: 20px; }
+/* Title Section */
+.evd-title-section {
+    background: #ffffff; border-radius: 20px; padding: 18px 20px;
+    margin-bottom: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+.evd-badge-row {
+    display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap;
+}
+.evd-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 100px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.evd-badge-free { background: #dcfce7; color: #16a34a; }
+.evd-badge-paid { background: #dbeafe; color: #2563eb; }
+.evd-badge-pending { background: #fef3c7; color: #d97706; }
+.evd-badge-campus { background: #f0f4fe; color: #2563eb; }
 .evd-title {
-    font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 16px;
-    letter-spacing: -0.03em; line-height: 1.2;
+    font-size: 22px; font-weight: 800; color: #0f172a;
+    letter-spacing: -0.03em; line-height: 1.25; margin: 0;
 }
 
-.evd-detail-row {
+/* Pending Banner */
+.evd-pending-banner {
+    background: #fef3c7; border: 1px solid rgba(217,119,6,0.2);
+    border-radius: 14px; padding: 12px 16px; margin-bottom: 16px;
     display: flex; align-items: flex-start; gap: 10px;
-    padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #475569;
 }
-.evd-detail-row:last-of-type { border-bottom: none; }
-.evd-detail-row .material-symbols-outlined {
-    font-size: 20px; color: #2563eb; flex-shrink: 0; margin-top: 1px;
+.evd-pending-banner .material-symbols-outlined {
+    font-size: 18px; color: #d97706; flex-shrink: 0; margin-top: 1px;
 }
-.evd-detail-row strong { font-weight: 700; color: #0f172a; }
+.evd-pending-banner div { font-size: 12px; color: #92400e; line-height: 1.5; }
+.evd-pending-banner strong { font-weight: 800; }
 
-.evd-section {
-    background: #ffffff; border: 1px solid #eef2f6; border-radius: 20px;
-    padding: 18px; margin-bottom: 16px;
+/* Info Card */
+.evd-info-card {
+    background: #ffffff; border-radius: 20px; padding: 18px;
+    margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    animation: evd-fadeIn 0.35s ease backwards;
 }
-.evd-section-title {
-    font-size: 13px; font-weight: 800; color: #0f172a; margin: 0 0 10px;
-    text-transform: uppercase; letter-spacing: 0.3px;
+.evd-info-card:nth-child(2) { animation-delay: 0.05s; }
+.evd-info-card:nth-child(3) { animation-delay: 0.1s; }
+@keyframes evd-fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+.evd-info-head {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 700; color: #64748b;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px;
 }
+.evd-info-head .material-symbols-outlined { font-size: 16px; }
+.evd-info-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+}
+.evd-info-item {
+    display: flex; align-items: center; gap: 10px;
+}
+.evd-info-icon {
+    width: 36px; height: 36px; border-radius: 12px;
+    background: #f0f4fe; display: flex; align-items: center;
+    justify-content: center; flex-shrink: 0;
+}
+.evd-info-icon .material-symbols-outlined { font-size: 18px; color: #2563eb; }
+.evd-info-label {
+    font-size: 10px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.evd-info-value {
+    font-size: 14px; font-weight: 700; color: #0f172a; margin-top: 1px;
+}
+
+/* Description */
 .evd-desc {
     font-size: 14px; color: #475569; line-height: 1.7;
     white-space: pre-wrap; margin: 0;
 }
 
-.evd-actions {
-    padding: 0 20px 20px; display: flex; flex-direction: column; gap: 10px;
+/* Sticky Bottom Bar */
+.evd-bottom {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+    background: rgba(255,255,255,0.92); backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(0,74,198,0.06);
+    display: flex; gap: 10px; z-index: 20;
 }
-.evd-action-btn {
-    width: 100%; padding: 14px; border-radius: 100px; font-size: 14px;
-    font-weight: 700; border: none; cursor: pointer; text-align: center;
-    text-decoration: none; font-family: 'Plus Jakarta Sans', sans-serif;
+.evd-bottom-btn {
+    flex: 1; padding: 14px; border-radius: 14px; border: none;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    text-align: center; text-decoration: none;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     transition: all 0.2s; display: flex; align-items: center;
     justify-content: center; gap: 8px;
 }
-.evd-action-btn:active { transform: scale(0.97); }
-.evd-action-gradient {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    color: #fff; box-shadow: 0 4px 16px rgba(37,99,235,0.3);
-}
-.evd-action-gradient:hover { box-shadow: 0 6px 24px rgba(37,99,235,0.4); }
+.evd-bottom-btn:active { transform: scale(0.97); }
+.evd-bottom-btn.primary { background: #0f172a; color: #fff; }
+.evd-bottom-btn.primary:hover { background: #1e293b; }
+.evd-bottom-btn.secondary { background: #f1f5f9; color: #0f172a; }
+.evd-bottom-btn.secondary:hover { background: #e2e8f0; }
 
-.evd-pending-banner {
-    background: #fef3c7; border: 1px solid rgba(217,119,6,0.2);
-    border-radius: 14px; padding: 14px 16px; margin: 0 20px 16px;
-    display: flex; align-items: flex-start; gap: 10px;
+/* ── Edit Modal Styles ── */
+.ev-modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15,23,42,0.5); backdrop-filter: blur(4px);
+    z-index: 100; align-items: flex-end; justify-content: center;
 }
-.evd-pending-banner .material-symbols-outlined {
-    font-size: 20px; color: #d97706; flex-shrink: 0;
+.ev-modal-overlay.open { display: flex; }
+.ev-modal {
+    background: #ffffff; border-radius: 24px 24px 0 0; width: 100%;
+    max-width: 500px; max-height: 85vh; overflow-y: auto;
+    padding: 20px 20px 24px; animation: ev-slideUp 0.3s ease;
 }
-.evd-pending-banner div { font-size: 13px; color: #92400e; line-height: 1.5; }
-.evd-pending-banner strong { display: block; margin-bottom: 2px; }
+.ev-modal::-webkit-scrollbar { width: 4px; }
+.ev-modal::-webkit-scrollbar-track { background: transparent; }
+.ev-modal::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 100px; }
+.ev-modal-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+}
+.ev-modal-header h2 { margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; }
+.ev-modal-close {
+    width: 32px; height: 32px; border-radius: 50%; border: none;
+    background: #f1f5f9; display: flex; align-items: center;
+    justify-content: center; cursor: pointer; transition: all 0.2s;
+}
+.ev-modal-close:hover { background: #e2e8f0; }
+.ev-modal-close .material-symbols-outlined { font-size: 18px; color: #64748b; }
+@keyframes ev-slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes ev-spin { to { transform: rotate(360deg); } }
+@media (min-width: 768px) {
+    .ev-modal { border-radius: 24px; margin-bottom: 40px; }
+    .ev-modal-overlay { align-items: center; }
+}
 </style>
 {% endblock %}
 
 {% block body %}
 <section class="evd-wrapper">
     <div class="evd-header">
-        <div class="evd-header-main">
-            <a href="{% url 'event_list' %}" class="evd-back-btn">
-                <span class="material-symbols-outlined" style="font-size:22px;">arrow_back</span>
-            </a>
-            <h2>{{ event.title|truncatechars:30 }}</h2>
-        </div>
-        {% if user.is_authenticated and user == event.creator or user.is_staff %}
+        <a href="{% url 'event_list' %}" class="evd-back-btn">
+            <span class="material-symbols-outlined" style="font-size:20px;">arrow_back</span>
+        </a>
+        <h2>{{ event.title|truncatechars:28 }}</h2>
+        {% if user.is_authenticated and user == event.user or user.is_staff %}
         <div class="evd-header-actions">
             <button class="evd-header-btn edit" onclick="editEvent({{ event.id }})" title="Edit">
-                <span class="material-symbols-outlined">edit</span>
+                <span class="material-symbols-outlined" style="font-size:18px;">edit</span>
             </button>
             <button class="evd-header-btn delete" onclick="deleteEvent({{ event.id }})" title="Delete">
-                <span class="material-symbols-outlined">delete</span>
+                <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
             </button>
         </div>
         {% endif %}
     </div>
 
-    <div class="evd-body">
-        {% if event.is_pending and user == event.creator %}
+    <div class="evd-scroll">
+        {% if event.status == 'pending' and user == event.user %}
         <div class="evd-pending-banner">
             <span class="material-symbols-outlined">info</span>
-            <div>
-                <strong>Pending Approval</strong>
-                This event is awaiting admin approval. Only you can see it right now.
-            </div>
+            <div><strong>Awaiting approval</strong> — only you can see this event right now.</div>
         </div>
         {% endif %}
 
         <div class="evd-poster-wrap">
             {% if event.poster %}
-            <img class="evd-poster" src="{{ event.poster|cloudinary_optimize }}" alt="{{ event.title }}" loading="lazy" decoding="async">
+            <img class="evd-poster" src="{{ event.poster|cloudinary_optimize }}" alt="{{ event.title }}">
             {% else %}
-            <div class="evd-poster" style="display:flex; align-items:center; justify-content:center; color:#cbd5e1; background:#f1f5f9;">
-                <span class="material-symbols-outlined" style="font-size:48px;">event</span>
+            <div class="evd-poster-placeholder">
+                <span class="material-symbols-outlined">event</span>
             </div>
             {% endif %}
         </div>
 
-        <div class="evd-content">
+        <div class="evd-title-section">
+            <div class="evd-badge-row">
+                <span class="evd-badge {% if event.fee_type == 'free' %}evd-badge-free{% else %}evd-badge-paid{% endif %}">
+                    <span class="material-symbols-outlined" style="font-size:12px;">{% if event.fee_type == 'free' %}money_off{% else %}currency_rupee{% endif %}</span>
+                    {% if event.fee_type == 'free' %}Free{% else %}&#8377;{{ event.fee_amount }}{% endif %}
+                </span>
+                {% if event.campus %}
+                <span class="evd-badge evd-badge-campus">
+                    <span class="material-symbols-outlined" style="font-size:12px;">location_on</span>
+                    {{ event.campus }}
+                </span>
+                {% endif %}
+                {% if event.status == 'pending' and user == event.user %}
+                <span class="evd-badge evd-badge-pending">
+                    <span class="material-symbols-outlined" style="font-size:12px;">hourglass_empty</span> Pending
+                </span>
+                {% endif %}
+            </div>
             <h1 class="evd-title">{{ event.title }}</h1>
+        </div>
 
-            <div class="evd-section">
-                <div class="evd-detail-row">
-                    <span class="material-symbols-outlined">calendar_month</span>
-                    <div><strong>Event Date:</strong> {{ event.event_date|date:"d M Y" }}</div>
+        <div class="evd-info-card">
+            <div class="evd-info-head">
+                <span class="material-symbols-outlined">info</span> Event Details
+            </div>
+            <div class="evd-info-grid">
+                <div class="evd-info-item">
+                    <div class="evd-info-icon"><span class="material-symbols-outlined">calendar_month</span></div>
+                    <div>
+                        <div class="evd-info-label">Date</div>
+                        <div class="evd-info-value">{{ event.event_date|date:"d M Y" }}</div>
+                    </div>
                 </div>
                 {% if event.last_reg_date %}
-                <div class="evd-detail-row">
-                    <span class="material-symbols-outlined">event_upcoming</span>
-                    <div><strong>Last Registration:</strong> {{ event.last_reg_date|date:"d M Y" }}</div>
+                <div class="evd-info-item">
+                    <div class="evd-info-icon"><span class="material-symbols-outlined">event_upcoming</span></div>
+                    <div>
+                        <div class="evd-info-label">Last Reg.</div>
+                        <div class="evd-info-value">{{ event.last_reg_date|date:"d M Y" }}</div>
+                    </div>
                 </div>
                 {% endif %}
                 {% if event.campus %}
-                <div class="evd-detail-row">
-                    <span class="material-symbols-outlined">location_on</span>
-                    <div><strong>Campus:</strong> {{ event.campus }}</div>
+                <div class="evd-info-item">
+                    <div class="evd-info-icon"><span class="material-symbols-outlined">location_on</span></div>
+                    <div>
+                        <div class="evd-info-label">Campus</div>
+                        <div class="evd-info-value">{{ event.campus }}</div>
+                    </div>
                 </div>
                 {% endif %}
-                <div class="evd-detail-row">
-                    <span class="material-symbols-outlined">currency_rupee</span>
-                    <div><strong>Fee:</strong> {% if event.fee == 0 %}Free{% else %}&#8377;{{ event.fee }}{% endif %}</div>
+                <div class="evd-info-item">
+                    <div class="evd-info-icon"><span class="material-symbols-outlined">{% if event.fee_type == 'free' %}money_off{% else %}currency_rupee{% endif %}</span></div>
+                    <div>
+                        <div class="evd-info-label">Fee</div>
+                        <div class="evd-info-value">{% if event.fee_type == 'free' %}Free{% else %}&#8377;{{ event.fee_amount }}{% endif %}</div>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            {% if event.description %}
-            <div class="evd-section">
-                <div class="evd-section-title">Description</div>
-                <div class="evd-desc">{{ event.description }}</div>
+        {% if event.description %}
+        <div class="evd-info-card">
+            <div class="evd-info-head">
+                <span class="material-symbols-outlined">description</span> About This Event
             </div>
-            {% endif %}
+            <div class="evd-desc">{{ event.description }}</div>
         </div>
+        {% endif %}
+    </div>
 
-        <div class="evd-actions">
-            {% if event.page_link %}
-            <a href="{{ event.page_link }}" target="_blank" rel="noopener" class="evd-action-btn evd-action-gradient">
-                <span class="material-symbols-outlined" style="font-size:18px;">open_in_new</span> Go to Page
-            </a>
-            {% endif %}
-            {% if event.reg_link %}
-            <a href="{{ event.reg_link }}" target="_blank" rel="noopener" class="evd-action-btn evd-action-gradient">
-                <span class="material-symbols-outlined" style="font-size:18px;">how_to_reg</span> Register Now
-            </a>
-            {% endif %}
+    <div class="evd-bottom">
+        {% if event.reg_link %}
+        <a href="{{ event.reg_link }}" target="_blank" rel="noopener" class="evd-bottom-btn primary">
+            <span class="material-symbols-outlined" style="font-size:18px;">how_to_reg</span> Register Now
+        </a>
+        {% endif %}
+        {% if event.page_link %}
+        <a href="{{ event.page_link }}" target="_blank" rel="noopener" class="evd-bottom-btn {% if event.reg_link %}secondary{% else %}primary{% endif %}">
+            <span class="material-symbols-outlined" style="font-size:18px;">open_in_new</span> Event Page
+        </a>
+        {% endif %}
+        {% if not event.reg_link and not event.page_link %}
+        <div style="flex:1;text-align:center;font-size:12px;color:#94a3b8;padding:14px;">
+            No registration links provided
         </div>
+        {% endif %}
     </div>
 </section>
 
+{% csrf_token %}
 {% include 'event_form_modal.html' %}
 
 <script>
@@ -235,12 +366,12 @@ function deleteEvent(id) {
         }).then(function(r){return r.json()}).then(function(d){
             if (d.success) window.location.href = "{% url 'event_list' %}";
             else customAlert(d.error || "Failed to delete");
-        });
+        }).catch(function(){ customAlert("Network error"); });
     });
 }
 
 function editEvent(id) {
-    fetch("/api/events/{{ event.id }}/get/")
+    fetch("/api/events/"+id+"/get/")
     .then(function(r){return r.json()})
     .then(function(d){
         if (d.success) {
@@ -254,9 +385,9 @@ function editEvent(id) {
             document.getElementById('evLastRegDate').value = d.event.last_reg_date || '';
             document.getElementById('evRegLink').value = d.event.reg_link || '';
             document.getElementById('evPageLink').value = d.event.page_link || '';
-            if (d.event.fee > 0) {
+            if (d.event.fee_type === 'paid') {
                 document.querySelector('[data-fee="paid"]').click();
-                document.getElementById('evFeeAmount').value = d.event.fee;
+                document.getElementById('evFeeAmount').value = d.event.fee_amount || '';
             } else {
                 document.querySelector('[data-fee="free"]').click();
             }
@@ -264,7 +395,7 @@ function editEvent(id) {
             document.getElementById('eventFormModal').classList.add('open');
             document.body.style.overflow = 'hidden';
         }
-    });
+    }).catch(function(){ customAlert("Could not load event data"); });
 }
 
 document.getElementById('eventFormModal')?.addEventListener('click', function(e) {
@@ -272,6 +403,32 @@ document.getElementById('eventFormModal')?.addEventListener('click', function(e)
         document.getElementById('eventFormModal').classList.remove('open');
         document.body.style.overflow = '';
     }
+});
+
+document.getElementById('eventForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var f = this, msg = document.getElementById('eventFormMsg');
+    var btn = f.querySelector('.ev-btn-submit');
+    var origText = btn.innerHTML;
+    msg.style.display = 'none';
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ev-spinner" style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:ev-spin 0.6s linear infinite;vertical-align:middle;margin-right:6px;"></span> Submitting...';
+    var fd = new FormData(f);
+    fetch(f.action, {method:'POST', body:fd, headers:{'X-CSRFToken':fd.get('csrfmiddlewaretoken')}})
+    .then(function(r){return r.json()}).then(function(d){
+        if (d.success) {
+            btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;">check</span> Done!';
+            setTimeout(function(){ location.reload(); }, 600);
+        } else {
+            btn.disabled = false; btn.innerHTML = origText;
+            msg.style.display = 'block'; msg.style.color = '#dc2626';
+            msg.textContent = d.error || 'Something went wrong';
+        }
+    }).catch(function(){
+        btn.disabled = false; btn.innerHTML = origText;
+        msg.style.display = 'block'; msg.style.color = '#dc2626';
+        msg.textContent = 'Network error';
+    });
 });
 </script>
 {% endblock %}

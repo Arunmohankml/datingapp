@@ -111,10 +111,11 @@ urlpatterns = [
     path("api/spotlights/edit/", views.edit_spotlight, name="edit_spotlight"),
     path("api/spotlights/delete/", views.delete_spotlight, name="delete_spotlight"),
     path("events/", views.event_list, name="event_list"),
-    path("events/<int:id>/", views.event_detail, name="event_detail"),
+    path("events/<slug:slug>/", views.event_detail, name="event_detail"),
     path("events/submit/", views.submit_event, name="submit_event"),
     path("events/edit/", views.edit_event, name="edit_event"),
     path("events/delete/", views.delete_event, name="delete_event"),
+    path("api/events/<int:id>/get/", views.event_api_get, name="event_api_get"),
     path("api/events/upcoming/", views.upcoming_events_api, name="upcoming_events_api"),
     path("master/events/", views.admin_events, name="admin_events"),
 ]

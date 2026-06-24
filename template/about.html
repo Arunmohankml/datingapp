@@ -3,11 +3,10 @@
 {% block title %}About KnotSpot – Student Social Platform{% endblock %}
 
 {% block meta_description %}Learn about KnotSpot, the student-built social platform for SRM campuses featuring matching, confessions, roommate finder, and campus community features.{% endblock %}
+{% block og_title %}About KnotSpot – Student Social Platform{% endblock %}
+{% block og_description %}Learn about KnotSpot, the student-built social platform for SRM campuses featuring matching, confessions, roommate finder, and campus community features.{% endblock %}
 
 {% block head %}
-<meta property="og:title" content="About KnotSpot – Student Social Platform">
-<meta property="og:description" content="Learn about KnotSpot, the student-built social platform for SRM campuses featuring matching, confessions, roommate finder, and campus community features.">
-
 <style>
     nav { display: none !important; }
     
@@ -250,6 +249,7 @@
     .glass-card.confess .icon-box { background: rgba(236,72,153,0.1); color: #ec4899; }
     .glass-card.room .icon-box { background: rgba(16,185,129,0.1); color: #10b981; }
     .glass-card.comm .icon-box { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    .glass-card.events .icon-box { background: rgba(139,92,246,0.1); color: #8b5cf6; }
 
     .glass-card h3 {
         font-size: 18px;
@@ -368,7 +368,7 @@
             <p>Everything you need to survive and thrive socially on campus.</p>
         </div>
         <div class="feature-grid">
-            <div class="glass-card match">
+            <a href="{% url 'home' %}" class="glass-card match" style="text-decoration:none;color:inherit;display:block;">
                 <div class="icon-box"><i class="fas fa-heart"></i></div>
                 <h3>Match & Discover</h3>
                 <ul>
@@ -376,8 +376,8 @@
                     <li><i class="fas fa-check"></i> Deep compatibility quizzes</li>
                     <li><i class="fas fa-check"></i> Cross-campus discovery</li>
                 </ul>
-            </div>
-            <div class="glass-card confess">
+            </a>
+            <a href="{% url 'confessions_feed' %}" class="glass-card confess" style="text-decoration:none;color:inherit;display:block;">
                 <div class="icon-box"><i class="fas fa-mask"></i></div>
                 <h3>Campus Confessions</h3>
                 <ul>
@@ -385,8 +385,8 @@
                     <li><i class="fas fa-check"></i> Moderated for safety</li>
                     <li><i class="fas fa-check"></i> React and comment securely</li>
                 </ul>
-            </div>
-            <div class="glass-card room">
+            </a>
+            <a href="{% url 'roomfinder_feed' %}" class="glass-card room" style="text-decoration:none;color:inherit;display:block;">
                 <div class="icon-box"><i class="fas fa-bed"></i></div>
                 <h3>Roommate Finder</h3>
                 <ul>
@@ -394,13 +394,22 @@
                     <li><i class="fas fa-check"></i> Advanced budget & vibe filters</li>
                     <li><i class="fas fa-check"></i> Zero broker interference</li>
                 </ul>
-            </div>
+            </a>
+            <a href="{% url 'event_list' %}" class="glass-card events" style="text-decoration:none;color:inherit;display:block;">
+                <div class="icon-box"><i class="fas fa-calendar-alt"></i></div>
+                <h3>Upcoming College Events</h3>
+                <ul>
+                    <li><i class="fas fa-check"></i> Discover workshops, fests & cultural events</li>
+                    <li><i class="fas fa-check"></i> Campus-wise event listings</li>
+                    <li><i class="fas fa-check"></i> Free & paid event discovery</li>
+                </ul>
+            </a>
             <div class="glass-card comm">
                 <div class="icon-box"><i class="fas fa-shield-alt"></i></div>
                 <h3>Safety First</h3>
                 <ul>
                     <li><i class="fas fa-check"></i> AI-powered face verification</li>
-                    <li><i class="fas fa-check"></i> strict anti-spam & ban systems</li>
+                    <li><i class="fas fa-check"></i> Strict anti-spam & ban systems</li>
                     <li><i class="fas fa-check"></i> Private reporting tools</li>
                 </ul>
             </div>

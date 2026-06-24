@@ -1334,23 +1334,6 @@
     </a>
     {% endif %}
 
-    {% if ads %}
-    <div class="panel">
-        <div class="panel-head">
-            <h2 class="panel-title"><span class="material-symbols-outlined">campaign</span>Upcoming Events</h2>
-            <span class="panel-badge">Events</span>
-        </div>
-        <div class="spotlight-carousel" id="spotlightCarousel">
-            {% for ad in ads %}
-            <a href="{{ ad.link_url }}" class="spotlight-card{% if forloop.first %} pos-center{% elif forloop.counter0 == 1 %} pos-right{% else %} pos-hidden{% endif %}" target="_blank" rel="noopener" data-index="{{ forloop.counter0 }}">
-                <img src="{{ ad.image_url }}" alt="{{ ad.title }}" loading="lazy" decoding="async">
-            </a>
-            {% endfor %}
-        </div>
-        <a href="#" class="spotlight-view" onclick="return false;">View all events &rarr;</a>
-    </div>
-    {% endif %}
-
     <div class="panel">
         <div class="panel-head">
             <h2 class="panel-title"><span class="material-symbols-outlined">chat_bubble</span>Latest confession</h2>

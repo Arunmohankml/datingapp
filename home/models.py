@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.text import slugify
 from django.contrib.auth.models import User
 
 class Profile(models.Model):
@@ -908,6 +909,7 @@ class Event(models.Model):
     reg_link = models.URLField(max_length=500, blank=True)
     page_link = models.URLField(max_length=500, blank=True)
     status = models.CharField(max_length=10, choices=EVENT_STATUS, default='pending')
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -916,6 +918,25 @@ class Event(models.Model):
 
     def __str__(self):
         return self.title
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base = slugify(f"{self.campus} {self.title}") if self.campus else slugify(self.title)
+            if not base:
+                base = f"event-{self.id or 'new'}"
+            self.slug = base
+            # ensure uniqueness
+            qs = Event.objects.filter(slug=self.slug)
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+            if qs.exists():
+                import time
+                self.slug = f"{base}-{int(time.time())}"
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('event_detail', args=[self.slug])
 
 
 class Advertisement(models.Model):

@@ -34,7 +34,12 @@
 
             <div class="ev-form-group">
                 <label>Campus</label>
-                <input type="text" name="campus" id="evCampus" placeholder="e.g. KTR, RMP, VDP">
+                <select name="campus" id="evCampus">
+                    <option value="">Select campus...</option>
+                    {% for c in campuses %}
+                    <option value="{{ c }}">{{ c }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
             <div style="display:flex; gap:12px;">

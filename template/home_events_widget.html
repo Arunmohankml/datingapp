@@ -13,7 +13,7 @@
     </div>
     <div class="hew-scroll" id="hewScroll">
         {% for e in upcoming_events %}
-        <a href="{% url 'event_detail' e.id %}" class="hew-card">
+        <a href="{% url 'event_detail' e.slug %}" class="hew-card">
             <div class="hew-card-img-wrap">
                 {% if e.poster %}
                 <img class="hew-card-img" src="{{ e.poster|cloudinary_optimize }}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">

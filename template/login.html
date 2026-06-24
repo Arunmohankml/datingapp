@@ -445,27 +445,34 @@ body::before {
         <p class="seo-campuses">Built for students at SRM KTR · Ramapuram · Vadapalani · NCR · AP · Chennai</p>
 
         <div class="seo-grid">
-            <div class="seo-feature">
+            <a href="{% url 'confessions_feed' %}" class="seo-feature" style="text-decoration:none;color:inherit;">
                 <div class="seo-icon"><i class="fas fa-mask"></i></div>
                 <div>
                     <h4>Anonymous Confessions</h4>
                     <p>Post and read campus confessions without revealing your name.</p>
                 </div>
-            </div>
-            <div class="seo-feature" style="cursor: pointer;" onclick="window.location.href='/roomfinder/'">
+            </a>
+            <a href="{% url 'roomfinder_feed' %}" class="seo-feature" style="text-decoration:none;color:inherit;">
                 <div class="seo-icon" style="background:#dcf5e7; color:#006242;"><span class="material-symbols-outlined">bed</span></div>
                 <div>
-                    <h4>Roomie</h4>
+                    <h4>Roommate Finder</h4>
                     <p>Find rooms, PGs, roommates, and flatmates near your SRM campus.</p>
                 </div>
-            </div>
-            <div class="seo-feature">
-                <div class="seo-icon" style="background:#fbe9f0; color:#be185d;"><span class="material-symbols-outlined">handshake</span></div>
+            </a>
+            <a href="{% url 'home' %}" class="seo-feature" style="text-decoration:none;color:inherit;">
+                <div class="seo-icon" style="background:#fbe9f0; color:#be185d;"><span class="material-symbols-outlined">favorite</span></div>
                 <div>
-                    <h4>Campus Connect</h4>
-                    <p>Meet verified SRM students and make new friends safely.</p>
+                    <h4>Match & Discover</h4>
+                    <p>Meet verified SRM students and make new friends through compatibility quizzes.</p>
                 </div>
-            </div>
+            </a>
+            <a href="{% url 'event_list' %}" class="seo-feature" style="text-decoration:none;color:inherit;">
+                <div class="seo-icon" style="background:#ede9fe; color:#7c3aed;"><span class="material-symbols-outlined">event</span></div>
+                <div>
+                    <h4>Upcoming College Events</h4>
+                    <p>Discover workshops, fests, and cultural events happening across SRM campuses.</p>
+                </div>
+            </a>
         </div>
     </div>
 

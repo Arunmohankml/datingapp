@@ -4,6 +4,8 @@
 {% block title %}{{ req.title }} | Room Request | KnotSpot{% endblock %}
 
 {% block meta_description %}Student looking for {{ req.preferred_room_type }} near {{ req.looking_near }} around SRM {{ req.campus }} campus. Connect on KnotSpot.{% endblock %}
+{% block og_title %}{{ req.title }} | Room Request | KnotSpot{% endblock %}
+{% block og_description %}Student looking for {{ req.preferred_room_type }} near {{ req.looking_near }} around SRM {{ req.campus }} campus. Connect on KnotSpot.{% endblock %}
 
 {% block json_ld %}
 <script type="application/ld+json">
@@ -30,8 +32,6 @@
 {% endblock %}
 
 {% block head %}
-<meta property="og:title" content="{{ req.title }} | Room Request | KnotSpot">
-<meta property="og:description" content="Student looking for {{ req.preferred_room_type }} near {{ req.looking_near }} around SRM {{ req.campus }} campus. Connect on KnotSpot.">
 <style>
 body > .container {
     padding: 0 !important;
