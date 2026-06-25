@@ -533,6 +533,10 @@
                 </div>
                 {% endfor %}
             </div>
+            <script>(function(){
+                var toasts = document.querySelector('.messages-toast-container');
+                if (toasts) setTimeout(function(){ toasts.style.opacity='0'; setTimeout(function(){ toasts.remove() },500); }, 5000);
+            })();</script>
         {% endif %}
         {% block body %}{% endblock %}
     </div>
@@ -582,6 +586,7 @@
                     if (chatBadge) {
                         chatBadge.style.display = 'block';
                     }
+                    showGlobalToast(`New message from ${data.sender_name || 'someone'}`, `/chat/${data.sender_id}/`);
                 } else {
                     // We are in the chat, so ensure the badge is hidden
                     const chatBadge = document.getElementById('chat-badge');
@@ -592,11 +597,45 @@
             userChannel.bind('new_connection', (data) => {
                 const matchBadge = document.getElementById('match-badge');
                 if (matchBadge) matchBadge.style.display = 'block';
+                showGlobalToast(`Connection request from ${data.sender_name || 'someone'}`, '/connections/');
+                // Update voice chat state in real-time
+                if (window.ME && data.sender_id) {
+                    var sid = data.sender_id;
+                    if (window.ME.pendingReceivedIds.indexOf(sid) === -1) {
+                        window.ME.pendingReceivedIds.push(sid);
+                    }
+                    if (window.VRS && window.VRS._renderPanel) {
+                        window.VRS._renderPanel();
+                    }
+                }
             });
 
             userChannel.bind('connection_accepted', (data) => {
                 const matchBadge = document.getElementById('match-badge');
                 if (matchBadge) matchBadge.style.display = 'block';
+                showGlobalToast(`${data.receiver_name || 'Someone'} accepted your request!`, '/connections/');
+                // Update voice chat state in real-time
+                if (window.ME && data.receiver_id) {
+                    var rid = data.receiver_id;
+                    window.ME.friendIds = window.ME.friendIds.filter(function(id){ return id !== rid; });
+                    window.ME.friendIds.push(rid);
+                    window.ME.pendingSentIds = window.ME.pendingSentIds.filter(function(id){ return id !== rid; });
+                    window.ME.pendingReceivedIds = window.ME.pendingReceivedIds.filter(function(id){ return id !== rid; });
+                    if (window.VRS && window.VRS._renderPanel) {
+                        window.VRS._renderPanel();
+                    }
+                }
+            });
+
+            userChannel.bind('connection_removed', (data) => {
+                if (window.ME && data.user_id) {
+                    var uid = data.user_id;
+                    window.ME.friendIds = window.ME.friendIds.filter(function(id){ return id !== uid; });
+                    if (window.VRS && window.VRS._renderPanel) {
+                        window.VRS._renderPanel();
+                    }
+                    showGlobalToast(`${data.user_name || 'Someone'} disconnected`, null);
+                }
             });
         }
 
@@ -688,7 +727,7 @@
                 modal.innerHTML = `
                     <div style="background:white; padding:32px; border-radius:28px; max-width:360px; width:90%; box-shadow:0 25px 50px -12px rgba(0,0,0,0.25); text-align:center; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
                         <div style="width:50px; height:50px; background:rgba(244,63,94,0.1); color:var(--accent); border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 16px; font-size:24px;">
-                            <i class="fas fa-exclamation-triangle"></i>
+                            <i class="fas fa-user-plus"></i>
                         </div>
                         <h3 style="margin:0 0 10px; font-size:20px; font-weight:800;">${title}</h3>
                         <p style="margin:0 0 24px; color:#64748b; font-size:15px; line-height:1.5;">${msg}</p>

@@ -30,7 +30,7 @@
                 </div>
                 <div class="hew-card-detail">
                     <span class="material-symbols-outlined">location_on</span>
-                    <span>{{ e.campus|default:"All Campuses" }}</span>
+                    <span>{{ e.campus_display|default:"All Campuses" }}</span>
                 </div>
                 <div class="hew-card-badge {% if e.fee_type == 'free' %}hew-badge-free{% else %}hew-badge-paid{% endif %}">
                     {% if e.fee_type == 'free' %}Free{% else %}&#8377;{{ e.fee_amount }}{% endif %}

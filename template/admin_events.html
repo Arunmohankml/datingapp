@@ -132,7 +132,7 @@ html, body { height:100dvh; overflow:hidden; position:fixed; width:100%; backgro
                         <div class="aev-card-title">{{ e.title }}</div>
                         <div class="aev-card-meta">
                             <span><span class="material-symbols-outlined">person</span> {{ e.user.username }}</span>
-                            {% if e.campus %}<span><span class="material-symbols-outlined">location_on</span> {{ e.campus }}</span>{% endif %}
+                            {% if e.campus %}<span><span class="material-symbols-outlined">location_on</span> {{ e.campus_display }}</span>{% endif %}
                             <span><span class="material-symbols-outlined">calendar_month</span> {{ e.event_date|date:"d M Y" }}</span>
                         </div>
                     </div>

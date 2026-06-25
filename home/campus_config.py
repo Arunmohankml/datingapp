@@ -24,40 +24,43 @@ from typing import Optional
 
 CAMPUSES = [
     # ── SRM ──
-    {"code": "KTR", "name": "Kattankulathur (KTR)", "org": "SRM", "aliases": ["Kattankulathur", "SRM KTR", "SRM Kattankulathur", "ktr"], "active": True},
-    {"code": "RMP", "name": "Ramapuram (RMP)",       "org": "SRM", "aliases": ["Ramapuram", "SRM Ramapuram", "rmp"], "active": True},
-    {"code": "VDP", "name": "Vadapalani (VDP)",       "org": "SRM", "aliases": ["Vadapalani", "SRM Vadapalani", "vdp"], "active": True},
-    {"code": "ESW", "name": "Eswari (ESW)",           "org": "SRM", "aliases": ["Eswari", "SRM Eswari", "Easwari", "esw"], "active": True},
-    {"code": "AP",  "name": "Amaravati (AP)",         "org": "SRM", "aliases": ["Amaravati", "SRM AP", "SRM Amaravati", "AMT", "ap"], "active": True},
-    {"code": "NCR", "name": "Delhi NCR",              "org": "SRM", "aliases": ["NCR", "SRM Delhi NCR", "NCR Modinagar", "ncr"], "active": True},
-    {"code": "SPT", "name": "Sonepat (SPT)",          "org": "SRM", "aliases": ["Sonepat", "SRM Sonepat", "spt"], "active": True},
-    {"code": "SKM", "name": "Sikkim (SKM)",           "org": "SRM", "aliases": ["Sikkim", "SRM Sikkim", "skm"], "active": True},
+    {"code": "KTR", "name": "SRM Kattankulathur (KTR)", "org": "SRM", "college": "SRM Institute of Science and Technology", "aliases": ["Kattankulathur", "SRM KTR", "SRM Kattankulathur", "ktr"], "active": True},
+    {"code": "RMP", "name": "SRM Ramapuram (RMP)",       "org": "SRM", "college": "SRM Institute of Science and Technology", "aliases": ["Ramapuram", "SRM Ramapuram", "rmp"], "active": True},
+    {"code": "VDP", "name": "SRM Vadapalani (VDP)",       "org": "SRM", "college": "SRM Institute of Science and Technology", "aliases": ["Vadapalani", "SRM Vadapalani", "vdp"], "active": True},
+    {"code": "ESW", "name": "SRM Eswari (ESW)",           "org": "SRM", "college": "SRM Institute of Science and Technology", "aliases": ["Eswari", "SRM Eswari", "Easwari", "esw"], "active": True},
+    {"code": "AP",  "name": "SRM Amaravati (AP)",         "org": "SRM", "college": "SRM Institute of Science and Technology", "aliases": ["Amaravati", "SRM AP", "SRM Amaravati", "AMT", "ap"], "active": True},
+    {"code": "NCR", "name": "SRM Delhi NCR",              "org": "SRM", "college": "SRM Institute of Science and Technology", "aliases": ["NCR", "SRM Delhi NCR", "NCR Modinagar", "ncr"], "active": True},
+    {"code": "SPT", "name": "SRM Sonepat (SPT)",          "org": "SRM", "college": "SRM Institute of Science and Technology", "aliases": ["Sonepat", "SRM Sonepat", "spt"], "active": True},
+    {"code": "SKM", "name": "SRM Sikkim (SKM)",           "org": "SRM", "college": "SRM Institute of Science and Technology", "aliases": ["Sikkim", "SRM Sikkim", "skm"], "active": True},
+    {"code": "TCY", "name": "SRM Tiruchirappalli (TCY)",   "org": "SRM", "college": "SRM Institute of Science and Technology", "aliases": ["Tiruchirappalli", "SRM Tiruchirappalli", "TCY", "tcy"], "active": True},
 
     # ── Amrita ──
-    {"code": "ACB", "name": "Amrita Coimbatore (ACB)",      "org": "Amrita", "aliases": ["Coimbatore", "Amrita Coimbatore", "acb"], "active": True},
-    {"code": "AKO", "name": "Amrita Kochi (AKO)",           "org": "Amrita", "aliases": ["Kochi", "Amrita Kochi", "ako"], "active": True},
-    {"code": "AAP", "name": "Amrita Amritapuri (AAP)",      "org": "Amrita", "aliases": ["Amritapuri", "Amrita Amritapuri", "aap"], "active": True},
-    {"code": "ABL", "name": "Amrita Bengaluru (ABL)",       "org": "Amrita", "aliases": ["Bengaluru", "Amrita Bengaluru", "Bangalore", "abl"], "active": True},
-    {"code": "AMY", "name": "Amrita Mysuru (AMY)",          "org": "Amrita", "aliases": ["Mysuru", "Amrita Mysuru", "Mysore", "amy"], "active": True},
-    {"code": "ACH", "name": "Amrita Chennai (ACH)",         "org": "Amrita", "aliases": ["Chennai", "Amrita Chennai", "ach"], "active": True},
-    {"code": "AAM", "name": "Amrita Amaravati (AAM)",       "org": "Amrita", "aliases": ["Amaravati", "Amrita Amaravati", "aam"], "active": True},
-    {"code": "AFD", "name": "Amrita Faridabad (AFD)",       "org": "Amrita", "aliases": ["Faridabad", "Amrita Faridabad", "afd"], "active": True},
-    {"code": "ANG", "name": "Amrita Nagercoil (ANG)",       "org": "Amrita", "aliases": ["Nagercoil", "Amrita Nagercoil", "ang"], "active": True},
-    {"code": "AHD", "name": "Amrita Haridwar (AHD)",        "org": "Amrita", "aliases": ["Haridwar", "Amrita Haridwar", "ahd"], "active": True},
-    {"code": "AON", "name": "Amrita Online (AON)",          "org": "Amrita", "aliases": ["Online", "Amrita Online", "aon"], "active": True},
+    {"code": "ACB", "name": "Amrita Coimbatore (ACB)",      "org": "Amrita", "college": "Amrita Vishwa Vidyapeetham", "aliases": ["Coimbatore", "Amrita Coimbatore", "acb"], "active": True},
+    {"code": "AKO", "name": "Amrita Kochi (AKO)",           "org": "Amrita", "college": "Amrita Vishwa Vidyapeetham", "aliases": ["Kochi", "Amrita Kochi", "ako"], "active": True},
+    {"code": "AAP", "name": "Amrita Amritapuri (AAP)",      "org": "Amrita", "college": "Amrita Vishwa Vidyapeetham", "aliases": ["Amritapuri", "Amrita Amritapuri", "aap"], "active": True},
+    {"code": "ABL", "name": "Amrita Bengaluru (ABL)",       "org": "Amrita", "college": "Amrita Vishwa Vidyapeetham", "aliases": ["Bengaluru", "Amrita Bengaluru", "Bangalore", "abl"], "active": True},
+    {"code": "AMY", "name": "Amrita Mysuru (AMY)",          "org": "Amrita", "college": "Amrita Vishwa Vidyapeetham", "aliases": ["Mysuru", "Amrita Mysuru", "Mysore", "amy"], "active": True},
+    {"code": "ACH", "name": "Amrita Chennai (ACH)",         "org": "Amrita", "college": "Amrita Vishwa Vidyapeetham", "aliases": ["Chennai", "Amrita Chennai", "ach"], "active": True},
+    {"code": "AAM", "name": "Amrita Amaravati (AAM)",       "org": "Amrita", "college": "Amrita Vishwa Vidyapeetham", "aliases": ["Amaravati", "Amrita Amaravati", "aam"], "active": True},
+    {"code": "AFD", "name": "Amrita Faridabad (AFD)",       "org": "Amrita", "college": "Amrita Vishwa Vidyapeetham", "aliases": ["Faridabad", "Amrita Faridabad", "afd"], "active": True},
+    {"code": "ANG", "name": "Amrita Nagercoil (ANG)",       "org": "Amrita", "college": "Amrita Vishwa Vidyapeetham", "aliases": ["Nagercoil", "Amrita Nagercoil", "ang"], "active": True},
+    {"code": "AHD", "name": "Amrita Haridwar (AHD)",        "org": "Amrita", "college": "Amrita Vishwa Vidyapeetham", "aliases": ["Haridwar", "Amrita Haridwar", "ahd"], "active": True},
+    {"code": "AON", "name": "Amrita Online (AON)",          "org": "Amrita", "college": "Amrita Vishwa Vidyapeetham", "aliases": ["Online", "Amrita Online", "aon"], "active": True},
 
     # ── VIT ──
-    {"code": "VLR", "name": "VIT Vellore (VLR)",            "org": "VIT",  "aliases": ["Vellore", "VIT Vellore", "vlr"], "active": True},
-    {"code": "VCH", "name": "VIT Chennai (VCH)",            "org": "VIT",  "aliases": ["Chennai", "VIT Chennai", "vch"], "active": True},
-    {"code": "VBP", "name": "VIT Bhopal (VBP)",             "org": "VIT",  "aliases": ["Bhopal", "VIT Bhopal", "vbp"], "active": True},
-    {"code": "VAP", "name": "VIT AP Amaravati (VAP)",       "org": "VIT",  "aliases": ["VIT AP", "VIT Amaravati", "Amaravati", "vap"], "active": True},
-    {"code": "VBL", "name": "VIT Bangalore (VBL)",          "org": "VIT",  "aliases": ["Bangalore", "VIT Bangalore", "Bengaluru", "vbl"], "active": True},
+    {"code": "VLR", "name": "VIT Vellore (VLR)",            "org": "VIT",  "college": "Vellore Institute of Technology", "aliases": ["Vellore", "VIT Vellore", "vlr"], "active": True},
+    {"code": "VCH", "name": "VIT Chennai (VCH)",            "org": "VIT",  "college": "Vellore Institute of Technology", "aliases": ["Chennai", "VIT Chennai", "vch"], "active": True},
+    {"code": "VBP", "name": "VIT Bhopal (VBP)",             "org": "VIT",  "college": "Vellore Institute of Technology", "aliases": ["Bhopal", "VIT Bhopal", "vbp"], "active": True},
+    {"code": "VAP", "name": "VIT AP Amaravati (VAP)",       "org": "VIT",  "college": "Vellore Institute of Technology", "aliases": ["VIT AP", "VIT Amaravati", "Amaravati", "vap"], "active": True},
+    {"code": "VBL", "name": "VIT Bangalore (VBL)",          "org": "VIT",  "college": "Vellore Institute of Technology", "aliases": ["Bangalore", "VIT Bangalore", "Bengaluru", "vbl"], "active": True},
 ]
 
 # Legacy DB value → canonical code mapping
 # Old SRM campus names stored in the database that need to map to current codes
 LEGACY_CAMPUS_MAP = {
     "Kattankulathur (KTR)": "KTR",
+    "KTR Campus":             "KTR",
+    "NCR Campus":             "NCR",
     "Ramapuram (RMP)":     "RMP",
     "Ramapuram":           "RMP",
     "Vadapalani (VDP)":    "VDP",
@@ -179,6 +182,12 @@ def get_org_groups() -> dict:
     for c in CAMPUSES:
         groups.setdefault(c["org"], []).append(c)
     return groups
+
+
+def get_campus_names_by_org(org: str) -> list:
+    """Return all canonical campus names for a given org (case-insensitive)."""
+    org_lower = org.lower()
+    return [c["name"] for c in CAMPUSES if c["org"].lower() == org_lower]
 
 
 def get_campus_search_results(query: str) -> list:

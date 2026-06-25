@@ -928,6 +928,9 @@ html, body {
     line-height: 1.5;
 }
 .rf-active-filter-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -939,7 +942,7 @@ html, body {
     font-size: 10px;
     font-weight: 800;
     padding: 0 5px;
-    margin-left: 4px;
+    z-index: 2;
 }
 
 /* ---- Scrollbar ---- */
@@ -949,7 +952,7 @@ html, body {
 
 /* ---- Responsive ---- */
 @media (min-width: 768px) {
-    .rf-modal { border-radius: 24px; margin-bottom: 40px; }
+    .rf-modal { border-radius: 24px; margin-bottom: 40px; padding-bottom: 24px; }
     .rf-modal-overlay { align-items: center; }
 }
 
@@ -1071,7 +1074,7 @@ html, body {
         <select id="filterCampus" class="rf-form-control">
             <option value="">Any Campus</option>
             {% for c in all_campuses %}
-            <option value="{{ c.code }}">{{ c.org }} {{ c.code }}</option>
+            <option value="{{ c.name }}">{{ c.org }} {{ c.code }}</option>
             {% endfor %}
         </select>
     </div>
@@ -1162,7 +1165,7 @@ html, body {
                 <label>Campus</label>
                 <select id="roomCampus" class="rf-form-control" required>
                     {% for c in all_campuses %}
-                    <option value="{{ c.code }}">{{ c.org }} {{ c.code }}</option>
+                    <option value="{{ c.name }}">{{ c.org }} {{ c.code }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -1270,7 +1273,7 @@ html, body {
                 <label>Campus</label>
                 <select id="reqCampus" class="rf-form-control" required>
                     {% for c in all_campuses %}
-                    <option value="{{ c.code }}">{{ c.org }} {{ c.code }}</option>
+                    <option value="{{ c.name }}">{{ c.org }} {{ c.code }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -1477,16 +1480,91 @@ html, body {
 
     // Unified Filters application
     function applyFilters() {
-        activeFilters = {};
-        const campus = document.getElementById('filterCampus').value;
-        const type = document.getElementById('filterType').value;
-        const gender = document.getElementById('filterGender').value;
-        const minRent = document.getElementById('filterMinRent').value;
-        const maxRent = document.getElementById('filterMaxRent').value;
-        const motherTongue = document.getElementById('filterMotherTongue').value;
+        syncActiveFilters();
+
+        // Save filters to localStorage
+        try {
+            localStorage.setItem('roomfinder_filters', JSON.stringify(activeFilters));
+        } catch (e) {}
         
-        // Get checked amenities
-        const checkedAmenities = Array.from(document.querySelectorAll('input[name="filterAmenity"]:checked')).map(el => el.value);
+        closeFilterModal();
+        fetchContent();
+    }
+
+    function restoreRoomfinderFilters() {
+        // Clear all filter fields first
+        document.getElementById('filterCampus').selectedIndex = 0;
+        document.getElementById('filterType').selectedIndex = 0;
+        document.getElementById('filterGender').selectedIndex = 0;
+        document.getElementById('filterMotherTongue').selectedIndex = 0;
+        document.getElementById('filterMinRent').value = '';
+        document.getElementById('filterMaxRent').value = '';
+        document.querySelectorAll('input[name="filterAmenity"]').forEach(function(cb) { cb.checked = false; });
+
+        try {
+            var saved = localStorage.getItem('roomfinder_filters');
+            if (saved) {
+                var filters = JSON.parse(saved);
+                // Restore all filter dropdown values
+                setSelectValue('filterCampus', filters.campus || '');
+                setSelectValue('filterType', filters.room_type || '');
+                setSelectValue('filterGender', filters.gender || '');
+                setSelectValue('filterMotherTongue', filters.mother_tongue || '');
+                document.getElementById('filterMinRent').value = filters.min_rent || '';
+                document.getElementById('filterMaxRent').value = filters.max_rent || '';
+                if (filters.amenity) {
+                    var cbs = document.querySelectorAll('input[name="filterAmenity"]');
+                    for (var i = 0; i < cbs.length; i++) {
+                        cbs[i].checked = cbs[i].value === filters.amenity;
+                    }
+                }
+                // Rebuild activeFilters and badge without closing modal
+                syncActiveFilters();
+                fetchContent();
+                return;
+            }
+        } catch (e) {}
+        // No saved filters — apply college preference from server as default
+        {% if college_pref %}
+        var campusSel = document.getElementById('filterCampus');
+        if (campusSel) {
+            var pref = '{{ college_pref|escapejs }}';
+            for (var i = 0; i < campusSel.options.length; i++) {
+                if (campusSel.options[i].text.startsWith(pref + ' ')) {
+                    campusSel.selectedIndex = i;
+                    activeFilters['campus'] = campusSel.value;
+                    applyFilters();
+                    break;
+                }
+            }
+        }
+        {% endif %}
+    }
+
+    function setSelectValue(id, val) {
+        var sel = document.getElementById(id);
+        if (!sel || !val) return;
+        // Try exact value match first (canonical name)
+        for (var i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].value === val) { sel.selectedIndex = i; return; }
+        }
+        // Fallback: match by "ORG CODE" text suffix (handles old code-only values e.g. "VDP")
+        var valUpper = val.toUpperCase();
+        for (var i = 0; i < sel.options.length; i++) {
+            var txt = sel.options[i].text.toUpperCase();
+            if (txt.endsWith(' ' + valUpper)) { sel.selectedIndex = i; return; }
+        }
+    }
+
+    function syncActiveFilters() {
+        activeFilters = {};
+        var campus = document.getElementById('filterCampus').value;
+        var type = document.getElementById('filterType').value;
+        var gender = document.getElementById('filterGender').value;
+        var minRent = document.getElementById('filterMinRent').value;
+        var maxRent = document.getElementById('filterMaxRent').value;
+        var motherTongue = document.getElementById('filterMotherTongue').value;
+        var checkedAmenities = Array.from(document.querySelectorAll('input[name="filterAmenity"]:checked')).map(function(el) { return el.value; });
 
         if (campus) activeFilters['campus'] = campus;
         if (type) activeFilters['room_type'] = type;
@@ -1494,12 +1572,11 @@ html, body {
         if (minRent) activeFilters['min_rent'] = minRent;
         if (maxRent) activeFilters['max_rent'] = maxRent;
         if (motherTongue) activeFilters['mother_tongue'] = motherTongue;
-        if (checkedAmenities.length > 0) activeFilters['amenity'] = checkedAmenities[0]; // Ripgrep style filtering
+        if (checkedAmenities.length > 0) activeFilters['amenity'] = checkedAmenities[0];
 
-        let count = Object.keys(activeFilters).length;
-        const countBadge = document.getElementById('filterCountBadge');
-        const filterBtn = document.getElementById('filterToggleBtn');
-        
+        var count = Object.keys(activeFilters).length;
+        var countBadge = document.getElementById('filterCountBadge');
+        var filterBtn = document.getElementById('filterToggleBtn');
         if (count > 0) {
             countBadge.style.display = 'inline-flex';
             countBadge.innerText = count;
@@ -1508,9 +1585,6 @@ html, body {
             countBadge.style.display = 'none';
             filterBtn.classList.remove('active');
         }
-        
-        closeFilterModal();
-        fetchContent();
     }
 
     // Fetch Room listings from API
@@ -1582,7 +1656,7 @@ html, body {
                             <div class="rf-details">
                                 <div class="rf-detail">
                                     <span class="material-symbols-outlined">location_on</span>
-                                    <span>${l.location} (${l.campus})</span>
+                                    <span>${l.location} (${l.campus_display})</span>
                                 </div>
                                 ${l.advance ? `<div class="rf-detail"><span class="material-symbols-outlined">payments</span><span>Advance: ₹${l.advance}</span></div>` : ''}
                             </div>
@@ -1668,7 +1742,7 @@ html, body {
                         <div class="rf-card-body">
                             <div class="rf-card-title-row" style="margin-bottom:12px;">
                                 <div class="rf-card-title" style="font-size:16px; flex:1; padding-right:10px;">${r.title}</div>
-                                <span class="rf-tag rf-tag-rent" style="font-size:11px; flex-shrink:0;">${r.campus}</span>
+                                <span class="rf-tag rf-tag-rent" style="font-size:11px; flex-shrink:0;">${r.campus_display}</span>
                             </div>
 
                             <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px 16px; margin-bottom:${r.extra_note ? '10px' : '14px'};">
@@ -2071,6 +2145,7 @@ html, body {
 
     // Init page feed on load
     document.addEventListener('DOMContentLoaded', () => {
+        restoreRoomfinderFilters();
         fetchContent();
     });
 </script>

@@ -1,19 +1,19 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ listing.get_room_type_display }} in {{ listing.location }} Near SRM {{ listing.campus }} | KnotSpot{% endblock %}
+{% block title %}{{ listing.get_room_type_display }} in {{ listing.location }} Near {{ listing.campus_display }} | KnotSpot{% endblock %}
 
-{% block meta_description %}Find {{ listing.get_room_type_display|lower }} in {{ listing.location }} near SRM {{ listing.campus }} for ₹{{ listing.rent }} on KnotSpot.{% endblock %}
-{% block og_title %}{{ listing.get_room_type_display }} in {{ listing.location }} Near SRM {{ listing.campus }} | KnotSpot{% endblock %}
-{% block og_description %}Find {{ listing.get_room_type_display|lower }} in {{ listing.location }} near SRM {{ listing.campus }} for ₹{{ listing.rent }} on KnotSpot.{% endblock %}
+{% block meta_description %}Find {{ listing.get_room_type_display|lower }} in {{ listing.location }} near {{ listing.campus_display }} for ₹{{ listing.rent }} on KnotSpot.{% endblock %}
+{% block og_title %}{{ listing.get_room_type_display }} in {{ listing.location }} Near {{ listing.campus_display }} | KnotSpot{% endblock %}
+{% block og_description %}Find {{ listing.get_room_type_display|lower }} in {{ listing.location }} near {{ listing.campus_display }} for ₹{{ listing.rent }} on KnotSpot.{% endblock %}
 
 {% block json_ld %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Article",
-  "headline": "{{ listing.get_room_type_display }} in {{ listing.location }} Near SRM {{ listing.campus }}",
-  "description": "Find {{ listing.get_room_type_display|lower }} in {{ listing.location }} near SRM {{ listing.campus }} for ₹{{ listing.rent }} on KnotSpot.",
+  "headline": "{{ listing.get_room_type_display }} in {{ listing.location }} Near {{ listing.campus_display }}",
+  "description": "Find {{ listing.get_room_type_display|lower }} in {{ listing.location }} near {{ listing.campus_display }} for ₹{{ listing.rent }} on KnotSpot.",
   {% if listing.images.all %}
   "image": "{{ request.scheme }}://{{ request.get_host }}{{ listing.images.first.image_url }}",
   {% endif %}
@@ -507,7 +507,7 @@ body {
     </div>
 
     <h1 class="rfd-price">₹{{ listing.rent }}<span> /month</span></h1>
-    <div class="rfd-location"><i class="fas fa-map-marker-alt"></i> {{ listing.location }} ({{ listing.campus }})</div>
+    <div class="rfd-location"><i class="fas fa-map-marker-alt"></i> {{ listing.location }} ({{ listing.campus_display }})</div>
 
     <!-- Quick Specs -->
     <div class="rfd-section">
@@ -575,7 +575,7 @@ body {
                 <label>Campus</label>
                 <select id="editRoomCampus" required>
                     {% for c in all_campuses %}
-                    <option value="{{ c.code }}" {% if listing.campus == c.code %}selected{% endif %}>{{ c.org }} {{ c.code }}</option>
+                    <option value="{{ c.name }}" {% if listing.campus == c.name %}selected{% endif %}>{{ c.org }} {{ c.code }}</option>
                     {% endfor %}
                 </select>
             </div>

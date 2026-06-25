@@ -551,7 +551,13 @@
                 <div class="all-done">
                     <div class="icon"><span class="material-symbols-outlined" style="font-size: 52px; font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 48;">auto_awesome</span></div>
                     <h2>All caught up!</h2>
-                    <p style="color: var(--text-muted);">Check back later for new profiles.</p>
+                    <p style="color: var(--text-muted);">
+                    {% if college_preference or has_age_pref %}
+                        No profiles match your preferences. Try changing your college or age settings.
+                    {% else %}
+                        Check back later for new profiles.
+                    {% endif %}
+                    </p>
                 </div>
             {% endif %}
 

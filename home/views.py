@@ -26,6 +26,7 @@ from .moderation import (
     check_bad_words, check_duplicate, check_name_mention,
     check_rate_limit, record_rate_limit, check_shadow_ban
 )
+from .campus_config import get_campus_names_by_org, get_campus_by_alias
 from django.core.paginator import Paginator
 from datetime import datetime
 
@@ -314,6 +315,7 @@ def home_hub(request):
         "friend_ids_json": list(friend_ids),
         "pending_sent_ids_json": list(pending_sent),
         "pending_received_ids_json": list(pending_received),
+        "is_admin": is_admin_check(user),
     })
 
 
@@ -491,18 +493,28 @@ def match_feed(request):
     blocked_user_ids = list(BlockedUser.objects.filter(blocker=user).values_list('blocked_id', flat=True)) + \
                        list(BlockedUser.objects.filter(blocked=user).values_list('blocker_id', flat=True))
     
+    college_preference = request.session.get('college_preference', '')
+    
     # Candidates are discoverable, verified profiles (quiz completion optional to avoid empty feeds after reset)
     candidates_qs = Profile.objects.filter(
         is_discoverable=True, 
         is_face_verified=True,
     ).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=blocked_user_ids)
     
+    if college_preference:
+        campus_names = get_campus_names_by_org(college_preference)
+        if campus_names:
+            candidates_qs = candidates_qs.filter(campus__in=campus_names)
+    
     has_valid_candidates = False
     for c in candidates_qs:
         user_pref_ok = (profile.pref_gender == 'any' or profile.pref_gender == c.gender)
         cand_pref_ok = (profile.pref_gender == 'any' or c.pref_gender == 'any' or c.pref_gender == profile.gender)
+        cand_age_ok = True
+        if profile.pref_age_min is not None and c.age is not None:
+            cand_age_ok = profile.pref_age_min <= c.age <= profile.pref_age_max
 
-        if user_pref_ok and cand_pref_ok:
+        if user_pref_ok and cand_pref_ok and cand_age_ok:
             has_valid_candidates = True
             break
 
@@ -513,6 +525,8 @@ def match_feed(request):
             "matches": [],
             "profile": profile,
             "quiz_round_size": round_size,
+            "college_preference": college_preference,
+            "has_age_pref": profile.pref_age_min is not None and profile.pref_age_max is not None,
         })
 
     question = Question.objects.exclude(id__in=answered_ids).first()
@@ -529,6 +543,11 @@ def match_feed(request):
         candidates = Profile.objects.filter(
             is_discoverable=True,
         ).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=blocked_user_ids).select_related('user')
+        
+        if college_preference:
+            campus_names = get_campus_names_by_org(college_preference)
+            if campus_names:
+                candidates = candidates.filter(campus__in=campus_names)
         
         user_ans = UserAnswer.objects.filter(user=user).select_related('option')
         user_dict = {ans.question_id: ans.option.id for ans in user_ans}
@@ -549,6 +568,11 @@ def match_feed(request):
             
             if not (user_pref_ok and cand_pref_ok):
                 continue
+            
+            # 2. Strict Age Preference
+            if profile.pref_age_min is not None and c.age is not None:
+                if not (profile.pref_age_min <= c.age <= profile.pref_age_max):
+                    continue
                 
             cand_dict = cand_ans_map.get(c.user_id, {})
             score, reasons, cand_ans_count, debug_info = calculate_intelligent_match(profile, c, user_dict, cand_dict)
@@ -557,15 +581,8 @@ def match_feed(request):
             if request.user.email in settings.ADMIN_EMAILS:
                 admin_reasons = reasons + ["======== ADMIN DEBUG ========"] + debug_info
             
-            # Age preference bool
-            user_age_ok = True
-            if profile.age:
-                user_age_ok = (c.pref_age_min <= profile.age <= c.pref_age_max)
-            cand_age_ok = True
-            if c.age:
-                cand_age_ok = (profile.pref_age_min <= c.age <= profile.pref_age_max)
-            mutual_age_ok = (user_age_ok and cand_age_ok)
-
+            mutual_age_ok = True  # Already enforced as strict filter above
+            
             looking_for_match = (profile.looking_for == c.looking_for)
             campus_match = (profile.campus == c.campus)
             
@@ -591,6 +608,8 @@ def match_feed(request):
             "sparked_ids": sparked_ids,
             "profile": profile,
             "quiz_round_size": round_size,
+            "college_preference": college_preference,
+            "has_age_pref": profile.pref_age_min is not None and profile.pref_age_max is not None,
         })
 
     total_q_db = Question.objects.count()
@@ -801,6 +820,12 @@ def check_match(request):
             is_face_verified=True
         ).exclude(user=user).exclude(user__id__in=interacted_user_ids).exclude(user__id__in=blocked_user_ids).exclude(user__id__in=seen_ids)
 
+        college_preference = request.session.get('college_preference', '')
+        if college_preference:
+            campus_names = get_campus_names_by_org(college_preference)
+            if campus_names:
+                candidates = candidates.filter(campus__in=campus_names)
+
         user_ans = UserAnswer.objects.filter(user=user).select_related('option')
         user_dict = {ans.question_id: ans.option.id for ans in user_ans}
         
@@ -820,6 +845,11 @@ def check_match(request):
             
             if not (user_pref_ok and cand_pref_ok):
                 continue
+            
+            # 2. Strict Age Preference
+            if profile.pref_age_min is not None and c.age is not None:
+                if not (profile.pref_age_min <= c.age <= profile.pref_age_max):
+                    continue
 
             cand_dict = cand_ans_map.get(c.user_id, {})
             score, reasons, cand_ans_count, debug_info = calculate_intelligent_match(profile, c, user_dict, cand_dict)
@@ -828,15 +858,7 @@ def check_match(request):
             if request.user.email in settings.ADMIN_EMAILS:
                 admin_reasons = reasons + ["======== ADMIN DEBUG ========"] + debug_info
 
-            # Age range check (both ways)
-            user_age_ok = True
-            if profile.age:
-                user_age_ok = (c.pref_age_min <= profile.age <= c.pref_age_max)
-            cand_age_ok = True
-            if c.age:
-                cand_age_ok = (profile.pref_age_min <= c.age <= profile.pref_age_max)
-            mutual_age_ok = (user_age_ok and cand_age_ok)
-
+            mutual_age_ok = True  # Already enforced as strict filter above
             looking_for_match = (profile.looking_for == c.looking_for)
             campus_match = (profile.campus == c.campus)
 
@@ -1125,17 +1147,43 @@ def reject_match(request, req_id):
     return redirect('connections')
 
 @login_required
+@require_POST
+def admin_disconnect_match(request, user_id):
+    if not is_admin_check(request.user):
+        return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+    target = get_object_or_404(User, id=user_id)
+    deleted = MatchRequest.objects.filter(
+        status='accepted'
+    ).filter(
+        Q(sender=request.user, receiver=target) | Q(sender=target, receiver=request.user)
+    ).delete()[0]
+    if deleted:
+        try:
+            broadcast_event(f'chat_{target.id}', 'connection_removed', {
+                'user_id': request.user.id,
+                'user_name': request.user.profile.name if hasattr(request.user, 'profile') else request.user.username
+            })
+        except Exception as e:
+            print(f"Pusher Error (Admin Disconnect): {e}")
+    return JsonResponse({'success': True})
+
+@login_required
 def connections_view(request):
     incoming_requests = MatchRequest.objects.filter(receiver=request.user, status='pending').select_related('sender__profile').order_by('-created_at')
     # Accepted matches can be either sent or received
-    accepted_sent = MatchRequest.objects.filter(sender=request.user, status='accepted').select_related('receiver__profile')
-    accepted_received = MatchRequest.objects.filter(receiver=request.user, status='accepted').select_related('sender__profile')
+    accepted_sent = MatchRequest.objects.filter(sender=request.user, status='accepted').select_related('receiver__profile').order_by('-created_at')
+    accepted_received = MatchRequest.objects.filter(receiver=request.user, status='accepted').select_related('sender__profile').order_by('-created_at')
     
+    seen = set()
     connections = []
     for req in accepted_sent:
-        connections.append(req.receiver)
+        if req.receiver_id not in seen:
+            seen.add(req.receiver_id)
+            connections.append(req.receiver)
     for req in accepted_received:
-        connections.append(req.sender)
+        if req.sender_id not in seen:
+            seen.add(req.sender_id)
+            connections.append(req.sender)
         
     return render(request, 'connections.html', {
         'incoming_requests': incoming_requests,
@@ -1157,11 +1205,16 @@ def chat_list_view(request):
     blocked_ids = set(BlockedUser.objects.filter(blocker=user).values_list('blocked_id', flat=True)) | \
                   set(BlockedUser.objects.filter(blocked=user).values_list('blocker_id', flat=True))
     
+    seen = set()
     partners = []
     for req in accepted_sent:
-        if req.receiver_id not in blocked_ids: partners.append(req.receiver)
+        if req.receiver_id not in blocked_ids and req.receiver_id not in seen:
+            seen.add(req.receiver_id)
+            partners.append(req.receiver)
     for req in accepted_received:
-        if req.sender_id not in blocked_ids: partners.append(req.sender)
+        if req.sender_id not in blocked_ids and req.sender_id not in seen:
+            seen.add(req.sender_id)
+            partners.append(req.sender)
     
     if not partners:
         return render(request, 'chat_list.html', {'chats': []})
@@ -1219,7 +1272,12 @@ def chat_view(request, partner_id):
         
     if request.method == 'GET':
         from datetime import timedelta
-        abandoned_games = Message.objects.filter(sender=request.user, receiver=partner, text__startswith='__XOX_START__:')
+        cutoff = timezone.now() - timedelta(hours=1)
+        abandoned_games = Message.objects.filter(
+            sender=request.user, receiver=partner,
+            text__startswith='__XOX_START__:',
+            timestamp__lt=cutoff
+        )
         for game_msg in abandoned_games:
             parts = game_msg.text.split(':')
             if len(parts) >= 2:
@@ -1228,7 +1286,7 @@ def chat_view(request, partner_id):
                 try:
                     broadcast_event(f'chat_{partner.id}', 'new_message', {
                         'id': f"temp-{int(timezone.now().timestamp() * 1000)}",
-                        'text': f"__SPIN__:XOX_LEFT:{game_id}:{sender_name}",
+                        'text': f"__XOX_LEFT__:{game_id}:{sender_name}",
                         'sender_id': request.user.id,
                         'timestamp': timezone.localtime(timezone.now()).strftime("%I:%M %p"),
                         'created_at': timezone.localtime(timezone.now()).isoformat(),
@@ -1237,7 +1295,6 @@ def chat_view(request, partner_id):
                 except:
                     pass
         abandoned_games.delete()
-        cutoff = timezone.now() - timedelta(minutes=15)
         Message.objects.filter(sender=partner, receiver=request.user, text__startswith='__XOX_START__:', timestamp__lt=cutoff).delete()
 
     if request.method == 'POST':
@@ -1286,6 +1343,24 @@ def chat_view(request, partner_id):
                         'reply_to': None
                     }})
                 return redirect('chat_view', partner_id=partner.id)
+
+            # XOX game signals — cleanup stale game cards, then persist to DB
+            if text.startswith('__XOX_LEFT__:'):
+                parts = text.split(':')
+                if len(parts) >= 2:
+                    game_id = parts[1]
+                    Message.objects.filter(
+                        Q(sender=request.user, receiver=partner) | Q(sender=partner, receiver=request.user),
+                        text=f"__XOX_START__:{game_id}"
+                    ).delete()
+            elif text.startswith('__XOX_CLOSE__:'):
+                parts = text.split(':')
+                if len(parts) >= 2:
+                    game_id = parts[1]
+                    Message.objects.filter(
+                        Q(sender=request.user, receiver=partner) | Q(sender=partner, receiver=request.user),
+                        text=f"__XOX_START__:{game_id}"
+                    ).delete()
 
             reply_to_msg = None
             if parent_id:
@@ -1669,6 +1744,15 @@ def edit_profile(request):
                         return JsonResponse({'status': 'error', 'message': 'No image file received.'}, status=400)
                 return redirect('edit_profile')
 
+            # Handle College Preference
+            elif 'college_pref' in request.POST:
+                college = request.POST.get('college_pref', '').strip()
+                request.session['college_preference'] = college
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    return JsonResponse({'success': True})
+                messages.success(request, f'College preference set to {college}.' if college else 'College preference cleared.')
+                return redirect('edit_profile')
+
         except Exception as e:
             import traceback
             print("!!! EDIT PROFILE POST ERROR !!!")
@@ -1681,12 +1765,23 @@ def edit_profile(request):
     gallery = profile.images.all()
     spark_count = Spark.objects.filter(receiver=request.user).count()
 
+    # Derive default college from profile campus, fallback to session preference
+    from .campus_config import get_campus_by_alias
+    campus_info = get_campus_by_alias(profile.campus)
+    default_college = campus_info["org"] if campus_info else ""
+    saved_pref = request.session.get("college_preference")
+    if saved_pref is None:
+        college_pref = default_college  # First visit — show their own college
+    else:
+        college_pref = saved_pref  # User has explicitly chosen (even if "")
+
     return render(request, "edit_profile.html", {
         "form": form,
         "image_form": image_form,
         "gallery": gallery,
         "profile": profile,
-        "spark_count": spark_count
+        "spark_count": spark_count,
+        "college_pref": college_pref,
     })
 
 @login_required
@@ -1846,18 +1941,27 @@ def wall_api(request):
 
 def confessions_feed(request):
     sort_by = request.GET.get('sort', 'latest')
-    campus_filter = request.GET.get('campus', '')
+    college_filter = request.GET.get('college')
     page_number = request.GET.get('page', 1)
 
     is_admin = is_staff_check(request.user)
+
+    # Apply college preference as default only when no college param is present
+    if college_filter is None:
+        saved = request.session.get('confessions_filter')
+        college_filter = saved if saved is not None else request.session.get('college_preference', '')
+    else:
+        # Remember the explicitly chosen filter
+        request.session['confessions_filter'] = college_filter
 
     # Public feed: ONLY approved confessions for EVERYONE
     confessions_list = Confession.objects.filter(
         moderation_status='approved'
     ).select_related('user__profile')
 
-    if campus_filter:
-        confessions_list = confessions_list.filter(campus__iexact=campus_filter)
+    if college_filter:
+        campus_names = get_campus_names_by_org(college_filter)
+        confessions_list = confessions_list.filter(campus__in=campus_names)
 
     if sort_by == 'top':
         confessions_list = confessions_list.order_by('-likes_count', '-created_at')
@@ -1867,11 +1971,15 @@ def confessions_feed(request):
     paginator = Paginator(confessions_list, 20) # Show 20 confessions per page
     page_obj = paginator.get_page(page_number)
 
+    # Grab last-used campus from session for create-form pre-select
+    last_campus = request.session.get('last_confession_campus', '')
+
     return render(request, 'confessions.html', {
         'confessions': page_obj,
         'current_sort': sort_by,
-        'current_campus': campus_filter,
-        'is_admin': is_admin
+        'current_college': college_filter,
+        'is_admin': is_admin,
+        'last_campus': last_campus,
     })
 
 def create_confession(request):
@@ -1882,6 +1990,10 @@ def create_confession(request):
     is_anon    = request.POST.get('is_anonymous') == 'true'
     campus     = request.POST.get('campus', '')
     fingerprint = request.POST.get('fingerprint', '').strip()
+
+    # Remember the campus choice for next time
+    if campus:
+        request.session['last_confession_campus'] = campus
     ip = (request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip()
           or request.META.get('REMOTE_ADDR', ''))
 
@@ -3259,8 +3371,9 @@ def roomfinder_feed(request):
         profile = getattr(request.user, 'profile', None)
         if not profile or not profile.name or not profile.age or not profile.gender or not profile.campus or not profile.native_place:
             return redirect('complete_profile')
-    
-    return render(request, 'roomfinder.html', {'profile': profile})
+
+    college_pref = request.session.get('college_preference', '')
+    return render(request, 'roomfinder.html', {'profile': profile, 'college_pref': college_pref})
 
 def roomfinder_detail(request, id):
     try:

@@ -583,6 +583,12 @@
         .card-link {
             margin-left: 0;
         }
+
+        .campus-pill {
+            padding: 4px 7px;
+            font-size: 9px;
+            gap: 3px;
+        }
     }
 
     /* ── Desktop & PC Layout (Min 768px) ── */
@@ -700,10 +706,10 @@
                 <option value="latest" {% if current_sort == 'latest' %}selected{% endif %}>Latest</option>
                 <option value="top" {% if current_sort == 'top' %}selected{% endif %}>Top Rated</option>
             </select>
-            <select name="campus" class="filter-field" onchange="this.form.submit()">
-                <option value="">All Campuses</option>
-                {% for c in all_campuses %}
-                <option value="{{ c.code }}" {% if current_campus == c.code %}selected{% endif %}>{{ c.org }} {{ c.code }}</option>
+            <select name="college" class="filter-field" onchange="this.form.submit()">
+                <option value="">All Colleges</option>
+                {% for org, campuses in campus_org_groups.items %}
+                <option value="{{ org }}" {% if current_college == org %}selected{% endif %}>{{ org }}</option>
                 {% endfor %}
             </select>
         </form>
@@ -730,12 +736,7 @@
                     {% if c.campus %}
                     <span class="campus-pill">
                         <span class="material-symbols-outlined" style="font-size:14px;">location_on</span>
-                        {{ c.campus }}
-                    </span>
-                    {% endif %}
-                    {% if is_admin %}
-                    <span class="admin-del" onclick="deleteConfession(event, {{ c.id }}, this)" title="Delete">
-                        <span class="material-symbols-outlined">delete</span>
+                        {{ c.campus_display }}
                     </span>
                     {% endif %}
                 </div>
@@ -769,10 +770,10 @@
             <div class="paginator-status">Page {{ confessions.number }} of {{ confessions.paginator.num_pages }}</div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 {% if confessions.has_previous %}
-                <a class="btn-ghost" href="?page={{ confessions.previous_page_number }}&sort={{ current_sort }}&campus={{ current_campus|urlencode }}">Previous</a>
+                <a class="btn-ghost" href="?page={{ confessions.previous_page_number }}&sort={{ current_sort }}&college={{ current_college|urlencode }}">Previous</a>
                 {% endif %}
                 {% if confessions.has_next %}
-                <a class="btn-ghost" href="?page={{ confessions.next_page_number }}&sort={{ current_sort }}&campus={{ current_campus|urlencode }}">Next</a>
+                <a class="btn-ghost" href="?page={{ confessions.next_page_number }}&sort={{ current_sort }}&college={{ current_college|urlencode }}">Next</a>
                 {% endif %}
             </div>
         </div>
@@ -832,10 +833,10 @@
 
             <div class="form-field">
                 <label style="font-weight:800; color:#151b27; font-size:14px;">Select Campus (Optional)</label>
-                <select name="campus" class="campus-select">
+                <select name="campus" class="campus-select" id="createCampus">
                     <option value="">Global Feed</option>
                     {% for c in all_campuses %}
-                    <option value="{{ c.code }}">{{ c.org }} {{ c.code }}</option>
+                    <option value="{{ c.name }}">{{ c.org }} {{ c.code }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -852,9 +853,34 @@
     function openCreateModal() {
         document.getElementById('createModal').classList.add('active');
         document.getElementById('fingerprintInput').value = getFingerprint();
+        restoreCampus();
     }
 
     function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
+
+    function restoreCampus() {
+        var sel = document.getElementById('createCampus');
+        if (!sel) return;
+        var saved = localStorage.getItem('confession_campus') || '{{ last_campus|escapejs }}';
+        if (saved) {
+            for (var i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].value === saved) {
+                    sel.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    document.addEventListener('change', function (e) {
+        if (e.target && e.target.id === 'createCampus') {
+            if (e.target.value) {
+                localStorage.setItem('confession_campus', e.target.value);
+            } else {
+                localStorage.removeItem('confession_campus');
+            }
+        }
+    });
 
     async function likeConfession(e, id, btn) {
         e.preventDefault();

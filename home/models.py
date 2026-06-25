@@ -1,7 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 from django.contrib.auth.models import User
-from .campus_config import get_campus_display_map
+from .campus_config import get_campus_by_alias
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -113,7 +113,8 @@ class Profile(models.Model):
 
     @property
     def campus_display(self):
-        return get_campus_display_map().get(self.campus, self.campus)
+        c = get_campus_by_alias(self.campus)
+        return f"{c['org']} {c['code']}" if c else self.campus
 
     @property
     def get_profile_pic_url(self):
@@ -306,6 +307,11 @@ class Confession(models.Model):
         if self.user and hasattr(self.user, 'profile'):
             return self.user.profile.get_profile_pic_url
         return "https://ui-avatars.com/api/?name=U&background=6366f1&color=fff&size=128"
+
+    @property
+    def campus_display(self):
+        c = get_campus_by_alias(self.campus)
+        return f"{c['org']} {c['code']}" if c else self.campus
 
 
 class ConfessionComment(models.Model):
@@ -505,7 +511,8 @@ class RoomListing(models.Model):
 
     @property
     def campus_display(self):
-        return get_campus_display_map().get(self.campus, self.campus)
+        c = get_campus_by_alias(self.campus)
+        return f"{c['org']} {c['code']}" if c else self.campus
 
 
 class RoomImage(models.Model):
@@ -574,7 +581,8 @@ class RoomRequest(models.Model):
 
     @property
     def campus_display(self):
-        return get_campus_display_map().get(self.campus, self.campus)
+        c = get_campus_by_alias(self.campus)
+        return f"{c['org']} {c['code']}" if c else self.campus
 
 
 class StaffMember(models.Model):
@@ -871,6 +879,11 @@ class Event(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def campus_display(self):
+        c = get_campus_by_alias(self.campus)
+        return f"{c['org']} {c['code']}" if c else self.campus
 
     def save(self, *args, **kwargs):
         if not self.slug:

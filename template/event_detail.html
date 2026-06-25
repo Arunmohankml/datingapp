@@ -269,7 +269,7 @@ html, body {
                 {% if event.campus %}
                 <span class="evd-badge evd-badge-campus">
                     <span class="material-symbols-outlined" style="font-size:12px;">location_on</span>
-                    {{ event.campus }}
+                    {{ event.campus_display }}
                 </span>
                 {% endif %}
                 {% if event.status == 'pending' and user == event.user %}
@@ -307,7 +307,7 @@ html, body {
                     <div class="evd-info-icon"><span class="material-symbols-outlined">location_on</span></div>
                     <div>
                         <div class="evd-info-label">Campus</div>
-                        <div class="evd-info-value">{{ event.campus }}</div>
+                        <div class="evd-info-value">{{ event.campus_display }}</div>
                     </div>
                 </div>
                 {% endif %}

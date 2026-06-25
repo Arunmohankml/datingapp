@@ -890,8 +890,12 @@
         border-color: #8b5cf6;
         color: #a78bfa;
         background: rgba(139,92,246,0.1);
-        cursor: default;
-        pointer-events: none;
+        cursor: pointer;
+    }
+    .voice-connect-btn.mutual:hover {
+        background: rgba(139,92,246,0.2);
+        color: #c4b5fd;
+        border-color: #a78bfa;
     }
 
     .voice-actions {
@@ -1614,7 +1618,8 @@ document.getElementById('spotlightForm').addEventListener('submit', function(e) 
         sessionPeerId: '{{ request.user.username|escapejs }}-' + Math.random().toString(36).substr(2,5),
         friendIds: {{ friend_ids_json|safe }},
         pendingSentIds: {{ pending_sent_ids_json|safe }},
-        pendingReceivedIds: {{ pending_received_ids_json|safe }}
+        pendingReceivedIds: {{ pending_received_ids_json|safe }},
+        isAdmin: {{ is_admin|yesno:"true,false" }}
     };
 
     function LOG(tag, msg) { if (console) console.log('[VC]', tag, msg); }
@@ -2136,14 +2141,18 @@ document.getElementById('spotlightForm').addEventListener('submit', function(e) 
 
         /* ── RENDER PARTICIPANT PANEL ── */
         _getConnectBtnHtml: function(userId) {
-            if (ME.friendIds.indexOf(userId) !== -1) return '<button class="voice-connect-btn connected" disabled>Connected</button>';
+            if (ME.friendIds.indexOf(userId) !== -1) {
+                if (ME.isAdmin) return '<button class="voice-connect-btn connected" style="pointer-events:auto;cursor:pointer" onclick="event.stopPropagation();VRS._adminDisconnect('+userId+')">Connected ✕</button>';
+                return '<button class="voice-connect-btn connected" disabled>Connected</button>';
+            }
             if (ME.pendingSentIds.indexOf(userId) !== -1) return '<button class="voice-connect-btn pending" disabled>Pending</button>';
             if (ME.pendingReceivedIds.indexOf(userId) !== -1) return '<button class="voice-connect-btn mutual" onclick="event.stopPropagation();VRS._acceptConnect('+userId+')">Accept</button>';
-            return '<button class="voice-connect-btn" onclick="event.stopPropagation();VRS._sendConnect('+userId+')">Connect</button>';
+            return '<button class="voice-connect-btn" onclick="event.stopPropagation();VRS._sendConnect('+userId+' )">Connect</button>';
         },
 
-        _sendConnect: function(userId) {
-            if (!confirm('Send connection request to this person?')) return;
+        _sendConnect: async function(userId) {
+            var confirmed = await customConfirm('Send connection request to this person?', 'Connection Request', 'Send', 'Cancel');
+            if (!confirmed) return;
             var self = this;
             var csrf = (document.querySelector('[name=csrfmiddlewaretoken]') || {}).value || '';
             fetch('/match/send/'+userId+'/', {
@@ -2190,6 +2199,25 @@ document.getElementById('spotlightForm').addEventListener('submit', function(e) 
             });
         },
 
+        _adminDisconnect: function(userId) {
+            var self = this;
+            var csrf = (document.querySelector('[name=csrfmiddlewaretoken]') || {}).value || '';
+            fetch('/match/admin-disconnect/'+userId+'/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrf,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).then(function(r){ return r.json(); }).then(function(d) {
+                if (!d.success) { toast('Failed to disconnect'); return; }
+                ME.friendIds = ME.friendIds.filter(function(id){ return id !== userId; });
+                toast('Disconnected');
+                self._renderPanel();
+            }).catch(function() {
+                toast('Network error. Try again.');
+            });
+        },
+
         _renderPanel: function() {
             var parts = this.curId ? this._getParts(this.curId) : [];
             var el = document.getElementById('voiceParticipants');
@@ -2198,6 +2226,18 @@ document.getElementById('spotlightForm').addEventListener('submit', function(e) 
             if (cnt) cnt.textContent = parts.length;
             var html = '';
             var self = this;
+            // Sort: pending requests (Accept) first, then connected, then sent, then others; newest within each group on top
+            parts = parts.map(function(p, i) { return {p: p, i: i}; }).sort(function(a, b) {
+                function priority(id) {
+                    if (ME.pendingReceivedIds.indexOf(id) !== -1) return 0;
+                    if (ME.friendIds.indexOf(id) !== -1) return 1;
+                    if (ME.pendingSentIds.indexOf(id) !== -1) return 2;
+                    return 3;
+                }
+                var pa = priority(a.p.id), pb = priority(b.p.id);
+                if (pa !== pb) return pa - pb;
+                return b.i - a.i;
+            }).map(function(item) { return item.p; });
             parts.forEach(function(p) {
                 var init = (p.name||'?').charAt(0).toUpperCase();
                 var img = p.pic ? '<img src="'+p.pic+'" alt="" onerror="this.style.display=\'none\'">' : '';
@@ -2291,6 +2331,7 @@ document.getElementById('spotlightForm').addEventListener('submit', function(e) 
     /* ── INIT ── */
     VRS.init();
     window.VRS = VRS;
+    window.ME = ME;
 
     /* ── WIRE UI ── */
     document.addEventListener('DOMContentLoaded', function() {

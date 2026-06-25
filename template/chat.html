@@ -718,16 +718,22 @@
                 </div>
             </div>
             {% endifchanged %}
-            {% if '__XOX_START__:' in msg.text %}
+            {% if '__SPIN_RESULT__:' in msg.text %}
+            <div class="message-row" data-id="{{ msg.id }}" data-date="{{ msg.timestamp|date:'Y-m-d' }}" style="justify-content: center; margin: 15px 0; opacity:0.6;">
+                <div style="background: rgba(0,74,198,0.05); color: #004ac6; padding: 4px 12px; border-radius: 20px; font-size: 10px; font-weight: 600; border: 1px solid rgba(0,74,198,0.1);">🎯 A bottle was spun!</div>
+            </div>
+            {% elif '__XOX_START__:' in msg.text %}
             <div class="message-row xox-game-message-container" data-game-id="{{ msg.text|slice:'14:' }}" data-id="{{ msg.id }}" data-date="{{ msg.timestamp|date:'Y-m-d' }}" style="display:flex; justify-content:center; width:100%;">
                 <div class="message {% if msg.sender == request.user %}sent{% else %}received{% endif %} xox-game-start-message" style="padding:0; overflow:hidden; border:none; background:none; box-shadow:none;">
                     <div class="xox-msg-card">
                         <h4>XOX Game</h4>
                         <p>{% if msg.sender == request.user %}You started a game{% else %}Tap to join game{% endif %}</p>
-                        <button class="xox-msg-btn" onclick="joinXoxGame('{{ msg.text|slice:'14:' }}', {% if msg.sender == request.user %}true{% else %}false{% endif %})">{% if msg.sender == request.user %}Open{% else %}Join{% endif %}</button>
+                        <button class="xox-msg-btn" onclick="joinXoxGame('{{ msg.text|slice:'14:' }}', {% if msg.sender == request.user %}true{% else %}false{% endif %}">{% if msg.sender == request.user %}Open{% else %}Join{% endif %}</button>
                     </div>
                 </div>
             </div>
+            {% elif '__XOX_MOVE__:' in msg.text or '__XOX_JOIN__:' in msg.text or '__XOX_CLOSE__:' in msg.text or '__XOX_REMATCH__:' in msg.text or '__XOX_LEFT__:' in msg.text %}
+            <div style="display:none" data-xox-signal="{{ msg.text }}" data-id="{{ msg.id }}"></div>
             {% else %}
             <div class="message-row {% if msg.sender == request.user %}sent{% else %}received{% endif %}" data-id="{{ msg.id }}" data-date="{{ msg.timestamp|date:'Y-m-d' }}" data-full-date="{{ msg.timestamp|date:'c' }}">
                 <div class="message {% if msg.sender == request.user %}sent{% else %}received{% endif %}" onclick="handleMessageClick(event, this)">
@@ -1047,20 +1053,26 @@ if (xoxStartBtn) {
         actionsDropup.classList.remove('active');
         plusBtn.classList.remove('active');
 
-        // Check if there is already an active game message in the chat
-        const existingGameContainer = Array.from(document.querySelectorAll('.xox-game-message-container:not(.expired)')).find(el => window.getComputedStyle(el).display !== 'none');
-        if (existingGameContainer) {
-            const joinBtn = existingGameContainer.querySelector('.xox-msg-btn');
-            if (joinBtn) {
-                // If a game already exists, just join it instead of creating a new one
-                joinBtn.click();
-                return;
-            }
+        // If in an active game, just reopen overlay
+        if (currentXoxGameId && xoxGameActive) {
+            document.getElementById('xoxOverlay').classList.add('active');
+            return;
+        }
+
+        // If there's a non-expired game card, reopen it instead of creating a new one
+        const existingCard = Array.from(document.querySelectorAll('.xox-game-message-container:not(.expired)'))
+            .find(el => window.getComputedStyle(el).display !== 'none');
+        if (existingCard) {
+            const gid = existingCard.dataset.gameId;
+            joinXoxGame(gid, true);
+            return;
         }
 
         const gameId = 'xox-' + Date.now();
+        // Set game state BEFORE fetch so handleXoxJoin doesn't miss the join
+        joinXoxGame(gameId, true);
+
         const signal = `__XOX_START__:${gameId}`;
-        
         const tempId = 'temp-' + Date.now();
         const optimisticMsg = {
             id: tempId, text: signal, sender_id: currentUserId,
@@ -1083,7 +1095,6 @@ if (xoxStartBtn) {
                     renderedIds.add(data.message.id);
                 }
             }
-            joinXoxGame(gameId, true);
         } catch (e) {
             console.error(e);
         }
@@ -1095,13 +1106,31 @@ let xoxBoard = Array(9).fill(null);
 let xoxTurn = 'blue'; 
 let myXoxRole = null; 
 let xoxGameActive = false;
+let pendingXoxJoin = null;
 
 window.joinXoxGame = async function(gameId, isCreator) {
+    const reopening = currentXoxGameId === gameId;
     currentXoxGameId = gameId;
     xoxBoard = Array(9).fill(null);
     xoxTurn = 'blue'; 
     myXoxRole = isCreator ? 'blue' : 'black';
-    xoxGameActive = !isCreator; // Only active for the joiner initially
+    if (!reopening) {
+        xoxGameActive = !isCreator;
+        // Expire all OTHER game cards so partner can't join stale games
+        document.querySelectorAll('.xox-game-message-container:not(.expired)').forEach(el => {
+            if (el.dataset.gameId !== gameId) {
+                const msgEl = el.querySelector('.xox-game-start-message');
+                if (msgEl) msgEl.classList.add('expired');
+                removeGameBox(el.dataset.gameId);
+            }
+        });
+    }
+
+    // Process join that arrived before currentXoxGameId was set
+    if (pendingXoxJoin === gameId) {
+        pendingXoxJoin = null;
+        if (isCreator) xoxGameActive = true;
+    }
     
     document.querySelectorAll('.xox-cell').forEach(cell => {
         cell.className = 'xox-cell';
@@ -1118,7 +1147,8 @@ window.joinXoxGame = async function(gameId, isCreator) {
     document.getElementById('xoxOverlay').classList.add('active');
 
     if (!isCreator) {
-        const signal = `__SPIN__:XOX_JOIN:${gameId}`;
+        pendingXoxJoin = null;
+        const signal = `__XOX_JOIN__:${gameId}`;
         try {
             await fetch(window.location.href, {
                 method: 'POST',
@@ -1134,7 +1164,7 @@ window.joinXoxGame = async function(gameId, isCreator) {
 window.leaveXoxGame = async function() {
     if (currentXoxGameId) {
         const myName = "{{ request.user.profile.name|default:request.user.username|escapejs }}";
-        const signal = `__SPIN__:XOX_LEFT:${currentXoxGameId}:${myName}`; // Send gameId and leaver name
+        const signal = `__XOX_LEFT__:${currentXoxGameId}:${myName}`;
         try {
             await fetch(window.location.href, {
                 method: 'POST',
@@ -1173,7 +1203,7 @@ window.makeXoxMove = async function(index) {
     
     applyXoxMove(index, myXoxRole);
     
-    const signal = `__SPIN__:XOX_MOVE:${currentXoxGameId}:${index}`;
+    const signal = `__XOX_MOVE__:${currentXoxGameId}:${index}`;
     try {
         await fetch(window.location.href, {
             method: 'POST',
@@ -1271,16 +1301,31 @@ function handleGameOver(winner) {
         if(titleText) titleText.innerHTML = `<span class="material-symbols-outlined" style="color:#ef4444;">mood_bad</span> ${actualPartnerName} Won!`;
     }
     
+    // Expire and remove the game card so a new game can be started
+    const gid = currentXoxGameId;
+    if (gid) {
+        const el = document.querySelector(`.xox-game-message-container[data-game-id="${gid}"] .xox-game-start-message`);
+        if (el) el.classList.add('expired');
+        removeGameBox(gid);
+    }
+    
+    const gameOverGameId = currentXoxGameId;
     setTimeout(() => {
         if (myXoxRole === 'blue' && currentXoxGameId) {
             const nextStart = Math.random() > 0.5 ? 'blue' : 'black';
             requestRematch(nextStart);
         }
     }, 2000);
+    // Allow starting a new game after rematch window closes
+    setTimeout(() => {
+        if (currentXoxGameId === gameOverGameId) {
+            currentXoxGameId = null;
+        }
+    }, 8000);
 }
 
 async function requestRematch(nextStart) {
-    const signal = `__SPIN__:XOX_REMATCH:${currentXoxGameId}:${nextStart}`;
+    const signal = `__XOX_REMATCH__:${currentXoxGameId}:${nextStart}`;
     try {
         await fetch(window.location.href, {
             method: 'POST',
@@ -1354,6 +1399,7 @@ window.endXoxGame = async function(gameId, signalType) {
 
 window.handleXoxMove = function(gameId, index, senderId) {
     if (currentXoxGameId !== gameId) return;
+    if (!xoxGameActive) return;
     if (senderId.toString() === currentUserId.toString()) return;
     if (xoxBoard[index] !== null) return;
     
@@ -1365,8 +1411,19 @@ window.handleXoxJoin = function(gameId) {
     if (currentXoxGameId === gameId && myXoxRole === 'blue') {
         xoxGameActive = true;
         updateXoxStatus();
-    } else if (currentXoxGameId === gameId && myXoxRole === 'black') {
-        xoxGameActive = true; // The creator has joined, so the joiner can now play.
+        return;
+    }
+    if (currentXoxGameId === null) {
+        pendingXoxJoin = gameId;
+        return;
+    }
+    // Partner joined a different (stale) game — switch to it so both are in the same room
+    if (myXoxRole === 'blue') {
+        currentXoxGameId = gameId;
+        xoxBoard = Array(9).fill(null);
+        xoxTurn = 'blue';
+        xoxGameActive = true;
+        updateXoxStatus();
     }
 };
 
@@ -1424,17 +1481,18 @@ spinBtn.onclick = async () => {
     const isMeWinner = Math.random() > 0.5;
     const winnerId = isMeWinner ? myId : pId;
     const winnerName = isMeWinner ? myName : pName;
-    const signal = `__SPIN__:${winnerId}:${winnerName}`;
+    const text = `__SPIN__:${winnerId}:${winnerName}`;
+    // Optimistic append so sender sees the bubble too
+    const tempId = 'temp-spin-' + Date.now();
+    appendMessage({ id: tempId, text, sender_id: currentUserId, timestamp: '', isOptimistic: true });
+    runSpinAnimation(winnerId, winnerName);
     try {
         await fetch(window.location.href, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-            body: JSON.stringify({ text: signal })
+            body: JSON.stringify({ text })
         });
-        runSpinAnimation(winnerId, winnerName);
-    } catch (e) {
-        runSpinAnimation(winnerId, winnerName);
-    }
+    } catch (e) {}
 };
 
 document.querySelectorAll('.message-row').forEach(row => {
@@ -1559,71 +1617,91 @@ function appendMessage(msg) {
     const emptyState = chatBox.querySelector('.chat-empty');
     if (emptyState) emptyState.remove();
 
-    if (msg.text.startsWith('__SPIN__:')) {
-        const parts = msg.text.split(':');
-        
-        // Add rendered ID for all signals to prevent re-processing
-        if (!msg.isOptimistic) {
-            renderedIds.add(msg.id);
-        }
-
-        const isMe = msg.sender_id.toString() === currentUserId.toString();
-
-        if (parts[1] === 'XOX_MOVE') {
-            handleXoxMove(parts[2], parseInt(parts[3]), msg.sender_id);
-            return;
-        }
-        if (parts[1] === 'XOX_CLOSE') {
-            if (!isMe) handleXoxClose(parts[2]);
-            return;
-        }
-        if (parts[1] === 'XOX_JOIN') {
-            if (!isMe) handleXoxJoin(parts[2]);
-            return;
-        }
-        if (parts[1] === 'XOX_REMATCH') {
-            if (!isMe) handleXoxRematch(parts[2], parts[3]);
-            return;
-        }
-        if (parts[1] === 'XOX_LEFT') {
-            const gameId = parts[2];
-            const leaverName = parts[3];
-            
-            if (!isMe) {
-                handleXoxLeft(gameId, leaverName);
-                const html = `
-                    <div class="message-row xox-system-message-row" data-id="${msg.id}">
-                        <div class="xox-system-message-bubble">
-                            ${leaverName} left the XOX game.
-                        </div>
-                    </div>
-                `;
-                chatBox.insertAdjacentHTML('beforeend', html);
-                scrollToBottom();
-            }
-            return;
-        }
-        
-        const winnerId = parts[1];
-        const winnerName = parts[2];
-        runSpinAnimation(winnerId, winnerName);
-        const html = `
-            <div class="message-row" data-id="${msg.id}" style="justify-content: center; margin: 15px 0;">
-                <div style="background: rgba(0,74,198,0.08); color: #004ac6; padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1px solid rgba(0,74,198,0.15);">
-                    🎯 Bottle landed on ${winnerName}
-                </div>
-            </div>
-        `;
+    // ── XOX game signals (persisted to DB) ──
+    if (msg.text.startsWith('__XOX_START__:')) {
+        const gameId = msg.text.split(':')[1];
+        const isSender = (msg.sender_id.toString() === currentUserId.toString());
+        const html = `<div class="message-row xox-game-message-container" data-game-id="${gameId}" data-id="${msg.id}" style="display:flex; justify-content:center; width:100%;"><div class="message ${isSender ? 'sent' : 'received'} xox-game-start-message" style="padding:0; overflow:hidden; border:none; background:none; box-shadow:none;"><div class="xox-msg-card"><h4>XOX Game</h4><p>${isSender ? 'You started a game' : 'Tap to join game'}</p><button class="xox-msg-btn" onclick="joinXoxGame('${gameId}', ${isSender})">${isSender ? 'Open' : 'Join'}</button></div></div></div>`;
         chatBox.insertAdjacentHTML('beforeend', html);
         if (!msg.isOptimistic) renderedIds.add(msg.id);
         scrollToBottom();
         return;
     }
-    
-    if (msg.text.startsWith('__XOX_START__:')) {
-        const gameId = msg.text.split(':')[1];
-        const isSender = (msg.sender_id.toString() === currentUserId.toString());
-        const html = `<div class="message-row xox-game-message-container" data-game-id="${gameId}" data-id="${msg.id}" style="display:flex; justify-content:center; width:100%;"><div class="message ${isSender ? 'sent' : 'received'} xox-game-start-message" style="padding:0; overflow:hidden; border:none; background:none; box-shadow:none;"><div class="xox-msg-card"><h4>XOX Game</h4><p>${isSender ? 'You started a game' : 'Tap to join game'}</p><button class="xox-msg-btn" onclick="joinXoxGame('${gameId}', ${isSender})">${isSender ? 'Open' : 'Join'}</button></div></div></div>`;
+    if (msg.text.startsWith('__XOX_MOVE__:')) {
+        const parts = msg.text.split(':');
+        handleXoxMove(parts[1], parseInt(parts[2]), msg.sender_id);
+        if (!msg.isOptimistic) renderedIds.add(msg.id);
+        return;
+    }
+    if (msg.text.startsWith('__XOX_JOIN__:')) {
+        const parts = msg.text.split(':');
+        if (msg.sender_id.toString() !== currentUserId.toString()) {
+            handleXoxJoin(parts[1]);
+        }
+        if (!msg.isOptimistic) renderedIds.add(msg.id);
+        return;
+    }
+    if (msg.text.startsWith('__XOX_LEFT__:')) {
+        const parts = msg.text.split(':');
+        const gameId = parts[1];
+        const leaverName = parts.slice(2).join(':');
+        if (msg.sender_id.toString() !== currentUserId.toString()) {
+            handleXoxLeft(gameId, leaverName);
+            const html = `
+                <div class="message-row xox-system-message-row" data-id="${msg.id}">
+                    <div class="xox-system-message-bubble">
+                        ${leaverName} left the XOX game.
+                    </div>
+                </div>
+            `;
+            chatBox.insertAdjacentHTML('beforeend', html);
+            scrollToBottom();
+        }
+        if (!msg.isOptimistic) renderedIds.add(msg.id);
+        return;
+    }
+    if (msg.text.startsWith('__XOX_CLOSE__:')) {
+        const parts = msg.text.split(':');
+        if (msg.sender_id.toString() !== currentUserId.toString()) {
+            handleXoxClose(parts[1]);
+        }
+        if (!msg.isOptimistic) renderedIds.add(msg.id);
+        return;
+    }
+    if (msg.text.startsWith('__XOX_REMATCH__:')) {
+        const parts = msg.text.split(':');
+        if (msg.sender_id.toString() !== currentUserId.toString()) {
+            handleXoxRematch(parts[1], parts[2]);
+        }
+        if (!msg.isOptimistic) renderedIds.add(msg.id);
+        return;
+    }
+
+    // ── SPIN signals (broadcast-only, not persisted) ──
+    if (msg.text.startsWith('__SPIN_RESULT__:') || msg.text.startsWith('__SPIN__:')) {
+        const parts = msg.text.split(':');
+        
+        if (msg.text.startsWith('__SPIN_RESULT__:')) {
+            const winnerName = parts[2] || 'someone';
+            const html = `<div class="message-row" data-id="${msg.id}" style="justify-content:center;margin:15px 0;opacity:0.6;"><div style="background:rgba(0,74,198,0.05);color:#004ac6;padding:4px 12px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid rgba(0,74,198,0.1);">🎯 A bottle was spun!</div></div>`;
+            chatBox.insertAdjacentHTML('beforeend', html);
+            if (!msg.isOptimistic) renderedIds.add(msg.id);
+            scrollToBottom();
+            return;
+        }
+        
+        const isMe = msg.sender_id.toString() === currentUserId.toString();
+        if (!isMe) {
+            const winnerName = parts[2];
+            runSpinAnimation(parts[1], winnerName);
+        }
+        const html = `
+            <div class="message-row" data-id="${msg.id}" style="justify-content: center; margin: 15px 0;">
+                <div style="background: rgba(0,74,198,0.08); color: #004ac6; padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: 700; border: 1px solid rgba(0,74,198,0.15);">
+                    🎯 Bottle landed on ${parts[2]}
+                </div>
+            </div>
+        `;
         chatBox.insertAdjacentHTML('beforeend', html);
         if (!msg.isOptimistic) renderedIds.add(msg.id);
         scrollToBottom();
@@ -1760,10 +1838,96 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// ── XOX page-load state reconstruction from persisted signals ──
+(function reconstructXoxState() {
+    const signalEls = document.querySelectorAll('[data-xox-signal]');
+    if (!signalEls.length) return;
+    const signals = [];
+    signalEls.forEach(el => {
+        const text = el.dataset.xoxSignal;
+        if (text) signals.push(text);
+    });
+
+    const myId = parseInt("{{ request.user.id }}");
+    const startCards = document.querySelectorAll('.xox-game-message-container');
+    const allGameIds = new Set();
+    startCards.forEach(card => { if (card.dataset.gameId) allGameIds.add(card.dataset.gameId); });
+    if (!allGameIds.size && !signalEls.length) return;
+
+    let myGameId = null;
+    let iAmCreator = false;
+    // Check if current user sent a __XOX_START__ card (they're the creator)
+    startCards.forEach(card => {
+        const msgEl = card.querySelector('.message');
+        if (msgEl && msgEl.classList.contains('sent')) {
+            const gid = card.dataset.gameId;
+            if (gid) { myGameId = gid; iAmCreator = true; }
+        }
+    });
+    // If not creator, check if they joined a game (find their JOIN signal)
+    if (!myGameId) {
+        signals.forEach(text => {
+            if (text.startsWith('__XOX_JOIN__:')) {
+                const gid = text.split(':')[1];
+                if (allGameIds.has(gid)) myGameId = gid;
+            }
+        });
+    }
+    if (!myGameId) return;
+
+    const moves = [];
+    let hasJoin = false;
+    let hasLeft = false;
+    let hasClose = false;
+
+    signals.forEach(text => {
+        if (text.startsWith('__XOX_MOVE__:' + myGameId + ':')) {
+            moves.push(parseInt(text.split(':')[2]));
+        }
+        if (text.startsWith('__XOX_JOIN__:' + myGameId)) hasJoin = true;
+        if (text.startsWith('__XOX_LEFT__:' + myGameId)) hasLeft = true;
+        if (text.startsWith('__XOX_CLOSE__:' + myGameId)) hasClose = true;
+    });
+
+    if (hasLeft || hasClose) return;
+
+    joinXoxGame(myGameId, iAmCreator);
+    // Reconstruct board directly (avoid handleGameOver side-effects on page load)
+    moves.forEach((index, i) => {
+        const role = i % 2 === 0 ? 'blue' : 'black';
+        xoxBoard[index] = role;
+        const cell = document.querySelector(`.xox-cell[data-index="${index}"]`);
+        if (cell) {
+            cell.classList.add(role);
+            cell.innerText = role === 'blue' ? 'X' : 'O';
+        }
+    });
+
+    if (hasJoin) {
+        const result = checkXoxWinner();
+        if (result) {
+            xoxGameActive = false;
+            const titleText = document.querySelector('.xox-title');
+            const partnerName = "{{ partner.profile.name|default:partner.username|escapejs }}";
+            if (result.role === 'draw') {
+                if(titleText) titleText.innerHTML = `<span class="material-symbols-outlined" style="color:#f59e0b;">handshake</span> Draw`;
+            } else if (result.role === myXoxRole) {
+                if(titleText) titleText.innerHTML = `<span class="material-symbols-outlined" style="color:#16a34a;">emoji_events</span> You Won!`;
+            } else {
+                if(titleText) titleText.innerHTML = `<span class="material-symbols-outlined" style="color:#ef4444;">mood_bad</span> ${partnerName} Won!`;
+            }
+        } else {
+            xoxGameActive = true;
+            xoxTurn = moves.length % 2 === 0 ? 'blue' : 'black';
+            updateXoxStatus();
+        }
+    }
+})();
+
 window.addEventListener('beforeunload', function() {
     if (currentXoxGameId) {
         const myName = "{{ request.user.profile.name|default:request.user.username|escapejs }}";
-        const signal = `__SPIN__:XOX_LEFT:${currentXoxGameId}:${myName}`;
+        const signal = `__XOX_LEFT__:${currentXoxGameId}:${myName}`;
         fetch(window.location.href, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },

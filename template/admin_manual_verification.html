@@ -176,7 +176,7 @@
                                 {% endif %}
                                 
                                 <span class="g-badge g-{{ p.gender|default:'other' }}">{{ p.gender|default:'Gender unknown' }}</span>
-                                {% if p.campus %}<span class="g-badge" style="background:#f1f5f9; color:#475569;">{{ p.campus }}</span>{% endif %}
+                                {% if p.campus %}<span class="g-badge" style="background:#f1f5f9; color:#475569;">{{ p.campus_display }}</span>{% endif %}
                             </div>
                         </div>
                     </a>

@@ -388,7 +388,7 @@ html, body {
                     {% if e.campus %}
                     <div class="ev-card-detail">
                         <span class="material-symbols-outlined">location_on</span>
-                        <span>{{ e.campus }}</span>
+                        <span>{{ e.campus_display }}</span>
                     </div>
                     {% endif %}
                     <div class="ev-card-badge {% if e.fee_type == 'free' %}ev-badge-free{% else %}ev-badge-paid{% endif %}">
@@ -419,7 +419,7 @@ html, body {
                     {% if e.campus %}
                     <div class="ev-card-detail">
                         <span class="material-symbols-outlined">location_on</span>
-                        <span>{{ e.campus }}</span>
+                        <span>{{ e.campus_display }}</span>
                     </div>
                     {% endif %}
                     <div class="ev-card-badge {% if e.fee_type == 'free' %}ev-badge-free{% else %}ev-badge-paid{% endif %}">

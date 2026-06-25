@@ -3,9 +3,9 @@
 
 {% block title %}{{ req.title }} | Room Request | KnotSpot{% endblock %}
 
-{% block meta_description %}Student looking for {{ req.preferred_room_type }} near {{ req.looking_near }} around SRM {{ req.campus }} campus. Connect on KnotSpot.{% endblock %}
+{% block meta_description %}Student looking for {{ req.preferred_room_type }} near {{ req.looking_near }} around {{ req.campus_display }} campus. Connect on KnotSpot.{% endblock %}
 {% block og_title %}{{ req.title }} | Room Request | KnotSpot{% endblock %}
-{% block og_description %}Student looking for {{ req.preferred_room_type }} near {{ req.looking_near }} around SRM {{ req.campus }} campus. Connect on KnotSpot.{% endblock %}
+{% block og_description %}Student looking for {{ req.preferred_room_type }} near {{ req.looking_near }} around {{ req.campus_display }} campus. Connect on KnotSpot.{% endblock %}
 
 {% block json_ld %}
 <script type="application/ld+json">
@@ -13,7 +13,7 @@
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": "{{ req.title|escapejs }}",
-  "description": "Student looking for {{ req.preferred_room_type|escapejs }} near {{ req.looking_near|escapejs }} around SRM {{ req.campus }} campus. Connect on KnotSpot.",
+  "description": "Student looking for {{ req.preferred_room_type|escapejs }} near {{ req.looking_near|escapejs }} around {{ req.campus_display }} campus. Connect on KnotSpot.",
   "author": {
     "@type": "Person",
     "name": "KnotSpot User"
@@ -445,7 +445,7 @@ body {
     <!-- Title -->
     <div class="rr-title-section">
         <h1 class="rr-title">{{ req.title }}</h1>
-        <span class="rr-campus"><i class="fas fa-map-marker-alt" style="font-size:11px;"></i> {{ req.campus }}</span>
+        <span class="rr-campus"><i class="fas fa-map-marker-alt" style="font-size:11px;"></i> {{ req.campus_display }}</span>
     </div>
 
     <!-- Meta Grid -->
@@ -529,7 +529,7 @@ body {
                 <label>Campus</label>
                 <select id="editCampus" required>
                     {% for c in all_campuses %}
-                    <option value="{{ c.code }}" {% if req.campus == c.code %}selected{% endif %}>{{ c.org }} {{ c.code }}</option>
+                    <option value="{{ c.name }}" {% if req.campus == c.name %}selected{% endif %}>{{ c.org }} {{ c.code }}</option>
                     {% endfor %}
                 </select>
             </div>

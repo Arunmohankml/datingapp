@@ -1319,6 +1319,15 @@
               <input type="hidden" name="pref_languages" id="id_pref_languages" value="{{ profile.pref_languages }}">
             </div>
           </div>
+          <div class="ep-row">
+            <label class="ep-label">College Preference</label>
+            <select class="form-control" onchange="saveCollegePref(this)" style="flex:1;">
+              <option value="">Any Campus</option>
+              {% for org, campuses in campus_org_groups.items %}
+              <option value="{{ org }}" {% if college_pref == org %}selected{% endif %}>{{ org }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
         <div class="ep-group">
           <div class="ep-toggle-row">
@@ -1936,6 +1945,17 @@
       hMin.value = min; hMax.value = max;
       hMin.dispatchEvent(new Event('change', { bubbles: true }));
       hMax.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+
+    window.saveCollegePref = function(sel) {
+      fetch("{% url 'edit_profile' %}", {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'college_pref=' + encodeURIComponent(sel.value)
+      }).catch(function() {});
     };
   }
 

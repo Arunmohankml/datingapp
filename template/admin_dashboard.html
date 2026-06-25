@@ -576,7 +576,7 @@
                         </div>
                     </div>
                     <div class="uc-details">
-                        <div class="uc-stat"><i class="fas fa-university"></i> {{ p.campus|default:"N/A" }}</div>
+                        <div class="uc-stat"><i class="fas fa-university"></i> {{ p.campus_display|default:"N/A" }}</div>
                         <div class="uc-stat"><i class="fas fa-birthday-cake"></i> {{ p.age|default:"-" }} yrs, {{ p.gender|default:"-"|title }}</div>
                         <div class="uc-stat" style="grid-column: 1 / -1;"><i class="fas fa-clock"></i> Joined: {{ p.user.date_joined|date:"M d, Y" }}</div>
                     </div>
