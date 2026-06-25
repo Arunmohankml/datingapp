@@ -1826,10 +1826,9 @@ def edit_profile(request):
     # Derive default college from profile campus, fallback to session preference
     from .campus_config import get_campus_by_alias
     campus_info = get_campus_by_alias(profile.campus)
-    default_college = campus_info["org"] if campus_info else ""
     saved_pref = request.session.get("college_preference")
     if saved_pref is None:
-        college_pref = default_college  # First visit — show their own college
+        college_pref = ""  # Default to Any Campus (no filter)
     else:
         college_pref = saved_pref  # User has explicitly chosen (even if "")
 

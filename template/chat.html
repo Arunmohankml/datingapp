@@ -884,7 +884,7 @@
                     {% if msg.reply_to %}
                     <div class="quoted-message" onclick="scrollToMessage({{ msg.reply_to.id }})">
                         <div class="quoted-name">{% if msg.reply_to.sender == request.user %}You{% else %}{{ msg.reply_to.sender.profile.name|default:msg.reply_to.sender.username }}{% endif %}</div>
-                        <div class="quoted-text">{{ msg.reply_to.text|truncatechars:50 }}</div>
+                        <div class="quoted-text">{% if msg.reply_to.text %}{{ msg.reply_to.text|truncatechars:50 }}{% elif msg.reply_to.image %}📷 Photo{% else %}Message{% endif %}</div>
                     </div>
                     {% endif %}
                     {% if msg.image %}
@@ -1155,10 +1155,13 @@ function openReplyPreview(parentId, msgText, senderName) {
 function initiateReply() {
     if (!selectedMessageForReply) return;
     const parentId = selectedMessageForReply.closest('.message-row').dataset.id;
-    const msgText = selectedMessageForReply.querySelector('.message-text').innerText;
+    const msgTextEl = selectedMessageForReply.querySelector('.message-text');
+    const msgText = msgTextEl ? msgTextEl.innerText.trim() : '';
+    const msgImg = selectedMessageForReply.querySelector('.message-image');
+    const snippet = msgText || (msgImg ? '📷 Photo' : 'Message');
     const isSent = selectedMessageForReply.classList.contains('sent');
     const senderName = isSent ? 'You' : '{{ partner.profile.name|default:partner.username|escapejs }}';
-    openReplyPreview(parentId, msgText, senderName);
+    openReplyPreview(parentId, snippet, senderName);
 }
 
 function cancelReply() {
@@ -1999,7 +2002,7 @@ function appendMessage(msg) {
         replyHtml = `
             <div class="quoted-message" onclick="scrollToMessage(${msg.reply_to.id})">
                 <div class="quoted-name">${msg.reply_to.sender_name}</div>
-                <div class="quoted-text">${msg.reply_to.text}</div>
+                <div class="quoted-text">${msg.reply_to.text || '📷 Photo'}</div>
             </div>
         `;
     }
