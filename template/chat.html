@@ -239,6 +239,8 @@
         line-height: 1.5;
         position: relative;
         animation: messageSlide 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+        word-break: break-word;
+        overflow-wrap: break-word;
     }
     @keyframes messageSlide {
         from { opacity: 0; transform: translateY(12px) scale(0.96); }
@@ -1165,7 +1167,7 @@ function scrollToMessage(id) {
 
 let selectedMessageForReply;
 function handleMessageClick(e, messageEl) {
-    if (e.target.closest('.quoted-message')) return;
+    if (e.target.closest('.quoted-message') || e.target.closest('img') || e.target.tagName === 'IMG') return;
     selectedMessageForReply = messageEl;
     const menu = document.getElementById('messageMenu');
     const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
