@@ -706,7 +706,7 @@
             // Check detected selfie gender against user profile's gender
             const profileGender = "{{ profile.gender }}";
             console.log("Detected selfie gender:", verificationGender, "Profile gender:", profileGender);
-            if (verificationGender && profileGender && profileGender !== 'other' && verificationGender !== 'unknown' && verificationGender !== profileGender) {
+            if (verificationGender && profileGender && profileGender !== 'other' && verificationGender.toLowerCase() !== 'unknown' && verificationGender.toLowerCase() !== profileGender) {
                 return handleFailure("Gender verification failed. Please retake your verification photo.");
             }
             
