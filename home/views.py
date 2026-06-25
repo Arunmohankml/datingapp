@@ -2699,6 +2699,59 @@ def admin_view_user(request, user_id):
     })
 
 @login_required
+def admin_user_chats(request, user_id):
+    if not is_staff_check(request.user):
+        return HttpResponse("Not authorized", status=403)
+    target_user = get_object_or_404(User, id=user_id)
+    # Find all unique partners this user has exchanged messages with
+    from django.db.models import Q, OuterRef, Subquery
+    sent_partners = Message.objects.filter(sender=target_user).values('receiver').distinct()
+    received_partners = Message.objects.filter(receiver=target_user).values('sender').distinct()
+    partner_ids = set()
+    for p in sent_partners: partner_ids.add(p['receiver'])
+    for p in received_partners: partner_ids.add(p['sender'])
+    partner_ids.discard(target_user.id)
+    partners = User.objects.filter(id__in=partner_ids).select_related('profile')
+    # Get latest message and unread count for each partner
+    chat_list = []
+    for partner in partners:
+        latest = Message.objects.filter(
+            (Q(sender=target_user, receiver=partner) & Q(sender_deleted=False)) |
+            (Q(sender=partner, receiver=target_user) & Q(receiver_deleted=False))
+        ).order_by('-timestamp').first()
+        unread = Message.objects.filter(sender=partner, receiver=target_user, is_read=False, receiver_deleted=False).count()
+        if latest:
+            chat_list.append({
+                'partner': partner,
+                'latest_text': latest.text[:100],
+                'latest_time': latest.timestamp,
+                'unread': unread,
+            })
+    chat_list.sort(key=lambda c: c['latest_time'], reverse=True)
+    return render(request, 'admin_user_chats.html', {
+        'target_user': target_user,
+        'chat_list': chat_list,
+        'is_admin': is_admin_check(request.user),
+    })
+
+@login_required
+def admin_chat_detail(request, user_id, partner_id):
+    if not is_staff_check(request.user):
+        return HttpResponse("Not authorized", status=403)
+    target_user = get_object_or_404(User, id=user_id)
+    partner = get_object_or_404(User, id=partner_id)
+    messages = Message.objects.filter(
+        (Q(sender=target_user, receiver=partner) & Q(sender_deleted=False)) |
+        (Q(sender=partner, receiver=target_user) & Q(receiver_deleted=False))
+    ).select_related('sender__profile').order_by('timestamp')
+    return render(request, 'admin_chat_detail.html', {
+        'target_user': target_user,
+        'partner': partner,
+        'messages': messages,
+        'is_admin': is_admin_check(request.user),
+    })
+
+@login_required
 def admin_manage_staff(request):
     if not is_admin_check(request.user):
         return HttpResponse("Not authorized", status=403)

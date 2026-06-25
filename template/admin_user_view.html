@@ -153,6 +153,9 @@
                     <a href="{% url 'admin_edit_user_profile' u.id %}" class="btn" style="background: #2563eb; color: white;">
                         <i class="fas fa-edit"></i> Full Profile Editor
                     </a>
+                    <a href="{% url 'admin_user_chats' u.id %}" class="btn" style="background: #0891b2; color: white;">
+                        <i class="fas fa-comments"></i> View Chats
+                    </a>
                     <form action="{% url 'admin_action' %}" method="POST" style="display: inline;">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="reset_verification">
