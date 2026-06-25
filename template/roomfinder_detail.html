@@ -575,7 +575,7 @@ body {
                 <label>Campus</label>
                 <select id="editRoomCampus" required>
                     {% for c in all_campuses %}
-                    <option value="{{ c.code }}" {% if listing.campus == c.code %}selected{% endif %}>{{ c.code }}</option>
+                    <option value="{{ c.code }}" {% if listing.campus == c.code %}selected{% endif %}>{{ c.org }} {{ c.code }}</option>
                     {% endfor %}
                 </select>
             </div>

@@ -703,7 +703,7 @@
             <select name="campus" class="filter-field" onchange="this.form.submit()">
                 <option value="">All Campuses</option>
                 {% for c in all_campuses %}
-                <option value="{{ c.code }}" {% if current_campus == c.code %}selected{% endif %}>{{ c.code }}</option>
+                <option value="{{ c.code }}" {% if current_campus == c.code %}selected{% endif %}>{{ c.org }} {{ c.code }}</option>
                 {% endfor %}
             </select>
         </form>
