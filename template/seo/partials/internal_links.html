@@ -1,0 +1,13 @@
+{% if internal_links %}
+<section class="seo-related reveal">
+    <h2>Explore More on KnotSpot</h2>
+    <div class="related-grid">
+        {% for link in internal_links %}
+        <a href="{% url link.url_name %}" class="related-card">
+            <h3>{{ link.title }}</h3>
+            <p>{{ link.desc }}</p>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}

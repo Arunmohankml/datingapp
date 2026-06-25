@@ -20,10 +20,19 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import TemplateView, RedirectView
 from home import views
+from home import seo_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("", include('home.urls')),
+    # SEO content hub
+    path('campuses/', seo_views.seo_campuses_view, name='seo_campuses'),
+    path('student-matching/', seo_views.seo_student_matching_view, name='seo_student_matching'),
+    path('college-roommate-finder/', seo_views.seo_roommate_finder_view, name='seo_roommate_finder'),
+    path('anonymous-campus-confessions/', seo_views.seo_confessions_view, name='seo_confessions'),
+    path('campus-events/', seo_views.seo_campus_events_view, name='seo_campus_events'),
+    path('campus/<slug:slug>/', seo_views.seo_campus_view, name='seo_campus'),
+    path('founder/', seo_views.founder_view, name='founder'),
     path('privacy-policy/', views.privacy_policy_view, name='privacy_policy'),
     path('terms-and-conditions/', views.terms_and_conditions_view, name='terms_and_conditions'),
     path('community-guidelines/', views.community_guidelines_view, name='community_guidelines'),

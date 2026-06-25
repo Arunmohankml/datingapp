@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ content.title }}{% endblock %}
+{% block meta_description %}{{ content.meta_description }}{% endblock %}
+{% block og_title %}{{ content.title }}{% endblock %}
+{% block og_description %}{{ content.meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block robots_tag %}
+<meta name="robots" content="index, follow">
+{% endblock %}
+
+{% block head %}
+{% include 'seo/partials/styles.html' %}
+<meta name="twitter:title" content="{{ content.title }}">
+<meta name="twitter:description" content="{{ content.meta_description }}">
+<meta name="twitter:image" content="https://knotspot.online/static/favicon.png">
+{% endblock %}
+
+{% block json_ld %}
+<script type="application/ld+json">{{ schema_json|safe }}</script>
+{% endblock %}
+
+{% block body %}
+<div class="seo-wrapper">
+    {% include 'seo/partials/breadcrumbs.html' %}
+
+    <header class="seo-hero">
+        <div class="founder-card">
+            <div class="founder-avatar">AM</div>
+            <h1>{{ content.h1 }}</h1>
+            <p class="subtitle">{{ content.subtitle }}</p>
+            <div class="founder-meta">
+                <span><i class="fas fa-map-marker-alt"></i> Malappuram, Kerala</span>
+                <span><i class="fas fa-graduation-cap"></i> SRM Ramapuram · CSE</span>
+                <span><a href="{{ content.instagram }}" target="_blank" rel="noopener noreferrer" style="color:#2563eb;text-decoration:none;"><i class="fab fa-instagram"></i> {{ content.instagram_handle }}</a></span>
+            </div>
+        </div>
+    </header>
+
+    <article class="seo-content">
+        <section class="reveal">
+            <h2>About the Founder</h2>
+            <p>
+                Arun Mohan K is the founder and developer of KnotSpot, a student-focused social platform built
+                to help college students connect, socialize, and build meaningful campus communities. Originally
+                from Malappuram, Kerala, Arun is a Computer Science and Engineering student at SRM Institute
+                of Science and Technology, Ramapuram Campus.
+            </p>
+        </section>
+
+        <section class="reveal">
+            <h2>Why KnotSpot Exists</h2>
+            <p>
+                The idea for KnotSpot started from a simple observation: many students enter college without
+                knowing anyone outside their classroom or friend circle. Finding roommates, making new friends,
+                discovering campus events, sharing experiences, and connecting with like-minded students often
+                happens through scattered WhatsApp groups and social media platforms.
+            </p>
+            <p>
+                Arun envisioned a single platform dedicated to student life, where these interactions could
+                happen in a safer, more organized, and more engaging environment — a true student social platform
+                rather than a patchwork of unrelated group chats.
+            </p>
+        </section>
+
+        <section class="reveal">
+            <h2>What KnotSpot Has Become</h2>
+            <p>
+                Built and maintained primarily by a student, KnotSpot has grown into a platform that supports
+                features such as student matching, roommate discovery, anonymous confessions, campus events,
+                voice channels, public drawing walls, student communities, and creator spotlights. The platform
+                aims to bring together students from multiple universities, including SRM, VIT, and Amrita campuses,
+                while preserving a strong sense of campus identity and community.
+            </p>
+            <p>
+                KnotSpot is not a profitable commercial venture — it is a passion project focused on making
+                student life more connected. The platform is not officially affiliated with any university.
+            </p>
+        </section>
+
+        <section class="reveal">
+            <h2>Vision for the Future</h2>
+            <p>
+                Arun continues to actively develop and improve KnotSpot, focusing on creating innovative features
+                that make student life more connected, engaging, and enjoyable. His vision is to build one of
+                India's largest student communities, helping students form friendships, discover opportunities,
+                and create lasting memories throughout their college journey.
+            </p>
+        </section>
+
+        <section class="reveal">
+            <h2>Connect</h2>
+            <p>
+                Instagram: <a href="{{ content.instagram }}" target="_blank" rel="noopener noreferrer">{{ content.instagram_handle }}</a><br>
+                Location: Malappuram, Kerala, India<br>
+                Education: B.Tech Computer Science and Engineering, SRM Ramapuram<br>
+                Role: Founder &amp; Developer, KnotSpot
+            </p>
+            <div class="cta-row" style="margin-top:20px;">
+                <a href="{% url 'about' %}" class="seo-btn seo-btn-glass">About KnotSpot</a>
+                <a href="{% url 'home' %}" class="seo-btn seo-btn-primary">Open KnotSpot</a>
+            </div>
+        </section>
+    </article>
+
+    {% include 'seo/partials/faq.html' %}
+    {% include 'footer.html' %}
+</div>
+{% endblock %}

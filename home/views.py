@@ -4126,11 +4126,17 @@ from django.http import HttpResponse
 
 def sitemap_view(request):
     base_url = "https://knotspot.online"
-    
+
     pages = [
         {"loc": "/", "changefreq": "daily", "priority": "1.0"},
         {"loc": "/login/", "changefreq": "monthly", "priority": "0.5"},
         {"loc": "/about/", "changefreq": "monthly", "priority": "0.5"},
+        {"loc": "/founder/", "changefreq": "monthly", "priority": "0.6"},
+        {"loc": "/campuses/", "changefreq": "monthly", "priority": "0.9"},
+        {"loc": "/student-matching/", "changefreq": "monthly", "priority": "0.9"},
+        {"loc": "/college-roommate-finder/", "changefreq": "monthly", "priority": "0.9"},
+        {"loc": "/anonymous-campus-confessions/", "changefreq": "monthly", "priority": "0.9"},
+        {"loc": "/campus-events/", "changefreq": "monthly", "priority": "0.9"},
         {"loc": "/confessions/", "changefreq": "hourly", "priority": "0.9"},
         {"loc": "/roomfinder/", "changefreq": "daily", "priority": "0.9"},
         {"loc": "/events/", "changefreq": "daily", "priority": "0.9"},
@@ -4141,8 +4147,10 @@ def sitemap_view(request):
         {"loc": "/community-guidelines/", "changefreq": "monthly", "priority": "0.5"},
         {"loc": "/terms-and-conditions/", "changefreq": "monthly", "priority": "0.5"},
         {"loc": "/contact/", "changefreq": "monthly", "priority": "0.5"},
-        {"loc": "/faq/", "changefreq": "monthly", "priority": "0.5"},
     ]
+
+    from .seo_views import get_seo_sitemap_urls
+    pages.extend(get_seo_sitemap_urls())
     
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -4205,8 +4213,6 @@ def terms_and_conditions_view(request):
 def community_guidelines_view(request):
     return render(request, 'community_guidelines.html')
 
-def about_view(request):
-    return render(request, 'about.html')
 def about_view(request):
     return render(request, 'about.html')
 

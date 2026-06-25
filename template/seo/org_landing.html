@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ content.title }}{% endblock %}
+{% block meta_description %}{{ content.meta_description }}{% endblock %}
+{% block og_title %}{{ content.title }}{% endblock %}
+{% block og_description %}{{ content.meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block robots_tag %}
+<meta name="robots" content="index, follow">
+{% endblock %}
+
+{% block head %}
+{% include 'seo/partials/styles.html' %}
+<meta name="twitter:title" content="{{ content.title }}">
+<meta name="twitter:description" content="{{ content.meta_description }}">
+<meta name="twitter:image" content="https://knotspot.online/static/favicon.png">
+{% endblock %}
+
+{% block json_ld %}
+<script type="application/ld+json">{{ schema_json|safe }}</script>
+{% endblock %}
+
+{% block body %}
+<div class="seo-wrapper">
+    {% include 'seo/partials/breadcrumbs.html' %}
+
+    <header class="seo-hero">
+        <div class="pill"><i class="fas fa-university"></i> {{ org_name }}</div>
+        <h1>{{ content.h1 }}</h1>
+        <p class="subtitle">{{ content.subtitle }}</p>
+        <div class="cta-row">
+            <a href="{% url 'home' %}" class="seo-btn seo-btn-primary">Join {{ org_name }} Students</a>
+            <a href="{% url 'seo_campuses' %}" class="seo-btn seo-btn-glass">All Campuses</a>
+        </div>
+    </header>
+
+    <article class="seo-content">
+        <section class="reveal">
+            <h2>Your {{ org_name }} Student Social Platform</h2>
+            <p>
+                KnotSpot is the dedicated student social platform for {{ org_name }} students across every supported campus.
+                Whether you are looking for a college friend finder, a reliable roommate before the semester starts,
+                a place to read anonymous campus confessions, or a calendar of workshops and fests — everything lives here.
+            </p>
+            <p>
+                Unlike generic social networks, KnotSpot is built around campus identity. You always know which
+                {{ org_name }} location you belong to, while still having the option to connect with students at
+                other colleges when you want broader college networking.
+            </p>
+        </section>
+
+        <section class="reveal">
+            <h2>Supported {{ org_name }} Campuses</h2>
+            <p>
+                KnotSpot supports students at all active {{ org_name }} campuses. Select yours during sign-up
+                to see relevant feeds, or explore individual campus pages below for localized friend finder,
+                roommate finder, and confession communities.
+            </p>
+            <div class="campus-grid">
+                {% for c in campuses %}
+                <a href="{% url 'seo_campus' slug=c.seo_slug %}" class="campus-card">
+                    <h3>{{ c.name }}</h3>
+                    <p>{{ c.college }} — friends, roommates, confessions &amp; events.</p>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="reveal">
+            <h2>{{ org_name }} Friend Finder &amp; Student Matching</h2>
+            <p>
+                Making friends at a large university can feel random. KnotSpot's student matching uses interests
+                and a personality quiz to suggest {{ org_name }} students you are more likely to click with.
+                It is a practical {{ org_name }} friend finder for first-years, transfers, and anyone expanding
+                their circle beyond one department.
+            </p>
+            <p>
+                Verified profiles and campus filters keep discovery safe and relevant.
+                <a href="{% url 'seo_student_matching' %}">Learn how student matching works</a>.
+            </p>
+        </section>
+
+        <section class="reveal">
+            <h2>{{ org_name }} Roommate Finder</h2>
+            <p>
+                Searching for flats, PGs, or shared accommodation near your {{ org_name }} campus?
+                The KnotSpot roommate finder lets students post and browse housing without broker spam.
+                List a vacancy, search by budget, or publish a room request when you need someone to join your flat.
+            </p>
+            <p>
+                <a href="{% url 'seo_roommate_finder' %}">Explore the college roommate finder</a>
+                or <a href="{% url 'roomfinder_feed' %}">browse active {{ org_name }} listings now</a>.
+            </p>
+        </section>
+
+        <section class="reveal">
+            <h2>{{ org_name }} Confessions</h2>
+            <p>
+                Anonymous campus confessions are a core part of {{ org_name }} student culture on KnotSpot.
+                Share thoughts without your name attached — every post is moderated to block defamation and vulgarity.
+                Browse {{ org_name }} confessions to feel the pulse of your campus or post your own story.
+            </p>
+            <p>
+                <a href="{% url 'seo_confessions' %}">About anonymous campus confessions</a>
+                · <a href="{% url 'confessions_feed' %}">Read {{ org_name }} confessions</a>
+            </p>
+        </section>
+
+        <section class="reveal">
+            <h2>Campus Events &amp; Communities</h2>
+            <p>
+                From department fests to club workshops, {{ org_name }} events on KnotSpot help you discover
+                what is happening this week. Organizers can advertise campus events directly in the app so
+                publicity is not limited to a single WhatsApp group.
+            </p>
+            <p>
+                Student communities, voice channels for live hangouts, a public drawing wall, and Spotlight
+                (showcase your Instagram or creator profile) add depth beyond basic feeds.
+                <a href="{% url 'seo_campus_events' %}">Discover campus events</a>.
+            </p>
+        </section>
+
+        <section class="reveal">
+            <h2>More Than a Feed — A Full Campus Hub</h2>
+            <p>
+                KnotSpot combines matching, housing, confessions, events, voice lounges, creative walls,
+                and creator spotlights into one {{ org_name }} student community platform. It is free,
+                student-built, and not officially affiliated with {{ org_name }} administration — an
+                independent space made for students, by students.
+            </p>
+            <p>
+                Built by <a href="{% url 'founder' %}">Arun Mohan K</a>, an SRM Ramapuram CSE student from
+                Malappuram, Kerala, KnotSpot is growing into one of India's largest multi-campus student networks.
+            </p>
+        </section>
+    </article>
+
+    <section class="reveal">
+        <h2 style="text-align:center;font-size:22px;font-weight:800;margin-bottom:16px;">Quick Links</h2>
+        <div class="feature-pills" style="justify-content:center;">
+            <a href="{% url 'seo_student_matching' %}" class="feature-pill">Student Matching</a>
+            <a href="{% url 'seo_roommate_finder' %}" class="feature-pill">Roommate Finder</a>
+            <a href="{% url 'seo_confessions' %}" class="feature-pill">Confessions</a>
+            <a href="{% url 'seo_campus_events' %}" class="feature-pill">Events</a>
+            <a href="{% url 'confessions_feed' %}" class="feature-pill">Open Confessions</a>
+            <a href="{% url 'roomfinder_feed' %}" class="feature-pill">Open Roomie</a>
+        </div>
+    </section>
+
+    {% include 'seo/partials/faq.html' %}
+    {% include 'footer.html' %}
+</div>
+{% endblock %}

@@ -2,9 +2,9 @@
 
 {% block title %}About KnotSpot – Student Social Platform{% endblock %}
 
-{% block meta_description %}Learn about KnotSpot, the student-built social platform for SRM campuses featuring matching, confessions, roommate finder, and campus community features.{% endblock %}
+{% block meta_description %}Learn about KnotSpot, the student-built social platform for SRM, VIT, and Amrita campuses featuring matching, confessions, roommate finder, and campus community features.{% endblock %}
 {% block og_title %}About KnotSpot – Student Social Platform{% endblock %}
-{% block og_description %}Learn about KnotSpot, the student-built social platform for SRM campuses featuring matching, confessions, roommate finder, and campus community features.{% endblock %}
+{% block og_description %}Learn about KnotSpot, the student-built social platform for SRM, VIT, and Amrita campuses featuring matching, confessions, roommate finder, and campus community features.{% endblock %}
 
 {% block head %}
 <style>
@@ -346,10 +346,10 @@
     <section class="hero-section">
         <div class="hero-pill"><i class="fas fa-sparkles"></i> For Students, By Students</div>
         <h1>About <span class="text-gradient">KnotSpot</span></h1>
-        <p>KnotSpot is a completely independent social platform designed to help you connect, socialize, find roommates, and interact safely across college campuses.</p>
+        <p>KnotSpot is a completely independent social platform designed to help you connect, socialize, find roommates, and interact safely across SRM, VIT, Amrita, and growing college campuses.</p>
         <div class="hero-actions">
             <a href="{% url 'home' %}" class="btn btn-primary">Open App <i class="fas fa-arrow-right"></i></a>
-            <a href="{% url 'confessions_feed' %}" class="btn btn-glass">View Confessions</a>
+            <a href="{% url 'seo_campuses' %}" class="btn btn-glass">Explore Campuses</a>
         </div>
     </section>
 
@@ -368,7 +368,7 @@
             <p>Everything you need to survive and thrive socially on campus.</p>
         </div>
         <div class="feature-grid">
-            <a href="{% url 'home' %}" class="glass-card match" style="text-decoration:none;color:inherit;display:block;">
+            <a href="{% url 'seo_student_matching' %}" class="glass-card match" style="text-decoration:none;color:inherit;display:block;">
                 <div class="icon-box"><i class="fas fa-heart"></i></div>
                 <h3>Match & Discover</h3>
                 <ul>
@@ -377,7 +377,7 @@
                     <li><i class="fas fa-check"></i> Cross-campus discovery</li>
                 </ul>
             </a>
-            <a href="{% url 'confessions_feed' %}" class="glass-card confess" style="text-decoration:none;color:inherit;display:block;">
+            <a href="{% url 'seo_confessions' %}" class="glass-card confess" style="text-decoration:none;color:inherit;display:block;">
                 <div class="icon-box"><i class="fas fa-mask"></i></div>
                 <h3>Campus Confessions</h3>
                 <ul>
@@ -386,7 +386,7 @@
                     <li><i class="fas fa-check"></i> React and comment securely</li>
                 </ul>
             </a>
-            <a href="{% url 'roomfinder_feed' %}" class="glass-card room" style="text-decoration:none;color:inherit;display:block;">
+            <a href="{% url 'seo_roommate_finder' %}" class="glass-card room" style="text-decoration:none;color:inherit;display:block;">
                 <div class="icon-box"><i class="fas fa-bed"></i></div>
                 <h3>Roommate Finder</h3>
                 <ul>
@@ -395,7 +395,7 @@
                     <li><i class="fas fa-check"></i> Zero broker interference</li>
                 </ul>
             </a>
-            <a href="{% url 'event_list' %}" class="glass-card events" style="text-decoration:none;color:inherit;display:block;">
+            <a href="{% url 'seo_campus_events' %}" class="glass-card events" style="text-decoration:none;color:inherit;display:block;">
                 <div class="icon-box"><i class="fas fa-calendar-alt"></i></div>
                 <h3>Upcoming College Events</h3>
                 <ul>
@@ -419,24 +419,35 @@
     <!-- Campuses -->
     <section class="reveal">
         <div class="section-title">
-            <h2>Across All Campuses</h2>
+            <h2>SRM, VIT &amp; Amrita Campuses</h2>
+            <p><a href="{% url 'seo_campuses' %}" style="color:#2563eb;font-weight:700;text-decoration:none;">View all supported campuses →</a></p>
         </div>
         <div class="campus-chips">
-            <div class="campus-chip"><i class="fas fa-map-marker-alt"></i> KTR (Kattankulathur)</div>
-            <div class="campus-chip"><i class="fas fa-map-marker-alt"></i> Ramapuram</div>
-            <div class="campus-chip"><i class="fas fa-map-marker-alt"></i> Vadapalani</div>
-            <div class="campus-chip"><i class="fas fa-map-marker-alt"></i> Delhi NCR</div>
-            <div class="campus-chip"><i class="fas fa-map-marker-alt"></i> Amaravati</div>
-            <div class="campus-chip"><i class="fas fa-map-marker-alt"></i> Tiruchirappalli</div>
+            <a href="{% url 'seo_campus' slug='srm' %}" class="campus-chip" style="text-decoration:none;"><i class="fas fa-map-marker-alt"></i> SRM</a>
+            <a href="{% url 'seo_campus' slug='vit' %}" class="campus-chip" style="text-decoration:none;"><i class="fas fa-map-marker-alt"></i> VIT</a>
+            <a href="{% url 'seo_campus' slug='amrita' %}" class="campus-chip" style="text-decoration:none;"><i class="fas fa-map-marker-alt"></i> Amrita</a>
+            <a href="{% url 'seo_campus' slug='srm-ktr' %}" class="campus-chip" style="text-decoration:none;"><i class="fas fa-map-marker-alt"></i> KTR</a>
+            <a href="{% url 'seo_campus' slug='srm-ramapuram' %}" class="campus-chip" style="text-decoration:none;"><i class="fas fa-map-marker-alt"></i> Ramapuram</a>
+            <a href="{% url 'seo_campus' slug='vit-vellore' %}" class="campus-chip" style="text-decoration:none;"><i class="fas fa-map-marker-alt"></i> VIT Vellore</a>
         </div>
     </section>
 
-    <!-- Disclaimer / Built By -->
+    <!-- Founder -->
+    <section class="reveal">
+        <div class="glass-card" style="text-align: center; border-color: rgba(37, 99, 235, 0.2); background: rgba(255,255,255,0.85);">
+            <div style="font-size: 32px; margin-bottom: 12px;">👨‍💻</div>
+            <h3 style="margin-bottom: 12px;">Built by a Student</h3>
+            <p style="font-size: 14px; color: #475569; line-height: 1.6; margin: 0 0 16px;">KnotSpot was founded and developed by <a href="{% url 'founder' %}" style="color:#2563eb;font-weight:700;">Arun Mohan K</a>, a CSE student at SRM Ramapuram from Malappuram, Kerala.</p>
+            <a href="{% url 'founder' %}" class="btn btn-glass" style="max-width:200px;margin:0 auto;">Meet the Founder</a>
+        </div>
+    </section>
+
+    <!-- Disclaimer -->
     <section class="reveal">
         <div class="glass-card" style="text-align: center; border-color: rgba(37, 99, 235, 0.2); background: rgba(255,255,255,0.85);">
             <div style="font-size: 32px; margin-bottom: 12px;">🎓</div>
             <h3 style="margin-bottom: 12px;">100% Student Run</h3>
-            <p style="font-size: 14px; color: #475569; line-height: 1.6; margin: 0;">KnotSpot is an independent passion project created by students. We are <strong>not</strong> officially affiliated with, endorsed by, or managed by SRM University or any of its administration.</p>
+            <p style="font-size: 14px; color: #475569; line-height: 1.6; margin: 0;">KnotSpot is an independent passion project created by students. We are <strong>not</strong> officially affiliated with, endorsed by, or managed by SRM, VIT, Amrita, or any university administration.</p>
         </div>
     </section>
 

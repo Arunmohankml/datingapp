@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ campus.name }} Student Community | KnotSpot{% endblock %}
+{% block meta_description %}Connect with students at {{ campus.name }}. Find friends, roommates, anonymous confessions, campus events, and communities on KnotSpot — the {{ campus.org }} student social platform.{% endblock %}
+{% block og_title %}{{ campus.name }} Student Community | KnotSpot{% endblock %}
+{% block og_description %}Find friends, roommates, confessions, and events at {{ campus.name }} on KnotSpot.{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block robots_tag %}
+<meta name="robots" content="index, follow">
+{% endblock %}
+
+{% block head %}
+{% include 'seo/partials/styles.html' %}
+<meta name="twitter:title" content="{{ campus.name }} Student Community | KnotSpot">
+<meta name="twitter:description" content="Find friends, roommates, confessions, and events at {{ campus.name }} on KnotSpot.">
+<meta name="twitter:image" content="https://knotspot.online/static/favicon.png">
+{% endblock %}
+
+{% block json_ld %}
+<script type="application/ld+json">{{ schema_json|safe }}</script>
+{% endblock %}
+
+{% block body %}
+<div class="seo-wrapper">
+    {% include 'seo/partials/breadcrumbs.html' %}
+
+    <header class="seo-hero">
+        <div class="pill"><i class="fas fa-map-marker-alt"></i> {{ campus.org }}</div>
+        <h1>{{ campus.name }}</h1>
+        <p class="subtitle">Your campus hub for friends, roommates, confessions, events, and student communities on KnotSpot.</p>
+        <div class="cta-row">
+            <a href="{% url 'home' %}" class="seo-btn seo-btn-primary">Join {{ campus.code }} Students</a>
+            <a href="{% url 'seo_campus' slug=org_slug %}" class="seo-btn seo-btn-glass">All {{ campus.org }} Campuses</a>
+        </div>
+    </header>
+
+    <article class="seo-content">
+        <section class="reveal">
+            <h2>{{ campus.name }} on KnotSpot</h2>
+            <p>
+                Welcome to the KnotSpot community for {{ campus.name }} at {{ campus.college }}.
+                KnotSpot is a student social platform where {{ campus.org }} students find friends through
+                personality-based matching, discover roommates for flats and PGs, share anonymous campus confessions,
+                browse events, and join communities — all in one place built for college life.
+            </p>
+            <p>
+                Whether you need a {{ campus.org }} friend finder before orientation week, a
+                {{ campus.org }} roommate finder for the upcoming semester, or simply want to read
+                what your campus is talking about, this page connects you to everything available at
+                {{ campus.name }}.
+            </p>
+        </section>
+
+        <section class="reveal">
+            <h2>Features for {{ campus.name }} Students</h2>
+            <div class="feature-pills">
+                <a href="{% url 'seo_student_matching' %}" class="feature-pill">Friend Finder</a>
+                <a href="{% url 'seo_roommate_finder' %}" class="feature-pill">Roommate Finder</a>
+                <a href="{% url 'seo_confessions' %}" class="feature-pill">Confessions</a>
+                <a href="{% url 'seo_campus_events' %}" class="feature-pill">Events</a>
+                <a href="{% url 'wall' %}" class="feature-pill">Drawing Wall</a>
+                <a href="{% url 'spotlight_page' %}" class="feature-pill">Spotlight</a>
+            </div>
+            <p>
+                <strong>Student matching</strong> helps you find peers with similar interests and quiz-compatible
+                personalities. <strong>Roomie</strong> covers student housing — flats, PGs, shared rooms, and
+                room requests. <strong>Confessions</strong> offer moderated anonymous posting with no defamation
+                or vulgarity. <strong>Events</strong> let clubs and students advertise campus activities.
+            </p>
+            <p>
+                Beyond core feeds, KnotSpot includes a <strong>public drawing wall</strong> for creative expression,
+                <strong>voice channels</strong> for live student hangouts, and <strong>Spotlight</strong> to
+                showcase your Instagram or creator profile to campus peers.
+            </p>
+        </section>
+
+        {% if recent_confessions %}
+        <section class="dynamic-feed reveal">
+            <h3>Recent Confessions at {{ campus.code }}</h3>
+            <ul class="feed-list">
+                {% for c in recent_confessions %}
+                <li><a href="{% url 'confession_detail' c.id %}">Confession #{{ c.id }}</a></li>
+                {% endfor %}
+            </ul>
+            <p><a href="{% url 'confessions_feed' %}">Browse all {{ campus.org }} confessions →</a></p>
+        </section>
+        {% endif %}
+
+        {% if recent_events %}
+        <section class="dynamic-feed reveal">
+            <h3>Upcoming Events at {{ campus.code }}</h3>
+            <ul class="feed-list">
+                {% for e in recent_events %}
+                <li><a href="{% url 'event_detail' e.slug %}">{{ e.title }}</a></li>
+                {% endfor %}
+            </ul>
+            <p><a href="{% url 'event_list' %}">See all campus events →</a></p>
+        </section>
+        {% endif %}
+
+        {% if recent_rooms %}
+        <section class="dynamic-feed reveal">
+            <h3>Room Listings Near {{ campus.code }}</h3>
+            <ul class="feed-list">
+                {% for r in recent_rooms %}
+                <li><a href="{% url 'roomfinder_detail' r.id %}">Listing #{{ r.id }}</a></li>
+                {% endfor %}
+            </ul>
+            <p><a href="{% url 'roomfinder_feed' %}">Browse roommate finder →</a></p>
+        </section>
+        {% endif %}
+
+        <section class="reveal">
+            <h2>Related {{ campus.org }} Campuses</h2>
+            <p>Explore other {{ campus.org }} locations on KnotSpot:</p>
+            <div class="campus-grid">
+                {% for c in sibling_campuses %}
+                {% if c.code != campus.code %}
+                <a href="{% url 'seo_campus' slug=c.seo_slug %}" class="campus-card">
+                    <h3>{{ c.name }}</h3>
+                    <p>{{ campus.org }} student community</p>
+                </a>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="reveal">
+            <h2>Independent &amp; Student-Built</h2>
+            <p>
+                KnotSpot is not officially affiliated with {{ campus.college }} or {{ campus.org }} administration.
+                It is an independent platform founded by <a href="{% url 'founder' %}">Arun Mohan K</a>, free for
+                students, and moderated for safety. Sign in with Google to join the {{ campus.name }} community today.
+            </p>
+        </section>
+    </article>
+
+    {% include 'seo/partials/faq.html' %}
+    {% include 'footer.html' %}
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+<section class="seo-faq reveal" id="faq">
+    <h2>Frequently Asked Questions</h2>
+    <div class="faq-list">
+        {% for item in faqs %}
+        <details class="faq-item">
+            <summary>{{ item.question }}</summary>
+            <p>{{ item.answer }}</p>
+        </details>
+        {% endfor %}
+    </div>
+</section>

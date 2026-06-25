@@ -204,3 +204,67 @@ def get_campus_search_results(query: str) -> list:
         elif any(q in a.lower() for a in c["aliases"]):
             results.append(c)
     return results
+
+
+# ── SEO URL slugs (used for /campus/<slug>/ landing pages) ──
+
+CAMPUS_SEO_SLUGS = {
+    "KTR": "srm-ktr",
+    "RMP": "srm-ramapuram",
+    "VDP": "srm-vadapalani",
+    "ESW": "srm-eswari",
+    "AP": "srm-amaravati",
+    "NCR": "srm-delhi-ncr",
+    "SPT": "srm-sonepat",
+    "SKM": "srm-sikkim",
+    "TCY": "srm-tiruchirappalli",
+    "ACB": "amrita-coimbatore",
+    "AKO": "amrita-kochi",
+    "AAP": "amrita-amritapuri",
+    "ABL": "amrita-bengaluru",
+    "AMY": "amrita-mysuru",
+    "ACH": "amrita-chennai",
+    "AAM": "amrita-amaravati",
+    "AFD": "amrita-faridabad",
+    "ANG": "amrita-nagercoil",
+    "AHD": "amrita-haridwar",
+    "AON": "amrita-online",
+    "VLR": "vit-vellore",
+    "VCH": "vit-chennai",
+    "VBP": "vit-bhopal",
+    "VAP": "vit-amaravati",
+    "VBL": "vit-bangalore",
+}
+
+ORG_SEO_SLUGS = {
+    "srm": "SRM",
+    "vit": "VIT",
+    "amrita": "Amrita",
+}
+
+_SEO_SLUG_TO_CAMPUS = {v: _CODE_MAP[k.lower()] for k, v in CAMPUS_SEO_SLUGS.items()}
+
+
+def get_campus_seo_slug(campus: dict) -> str:
+    """Return the SEO-friendly URL slug for a campus dict."""
+    return CAMPUS_SEO_SLUGS.get(campus["code"], f"{campus['org'].lower()}-{campus['code'].lower()}")
+
+
+def get_campus_by_seo_slug(slug: str) -> Optional[dict]:
+    """Lookup a campus by its SEO slug (e.g. 'srm-ktr', 'vit-vellore')."""
+    if not slug:
+        return None
+    return _SEO_SLUG_TO_CAMPUS.get(slug.lower().strip())
+
+
+def get_org_by_seo_slug(slug: str) -> Optional[str]:
+    """Return org name ('SRM', 'VIT', 'Amrita') for an org landing slug, or None."""
+    if not slug:
+        return None
+    return ORG_SEO_SLUGS.get(slug.lower().strip())
+
+
+def get_campuses_by_org(org: str) -> list:
+    """Return active campus dicts for an organization."""
+    org_lower = org.lower()
+    return [c for c in _ACTIVE_CAMPUSES if c["org"].lower() == org_lower]

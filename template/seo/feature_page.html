@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page.title }}{% endblock %}
+{% block meta_description %}{{ page.meta_description }}{% endblock %}
+{% block og_title %}{{ page.title }}{% endblock %}
+{% block og_description %}{{ page.meta_description }}{% endblock %}
+{% block canonical_url %}{{ canonical_url }}{% endblock %}
+
+{% block robots_tag %}
+<meta name="robots" content="index, follow">
+{% endblock %}
+
+{% block head %}
+{% include 'seo/partials/styles.html' %}
+<meta name="twitter:title" content="{{ page.title }}">
+<meta name="twitter:description" content="{{ page.meta_description }}">
+<meta name="twitter:image" content="https://knotspot.online/static/favicon.png">
+{% endblock %}
+
+{% block json_ld %}
+<script type="application/ld+json">{{ schema_json|safe }}</script>
+{% endblock %}
+
+{% block body %}
+<div class="seo-wrapper">
+    {% include 'seo/partials/breadcrumbs.html' %}
+
+    <header class="seo-hero">
+        <div class="pill"><i class="fas fa-graduation-cap"></i> KnotSpot</div>
+        <h1>{{ page.h1 }}</h1>
+        <p class="subtitle">{{ page.subtitle }}</p>
+        <div class="cta-row">
+            <a href="{% url 'home' %}" class="seo-btn seo-btn-primary">Open KnotSpot <i class="fas fa-arrow-right"></i></a>
+            {% if page.page_key == 'campuses' %}
+            <a href="{% url 'seo_student_matching' %}" class="seo-btn seo-btn-glass">Student Matching</a>
+            {% elif page.page_key == 'student_matching' %}
+            <a href="{% url 'seo_roommate_finder' %}" class="seo-btn seo-btn-glass">Roommate Finder</a>
+            {% elif page.page_key == 'college_roommate_finder' %}
+            <a href="{% url 'seo_confessions' %}" class="seo-btn seo-btn-glass">Campus Confessions</a>
+            {% elif page.page_key == 'anonymous_campus_confessions' %}
+            <a href="{% url 'seo_campus_events' %}" class="seo-btn seo-btn-glass">Campus Events</a>
+            {% else %}
+            <a href="{% url 'seo_campuses' %}" class="seo-btn seo-btn-glass">All Campuses</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <article class="seo-content">
+        {% for section in page.sections %}
+        <section class="reveal">
+            <h2>{{ section.heading }}</h2>
+            {% for para in section.paragraphs %}
+            <p>
+                {{ para }}
+                {% if section.heading == 'Supported Universities' and forloop.last %}
+                Visit our <a href="{% url 'seo_campus' slug='srm' %}">SRM</a>, <a href="{% url 'seo_campus' slug='vit' %}">VIT</a>, and <a href="{% url 'seo_campus' slug='amrita' %}">Amrita</a> community pages.
+                {% elif section.heading == 'Friends and Student Matching' and forloop.last %}
+                <a href="{% url 'seo_student_matching' %}">Explore student matching on KnotSpot</a>.
+                {% elif section.heading == 'Roommates and Student Housing' and forloop.last %}
+                <a href="{% url 'seo_roommate_finder' %}">Browse the college roommate finder</a>.
+                {% elif section.heading == 'Anonymous Campus Confessions' and forloop.last %}
+                <a href="{% url 'seo_confessions' %}">Read anonymous campus confessions</a>.
+                {% elif section.heading == 'Campus Events and Networking' and forloop.last %}
+                <a href="{% url 'seo_campus_events' %}">See campus events</a>.
+                {% endif %}
+            </p>
+            {% endfor %}
+        </section>
+        {% endfor %}
+
+        {% if page.page_key == 'campuses' %}
+        <section class="reveal">
+            <h2>Browse by University</h2>
+            <div class="campus-grid">
+                <a href="{% url 'seo_campus' slug='srm' %}" class="campus-card">
+                    <h3>SRM Institute of Science and Technology</h3>
+                    <p>KTR, Ramapuram, Vadapalam, NCR &amp; more — SRM friend finder, confessions &amp; roommates.</p>
+                </a>
+                <a href="{% url 'seo_campus' slug='vit' %}" class="campus-card">
+                    <h3>Vellore Institute of Technology (VIT)</h3>
+                    <p>Vellore, Chennai, Bhopal, Bangalore &amp; AP — VIT student matching &amp; communities.</p>
+                </a>
+                <a href="{% url 'seo_campus' slug='amrita' %}" class="campus-card">
+                    <h3>Amrita Vishwa Vidyapeetham</h3>
+                    <p>Coimbatore, Kochi, Bengaluru &amp; more — Amrita campus events &amp; housing.</p>
+                </a>
+            </div>
+        </section>
+        {% endif %}
+    </article>
+
+    {% include 'seo/partials/internal_links.html' %}
+    {% include 'seo/partials/faq.html' %}
+    {% include 'footer.html' %}
+</div>
+{% endblock %}
