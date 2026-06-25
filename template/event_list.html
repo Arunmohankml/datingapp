@@ -391,6 +391,12 @@ html, body {
                         <span>{{ e.campus_display }}</span>
                     </div>
                     {% endif %}
+                    {% if e.location %}
+                    <div class="ev-card-detail">
+                        <span class="material-symbols-outlined">pin_drop</span>
+                        <span>{{ e.location }}</span>
+                    </div>
+                    {% endif %}
                     <div class="ev-card-badge {% if e.fee_type == 'free' %}ev-badge-free{% else %}ev-badge-paid{% endif %}">
                         {% if e.fee_type == 'free' %}Free{% else %}&#8377;{{ e.fee_amount }}{% endif %}
                     </div>
@@ -420,6 +426,12 @@ html, body {
                     <div class="ev-card-detail">
                         <span class="material-symbols-outlined">location_on</span>
                         <span>{{ e.campus_display }}</span>
+                    </div>
+                    {% endif %}
+                    {% if e.location %}
+                    <div class="ev-card-detail">
+                        <span class="material-symbols-outlined">pin_drop</span>
+                        <span>{{ e.location }}</span>
                     </div>
                     {% endif %}
                     <div class="ev-card-badge {% if e.fee_type == 'free' %}ev-badge-free{% else %}ev-badge-paid{% endif %}">

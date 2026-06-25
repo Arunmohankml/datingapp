@@ -4887,6 +4887,7 @@ def submit_event(request):
         title = request.POST.get('title', '').strip()
         description = request.POST.get('description', '').strip()
         campus = request.POST.get('campus', '').strip()
+        location = request.POST.get('location', '').strip()
         event_date = request.POST.get('event_date', '').strip()
         last_reg_date = request.POST.get('last_reg_date', '').strip()
         fee_type = request.POST.get('fee_type', 'free')
@@ -4912,6 +4913,7 @@ def submit_event(request):
             poster=poster,
             description=description,
             campus=campus,
+            location=location,
             event_date=event_date,
             last_reg_date=last_reg_date if last_reg_date else None,
             fee_type=fee_type,
@@ -4944,6 +4946,7 @@ def edit_event(request):
     event.title = data.get('title', event.title)
     event.description = data.get('description', event.description)
     event.campus = data.get('campus', event.campus)
+    event.location = data.get('location', event.location)
     event.event_date = data.get('event_date', event.event_date)
     event.last_reg_date = data.get('last_reg_date', event.last_reg_date) if data.get('last_reg_date') else None
     event.fee_type = data.get('fee_type', event.fee_type)
@@ -5026,6 +5029,7 @@ def event_api_get(request, id):
         'description': event.description,
         'poster': event.poster,
         'campus': event.campus,
+        'location': event.location,
         'event_date': event.event_date.isoformat(),
         'last_reg_date': event.last_reg_date.isoformat() if event.last_reg_date else None,
         'fee_type': event.fee_type,

@@ -120,7 +120,7 @@ html, body { height:100dvh; overflow:hidden; position:fixed; width:100%; backgro
         {% if events.object_list %}
         <div id="aevList">
             {% for e in events.object_list %}
-            <div class="aev-card" onclick="viewEvent({{ e.id }}, '{{ e.title|escapejs }}', '{{ e.description|escapejs }}', '{{ e.poster|escapejs }}', '{{ e.campus|escapejs }}', '{{ e.event_date|date:"d M Y" }}', '{{ e.fee_type }}', '{% if e.fee_amount %}&#8377;{{ e.fee_amount }}{% endif %}', '{{ e.reg_link|escapejs }}', '{{ e.page_link|escapejs }}', '{{ e.status }}', '{{ e.user.username|escapejs }}')" style="animation-delay:{{ forloop.counter0 }}00ms;">
+            <div class="aev-card" onclick="viewEvent({{ e.id }}, '{{ e.title|escapejs }}', '{{ e.description|escapejs }}', '{{ e.poster|escapejs }}', '{{ e.campus|escapejs }}', '{{ e.location|escapejs }}', '{{ e.event_date|date:"d M Y" }}', '{{ e.fee_type }}', '{% if e.fee_amount %}&#8377;{{ e.fee_amount }}{% endif %}', '{{ e.reg_link|escapejs }}', '{{ e.page_link|escapejs }}', '{{ e.status }}', '{{ e.user.username|escapejs }}')" style="animation-delay:{{ forloop.counter0 }}00ms;">
                 <div class="aev-card-top">
                     {% if e.poster %}
                     <img class="aev-card-thumb" src="{{ e.poster }}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -133,6 +133,7 @@ html, body { height:100dvh; overflow:hidden; position:fixed; width:100%; backgro
                         <div class="aev-card-meta">
                             <span><span class="material-symbols-outlined">person</span> {{ e.user.username }}</span>
                             {% if e.campus %}<span><span class="material-symbols-outlined">location_on</span> {{ e.campus_display }}</span>{% endif %}
+                            {% if e.location %}<span><span class="material-symbols-outlined">pin_drop</span> {{ e.location }}</span>{% endif %}
                             <span><span class="material-symbols-outlined">calendar_month</span> {{ e.event_date|date:"d M Y" }}</span>
                         </div>
                     </div>
@@ -187,6 +188,7 @@ html, body { height:100dvh; overflow:hidden; position:fixed; width:100%; backgro
         <img class="aev-detail-poster" id="detailPoster" src="" alt="" onerror="this.style.display='none'">
         <div class="aev-detail-field"><div class="aev-detail-label">Created by</div><div class="aev-detail-value" id="detailCreator"></div></div>
         <div class="aev-detail-field"><div class="aev-detail-label">Campus</div><div class="aev-detail-value" id="detailCampus"></div></div>
+        <div class="aev-detail-field"><div class="aev-detail-label">Location</div><div class="aev-detail-value" id="detailLocation"></div></div>
         <div class="aev-detail-field"><div class="aev-detail-label">Date</div><div class="aev-detail-value" id="detailDate"></div></div>
         <div class="aev-detail-field"><div class="aev-detail-label">Fee</div><div class="aev-detail-value" id="detailFee"></div></div>
         <div class="aev-detail-field"><div class="aev-detail-label">Description</div><div class="aev-detail-value" id="detailDesc" style="white-space:pre-wrap;line-height:1.6;"></div></div>
@@ -198,10 +200,11 @@ html, body { height:100dvh; overflow:hidden; position:fixed; width:100%; backgro
 <script>
 var csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-function viewEvent(id, title, desc, poster, campus, date, feeType, feeAmount, regLink, pageLink, status, creator) {
+function viewEvent(id, title, desc, poster, campus, location, date, feeType, feeAmount, regLink, pageLink, status, creator) {
     document.getElementById('detailTitle').textContent = title;
     document.getElementById('detailCreator').textContent = creator;
     document.getElementById('detailCampus').textContent = campus || 'N/A';
+    document.getElementById('detailLocation').textContent = location || 'N/A';
     document.getElementById('detailDate').textContent = date;
     document.getElementById('detailFee').textContent = feeType === 'free' ? 'Free' : feeAmount;
     document.getElementById('detailDesc').textContent = desc || 'No description';

@@ -311,6 +311,15 @@ html, body {
                     </div>
                 </div>
                 {% endif %}
+                {% if event.location %}
+                <div class="evd-info-item">
+                    <div class="evd-info-icon"><span class="material-symbols-outlined">pin_drop</span></div>
+                    <div>
+                        <div class="evd-info-label">Location</div>
+                        <div class="evd-info-value">{{ event.location }}</div>
+                    </div>
+                </div>
+                {% endif %}
                 <div class="evd-info-item">
                     <div class="evd-info-icon"><span class="material-symbols-outlined">{% if event.fee_type == 'free' %}money_off{% else %}currency_rupee{% endif %}</span></div>
                     <div>
@@ -381,6 +390,7 @@ function editEvent(id) {
             document.getElementById('evTitle').value = d.event.title;
             document.getElementById('evDesc').value = d.event.description;
             document.getElementById('evCampus').value = d.event.campus || '';
+            document.getElementById('evLocation').value = d.event.location || '';
             document.getElementById('evEventDate').value = d.event.event_date;
             document.getElementById('evLastRegDate').value = d.event.last_reg_date || '';
             document.getElementById('evRegLink').value = d.event.reg_link || '';

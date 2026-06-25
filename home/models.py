@@ -863,6 +863,7 @@ class Event(models.Model):
     poster = models.URLField(max_length=500, blank=True)
     description = models.TextField()
     campus = models.CharField(max_length=100, blank=True)
+    location = models.CharField(max_length=200, blank=True)
     event_date = models.DateField()
     last_reg_date = models.DateField(blank=True, null=True)
     fee_type = models.CharField(max_length=10, choices=FEE_TYPE, default='free')
