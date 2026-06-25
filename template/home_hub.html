@@ -1487,7 +1487,16 @@
         <div class="spotlight-stack" id="spotlightStack">
             {% for s in spotlights %}
             <a class="spot-card" href="https://instagram.com/{{ s.instagram_handle }}" target="_blank" rel="noopener">
-                <img class="spot-card-av" src="{{ s.user.profile.profile_pic|default:'https://res.cloudinary.com/dq9vbhbcj/image/upload/v1/srm_match/default_avatar' }}" alt="" loading="lazy" decoding="async">
+                {% if s.user.profile.profile_pic %}
+                    <img class="spot-card-av" src="{{ s.user.profile.profile_pic }}" alt="" loading="lazy" decoding="async" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <div class="spot-card-av sp-fallback-avatar" style="display:none; background-color: #3b82f6; color: white; justify-content: center; align-items: center; font-weight: 700; font-size: 20px;">
+                        {{ s.user.profile.name|first|upper }}
+                    </div>
+                {% else %}
+                    <div class="spot-card-av sp-fallback-avatar" style="display:flex; background-color: #3b82f6; color: white; justify-content: center; align-items: center; font-weight: 700; font-size: 20px;">
+                        {{ s.user.profile.name|first|upper }}
+                    </div>
+                {% endif %}
                 <div class="spot-card-body">
                     <div class="spot-card-name">{{ s.user.profile.name }}</div>
                     <div class="spot-card-handle">@{{ s.instagram_handle }}</div>
