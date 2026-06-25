@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Blocked Profiles | KnotSpot{% endblock %}
+{% block head %}
+<style>
+    html, body {
+        height: 100dvh; overflow: hidden; position: fixed; width: 100%;
+        background: #f5f7fa; padding: 0 !important; margin: 0 !important;
+    }
+    .bu-wrapper {
+        display: flex; flex-direction: column; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        width: 100%; max-width: 560px; margin: 0 auto; background: #f5f7fa; z-index: 10;
+    }
+    .bu-header {
+        flex-shrink: 0; padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+        display: flex; align-items: center; gap: 12px; z-index: 20;
+        background: rgba(245,247,250,0.88); backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+    .bu-back-btn {
+        width: 40px; height: 40px; border-radius: 14px; border: none;
+        background: rgba(255,255,255,0.88); display: flex; align-items: center;
+        justify-content: center; text-decoration: none; color: #1e293b;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04); flex-shrink: 0;
+        transition: 0.2s;
+    }
+    .bu-back-btn:active { transform: scale(0.92); }
+    .bu-header h2 { margin: 0; font-size: 16px; font-weight: 700; color: #0f172a; }
+    .bu-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 8px 16px 120px; }
+    .bu-card {
+        display: flex; align-items: center; gap: 12px;
+        background: #fff; border-radius: 16px; padding: 12px;
+        margin-bottom: 8px; box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    }
+    .bu-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: #e2e8f0; flex-shrink: 0; }
+    .bu-info { flex: 1; min-width: 0; }
+    .bu-name { font-size: 14px; font-weight: 700; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bu-handle { font-size: 12px; color: #64748b; }
+    .bu-unblock {
+        flex-shrink: 0; border: none; background: #fee2e2; color: #dc2626;
+        border-radius: 100px; padding: 6px 16px; font-size: 12px; font-weight: 700;
+        cursor: pointer; transition: 0.2s;
+    }
+    .bu-unblock:active { transform: scale(0.92); }
+    .bu-empty {
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; padding: 80px 20px; color: #94a3b8; text-align: center;
+    }
+    .bu-empty .material-symbols-outlined { font-size: 48px; margin-bottom: 12px; }
+    .bu-empty h3 { margin: 0 0 4px; font-size: 16px; font-weight: 700; color: #64748b; }
+    .bu-empty p { margin: 0; font-size: 13px; }
+</style>
+{% endblock %}
+{% block body %}
+<div class="bu-wrapper">
+    <div class="bu-header">
+        <button onclick="window.history.back()" class="bu-back-btn">
+            <span class="material-symbols-outlined" style="font-size:22px;">arrow_back</span>
+        </button>
+        <h2>Blocked Profiles</h2>
+    </div>
+    <div class="bu-body">
+        {% if blocks %}
+            {% for b in blocks %}
+            <div class="bu-card">
+                <img class="bu-avatar" src="{{ b.blocked.profile.profile_pic|default:'https://res.cloudinary.com/dq9vbhbcj/image/upload/v1/srm_match/default_avatar' }}" alt="">
+                <div class="bu-info">
+                    <div class="bu-name">{{ b.blocked.profile.name|default:b.blocked.username }}</div>
+                    <div class="bu-handle">@{{ b.blocked.username }}</div>
+                </div>
+                <button class="bu-unblock" onclick="unblockUser({{ b.blocked.id }}, this)">Unblock</button>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="bu-empty">
+                <span class="material-symbols-outlined">block</span>
+                <h3>No blocked profiles</h3>
+                <p>When you block someone, they'll appear here.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+<script>
+async function unblockUser(userId, btn) {
+    var confirmed = await customConfirm('Are you sure you want to unblock this user? They will be able to see you again.', 'Unblock User', 'Unblock', 'Cancel');
+    if (!confirmed) return;
+    fetch(`/profile/unblock/${userId}/`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } })
+    .then(function(r) {
+        if (r.ok) {
+            var card = btn.closest('.bu-card');
+            card.style.opacity = '0';
+            card.style.transform = 'translateX(20px)';
+            card.style.transition = '0.2s';
+            setTimeout(function() { card.remove(); location.reload(); }, 200);
+        }
+    });
+}
+</script>
+{% endblock %}

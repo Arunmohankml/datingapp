@@ -1502,11 +1502,17 @@ def chat_api_messages(request, partner_id):
 def view_profile(request, user_id):
     profile = get_object_or_404(Profile.objects.select_related('user'), user__id=user_id)
     target_user = profile.user
-    
-    # Matching logic (simplified)
     my_profile = request.user.profile
-    score = 0
-    if my_profile.campus == profile.campus: score += 20
+    
+    # Match score using the full algorithm
+    user_ans = UserAnswer.objects.filter(user=request.user).select_related('option')
+    cand_ans = UserAnswer.objects.filter(user=target_user).select_related('option')
+    user_dict = {ans.question_id: ans.option.id for ans in user_ans}
+    cand_dict = {ans.question_id: ans.option.id for ans in cand_ans}
+    if user_dict and cand_dict:
+        score, _, _, _ = calculate_intelligent_match(my_profile, profile, user_dict, cand_dict)
+    else:
+        score = 0
     
     # Spark logic
     spark_count = Spark.objects.filter(receiver=target_user).count()
@@ -3267,6 +3273,16 @@ def announcements_view(request):
 @login_required
 def settings_view(request):
     return render(request, 'settings.html')
+
+@login_required
+def blocked_users(request):
+    blocks = BlockedUser.objects.filter(blocker=request.user).select_related('blocked__profile')
+    return render(request, 'blocked_users.html', {'blocks': blocks})
+
+@login_required
+def unblock_user(request, user_id):
+    BlockedUser.objects.filter(blocker=request.user, blocked__id=user_id).delete()
+    return redirect('blocked_users')
 
 @csrf_exempt
 @login_required

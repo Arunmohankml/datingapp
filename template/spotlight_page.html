@@ -138,6 +138,17 @@
         object-fit: cover;
         display: block;
         background: #f1f5f9;
+        cursor: zoom-in;}
+    .sp-lightbox {
+        display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.92); z-index: 99999; align-items: center;
+        justify-content: center; cursor: pointer;
+    }
+    .sp-lightbox.open { display: flex; }
+    .sp-lightbox img {
+        max-width: 95vw; max-height: 95vh; object-fit: contain;
+        border-radius: 8px; box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    }
     }
     .sp-card-body {
         padding: 0 18px 18px;
@@ -560,7 +571,7 @@
             {% for s in spotlights %}
             <div class="sp-card{% if not s.cover_image %} no-cover{% endif %}" style="animation-delay:{{ forloop.counter0|divisibleby:1|yesno:'0.05,0.1' }}s;">
                 {% if s.cover_image %}
-                <img class="sp-cover" src="{{ s.cover_image|cloudinary_optimize }}" alt="" onerror="this.style.display='none'" loading="lazy" decoding="async">
+                <img class="sp-cover" src="{{ s.cover_image|cloudinary_optimize }}" alt="" onerror="this.style.display='none'" loading="lazy" decoding="async" onclick="openSpotlightLightbox(this.src)">
                 {% endif %}
                 <div class="sp-card-body">
                     {% with is_website=s.instagram_handle|slice:':4' %}
@@ -785,5 +796,19 @@ document.getElementById('spotlightForm')?.addEventListener('submit', function(e)
         else { btn.disabled = false; btn.innerHTML = origText; msg.style.display='block'; msg.style.color='#dc2626'; msg.textContent=d.error; }
     }).catch(function(){ btn.disabled = false; btn.innerHTML = origText; msg.style.display='block'; msg.style.color='#dc2626'; msg.textContent='Something went wrong'; });
 });
+</script>
+
+<div class="sp-lightbox" id="spotlightLightbox" onclick="closeSpotlightLightbox()">
+    <img id="spotlightLightboxImg" src="" alt="">
+</div>
+
+<script>
+function openSpotlightLightbox(src) {
+    document.getElementById('spotlightLightboxImg').src = src;
+    document.getElementById('spotlightLightbox').classList.add('open');
+}
+function closeSpotlightLightbox() {
+    document.getElementById('spotlightLightbox').classList.remove('open');
+}
 </script>
 {% endblock %}

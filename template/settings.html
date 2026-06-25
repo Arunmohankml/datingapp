@@ -271,6 +271,22 @@
 </div>
 </button>
 
+<!-- Blocked Profiles -->
+<a href="{% url 'blocked_users' %}" class="w-full bg-surface-container-lowest rounded-[20px] p-4 shadow-card border border-outline-variant/10 hover:bg-surface-container-low transition-colors text-left no-underline block">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-[14px] bg-error-container/30 flex items-center justify-center">
+<span class="material-symbols-outlined text-error" style="font-size:20px;">block</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md" style="font-size:15px;font-weight:600;color:var(--text-main);">Blocked Profiles</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant" style="font-size:13px;">Manage blocked users</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-outline" style="font-size:18px;">chevron_right</span>
+</div>
+</a>
+
 <!-- Logout -->
 <button onclick="handleLogout()" class="w-full bg-surface-container-lowest rounded-[20px] p-4 shadow-card border border-outline-variant/10 hover:bg-surface-container-low transition-colors text-left border-0 cursor-pointer">
 <div class="flex items-center justify-between">

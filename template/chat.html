@@ -697,7 +697,7 @@
         </div>
         <div class="header-actions">
             <button onclick="toggleSpark({{ partner.id }})" id="chatSparkBtn" class="header-btn" style="color:#f59e0b;">
-                <span class="material-symbols-outlined" id="chatSparkIcon">{% if has_sparked %}bolt{% else %}bolt{% endif %}</span>
+                <span class="material-symbols-outlined" id="chatSparkIcon" {% if has_sparked %}style="font-variation-settings:'FILL' 1"{% endif %}>bolt</span>
             </button>
             <button onclick="openReportModal()" class="header-btn" style="color:#ef4444;">
                 <span class="material-symbols-outlined">flag</span>
@@ -884,6 +884,7 @@
 <script>
 async function confirmBlockUser(event, url) {
     event.preventDefault();
+    closeReportModal();
     const confirmed = await customConfirm("Are you sure you want to block this user? This will delete your connection and you won't see each other again.", "Block User", "Block", "Cancel");
     if (confirmed) window.location.href = url;
 }
@@ -1804,13 +1805,15 @@ async function toggleSpark(userId) {
     try {
         const res = await fetch(`/profile/spark/${userId}/`, {
             method: 'POST',
-            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+            headers: { 'X-CSRFToken': csrfToken }
         });
         const data = await res.json();
         if (data.success) {
-            icon.textContent = data.action === 'added' ? 'bolt' : 'bolt';
+            icon.style.fontVariationSettings = data.action === 'added' ? "'FILL' 1" : "'FILL' 0";
         }
-    } catch (e) {}
+    } catch (e) {
+        console.error('Spark toggle failed:', e);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

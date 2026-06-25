@@ -91,6 +91,18 @@ html, body {
 }
 .evd-poster-placeholder .material-symbols-outlined { font-size: 48px; }
 
+/* Lightbox */
+.evd-lightbox {
+    display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.92); z-index: 99999; align-items: center;
+    justify-content: center; cursor: pointer;
+}
+.evd-lightbox.open { display: flex; }
+.evd-lightbox img {
+    max-width: 95vw; max-height: 95vh; object-fit: contain;
+    border-radius: 8px; box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+}
+
 /* Title Section */
 .evd-title-section {
     background: #ffffff; border-radius: 20px; padding: 18px 20px;
@@ -252,7 +264,7 @@ html, body {
 
         <div class="evd-poster-wrap">
             {% if event.poster %}
-            <img class="evd-poster" src="{{ event.poster|cloudinary_optimize }}" alt="{{ event.title }}">
+            <img class="evd-poster" src="{{ event.poster|cloudinary_optimize }}" alt="{{ event.title }}" onclick="openEventLightbox(this.src)" style="cursor:zoom-in">
             {% else %}
             <div class="evd-poster-placeholder">
                 <span class="material-symbols-outlined">event</span>
@@ -440,5 +452,19 @@ document.getElementById('eventForm')?.addEventListener('submit', function(e) {
         msg.textContent = 'Network error';
     });
 });
+</script>
+
+<div class="evd-lightbox" id="eventLightbox" onclick="closeEventLightbox()">
+    <img id="eventLightboxImg" src="" alt="">
+</div>
+
+<script>
+function openEventLightbox(src) {
+    document.getElementById('eventLightboxImg').src = src;
+    document.getElementById('eventLightbox').classList.add('open');
+}
+function closeEventLightbox() {
+    document.getElementById('eventLightbox').classList.remove('open');
+}
 </script>
 {% endblock %}
