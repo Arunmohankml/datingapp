@@ -1070,10 +1070,9 @@ html, body {
         <label>Campus</label>
         <select id="filterCampus" class="rf-form-control">
             <option value="">Any Campus</option>
-            <option value="KTR">KTR</option>
-            <option value="RMP">RMP</option>
-            <option value="VDP">VDP</option>
-            <option value="NCR">NCR</option>
+            {% for c in all_campuses %}
+            <option value="{{ c.code }}">{{ c.code }}</option>
+            {% endfor %}
         </select>
     </div>
 
@@ -1162,10 +1161,9 @@ html, body {
             <div class="rf-form-group" style="flex:1;">
                 <label>Campus</label>
                 <select id="roomCampus" class="rf-form-control" required>
-                    <option value="KTR">KTR</option>
-                    <option value="RMP">RMP</option>
-                    <option value="VDP">VDP</option>
-                    <option value="NCR">NCR</option>
+                    {% for c in all_campuses %}
+                    <option value="{{ c.code }}">{{ c.code }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="rf-form-group" style="flex:1;">
@@ -1271,10 +1269,9 @@ html, body {
             <div class="rf-form-group" style="flex:1;">
                 <label>Campus</label>
                 <select id="reqCampus" class="rf-form-control" required>
-                    <option value="KTR">KTR</option>
-                    <option value="RMP">RMP</option>
-                    <option value="VDP">VDP</option>
-                    <option value="NCR">NCR</option>
+                    {% for c in all_campuses %}
+                    <option value="{{ c.code }}">{{ c.code }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="rf-form-group" style="flex:1;">

@@ -528,10 +528,9 @@ body {
             <div class="rr-fg" style="flex:1;">
                 <label>Campus</label>
                 <select id="editCampus" required>
-                    <option value="KTR" {% if req.campus == 'KTR' %}selected{% endif %}>KTR</option>
-                    <option value="RMP" {% if req.campus == 'RMP' %}selected{% endif %}>RMP</option>
-                    <option value="VDP" {% if req.campus == 'VDP' %}selected{% endif %}>VDP</option>
-                    <option value="NCR" {% if req.campus == 'NCR' %}selected{% endif %}>NCR</option>
+                    {% for c in all_campuses %}
+                    <option value="{{ c.code }}" {% if req.campus == c.code %}selected{% endif %}>{{ c.code }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="rr-fg" style="flex:1;">

@@ -2,7 +2,7 @@
 
 {% block title %}SRM Anonymous Confessions | KnotSpot{% endblock %}
 {% block meta_description %}Read anonymous confessions, funny campus stories, and student posts from SRM campuses.{% endblock %}
-{% block meta_keywords %}SRM confessions, SRM anonymous confessions, SRM student confessions{% endblock %}
+{% block meta_keywords %}campus confessions, anonymous confessions, college confessions, student confessions{% endblock %}
 {% block og_title %}SRM Anonymous Confessions | KnotSpot{% endblock %}
 {% block og_description %}Read anonymous confessions, funny campus stories, and student posts from SRM campuses.{% endblock %}
 
@@ -690,7 +690,7 @@
                 <i class="fas fa-mask" style="font-size:14px;"></i>
                 Anonymous campus feed
             </span>
-            <h1>Anonymous SRM Confessions</h1>
+            <h1>Anonymous Campus Confessions</h1>
             <p>Share your secrets, experiences, and confessions anonymously with the campus.</p>
         </div>
 
@@ -702,15 +702,9 @@
             </select>
             <select name="campus" class="filter-field" onchange="this.form.submit()">
                 <option value="">All Campuses</option>
-                <option value="KTR" {% if current_campus == 'KTR' %}selected{% endif %}>KTR</option>
-                <option value="RMP" {% if current_campus == 'RMP' %}selected{% endif %}>RMP</option>
-                <option value="VDP" {% if current_campus == 'VDP' %}selected{% endif %}>VDP</option>
-                <option value="ESW" {% if current_campus == 'ESW' %}selected{% endif %}>ESW</option>
-                <option value="NCR" {% if current_campus == 'NCR' %}selected{% endif %}>NCR</option>
-                <option value="TCY" {% if current_campus == 'TCY' %}selected{% endif %}>TCY</option>
-                <option value="AMT" {% if current_campus == 'AMT' %}selected{% endif %}>AMT</option>
-                <option value="SKM" {% if current_campus == 'SKM' %}selected{% endif %}>SKM</option>
-                <option value="SPT" {% if current_campus == 'SPT' %}selected{% endif %}>SPT</option>
+                {% for c in all_campuses %}
+                <option value="{{ c.code }}" {% if current_campus == c.code %}selected{% endif %}>{{ c.code }}</option>
+                {% endfor %}
             </select>
         </form>
     </div>
@@ -840,15 +834,9 @@
                 <label style="font-weight:800; color:#151b27; font-size:14px;">Select Campus (Optional)</label>
                 <select name="campus" class="campus-select">
                     <option value="">Global Feed</option>
-                    <option value="KTR">SRM KTR</option>
-                    <option value="RMP">SRM Ramapuram</option>
-                    <option value="VDP">SRM Vadapalani</option>
-                    <option value="ESW">SRM Eswari</option>
-                    <option value="NCR">SRM Delhi NCR</option>
-                    <option value="TCY">SRM Tiruchirappalli</option>
-                    <option value="AMT">SRM Amaravati</option>
-                    <option value="SKM">SRM Sikkim</option>
-                    <option value="SPT">SRM Sonepat</option>
+                    {% for c in all_campuses %}
+                    <option value="{{ c.code }}">{{ c.org }} {{ c.code }}</option>
+                    {% endfor %}
                 </select>
             </div>
 

@@ -361,7 +361,7 @@ def giveaway_page(request):
         "giveaway_first_winner": giveaway_first_winner,
         "giveaway_second_winner": giveaway_second_winner,
         "giveaway_state": giveaway_state,
-        "shuffle_noise": json.dumps(shuffle_noise or ["@srm_student", "@campus_hero", "@match_king", "@winner_x"]),
+        "shuffle_noise": json.dumps(shuffle_noise or ["@campus_vibe", "@campus_hero", "@match_king", "@winner_x"]),
     })
 
 

@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.text import slugify
 from django.contrib.auth.models import User
+from .campus_config import get_campus_display_map
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -112,23 +113,7 @@ class Profile(models.Model):
 
     @property
     def campus_display(self):
-        campus_map = {
-            'Kattankulathur (KTR)': 'KTR',
-            'Ramapuram (RMP)': 'RMP',
-            'Ramapuram': 'RMP',
-            'Vadapalani (VDP)': 'VDP',
-            'Vadapalani': 'VDP',
-            'Eswari (ESW)': 'ESW',
-            'Delhi NCR': 'NCR',
-            'NCR Modinagar': 'NCR',
-            'Tiruchirappalli (TCY)': 'TCY',
-            'Tiruchirappalli': 'TCY',
-            'Amaravati (AMT)': 'AMT',
-            'SRM AP': 'AMT',
-            'Sikkim (SKM)': 'SKM',
-            'Sonepat (SPT)': 'SPT',
-        }
-        return campus_map.get(self.campus, self.campus)
+        return get_campus_display_map().get(self.campus, self.campus)
 
     @property
     def get_profile_pic_url(self):
@@ -520,23 +505,7 @@ class RoomListing(models.Model):
 
     @property
     def campus_display(self):
-        campus_map = {
-            'Kattankulathur (KTR)': 'KTR',
-            'Ramapuram (RMP)': 'RMP',
-            'Ramapuram': 'RMP',
-            'Vadapalani (VDP)': 'VDP',
-            'Vadapalani': 'VDP',
-            'Eswari (ESW)': 'ESW',
-            'Delhi NCR': 'NCR',
-            'NCR Modinagar': 'NCR',
-            'Tiruchirappalli (TCY)': 'TCY',
-            'Tiruchirappalli': 'TCY',
-            'Amaravati (AMT)': 'AMT',
-            'SRM AP': 'AMT',
-            'Sikkim (SKM)': 'SKM',
-            'Sonepat (SPT)': 'SPT',
-        }
-        return campus_map.get(self.campus, self.campus)
+        return get_campus_display_map().get(self.campus, self.campus)
 
 
 class RoomImage(models.Model):
@@ -605,23 +574,7 @@ class RoomRequest(models.Model):
 
     @property
     def campus_display(self):
-        campus_map = {
-            'Kattankulathur (KTR)': 'KTR',
-            'Ramapuram (RMP)': 'RMP',
-            'Ramapuram': 'RMP',
-            'Vadapalani (VDP)': 'VDP',
-            'Vadapalani': 'VDP',
-            'Eswari (ESW)': 'ESW',
-            'Delhi NCR': 'NCR',
-            'NCR Modinagar': 'NCR',
-            'Tiruchirappalli (TCY)': 'TCY',
-            'Tiruchirappalli': 'TCY',
-            'Amaravati (AMT)': 'AMT',
-            'SRM AP': 'AMT',
-            'Sikkim (SKM)': 'SKM',
-            'Sonepat (SPT)': 'SPT',
-        }
-        return campus_map.get(self.campus, self.campus)
+        return get_campus_display_map().get(self.campus, self.campus)
 
 
 class StaffMember(models.Model):

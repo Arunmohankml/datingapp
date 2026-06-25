@@ -1,5 +1,6 @@
 from django import forms
 from .models import Profile, ProfileImage
+from .campus_config import get_campus_options
 
 # ✅ Move choices outside Meta
 GENDER_CHOICES = [
@@ -21,18 +22,7 @@ PREF_GENDER_CHOICES = [
 ]
 
 YEAR_CHOICES = [('', 'Select Year')] + [(y, str(y)) for y in range(1, 6)]
-CAMPUS_CHOICES = [
-    ('', 'Select Campus'),
-    ('Kattankulathur (KTR)', 'Kattankulathur (KTR)'),
-    ('Ramapuram (RMP)', 'Ramapuram (RMP)'),
-    ('Vadapalani (VDP)', 'Vadapalani (VDP)'),
-    ('Eswari (ESW)', 'Eswari (ESW)'),
-    ('Delhi NCR', 'Delhi NCR'),
-    ('Tiruchirappalli (TCY)', 'Tiruchirappalli (TCY)'),
-    ('Amaravati (AMT)', 'Amaravati (AMT)'),
-    ('Sikkim (SKM)', 'Sikkim (SKM)'),
-    ('Sonepat (SPT)', 'Sonepat (SPT)'),
-]
+CAMPUS_CHOICES = [('', 'Select Campus')] + get_campus_options()
 COURSE_CHOICES = [
     ('', 'Select Course'),
     ('B.Tech', 'B.Tech'),

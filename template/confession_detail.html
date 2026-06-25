@@ -10,7 +10,7 @@
 {
   "@context": "https://schema.org",
   "@type": "Article",
-  "headline": "SRM Confession #{{ confession.id }}",
+  "headline": "Campus Confession #{{ confession.id }}",
   "description": "{% if confession.content %}{{ confession.content|truncatechars:150|escapejs }}{% else %}Read anonymous student confession posted on KnotSpot.{% endif %}",
   {% if confession.image %}
   "image": "{{ request.scheme }}://{{ request.get_host }}{{ confession.image.url|default:confession.image }}",

@@ -109,6 +109,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'home.context_processors.unread_messages_count',
+                'home.context_processors.campus_options',
             ],
             'loaders': [(
                 'django.template.loaders.cached.Loader', [
