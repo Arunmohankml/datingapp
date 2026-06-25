@@ -369,10 +369,21 @@ lc         cursor: pointer;
                 <div class="chat-snippet-row">
                     <div class="chat-snippet">
                         {% if chat.latest_message %}
-                            {% if chat.latest_message.sender == request.user %}
-                                <span style="color: #004ac6; font-weight: 700;">You: </span>
+                            {% if chat.latest_message.image and not chat.latest_message.text %}
+                                {% if chat.latest_message.sender == request.user %}
+                                    <span style="color: #004ac6; font-weight: 700;">You</span> sent an image
+                                {% else %}
+                                    <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">image</span> sent an image
+                                {% endif %}
+                            {% else %}
+                                {% if chat.latest_message.sender == request.user %}
+                                    <span style="color: #004ac6; font-weight: 700;">You: </span>
+                                {% endif %}
+                                {% if chat.latest_message.image %}
+                                    <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">image</span>
+                                {% endif %}
+                                {{ chat.latest_message.text|truncatechars:40 }}
                             {% endif %}
-                            {{ chat.latest_message.text|truncatechars:40 }}
                         {% else %}
                             <span style="font-style: italic; color: #94a3b8;">No messages yet</span>
                         {% endif %}

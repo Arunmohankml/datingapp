@@ -3,6 +3,90 @@
 
 {% block head %}
 <style>
+    /* Lightbox modal styles */
+    .lightbox-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(15, 23, 42, 0.88);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+    .lightbox-overlay.active {
+        display: flex !important;
+        opacity: 1 !important;
+    }
+    .lightbox-overlay img {
+        max-width: 90%;
+        max-height: 80%;
+        border-radius: 16px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        transform: scale(0.92);
+        transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .lightbox-overlay.active img {
+        transform: scale(1) !important;
+    }
+
+    /* Image attachment preview styling */
+    .image-preview-container {
+        padding: 12px 16px;
+        background: #f8fafc;
+        border-top: 1px solid rgba(0, 74, 198, 0.08);
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid rgba(0, 74, 198, 0.04);
+        animation: previewSlide 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+    }
+    @keyframes previewSlide {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .image-preview-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+    .image-preview-wrapper img {
+        max-height: 80px;
+        max-width: 120px;
+        border-radius: 12px;
+        display: block;
+        border: 2px solid #004ac6;
+        box-shadow: 0 4px 12px rgba(0, 74, 198, 0.12);
+        object-fit: cover;
+    }
+    .cancel-image-preview {
+        position: absolute;
+        top: -6px; right: -6px;
+        background: #ef4444;
+        color: white;
+        border: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(239, 68, 68, 0.35);
+        transition: transform 0.2s;
+        z-index: 10;
+        padding: 0;
+    }
+    .cancel-image-preview:active {
+        transform: scale(0.85);
+    }
+    .cancel-image-preview .material-symbols-outlined {
+        font-size: 13px !important;
+        font-weight: 900 !important;
+    }
+
     nav { display: none !important; }
     html, body {
         padding: 0 !important;
@@ -310,6 +394,7 @@
         padding: 8px;
         border-radius: 20px;
         box-shadow: 0 20px 60px rgba(15, 23, 42, 0.15);
+        z-index: 1000;
         display: none;
         flex-direction: column;
         gap: 4px;
@@ -675,6 +760,63 @@
         opacity: 0.7; /* Less visible */
         filter: grayscale(50%); /* Slightly desaturate */
     }
+/* Lightbox */
+.lightbox-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.lightbox-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+.lightbox-overlay img {
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    object-fit: contain;
+}
+
+/* Image Preview Container */
+.image-preview-container {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    border-radius: 12px 12px 0 0;
+    margin: 0 -20px;
+    padding: 10px 20px;
+}
+.image-preview-container img {
+    max-height: 60px;
+    max-width: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+.cancel-image-preview {
+    background: rgba(255, 64, 129, 0.1);
+    color: var(--primary);
+    border: none;
+    border-radius: 50%;
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.cancel-image-preview:hover {
+    background: rgba(255, 64, 129, 0.2);
+}
 </style>
 {% endblock %}
 
@@ -743,7 +885,14 @@
                         <div class="quoted-text">{{ msg.reply_to.text|truncatechars:50 }}</div>
                     </div>
                     {% endif %}
+                    {% if msg.image %}
+                    <img src="{{ msg.image }}" class="message-image" style="max-width: 200px; border-radius: 12px; margin-bottom: 4px; display: block; cursor: pointer;" onclick="openLightbox('{{ msg.image }}')">
+                    {% endif %}
+                    {% if msg.text %}
                     <div class="message-text">{{ msg.text }}</div>
+                    {% else %}
+                    <div class="message-text" style="display: none;"></div>
+                    {% endif %}
                     <span class="timestamp">{{ msg.timestamp|time:"H:i" }}</span>
                 </div>
             </div>
@@ -770,6 +919,14 @@
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
+        <div class="image-preview-container" id="imagePreviewContainer" style="display: none;">
+            <div class="image-preview-wrapper">
+                <img id="imagePreviewImg" src="" alt="Preview" />
+                <button class="cancel-image-preview" type="button" id="cancelImagePreviewBtn">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+        </div>
         <form class="chat-form" id="chat-form" onsubmit="return false;">
             {% csrf_token %}
             <input type="hidden" id="replyParentId" value="">
@@ -785,7 +942,18 @@
                     <button type="button" class="action-item" id="xoxStartBtn">
                         <span class="material-symbols-outlined">grid_3x3</span> Start XOX
                     </button>
+                    <button type="button" class="action-item" id="imageBtn">
+                        <span class="material-symbols-outlined">image</span> Send Image
+                    </button>
                 </div>
+                <input type="file" id="imageFileInput" accept="image/*" style="display: none;">
+            </div>
+
+            <div class="image-preview-container" id="imagePreviewContainer" style="display: none;">
+                <img id="imagePreviewImg" src="" alt="Preview">
+                <button type="button" class="cancel-image-preview" id="cancelImagePreviewBtn">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
             </div>
 
             <div class="chat-input-wrapper">
@@ -796,6 +964,11 @@
             </div>
         </form>
     </div>
+</div>
+
+<!-- Image Lightbox -->
+<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
+    <img id="lightboxImage" src="" alt="Image" onclick="event.stopPropagation()">
 </div>
 
 <!-- Spin Overlay -->
@@ -1004,10 +1177,17 @@ function handleMessageClick(e, messageEl) {
 
 document.addEventListener('mousedown', function(e) {
     const menu = document.getElementById('messageMenu');
-    if (menu.classList.contains('active') && !menu.contains(e.target)) {
+    if (menu && menu.classList.contains('active') && !menu.contains(e.target)) {
         menu.classList.remove('active');
     }
 });
+
+document.addEventListener('scroll', function() {
+    const menu = document.getElementById('messageMenu');
+    if (menu && menu.classList.contains('active')) {
+        menu.classList.remove('active');
+    }
+}, true);
 
 function handleMessageGesture(e, messageEl) {
     if (e.preventDefault) e.preventDefault();
@@ -1035,6 +1215,8 @@ const xoxStartBtn = document.getElementById('xoxStartBtn');
 const spinOverlay = document.getElementById('spinOverlay');
 const bottle = document.getElementById('bottle');
 const spinResult = document.getElementById('spinResult');
+const imageBtn = document.getElementById('imageBtn');
+const imageFileInput = document.getElementById('imageFileInput');
 
 if (plusBtn) {
     plusBtn.onclick = (e) => {
@@ -1047,6 +1229,69 @@ document.addEventListener('click', () => {
     if (plusBtn) plusBtn.classList.remove('active');
     if (actionsDropup) actionsDropup.classList.remove('active');
 });
+
+// Lightbox open/close
+function openLightbox(src) {
+    const overlay = document.getElementById('lightboxOverlay');
+    const img = document.getElementById('lightboxImage');
+    img.src = src;
+    overlay.classList.add('active');
+}
+function closeLightbox() {
+    const overlay = document.getElementById('lightboxOverlay');
+    overlay.classList.remove('active');
+}
+
+// Image attachment state
+let pendingImageFile = null;
+let pendingImageDataUrl = null;
+const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+const imagePreviewImg = document.getElementById('imagePreviewImg');
+const cancelImagePreviewBtn = document.getElementById('cancelImagePreviewBtn');
+
+function showImagePreview(file, dataUrl) {
+    pendingImageFile = file;
+    pendingImageDataUrl = dataUrl;
+    imagePreviewImg.src = dataUrl;
+    imagePreviewContainer.style.display = 'flex';
+    messageInput.removeAttribute('required');
+    messageInput.focus();
+}
+
+function clearImagePreview() {
+    pendingImageFile = null;
+    pendingImageDataUrl = null;
+    imagePreviewImg.src = '';
+    imagePreviewContainer.style.display = 'none';
+    messageInput.setAttribute('required', '');
+    imageFileInput.value = '';
+}
+
+if (cancelImagePreviewBtn) {
+    cancelImagePreviewBtn.onclick = (e) => {
+        e.preventDefault();
+        clearImagePreview();
+    };
+}
+
+if (imageBtn && imageFileInput) {
+    imageBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (plusBtn) plusBtn.classList.remove('active');
+        if (actionsDropup) actionsDropup.classList.remove('active');
+        imageFileInput.click();
+    };
+
+    imageFileInput.onchange = () => {
+        if (!imageFileInput.files || imageFileInput.files.length === 0) return;
+        const file = imageFileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            showImagePreview(file, e.target.result);
+        };
+        reader.readAsDataURL(file);
+    };
+}
 
 if (xoxStartBtn) {
     xoxStartBtn.onclick = async (e) => {
@@ -1648,15 +1893,6 @@ function appendMessage(msg) {
         const leaverName = parts.slice(2).join(':');
         if (msg.sender_id.toString() !== currentUserId.toString()) {
             handleXoxLeft(gameId, leaverName);
-            const html = `
-                <div class="message-row xox-system-message-row" data-id="${msg.id}">
-                    <div class="xox-system-message-bubble">
-                        ${leaverName} left the XOX game.
-                    </div>
-                </div>
-            `;
-            chatBox.insertAdjacentHTML('beforeend', html);
-            scrollToBottom();
         }
         if (!msg.isOptimistic) renderedIds.add(msg.id);
         return;
@@ -1728,7 +1964,8 @@ function appendMessage(msg) {
         <div class="message-row ${isSent ? 'sent' : 'received'}" data-id="${msg.id}" data-date="${msgYmd}">
             <div class="message ${isSent ? 'sent' : 'received'} ${msg.isOptimistic ? 'sending' : ''}" onclick="handleMessageClick(event, this)">
                 ${replyHtml}
-                <div class="message-text">${msg.text}</div>
+                ${msg.image ? `<img src="${msg.image}" class="message-image" style="max-width: 200px; border-radius: 12px; margin-bottom: 4px; display: block; cursor: pointer;" onclick="openLightbox('${msg.image}')" />` : ''}
+                <div class="message-text" ${msg.text ? '' : 'style="display: none;"'}>${msg.text || ''}</div>
                 <span class="timestamp">${msg.timestamp}</span>
             </div>
         </div>
@@ -1746,40 +1983,75 @@ chatForm.addEventListener('submit', async (e) => {
     const now = Date.now();
     if (now - lastSubmitTime < 500) return false;
     lastSubmitTime = now;
+    
     const text = messageInput.value.trim();
-    if (!text) return;
+    if (!text && !pendingImageFile) return;
+    
     const parentId = document.getElementById('replyParentId').value;
     const parentSnippet = document.getElementById('replyTextSnippet').innerText;
     const parentName = document.getElementById('replyName').innerText.replace('Replying to ', '');
+    
     messageInput.value = '';
     document.getElementById('sendBtn').classList.remove('visible');
     messageInput.focus();
+    
     const tempId = 'temp-' + Date.now();
     const optimisticMsg = {
-        id: tempId, text: text, sender_id: currentUserId,
+        id: tempId, 
+        text: text, 
+        sender_id: currentUserId,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
         created_at: new Date().toISOString(),
         isOptimistic: true,
+        image: pendingImageDataUrl,
         reply_to: parentId ? { id: parentId, text: parentSnippet, sender_name: parentName } : null
     };
+    
+    // Save image ref before clearing
+    const fileToSend = pendingImageFile;
+    clearImagePreview();
     appendMessage(optimisticMsg);
     cancelReply();
+    
     try {
-        const response = await fetch(window.location.href, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-            body: JSON.stringify({ text: text, parent_id: parentId })
-        });
+        let response;
+        if (fileToSend) {
+            const formData = new FormData();
+            formData.append('image', fileToSend);
+            formData.append('text', text);
+            if (parentId) formData.append('parent_id', parentId);
+            
+            response = await fetch(window.location.href, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken },
+                body: formData
+            });
+        } else {
+            response = await fetch(window.location.href, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ text: text, parent_id: parentId })
+            });
+        }
+        
         const data = await response.json();
         if (data.success) {
             const tempEl = document.querySelector(`[data-id="${tempId}"]`);
             if (tempEl) {
                 tempEl.dataset.id = data.message.id;
                 tempEl.querySelector('.message').classList.remove('sending');
+                
+                const imgEl = tempEl.querySelector('.message-image');
+                if (imgEl && data.message.image) {
+                    imgEl.src = data.message.image;
+                    imgEl.setAttribute('onclick', `openLightbox('${data.message.image}')`);
+                }
+                
                 renderedIds.add(data.message.id);
             }
         }
     } catch (error) {
+        console.error('Send error:', error);
         const tempEl = document.querySelector(`[data-id="${tempId}"]`);
         if (tempEl) tempEl.style.opacity = '0.3';
     }

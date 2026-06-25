@@ -65,14 +65,15 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 16px;
+        align-items: stretch;
     }
 
     .hub-card {
         display: flex;
         flex-direction: column;
         gap: 5px;
-        min-height: 150px;
-        padding: 20px;
+        min-height: auto;
+        padding: 16px 20px;
         text-decoration: none;
         background: rgba(255, 255, 255, 0.84);
         border: 1px solid rgba(0, 74, 198, 0.08);
@@ -91,7 +92,195 @@
         transform: scale(0.985);
     }
 
-    .hub-icon {
+    /* Unified Match + Roomie card styling */
+
+    /* Both cards share the same base look */
+    .hub-card.match.highlighted,
+    .hub-card.room {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 34px 20px 16px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Shift Roomie content down slightly to balance visual weight */
+    .hub-card.room {
+        padding-top: 42px;
+    }
+
+    /* Match card: highlighted blue */
+    .hub-card.match.highlighted {
+        background: linear-gradient(135deg, #e3eeff 0%, #f4f8ff 100%);
+        border: 2px solid #3b82f6;
+        box-shadow: 0 20px 40px rgba(59, 130, 246, 0.15);
+    }
+
+    .hub-card.match.highlighted:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 25px 45px rgba(59, 130, 246, 0.22);
+        border-color: #2563eb;
+    }
+
+    .hub-card.match.highlighted::before {
+        content: \'\';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-image:
+            radial-gradient(circle, rgba(59, 130, 246, 0.08) 1.5px, transparent 1.5px),
+            radial-gradient(circle, rgba(59, 130, 246, 0.08) 1.5px, transparent 1.5px);
+        background-size: 24px 24px;
+        background-position: 0 0, 12px 12px;
+        opacity: 0.8;
+        pointer-events: none;
+    }
+
+    .match-sparkles {
+        position: absolute;
+        top: 20%; right: 15%;
+        font-size: 14px;
+        color: rgba(59, 130, 246, 0.4);
+        pointer-events: none;
+    }
+
+    .match-sparkles-left {
+        position: absolute;
+        top: 40%; left: 12%;
+        font-size: 14px;
+        color: rgba(59, 130, 246, 0.4);
+        pointer-events: none;
+    }
+
+    /* Popular badge */
+    .match-popular-badge {
+        position: absolute;
+        top: 6px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #0056e0;
+        color: #ffffff;
+        font-size: 9px;
+        font-weight: 800;
+        padding: 3px 8px;
+        border-radius: 99px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        box-shadow: 0 4px 10px rgba(0, 86, 224, 0.25);
+        z-index: 2;
+        white-space: nowrap;
+    }
+
+    .match-popular-badge .badge-emoji {
+        font-size: 10px;
+    }
+
+    /* Shared icon style */
+    .hub-card.match.highlighted .hub-icon,
+    .hub-card.room .hub-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 18px;
+        margin-bottom: 6px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+    }
+
+    /* Match icon: blue gradient */
+    .hub-card.match.highlighted .hub-icon.match-icon {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+        box-shadow: 0 8px 24px rgba(0, 74, 198, 0.3);
+    }
+
+    /* Roomie icon: green */
+    .hub-card.room .hub-icon {
+        background: #e8f7ee;
+        color: #10b981;
+    }
+
+    /* Shared title */
+    .match-title,
+    .hub-card.room h3 {
+        font-size: 21px !important;
+        font-weight: 800 !important;
+        margin-bottom: 2px !important;
+        z-index: 2;
+    }
+
+    .match-title { color: #004ac6 !important; }
+    .hub-card.room h3 { color: #151b27; }
+
+    /* Shared desc */
+    .match-desc,
+    .hub-card.room p {
+        font-size: 13px !important;
+        line-height: 1.45 !important;
+        max-width: 170px;
+        margin: 0 auto 6px !important;
+        z-index: 2;
+    }
+
+    .match-desc { color: #4b5e7d !important; }
+    .hub-card.room p { color: #64748b; }
+
+    /* Shared action btn wrapper */
+    .match-action-btn-wrapper,
+    .room-action-btn-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin-top: auto;
+        z-index: 2;
+    }
+
+    /* Match enter btn */
+    .match-enter-btn {
+        background: transparent;
+        color: #004ac6;
+        padding: 0;
+        font-size: 14px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: none;
+        transition: transform 0.2s, color 0.2s;
+    }
+
+    .hub-card.match.highlighted:hover .match-enter-btn {
+        color: #003fa8;
+        transform: translateX(4px);
+    }
+
+    .match-enter-btn .material-symbols-outlined { font-size: 16px; font-weight: 700; }
+
+    /* Roomie find btn */
+    .room-find-btn {
+        background: transparent;
+        color: #10b981;
+        padding: 0;
+        font-size: 14px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: none;
+        transition: transform 0.2s, color 0.2s;
+    }
+
+    .hub-card.room:hover .room-find-btn {
+        color: #059669;
+        transform: translateX(4px);
+    }
+
+    .room-find-btn .material-symbols-outlined { font-size: 16px; font-weight: 700; }
+
+        .hub-icon {
         width: 52px;
         height: 52px;
         border-radius: 18px;
@@ -1232,18 +1421,33 @@
     </div>
 
     <div class="hub-grid">
-        <a href="{% url 'match_feed' %}" class="hub-card match">
-            <div class="hub-icon"><span class="material-symbols-outlined">handshake</span></div>
-            <h3>Match</h3>
-            <p>Find people who share your interests.</p>
-            <span class="hub-action">Enter Match <span class="material-symbols-outlined">chevron_right</span></span>
+        <a href="{% url 'match_feed' %}" class="hub-card match highlighted">
+            <div class="match-popular-badge">
+                <span class="badge-emoji">🔥</span> Most Popular
+            </div>
+            <div class="match-sparkles">✦</div>
+            <div class="match-sparkles-left">✦</div>
+            <div class="hub-icon match-icon">
+                <span class="material-symbols-outlined">handshake</span>
+            </div>
+            <h3 class="match-title">Match</h3>
+            <p class="match-desc">Find people who share your interests.</p>
+            <div class="match-action-btn-wrapper">
+                <span class="match-enter-btn">
+                    Enter Match <span class="material-symbols-outlined">arrow_forward</span>
+                </span>
+            </div>
         </a>
 
         <a href="{% url 'roomfinder_feed' %}" class="hub-card room">
             <div class="hub-icon"><span class="material-symbols-outlined">bed</span></div>
             <h3>Roomie</h3>
             <p>Discover available rooms and roommates.</p>
-            <span class="hub-action">Find Rooms <span class="material-symbols-outlined">chevron_right</span></span>
+            <div class="room-action-btn-wrapper">
+                <span class="room-find-btn">
+                    Find Rooms <span class="material-symbols-outlined">arrow_forward</span>
+                </span>
+            </div>
         </a>
     </div>
 
