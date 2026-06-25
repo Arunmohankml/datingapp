@@ -732,7 +732,7 @@
     .xox-leave-btn { background: #fee2e2; color: #ef4444; border: none; padding: 8px 16px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 13px; transition: 0.2s; }
     .xox-leave-btn:active { transform: scale(0.95); }
     .xox-board { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 10px; width: 100%; max-width: 320px; aspect-ratio: 1; margin-bottom: 24px; }
-    .xox-cell { background: #ffffff; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; font-size: 48px; font-weight: 800; cursor: pointer; transition: 0.2s; border: 2px solid transparent; -webkit-tap-highlight-color: transparent; }
+    .xox-cell { background: #ffffff; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; font-size: 48px; font-weight: 800; cursor: pointer; transition: 0.2s; border: 2px solid transparent; -webkit-tap-highlight-color: transparent; touch-action: manipulation; user-select: none; }
     .xox-cell:active { transform: scale(0.95); }
     .xox-cell.blue { color: #2563eb; background: #eff6ff; border-color: rgba(37,99,235,0.2); }
     .xox-cell.black { color: #0f172a; background: #f1f5f9; border-color: rgba(15,23,42,0.2); }
@@ -880,7 +880,7 @@
             <div style="display:none" data-xox-signal="{{ msg.text }}" data-id="{{ msg.id }}"></div>
             {% else %}
             <div class="message-row {% if msg.sender == request.user %}sent{% else %}received{% endif %}" data-id="{{ msg.id }}" data-date="{{ msg.timestamp|date:'Y-m-d' }}" data-full-date="{{ msg.timestamp|date:'c' }}">
-                <div class="message {% if msg.sender == request.user %}sent{% else %}received{% endif %}" onclick="handleMessageClick(event, this)">
+                <div class="message {% if msg.sender == request.user %}sent{% else %}received{% endif %}">
                     {% if msg.reply_to %}
                     <div class="quoted-message" onclick="scrollToMessage({{ msg.reply_to.id }})">
                         <div class="quoted-name">{% if msg.reply_to.sender == request.user %}You{% else %}{{ msg.reply_to.sender.profile.name|default:msg.reply_to.sender.username }}{% endif %}</div>
@@ -1096,6 +1096,16 @@ if (pusherKey && typeof Pusher !== 'undefined') {
         }
     });
 
+    myChannel.bind('message_deleted', (data) => {
+        const msgRow = document.querySelector(`.message-row[data-id="${data.id}"]`);
+        if (msgRow) {
+            msgRow.style.transition = 'all 0.3s ease';
+            msgRow.style.opacity = '0';
+            msgRow.style.transform = 'scale(0.9)';
+            setTimeout(() => msgRow.remove(), 300);
+        }
+    });
+
     const partnerChannel = pusher.subscribe(`chat_${partnerId}`);
     partnerChannel.bind('typing', (data) => {
         if (data.user_id.toString() !== currentUserId.toString()) {
@@ -1169,12 +1179,40 @@ let selectedMessageForReply;
 function handleMessageClick(e, messageEl) {
     if (e.target.closest('.quoted-message') || e.target.closest('img') || e.target.tagName === 'IMG') return;
     selectedMessageForReply = messageEl;
+    const isSent = messageEl.classList.contains('sent');
+    const msgId = messageEl.closest('.message-row').dataset.id;
+    
     const menu = document.getElementById('messageMenu');
-    const x = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-    const y = e.clientY || (e.touches ? e.touches[0].clientY : 0);
+    let html = `<div class="action-item" onclick="initiateReply()"><span class="material-symbols-outlined">reply</span> Reply</div>`;
+    if (isSent) {
+        html += `<div class="action-item" onclick="deleteMessage(${msgId})" style="color:#ef4444;"><span class="material-symbols-outlined">delete</span> Delete</div>`;
+    }
+    menu.innerHTML = html;
+    
+    const x = e.clientX || (e.touches ? e.touches[0].clientX : window.innerWidth/2);
+    const y = e.clientY || (e.touches ? e.touches[0].clientY : window.innerHeight/2);
     menu.style.left = Math.min(x, window.innerWidth - 130) + 'px';
-    menu.style.top = Math.min(y, window.innerHeight - 60) + 'px';
+    menu.style.top = Math.min(y, window.innerHeight - 100) + 'px';
     menu.classList.add('active');
+}
+
+async function deleteMessage(id) {
+    document.getElementById('messageMenu').classList.remove('active');
+    const msgRow = document.querySelector(`.message-row[data-id="${id}"]`);
+    if (msgRow) {
+        msgRow.style.transition = 'all 0.3s ease';
+        msgRow.style.opacity = '0';
+        msgRow.style.transform = 'scale(0.9)';
+        setTimeout(() => msgRow.remove(), 300);
+    }
+    try {
+        await fetch(`/api/chat/message/${id}/delete/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+    } catch(e) {
+        console.error('Delete failed', e);
+    }
 }
 
 document.addEventListener('mousedown', function(e) {
@@ -1200,11 +1238,19 @@ function bindMessageEvents(el) {
     const msg = el.querySelector('.message');
     if (!msg) return;
     let pressTimer;
-    msg.addEventListener('touchstart', (e) => {
+    const startPress = (e) => {
         pressTimer = window.setTimeout(() => handleMessageGesture(e, msg), 500);
-    });
-    msg.addEventListener('touchend', () => clearTimeout(pressTimer));
-    msg.addEventListener('touchmove', () => clearTimeout(pressTimer));
+    };
+    const cancelPress = () => clearTimeout(pressTimer);
+
+    msg.addEventListener('touchstart', startPress, {passive: true});
+    msg.addEventListener('touchend', cancelPress);
+    msg.addEventListener('touchmove', cancelPress);
+    
+    msg.addEventListener('mousedown', startPress);
+    msg.addEventListener('mouseup', cancelPress);
+    msg.addEventListener('mousemove', cancelPress);
+    msg.addEventListener('contextmenu', (e) => { e.preventDefault(); handleMessageGesture(e, msg); });
 }
 
 document.querySelectorAll('.message-row').forEach(bindMessageEvents);
@@ -1964,7 +2010,7 @@ function appendMessage(msg) {
 
     const html = `
         <div class="message-row ${isSent ? 'sent' : 'received'}" data-id="${msg.id}" data-date="${msgYmd}">
-            <div class="message ${isSent ? 'sent' : 'received'} ${msg.isOptimistic ? 'sending' : ''}" onclick="handleMessageClick(event, this)">
+            <div class="message ${isSent ? 'sent' : 'received'} ${msg.isOptimistic ? 'sending' : ''}">
                 ${replyHtml}
                 ${msg.image ? `<img src="${msg.image}" class="message-image" style="max-width: 200px; border-radius: 12px; margin-bottom: 4px; display: block; cursor: pointer;" onclick="openLightbox('${msg.image}')" />` : ''}
                 <div class="message-text" ${msg.text ? '' : 'style="display: none;"'}>${msg.text || ''}</div>

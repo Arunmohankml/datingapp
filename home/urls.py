@@ -43,6 +43,7 @@ urlpatterns = [
     path("profile/unblock/<int:user_id>/", views.unblock_user, name="unblock_user"),
     path("settings/blocked/", views.blocked_users, name="blocked_users"),
     path("chat/delete/<int:partner_id>/", views.delete_chat, name="delete_chat"),
+    path("api/chat/message/<int:message_id>/delete/", views.delete_message, name="delete_message"),
     path("announcements/", views.announcements_view, name="announcements"),
     path("profile/image/delete/<int:image_id>/", views.delete_profile_image, name="delete_profile_image"),
     path("run_migrations/", views.run_migrations, name="run_migrations"),

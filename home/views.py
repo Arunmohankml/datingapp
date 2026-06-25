@@ -1583,6 +1583,28 @@ def delete_chat(request, partner_id):
     
     messages.success(request, "Chat cleared for you.")
     return redirect('chat_list')
+
+@login_required
+def delete_message(request, message_id):
+    if request.method == "POST":
+        msg = get_object_or_404(Message, id=message_id)
+        if msg.sender != request.user:
+            return JsonResponse({'success': False, 'error': 'Not authorized'}, status=403)
+        
+        partner_id = msg.receiver.id
+        sender_id = msg.sender.id
+        msg_id = msg.id
+        msg.delete()
+        
+        try:
+            broadcast_event(f'chat_{partner_id}', 'message_deleted', {'id': msg_id})
+            broadcast_event(f'chat_{sender_id}', 'message_deleted', {'id': msg_id})
+        except Exception as e:
+            print("Pusher error on delete:", e)
+            
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+
 @login_required
 def toggle_spark(request, user_id):
     target_user = get_object_or_404(User, id=user_id)

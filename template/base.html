@@ -122,6 +122,13 @@
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
             tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        input, textarea, [contenteditable] {
+            -webkit-user-select: auto;
+            user-select: auto;
         }
 
         body::before {
