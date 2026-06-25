@@ -674,7 +674,16 @@
                 <div class="sp-card-body">
                     {% with is_website=s.instagram_handle|slice:':4' %}
                     <div class="sp-avatar-wrap">
-                        <img class="sp-avatar" src="{{ s.user.profile.profile_pic|default:'https://res.cloudinary.com/dq9vbhbcj/image/upload/v1/srm_match/default_avatar' }}" alt="">
+                        {% if s.user.profile.profile_pic %}
+                            <img class="sp-avatar" src="{{ s.user.profile.profile_pic }}" alt="" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <div class="sp-avatar fallback-avatar" style="display:none; background-color: #3b82f6; color: white; justify-content: center; align-items: center; font-weight: 700; font-size: 22px;">
+                                {{ s.user.profile.name|first|upper }}
+                            </div>
+                        {% else %}
+                            <div class="sp-avatar fallback-avatar" style="display:flex; background-color: #3b82f6; color: white; justify-content: center; align-items: center; font-weight: 700; font-size: 22px;">
+                                {{ s.user.profile.name|first|upper }}
+                            </div>
+                        {% endif %}
                         <div class="sp-name-row">
                             <div class="sp-name">{{ s.user.profile.name }}</div>
                             {% if is_website == 'http' %}
