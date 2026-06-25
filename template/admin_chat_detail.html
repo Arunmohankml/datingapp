@@ -33,7 +33,7 @@ html, body { height: 100dvh; overflow: hidden; position: fixed; width: 100%; bac
 .admin-notice { padding: 8px 16px; background: #fef3c7; border-top: 1px solid #fde68a; text-align: center; font-size: 11px; font-weight: 600; color: #92400e; flex-shrink: 0; }
 </style>
 {% endblock %}
-{% block content %}
+{% block body %}
 <div class="chat-wrapper">
     <div class="chat-header">
         <a href="{% url 'admin_user_chats' target_user.id %}" class="back-btn"><span class="material-symbols-outlined">arrow_back</span></a>
