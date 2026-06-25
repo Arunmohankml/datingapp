@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Confession Story</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+        width: 100%; min-height: 100dvh;
+        background: #d4eafc;
+        display: flex; flex-direction: column; align-items: center;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        overflow-x: hidden;
+    }
+    .story-container {
+        width: 100%; max-width: 420px; min-height: 100dvh;
+        background: linear-gradient(180deg, #d4eafc 0%, #b8ddf5 50%, #a0d0ef 100%);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 40px 24px; position: relative;
+    }
+    .brand {
+        position: absolute; top: 60px; font-size: 13px; font-weight: 700;
+        color: rgba(30,64,175,0.3); letter-spacing: 6px; text-transform: uppercase;
+    }
+    .confession-bubble {
+        background: #ffffff; border-radius: 28px; padding: 36px 32px;
+        max-width: 100%; width: 100%; position: relative;
+        box-shadow: 0 8px 32px rgba(30,64,175,0.12), 0 2px 8px rgba(30,64,175,0.06);
+    }
+    .confession-bubble::before {
+        content: ''; position: absolute; top: -12px; left: 32px;
+        width: 24px; height: 24px; background: #ffffff;
+        border-radius: 4px 0 0 0; transform: rotate(45deg);
+        box-shadow: -2px -2px 4px rgba(30,64,175,0.04);
+    }
+    .confession-header {
+        display: flex; align-items: center; gap: 14px; margin-bottom: 20px;
+    }
+    .confession-avatar {
+        width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
+        background: #e2e8f0; flex-shrink: 0;
+    }
+    .confession-name {
+        font-size: 16px; font-weight: 700; color: #1e293b;
+    }
+    .confession-meta {
+        font-size: 12px; color: #94a3b8; margin-top: 2px;
+    }
+    .confession-content {
+        font-size: 17px; line-height: 1.7; color: #1e293b;
+        word-wrap: break-word; white-space: pre-wrap;
+    }
+    .confession-content::before { content: '\201C'; font-size: 28px; color: #2563eb; font-weight: 700; margin-right: 2px; }
+    .confession-content::after { content: '\201D'; font-size: 28px; color: #2563eb; font-weight: 700; margin-left: 2px; vertical-align: bottom; }
+    .footer-text {
+        position: absolute; bottom: 40px; font-size: 11px; font-weight: 600;
+        color: rgba(30,64,175,0.2); text-align: center;
+    }
+    .action-bar {
+        position: fixed; bottom: 0; left: 0; right: 0;
+        background: rgba(255,255,255,0.85); backdrop-filter: blur(20px);
+        padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+        display: flex; gap: 12px; justify-content: center;
+        border-top: 1px solid rgba(30,64,175,0.08);
+    }
+    .action-bar a, .action-bar button {
+        padding: 12px 28px; border-radius: 14px; border: none;
+        font-size: 14px; font-weight: 700; cursor: pointer;
+        text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+        transition: all 0.2s;
+    }
+    .btn-download {
+        background: #2563eb; color: #fff;
+    }
+    .btn-download:hover { background: #1d4ed8; }
+    .btn-close {
+        background: #f1f5f9; color: #475569;
+    }
+    .btn-close:hover { background: #e2e8f0; }
+    .brand-icon {
+        position: absolute; top: 30px; display: flex; align-items: center; gap: 6px;
+        font-size: 20px; color: rgba(30,64,175,0.15);
+    }
+    .brand-icon span { font-size: 13px; font-weight: 700; letter-spacing: 4px; text-transform: uppercase; }
+    @media (min-width: 768px) {
+        .story-container { min-height: 100vh; border-radius: 0; }
+        .action-bar { max-width: 420px; left: 50%; transform: translateX(-50%); border-radius: 20px 20px 0 0; }
+    }
+</style>
+</head>
+<body>
+<div class="story-container" id="storyContainer">
+    <div class="brand-icon"><span>Confession</span></div>
+
+    <div class="confession-bubble">
+        <div class="confession-header">
+            <img src="{{ confession.display_pic }}" alt="" class="confession-avatar">
+            <div>
+                <div class="confession-name">{{ confession.display_name }}</div>
+                <div class="confession-meta">{{ confession.created_at|timesince }} ago</div>
+            </div>
+        </div>
+        <div class="confession-content">{{ confession.content|truncatechars:200|linebreaksbr }}</div>
+    </div>
+
+    <div class="footer-text">share this on your story</div>
+</div>
+
+<div class="action-bar">
+    <button class="btn-download" onclick="downloadStory()"><span>📥</span> Download</button>
+    <a href="javascript:window.close()" class="btn-close">Close</a>
+</div>
+
+<script>
+async function downloadStory() {
+    const container = document.getElementById('storyContainer');
+    try {
+        const { default: html2canvas } = await import('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/+esm');
+        const canvas = await html2canvas(container, {
+            scale: 2, useCORS: true, allowTaint: true,
+            backgroundColor: '#d4eafc',
+            width: container.scrollWidth, height: container.scrollHeight,
+        });
+        const link = document.createElement('a');
+        link.download = 'confession-{{ confession.id }}.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    } catch (e) {
+        alert('Screenshot failed. Take a screenshot manually.');
+    }
+}
+</script>
+</body>
+</html>

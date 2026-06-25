@@ -2195,6 +2195,13 @@ def confession_detail(request, confession_id):
     is_admin = is_staff_check(request.user)
     return render(request, 'confession_detail.html', {'confession': confession, 'is_admin': is_admin})
 
+@login_required
+def confession_story(request, confession_id):
+    confession = get_object_or_404(Confession, id=confession_id)
+    if not is_staff_check(request.user) and confession.user != request.user:
+        return HttpResponse("Not authorized", status=403)
+    return render(request, 'confession_story.html', {'confession': confession})
+
 def add_comment(request, confession_id):
     if request.method == 'POST':
         confession = get_object_or_404(Confession, id=confession_id)

@@ -462,6 +462,7 @@
                         </div>
                         <p style="font-size:14px; color:#1e293b; margin:10px 0; line-height:1.5;">"{{ c.content }}"</p>
                         <div class="action-row">
+                            <a href="{% url 'confession_story' c.id %}" target="_blank" class="btn btn-outline" style="color:#0891b2;border-color:#0891b2;"><i class="fas fa-instagram"></i> Story</a>
                             <form action="{% url 'admin_action' %}" method="POST">
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="approve_confession">
@@ -513,6 +514,7 @@
                             {% endfor %}
                         </div>
                         <div class="action-row">
+                            <a href="{% url 'confession_story' c.id %}" target="_blank" class="btn btn-outline" style="color:#0891b2;border-color:#0891b2;"><i class="fas fa-instagram"></i> Story</a>
                             <form action="{% url 'admin_action' %}" method="POST">
                                 {% csrf_token %}
                                 <input type="hidden" name="action" value="dismiss_confession">
