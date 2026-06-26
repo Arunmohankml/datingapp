@@ -132,7 +132,7 @@ class Profile(models.Model):
     def get_profile_pic_thumb_url(self):
         if isinstance(self.profile_pic, str) and (self.profile_pic.startswith('http://') or self.profile_pic.startswith('https://')):
             if 'res.cloudinary.com' in self.profile_pic:
-                return self.profile_pic.replace('/upload/', '/upload/f_webp,q_20,w_80/')
+                return self.profile_pic.replace('/upload/', '/upload/f_webp,q_40,w_300/')
             return self.profile_pic
         name_param = self.name.replace(" ", "+") if self.name else "User"
         return f"https://ui-avatars.com/api/?name={name_param}&background=6366f1&color=fff&size=80"

@@ -330,7 +330,8 @@ def home_hub(request):
         "is_admin": is_admin_check(user),
         "spark_reward_earned": _check_daily_login_reward(user),
         "daily_sparks_used": DailySpark.objects.filter(sender=user, date=timezone.now().date()).count(),
-        "total_sparks_received": Spark.objects.filter(receiver=user).count(),`r`n        "today": today,
+        "total_sparks_received": Spark.objects.filter(receiver=user).count(),
+        "today": today,
     })
 
 
