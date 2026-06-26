@@ -62,6 +62,7 @@ class Profile(models.Model):
     # System
     is_banned = models.BooleanField(default=False)
     is_discoverable = models.BooleanField(default=False)
+    total_sparks = models.PositiveIntegerField(default=0)
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -382,6 +383,42 @@ class Spark(models.Model):
 
     def __str__(self):
         return f"{self.sender.username} sparked {self.receiver.username}"
+
+class DailySpark(models.Model):
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='daily_sparks_sent')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='daily_sparks_received')
+    date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('sender', 'receiver', 'date')
+
+    def __str__(self):
+        return f"{self.sender.username} -> {self.receiver.username} on {self.date}"
+
+class SparkStreak(models.Model):
+    user1 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='spark_streaks_as_user1')
+    user2 = models.ForeignKey(User, on_delete=models.CASCADE, related_name='spark_streaks_as_user2')
+    streak = models.PositiveIntegerField(default=0)
+    last_spark_date = models.DateField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user1', 'user2')
+
+    def __str__(self):
+        return f"{self.user1.username} & {self.user2.username}: {self.streak} day streak"
+
+class DailyLoginReward(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='login_rewards')
+    date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'date')
+
+    def __str__(self):
+        return f"{self.user.username} login reward on {self.date}"
 
 class BlockedUser(models.Model):
     blocker = models.ForeignKey(User, on_delete=models.CASCADE, related_name='blocking')

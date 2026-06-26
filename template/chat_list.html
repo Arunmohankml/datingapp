@@ -254,6 +254,17 @@ lc         cursor: pointer;
         color: #ef4444;
     }
 
+    .chat-streak-badge {
+        font-size: 10px;
+        font-weight: 800;
+        color: #92400e;
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        padding: 3px 8px;
+        border-radius: 8px;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+
     .empty-state {
         text-align: center;
         padding: 60px 20px;
@@ -389,6 +400,9 @@ lc         cursor: pointer;
                         {% endif %}
                     </div>
                     <div style="display:flex; align-items:center; gap:6px;">
+                        {% if chat.spark_streak > 0 %}
+                        <span class="chat-streak-badge">⚡ {{ chat.spark_streak }} Day</span>
+                        {% endif %}
                         {% if chat.unread_count > 0 %}
                             <div class="unread-badge">{{ chat.unread_count }}</div>
                         {% endif %}

@@ -38,6 +38,7 @@ urlpatterns = [
     path("settings/delete/", views.delete_account, name="delete_account"),
     path("profile/<int:user_id>/", views.view_profile, name="view_profile"),
     path("profile/spark/<int:user_id>/", views.toggle_spark, name="toggle_spark"),
+    path("api/spark/send/<int:user_id>/", views.api_send_daily_spark, name="api_send_daily_spark"),
     path("profile/toggle-discoverable/", views.toggle_discoverable, name="toggle_discoverable"),
     path("profile/block/<int:user_id>/", views.block_user, name="block_user"),
     path("profile/unblock/<int:user_id>/", views.unblock_user, name="unblock_user"),

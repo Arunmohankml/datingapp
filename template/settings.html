@@ -109,12 +109,13 @@
     }
 
     html, body {
-        height: 100%;
-        height: 100dvh;
-        overflow: hidden;
-        position: fixed;
-        width: 100%;
-        background: #f7f9fb;
+        height: 100% !important;
+        min-height: 100% !important;
+        height: 100dvh !important;
+        overflow: hidden !important;
+        position: fixed !important;
+        width: 100% !important;
+        background: #f7f9fb !important;
         padding: 0 !important;
         margin: 0 !important;
     }
@@ -124,13 +125,15 @@
         width: 100% !important;
         padding: 0 !important;
         margin: 0 !important;
-        height: 100%;
-        box-sizing: border-box;
+        height: 100% !important;
+        box-sizing: border-box !important;
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
+        position: static !important;
+        min-height: 0 !important;
     }
 
     .settings-wrapper {

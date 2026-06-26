@@ -230,6 +230,17 @@
     }
     .btn-reject:hover { background: rgba(239,68,68,0.2); }
 
+    .conn-streak-badge {
+        font-size: 10px;
+        font-weight: 800;
+        color: #92400e;
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        padding: 4px 8px;
+        border-radius: 8px;
+        white-space: nowrap;
+        line-height: 1.2;
+    }
+
     .btn-chat {
         background: linear-gradient(135deg, #2563eb, #1d4ed8);
         color: #ffffff;
@@ -350,6 +361,11 @@
                             <span>You matched!</span>
                         </div>
                     </div>
+                    {% if conn.spark_streak > 0 %}
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="conn-streak-badge">⚡ {{ conn.spark_streak }} Day</span>
+                    </div>
+                    {% endif %}
                     <a href="{% url 'chat_view' conn.id %}?from=connections" class="btn-chat">
                         <span class="material-symbols-outlined" style="font-size:14px;">chat_bubble</span> Chat
                     </a>

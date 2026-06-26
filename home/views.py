@@ -28,7 +28,7 @@ from .moderation import (
 )
 from .campus_config import get_campus_names_by_org, get_campus_by_alias
 from django.core.paginator import Paginator
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def get_firebase_app():
     """Helper to initialize or get the Firebase app with robust config parsing."""
@@ -87,7 +87,7 @@ def get_firebase_app():
             raise e
     return firebase_admin.get_app()
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Q, Prefetch
+from django.db.models import Q, Prefetch, F
 from django.core.files.base import ContentFile
 import base64
 import math
@@ -327,6 +327,9 @@ def home_hub(request):
         "pending_sent_ids_json": list(pending_sent),
         "pending_received_ids_json": list(pending_received),
         "is_admin": is_admin_check(user),
+        "spark_reward_earned": _check_daily_login_reward(user),
+        "daily_sparks_used": DailySpark.objects.filter(sender=user, date=timezone.now().date()).count(),
+        "total_sparks_received": Spark.objects.filter(receiver=user).count(),
     })
 
 
@@ -1196,9 +1199,13 @@ def connections_view(request):
             seen.add(req.sender_id)
             connections.append(req.sender)
         
+    # Spark streaks for connections
+    for conn in connections:
+        conn.spark_streak = _get_streak_for_pair(request.user, conn)
+
     return render(request, 'connections.html', {
         'incoming_requests': incoming_requests,
-        'connections': connections
+        'connections': connections,
     })
 
 # ---------------- CHAT INBOX ----------------
@@ -1258,9 +1265,14 @@ def chat_list_view(request):
             })
     
     chats.sort(key=lambda x: x['timestamp'].timestamp() if x.get('timestamp') else 0, reverse=True)
+
+    # Spark streaks for partners
+    for c in chats:
+        c['spark_streak'] = _get_streak_for_pair(user, c['partner'])
+
     return render(request, 'chat_list.html', {
         'chats': chats,
-        'today': timezone.localtime(timezone.now()).date()
+        'today': timezone.localtime(timezone.now()).date(),
     })
 
 
@@ -1453,11 +1465,18 @@ def chat_view(request, partner_id):
     # Spark status
     has_sparked = Spark.objects.filter(sender=request.user, receiver=partner).exists()
     
+    # Daily spark system
+    today = timezone.now().date()
+    daily_spark_sent = DailySpark.objects.filter(sender=request.user, receiver=partner, date=today).exists()
+    streak = _get_streak_for_pair(request.user, partner)
+    
     return render(request, "chat.html", {
         "partner": partner,
         "chat_messages": chat_messages,
         "has_sparked": has_sparked,
-        "today": timezone.now().date(),
+        "daily_spark_sent": daily_spark_sent,
+        "spark_streak": streak,
+        "today": today,
         "yesterday": (timezone.now() - timedelta(days=1)).date(),
         'PUSHER_KEY': settings.PUSHER_KEY,
         'PUSHER_CLUSTER': settings.PUSHER_CLUSTER
@@ -1546,7 +1565,11 @@ def view_profile(request, user_id):
     
     # Spark logic
     spark_count = Spark.objects.filter(receiver=target_user).count()
-    has_sparked = Spark.objects.filter(sender=request.user, receiver=target_user).exists()
+    
+    # Daily spark system
+    today = timezone.now().date()
+    daily_spark_sent = DailySpark.objects.filter(sender=request.user, receiver=target_user, date=today).exists()
+    daily_spark_streak = _get_streak_for_pair(request.user, target_user)
     
     # Gallery
     gallery = profile.images.all()
@@ -1555,7 +1578,8 @@ def view_profile(request, user_id):
         "profile": profile,
         "score": score,
         "spark_count": spark_count,
-        "has_sparked": has_sparked,
+        "daily_spark_sent": daily_spark_sent,
+        "daily_spark_streak": daily_spark_streak,
         "gallery": gallery
     })
 
@@ -1621,6 +1645,92 @@ def toggle_spark(request, user_id):
         
     new_count = Spark.objects.filter(receiver=target_user).count()
     return JsonResponse({'success': True, 'action': action, 'new_count': new_count})
+
+from .models import DailySpark, SparkStreak, DailyLoginReward
+
+def _get_streak_for_pair(user_a, user_b):
+    if user_a.id == user_b.id:
+        return 0
+    u1, u2 = (user_a, user_b) if user_a.id < user_b.id else (user_b, user_a)
+    try:
+        return SparkStreak.objects.get(user1=u1, user2=u2).streak
+    except SparkStreak.DoesNotExist:
+        return 0
+
+def _update_streak_for_pair(user_a, user_b):
+    today = timezone.now().date()
+    if user_a.id == user_b.id:
+        return 0
+    u1, u2 = (user_a, user_b) if user_a.id < user_b.id else (user_b, user_a)
+    streak_obj, created = SparkStreak.objects.get_or_create(user1=u1, user2=u2, defaults={'streak': 0, 'last_spark_date': None})
+    if streak_obj.last_spark_date == today:
+        return streak_obj.streak
+    if streak_obj.last_spark_date == today - timedelta(days=1):
+        streak_obj.streak += 1
+    else:
+        streak_obj.streak = 1
+    streak_obj.last_spark_date = today
+    streak_obj.save()
+    return streak_obj.streak
+
+@login_required
+@require_POST
+def api_send_daily_spark(request, user_id):
+    target = get_object_or_404(User, id=user_id)
+    if target == request.user:
+        return JsonResponse({'success': False, 'error': 'Cannot send spark to yourself'})
+
+    # Must be connected
+    is_connected = MatchRequest.objects.filter(
+        Q(sender=request.user, receiver=target, status='accepted') |
+        Q(sender=target, receiver=request.user, status='accepted')
+    ).exists() or Conversation.objects.filter(
+        Q(user1=request.user, user2=target) |
+        Q(user1=target, user2=request.user)
+    ).exists()
+    if not is_connected:
+        return JsonResponse({'success': False, 'error': 'Not connected'})
+
+    today = timezone.now().date()
+
+    # Check daily limit (3 base + 1 if login reward claimed today)
+    daily_count = DailySpark.objects.filter(sender=request.user, date=today).count()
+    has_login_bonus = DailyLoginReward.objects.filter(user=request.user, date=today).exists()
+    max_sparks = 4 if has_login_bonus else 3
+    if daily_count >= max_sparks:
+        return JsonResponse({'success': False, 'error': 'Daily spark limit reached'})
+
+    # Check not already sent to this person today
+    if DailySpark.objects.filter(sender=request.user, receiver=target, date=today).exists():
+        return JsonResponse({'success': False, 'error': 'Already sparked this person today'})
+
+    # Create daily spark
+    DailySpark.objects.create(sender=request.user, receiver=target, date=today)
+
+    # Update receiver's total sparks
+    Profile.objects.filter(user=target).update(total_sparks=F('total_sparks') + 1)
+
+    # Update streak
+    streak = _update_streak_for_pair(request.user, target)
+
+    # Send push notification
+    try:
+        sender_name = request.user.profile.name if hasattr(request.user, 'profile') else request.user.username
+        send_push_to_user(
+            target,
+            title="Daily Spark!",
+            body=f"{sender_name} sent you a Spark of the Day!",
+            url=f"/profile/{request.user.id}/"
+        )
+    except Exception as e:
+        print(f"Push error on daily spark: {e}")
+
+    return JsonResponse({'success': True, 'streak': streak})
+
+def _check_daily_login_reward(user):
+    today = timezone.now().date()
+    reward, created = DailyLoginReward.objects.get_or_create(user=user, date=today)
+    return created
 
 def _profile_missing_fields(profile):
     """Return list of missing required field labels for discovery."""
@@ -3321,6 +3431,7 @@ def announcements_view(request):
         'is_admin': is_staff
     })
 
+@login_required
 @login_required
 def settings_view(request):
     return render(request, 'settings.html')
