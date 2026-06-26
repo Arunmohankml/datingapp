@@ -133,6 +133,7 @@ html, body {
 }
 .ev-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.06); }
 @keyframes ev-cardIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+.ev-card.past-event { opacity: 0.5; filter: grayscale(0.7); }
 .ev-card-poster {
     width: 100%; max-height: 180px; object-fit: contain; display: block;
     background: #f1f5f9;
@@ -401,8 +402,9 @@ html, body {
                     <div class="ev-card-badge {% if e.fee_type == 'free' %}ev-badge-free{% else %}ev-badge-paid{% endif %}">
                         {% if e.fee_type == 'free' %}Free{% else %}&#8377;{{ e.fee_amount }}{% endif %}
                     </div>
+                {% if e.event_date < today %}<div class="ev-past-label">Past</div>{% endif %}
                 </div>
-            </a>{% if e.event_date < today %}<div class="ev-past-label">Past</div>{% endif %}
+            </a>
             {% endfor %}
         </div>
         {% endif %}
@@ -438,8 +440,9 @@ html, body {
                     <div class="ev-card-badge {% if e.fee_type == 'free' %}ev-badge-free{% else %}ev-badge-paid{% endif %}">
                         {% if e.fee_type == 'free' %}Free{% else %}&#8377;{{ e.fee_amount }}{% endif %}
                     </div>
+                {% if e.event_date < today %}<div class="ev-past-label">Past</div>{% endif %}
                 </div>
-            </a>{% if e.event_date < today %}<div class="ev-past-label">Past</div>{% endif %}
+            </a>
             {% endfor %}
         </div>
 
@@ -630,3 +633,7 @@ document.getElementById('eventForm')?.addEventListener('submit', function(e) {
 });
 </script>
 {% endblock %}
+
+
+
+
