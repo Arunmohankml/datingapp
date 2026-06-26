@@ -93,10 +93,10 @@ html, body {
 .ev-search-bar input::placeholder { color: #94a3b8; }
 .ev-filter-btn {
     width: 40px; height: 40px; border-radius: 12px; border: none;
-    background: {% if current_campus or current_fee or current_sort != 'latest' or include_past or current_month %}#2563eb{% else %}#fff{% endif %};
-    color: {% if current_campus or current_fee or current_sort != 'latest' or include_past or current_month %}#fff{% else %}#64748b{% endif %};
+    background: {% if current_campus or current_fee or current_sort != 'latest' or current_month %}#2563eb{% else %}#fff{% endif %};
+    color: {% if current_campus or current_fee or current_sort != 'latest' or current_month %}#fff{% else %}#64748b{% endif %};
     display: flex; align-items: center; justify-content: center;
-    cursor: pointer; flex-shrink: 0; border: 1px solid {% if current_campus or current_fee or current_sort != 'latest' or include_past or current_month %}transparent{% else %}#e2e8f0{% endif %};
+    cursor: pointer; flex-shrink: 0; border: 1px solid {% if current_campus or current_fee or current_sort != 'latest' or current_month %}transparent{% else %}#e2e8f0{% endif %};
     box-shadow: 0 2px 8px rgba(0,0,0,0.04); transition: all 0.2s;
 }
 .ev-filter-btn:active { transform: scale(0.92); }
@@ -154,6 +154,7 @@ html, body {
 }
 .ev-badge-free { background: #dcfce7; color: #16a34a; }
 .ev-badge-paid { background: #dbeafe; color: #2563eb; }
+.ev-past-label { display: inline-flex; padding: 2px 10px; border-radius: 100px; font-size: 10px; font-weight: 700; background: #e2e8f0; color: #64748b; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.04em; }
 .ev-badge-pending {
     background: #fef3c7; color: #d97706; font-size: 9px; padding: 3px 8px;
     border-radius: 100px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;
@@ -401,7 +402,7 @@ html, body {
                         {% if e.fee_type == 'free' %}Free{% else %}&#8377;{{ e.fee_amount }}{% endif %}
                     </div>
                 </div>
-            </a>
+            </a>{% if e.event_date < today %}<div class="ev-past-label">Past</div>{% endif %}
             {% endfor %}
         </div>
         {% endif %}
@@ -412,7 +413,7 @@ html, body {
         </div>
         <div class="ev-grid" id="evMainGrid">
             {% for e in events %}
-            <a href="{% url 'event_detail' e.slug %}" class="ev-card" style="animation-delay:{{ forloop.counter0|divisibleby:1|yesno:'0.05,0.1' }}s;">
+            <a href="{% url 'event_detail' e.slug %}" class="ev-card{% if e.event_date < today %} past-event{% endif %}" style="animation-delay:{{ forloop.counter0|divisibleby:1|yesno:'0.05,0.1' }}s;">
                 {% if e.poster %}
                 <img class="ev-card-poster" src="{{ e.poster|cloudinary_optimize }}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">
                 {% endif %}
@@ -438,7 +439,7 @@ html, body {
                         {% if e.fee_type == 'free' %}Free{% else %}&#8377;{{ e.fee_amount }}{% endif %}
                     </div>
                 </div>
-            </a>
+            </a>{% if e.event_date < today %}<div class="ev-past-label">Past</div>{% endif %}
             {% endfor %}
         </div>
 
@@ -541,12 +542,7 @@ html, body {
                 </select>
             </div>
 
-            <div class="ev-filter-group">
-                <label class="ev-check">
-                    <input type="checkbox" name="include_past" value="1" {% if include_past %}checked{% endif %}>
-                    <span>Include past events</span>
-                </label>
-            </div>
+
         </div>
         <div class="ev-drawer-foot">
             <button type="button" class="ev-drawer-btn clear" onclick="clearFilters(event)">Clear</button>

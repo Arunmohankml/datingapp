@@ -262,6 +262,13 @@ html, body {
         </div>
         {% endif %}
 
+        {% if event.event_date < today %}
+        <div class="evd-ended-banner">
+            <span class="material-symbols-outlined">event_busy</span>
+            <div>This event has ended.</div>
+        </div>
+        {% endif %}
+
         <div class="evd-poster-wrap">
             {% if event.poster %}
             <img class="evd-poster" src="{{ event.poster|cloudinary_optimize }}" alt="{{ event.title }}" onclick="openEventLightbox(this.src)" style="cursor:zoom-in">

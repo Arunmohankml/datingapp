@@ -5,7 +5,7 @@
 <div class="hew-panel">
     <div class="hew-head">
         <h2 class="hew-title">
-            <span class="material-symbols-outlined">campaign</span> Upcoming Events
+            <span class="material-symbols-outlined">campaign</span> Events
         </h2>
         <a href="{% url 'event_list' %}" class="hew-view-all">
             View All <span class="material-symbols-outlined" style="font-size:14px;">chevron_right</span>
@@ -13,7 +13,7 @@
     </div>
     <div class="hew-scroll" id="hewScroll">
         {% for e in upcoming_events %}
-        <a href="{% url 'event_detail' e.slug %}" class="hew-card">
+        <a href="{% url 'event_detail' e.slug %}" class="hew-card{% if e.event_date < today %} past-event{% endif %}">
             <div class="hew-card-img-wrap">
                 {% if e.poster %}
                 <img class="hew-card-img" src="{{ e.poster|cloudinary_optimize }}" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">
@@ -35,6 +35,9 @@
                 <div class="hew-card-badge {% if e.fee_type == 'free' %}hew-badge-free{% else %}hew-badge-paid{% endif %}">
                     {% if e.fee_type == 'free' %}Free{% else %}&#8377;{{ e.fee_amount }}{% endif %}
                 </div>
+                {% if e.event_date < today %}
+                <div class="hew-past-label">Past</div>
+                {% endif %}
             </div>
         </a>
         {% endfor %}
@@ -79,6 +82,7 @@
 }
 .hew-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
 .hew-card:active { transform: scale(0.97); }
+.hew-card.past-event { opacity: 0.5; filter: grayscale(0.7); }
 
 .hew-card-img-wrap {
     width: 100%; aspect-ratio: 16/10; overflow: hidden;
@@ -111,5 +115,6 @@
 }
 .hew-badge-free { background: #dcfce7; color: #16a34a; }
 .hew-badge-paid { background: #dbeafe; color: #2563eb; }
+.hew-past-label { display: inline-flex; padding: 1px 6px; border-radius: 100px; font-size: 8px; font-weight: 700; background: #e2e8f0; color: #64748b; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
 </style>
 {% endif %}

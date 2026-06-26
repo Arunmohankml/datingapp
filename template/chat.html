@@ -880,7 +880,7 @@
                 <span class="material-symbols-outlined">arrow_back</span>
             </a>
             <a href="{% url 'view_profile' partner.id %}">
-                <img src="{{ partner.profile.get_profile_pic_url }}" alt="Avatar" class="chat-partner-pic" loading="lazy" decoding="async" width="40" height="40">
+                <img src="{{ partner.profile.get_profile_pic_thumb_url }}" alt="Avatar" class="chat-partner-pic" loading="lazy" decoding="async" width="40" height="40">
             </a>
             <a href="{% url 'view_profile' partner.id %}" class="chat-partner-info" style="text-decoration:none;">
                 <h3 class="chat-partner-name">{{ partner.profile.name|default:partner.username }}</h3>
@@ -942,7 +942,7 @@
                     </div>
                     {% endif %}
                     {% if msg.image %}
-                    <img src="{{ msg.image }}" class="message-image" style="max-width: 200px; border-radius: 12px; margin-bottom: 4px; display: block; cursor: pointer;" onclick="openLightbox('{{ msg.image }}')">
+                    <img src="{{ msg.image|cloudinary_optimize:"f_webp,q_20,w_200" }}" class="message-image" style="max-width: 200px; border-radius: 12px; margin-bottom: 4px; display: block; cursor: pointer;" onclick="openLightbox('{{ msg.image }}')">
                     {% endif %}
                     {% if msg.text %}
                     <div class="message-text">{{ msg.text }}</div>
@@ -2079,7 +2079,7 @@ function appendMessage(msg) {
         <div class="message-row ${isSent ? 'sent' : 'received'}" data-id="${msg.id}" data-date="${msgYmd}">
             <div class="message ${isSent ? 'sent' : 'received'} ${msg.isOptimistic ? 'sending' : ''}">
                 ${replyHtml}
-                ${msg.image ? `<img src="${msg.image}" class="message-image" style="max-width: 200px; border-radius: 12px; margin-bottom: 4px; display: block; cursor: pointer;" onclick="openLightbox('${msg.image}')" />` : ''}
+                ${msg.image ? `<img src="${msg.image.replace(`/upload/`, `/upload/f_webp,q_20,w_200/`)}" class="message-image" style="max-width: 200px; border-radius: 12px; margin-bottom: 4px; display: block; cursor: pointer;" onclick="openLightbox('${msg.image}')" />` : ''}
                 <div class="message-text" ${msg.text ? '' : 'style="display: none;"'}>${msg.text || ''}</div>
                 <span class="timestamp">${msg.timestamp}</span>
             </div>
@@ -2158,7 +2158,7 @@ chatForm.addEventListener('submit', async (e) => {
                 
                 const imgEl = tempEl.querySelector('.message-image');
                 if (imgEl && data.message.image) {
-                    imgEl.src = data.message.image;
+                    imgEl.src = data.message.image.replace("/upload/", "/upload/f_webp,q_20,w_200/");
                     imgEl.setAttribute('onclick', `openLightbox('${data.message.image}')`);
                 }
                 

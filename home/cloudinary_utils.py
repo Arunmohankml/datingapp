@@ -2,6 +2,8 @@ import os
 import cloudinary
 import cloudinary.uploader
 from django.conf import settings
+from PIL import Image
+import io
 
 # Configure Cloudinary
 cloudinary.config(
@@ -11,12 +13,23 @@ cloudinary.config(
     secure = True
 )
 
-def upload_to_cloudinary(file_obj, folder="srm_match/misc", public_id=None):
-    """
-    Uploads a file object to Cloudinary and returns the secure URL.
-    """
+def _convert_to_webp(file_obj, quality=85):
     try:
-        # If it's a file path or file-like object
+        img = Image.open(file_obj)
+        if img.mode in ("RGBA", "P"):
+            img = img.convert("RGB")
+        output = io.BytesIO()
+        img.save(output, format='WEBP', quality=quality, optimize=True)
+        output.seek(0)
+        return output
+    except Exception as e:
+        print(f"WebP conversion failed: {e}")
+        file_obj.seek(0)
+        return file_obj
+
+def upload_to_cloudinary(file_obj, folder="srm_match/misc", public_id=None):
+    try:
+        webp_data = _convert_to_webp(file_obj)
         params = {
             "folder": folder,
             "resource_type": "image",
@@ -25,24 +38,16 @@ def upload_to_cloudinary(file_obj, folder="srm_match/misc", public_id=None):
             params["public_id"] = public_id
             params["overwrite"] = True
 
-        upload_result = cloudinary.uploader.upload(file_obj, **params)
+        upload_result = cloudinary.uploader.upload(webp_data, **params)
         return upload_result.get('secure_url')
     except Exception as e:
         print(f"Cloudinary Upload Error: {e}")
         return None
 
 def upload_base64_to_cloudinary(base64_str, folder="srm_match/verification"):
-    """
-    Decodes base64 string and uploads to Cloudinary.
-    """
     try:
-        # Cloudinary uploader.upload supports data URIs directly
-        # If the string doesn't have the prefix, add it if needed, 
-        # but usually base64 strings from camera have 'data:image/jpeg;base64,...'
         if not base64_str.startswith('data:'):
-            # Assume jpeg as fallback
             base64_str = f"data:image/jpeg;base64,{base64_str}"
-            
         upload_result = cloudinary.uploader.upload(base64_str, folder=folder)
         return upload_result.get('secure_url')
     except Exception as e:

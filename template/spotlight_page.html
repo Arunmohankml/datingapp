@@ -669,13 +669,13 @@
             {% for s in spotlights %}
             <div class="sp-card{% if not s.cover_image %} no-cover{% endif %}" style="animation-delay:{{ forloop.counter0|divisibleby:1|yesno:'0.05,0.1' }}s;">
                 {% if s.cover_image %}
-                <img class="sp-cover" src="{{ s.cover_image|cloudinary_optimize }}" alt="" onerror="this.style.display='none'" loading="lazy" decoding="async" onclick="openSpotlightLightbox(this.src)">
+                <img class="sp-cover" src="{{ s.cover_image|cloudinary_optimize:"c_fill,w_560,q_20,f_webp" }}" alt="" onerror="this.style.display='none'" loading="lazy" decoding="async" onclick="openSpotlightLightbox(this.src)">
                 {% endif %}
                 <div class="sp-card-body">
                     {% with is_website=s.instagram_handle|slice:':4' %}
                     <div class="sp-avatar-wrap">
-                        {% if s.user.profile.profile_pic %}
-                            <img class="sp-avatar" src="{{ s.user.profile.profile_pic }}" alt="" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        {% if s.user.profile.get_profile_pic_thumb_url %}
+                            <img class="sp-avatar" src="{{ s.user.profile.get_profile_pic_thumb_url }}" alt="" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
                             <div class="sp-avatar fallback-avatar" style="display:none; background-color: #3b82f6; color: white; justify-content: center; align-items: center; font-weight: 700; font-size: 22px;">
                                 {{ s.user.profile.name|first|upper }}
                             </div>

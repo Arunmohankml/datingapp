@@ -293,7 +293,8 @@ def home_hub(request):
     
     ads = Advertisement.objects.filter(is_active=True)[:10]
     spotlights = CampusSpotlight.objects.filter(is_active=True).select_related('user__profile')[:15]
-    upcoming_events = Event.objects.filter(status='approved', event_date__gte=timezone.now().date()).order_by('event_date').select_related('user__profile')[:5]
+    upcoming_events = Event.objects.filter(status='approved').order_by('-event_date').select_related('user__profile')[:5]
+    today = timezone.now().date()
     
     # Fetch 3 profiles with pictures to show in the highlighted Match card
     from django.db.models import Q
@@ -329,7 +330,7 @@ def home_hub(request):
         "is_admin": is_admin_check(user),
         "spark_reward_earned": _check_daily_login_reward(user),
         "daily_sparks_used": DailySpark.objects.filter(sender=user, date=timezone.now().date()).count(),
-        "total_sparks_received": Spark.objects.filter(receiver=user).count(),
+        "total_sparks_received": Spark.objects.filter(receiver=user).count(),`r`n        "today": today,
     })
 
 
@@ -1348,9 +1349,7 @@ def chat_view(request, partner_id):
                     request.FILES['image'],
                     folder='srm_match/chat_images'
                 )
-                # Apply webp + auto compression via Cloudinary URL transformation
-                if image_url and 'res.cloudinary.com' in image_url:
-                    image_url = image_url.replace('/upload/', '/upload/f_webp,q_auto/')
+                # WebP conversion handled at upload time in cloudinary_utils.py
             
         if text or image_url:
             if text.startswith('__SPIN__:'):
@@ -5035,15 +5034,12 @@ def event_list(request):
     campus_filter = request.GET.get('campus', '')
     fee_filter = request.GET.get('fee', '')
     sort = request.GET.get('sort', 'latest')
-    include_past = request.GET.get('include_past', '') == '1'
     month = request.GET.get('month', '')
 
     if q:
         approved = approved.filter(title__icontains=q)
     if campus_filter:
         approved = approved.filter(campus=campus_filter)
-    if not include_past:
-        approved = approved.filter(event_date__gte=now.date())
     if month:
         try:
             ym = month.split('-')
@@ -5082,7 +5078,6 @@ def event_list(request):
     if campus_filter: qs_parts.append(f'campus={quote(campus_filter)}')
     if fee_filter: qs_parts.append(f'fee={quote(fee_filter)}')
     if sort != 'latest': qs_parts.append(f'sort={quote(sort)}')
-    if include_past: qs_parts.append('include_past=1')
     if month: qs_parts.append(f'month={quote(month)}')
     query_string = '&'.join(qs_parts)
 
@@ -5094,7 +5089,7 @@ def event_list(request):
         'current_campus': campus_filter,
         'current_fee': fee_filter,
         'current_sort': sort,
-        'include_past': include_past,
+        'today': now.date(),
         'current_month': month,
         'months': months,
         'query_string': query_string,
@@ -5110,7 +5105,7 @@ def event_detail(request, slug):
         raise Http404("Event not found")
     profile_campuses = Profile.objects.exclude(campus='').values_list('campus', flat=True)
     campuses = sorted(set(c for c in list(profile_campuses) if c))
-    return render(request, 'event_detail.html', {'event': event, 'campuses': campuses})
+    return render(request, 'event_detail.html', {'event': event, 'campuses': campuses, 'today': timezone.now().date()})
 
 
 @csrf_exempt

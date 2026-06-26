@@ -313,7 +313,7 @@
                 {% for req in incoming_requests %}
                 <div class="user-card" style="animation-delay:{{ forloop.counter0|divisibleby:1|yesno:'0.05,0.1' }}s;">
                     <div class="user-info" onclick="window.location.href='{% url 'view_profile' req.sender.id %}'">
-                        <img src="{{ req.sender.profile.get_profile_pic_url }}" alt="Avatar" onerror="this.src='https://placehold.co/100x100/e2e8f0/94a3b8?text=User'" loading="lazy" decoding="async" width="52" height="52">
+                        <img src="{{ req.sender.profile.get_profile_pic_thumb_url }}" alt="Avatar" onerror="this.src='https://placehold.co/100x100/e2e8f0/94a3b8?text=User'" loading="lazy" decoding="async" width="52" height="52">
                         <div>
                             <h4>
                                 {{ req.sender.profile.name|default:req.sender.username }}
@@ -350,7 +350,7 @@
                 {% for conn in connections %}
                 <div class="user-card" style="animation-delay:{{ forloop.counter0|divisibleby:1|yesno:'0.05,0.1' }}s;">
                     <div class="user-info" onclick="window.location.href='{% url 'view_profile' conn.id %}'">
-                        <img src="{{ conn.profile.get_profile_pic_url }}" alt="Avatar" onerror="this.src='https://placehold.co/100x100/e2e8f0/94a3b8?text=User'" loading="lazy" decoding="async" width="52" height="52">
+                        <img src="{{ conn.profile.get_profile_pic_thumb_url }}" alt="Avatar" onerror="this.src='https://placehold.co/100x100/e2e8f0/94a3b8?text=User'" loading="lazy" decoding="async" width="52" height="52">
                         <div>
                             <h4>
                                 {{ conn.profile.name|default:conn.username }}

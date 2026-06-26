@@ -4,7 +4,7 @@ import re
 register = template.Library()
 
 @register.filter
-def cloudinary_optimize(url, params="c_fill,w_560,q_auto:good,f_auto"):
+def cloudinary_optimize(url, params="c_fill,w_560,q_auto:eco,f_webp"):
     if not url or 'cloudinary' not in url:
         return url
     parts = url.split('/image/upload/', 1)

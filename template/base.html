@@ -43,26 +43,6 @@
         @keyframes qFadeIn { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
         @keyframes fadeUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
     </style>
-    <script>
-        let faceModelsLoaded = false;
-        async function loadFaceModelsOnce() {
-            if (faceModelsLoaded) return;
-            const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-            try {
-                await Promise.all([
-                    faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-                    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-                    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-                    faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-                    faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL)
-                ]);
-                faceModelsLoaded = true;
-                console.log("AI Models loaded successfully.");
-            } catch (err) {
-                console.error("AI Models failed to load:", err);
-            }
-        }
-    </script>
     
     <style>
         :root {
@@ -1123,28 +1103,5 @@
     </style>
     {% endif %}
 
-    <!-- AI & ML Scripts (deferred — not render-blocking) -->
-    <script defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.js"></script>
-    <script defer>
-        // Centralized robust patch to prevent negative coordinate crash in face-api.js
-        if (typeof faceapi !== 'undefined' && faceapi.Box) {
-            const OriginalBox = faceapi.Box;
-            function PatchedBox(x, y, width, height, allowInvalid = false) {
-                let safeWidth = width;
-                let safeHeight = height;
-                if (!allowInvalid) {
-                    if (safeWidth < 0) safeWidth = Math.abs(safeWidth) || 0.001;
-                    if (safeHeight < 0) safeHeight = Math.abs(safeHeight) || 0.001;
-                }
-                return new OriginalBox(x, y, safeWidth, safeHeight, allowInvalid);
-            }
-            PatchedBox.prototype = OriginalBox.prototype;
-            Object.assign(PatchedBox, OriginalBox);
-            faceapi.Box = PatchedBox;
-            console.log("Centralized patch applied to faceapi.Box constructor.");
-        }
-    </script>
-    <script defer src="https://cdn.jsdelivr.net/npm/nsfwjs@2.4.1/dist/nsfwjs.min.js"></script>
-</body>
+    </body>
 </html>
