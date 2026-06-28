@@ -93,7 +93,7 @@ import base64
 import math
 from django.utils import timezone
 
-from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier, Conversation, RoomRequest, StaffMember, VoiceRoom, VoiceParticipant, BugReport, FeatureSuggestion, SupportTicket, TicketMessage, FeedbackNotification, Advertisement, CampusSpotlight, Event
+from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier, Conversation, RoomRequest, StaffMember, VoiceRoom, VoiceParticipant, BugReport, FeatureSuggestion, SupportTicket, TicketMessage, FeedbackNotification, Advertisement, CampusSpotlight, Event, Community, CommunityMessage
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm, ProfileInitForm
 from .supabase_utils import delete_from_supabase_by_url
 from .cloudinary_utils import upload_to_cloudinary, upload_base64_to_cloudinary
@@ -1563,8 +1563,8 @@ def view_profile(request, user_id):
     else:
         score = 0
     
-    # Spark logic
-    spark_count = Spark.objects.filter(receiver=target_user).count()
+    # Spark logic - use total_sparks from profile (includes daily sparks)
+    spark_count = profile.total_sparks
     
     # Daily spark system
     today = timezone.now().date()
@@ -5289,3 +5289,243 @@ def upcoming_events_api(request):
 
 def _notify_user(user, message, link=''):
     FeedbackNotification.objects.create(user=user, message=message, link=link)
+
+
+# ──────────────── COMMUNITY ────────────────
+
+def _seed_communities():
+    """Create default communities if they don't exist."""
+    defaults = [
+        {'name': 'SRM', 'slug': 'srm', 'description': 'Connect with students from SRM University.', 'image': '', 'is_anonymous': False},
+        {'name': 'VIT', 'slug': 'vit', 'description': 'Connect with students from VIT University.', 'image': '', 'is_anonymous': False},
+        {'name': 'Amrita', 'slug': 'amrita', 'description': 'Connect with students from Amrita University.', 'image': '', 'is_anonymous': False},
+        {'name': 'Anonymous', 'slug': 'anonymous', 'description': 'Chat anonymously with fellow students.', 'image': '', 'is_anonymous': True},
+    ]
+    for d in defaults:
+        Community.objects.get_or_create(slug=d['slug'], defaults=d)
+
+
+@login_required
+def community_list(request):
+    _seed_communities()
+    communities = Community.objects.all()
+    for c in communities:
+        c.member_count = CommunityMessage.objects.filter(community=c).values('sender').distinct().count()
+    return render(request, 'community_list.html', {
+        'communities': communities,
+        'is_admin': is_staff_check(request.user),
+    })
+
+
+@login_required
+def community_list_api(request):
+    _seed_communities()
+    communities = Community.objects.all()
+    data = []
+    for c in communities:
+        member_count = CommunityMessage.objects.filter(community=c).values('sender').distinct().count()
+        data.append({
+            'slug': c.slug,
+            'name': c.name,
+            'description': c.description,
+            'image_url': c.get_image_url,
+            'member_count': member_count,
+            'is_anonymous': c.is_anonymous,
+        })
+    return JsonResponse({'communities': data})
+
+
+@login_required
+def community_chat(request, slug):
+    _seed_communities()
+    try:
+        community = Community.objects.get(slug=slug)
+    except Community.DoesNotExist:
+        messages.error(request, "Community not found.")
+        return redirect('community_list')
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body) if request.content_type == 'application/json' else None
+        except json.JSONDecodeError:
+            data = None
+
+        text = ''
+        parent_id = None
+
+        if data:
+            text = data.get('text', '').strip()
+            parent_id = data.get('parent_id')
+        else:
+            text = request.POST.get('text', '').strip()
+            parent_id = request.POST.get('parent_id')
+
+        if not text:
+            return JsonResponse({'success': False, 'error': 'Message cannot be empty.'}, status=400)
+
+        reply_to = None
+        if parent_id:
+            try:
+                reply_to = CommunityMessage.objects.get(id=parent_id, community=community)
+            except CommunityMessage.DoesNotExist:
+                pass
+
+        msg = CommunityMessage.objects.create(
+            community=community,
+            sender=request.user,
+            text=text,
+            reply_to=reply_to,
+        )
+
+        if request.content_type == 'application/json':
+            return JsonResponse({
+                'success': True,
+                'message': {
+                    'id': msg.id,
+                    'text': msg.text,
+                    'sender_id': msg.sender.id,
+                    'sender_name': msg.sender_name,
+                    'sender_avatar': msg.sender_avatar,
+                    'timestamp': msg.timestamp.strftime('%I:%M %p'),
+                    'created_at': msg.timestamp.isoformat(),
+                    'reply_to': {
+                        'id': reply_to.id,
+                        'text': reply_to.text[:50] if reply_to else '',
+                        'sender_name': reply_to.sender_name if reply_to else '',
+                    } if reply_to else None,
+                }
+            })
+        return redirect('community_chat', slug=slug)
+
+    chat_messages = CommunityMessage.objects.filter(community=community).select_related('sender', 'sender__profile', 'reply_to', 'reply_to__sender', 'reply_to__sender__profile').order_by('timestamp')
+
+    if community.chat_cleared_at:
+        chat_messages = chat_messages.filter(timestamp__gt=community.chat_cleared_at)
+
+    today = timezone.now().date()
+    yesterday = today - timedelta(days=1)
+
+    return render(request, 'community_chat.html', {
+        'community': community,
+        'chat_messages': chat_messages,
+        'today': today,
+        'yesterday': yesterday,
+        'is_admin': is_staff_check(request.user),
+        'from_source': request.GET.get('from', ''),
+    })
+
+
+@login_required
+def community_messages_api(request, slug):
+    try:
+        community = Community.objects.get(slug=slug)
+    except Community.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Not found'}, status=404)
+
+    after_id = request.GET.get('after')
+    qs = CommunityMessage.objects.filter(community=community).select_related('sender', 'sender__profile', 'reply_to', 'reply_to__sender', 'reply_to__sender__profile')
+
+    if community.chat_cleared_at:
+        qs = qs.filter(timestamp__gt=community.chat_cleared_at)
+
+    all_ids = list(qs.order_by('id').values_list('id', flat=True))
+
+    messages_data = []
+    for msg in qs.order_by('id')[:200]:
+        messages_data.append({
+            'id': msg.id,
+            'text': msg.text,
+            'sender_id': msg.sender.id,
+            'sender_name': msg.sender_name,
+            'sender_avatar': msg.sender_avatar,
+            'timestamp': msg.timestamp.strftime('%I:%M %p'),
+            'created_at': msg.timestamp.isoformat(),
+            'reply_to': {
+                'id': msg.reply_to.id,
+                'text': msg.reply_to.text[:50] if msg.reply_to else '',
+                'sender_name': msg.reply_to.sender_name if msg.reply_to else '',
+            } if msg.reply_to else None,
+        })
+
+    return JsonResponse({'messages': messages_data, 'all_ids': all_ids})
+
+
+@login_required
+def community_delete_message(request, message_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+
+    is_staff = is_staff_check(request.user)
+
+    if is_staff:
+        try:
+            msg = CommunityMessage.objects.get(id=message_id)
+        except CommunityMessage.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Not found'}, status=404)
+    else:
+        try:
+            msg = CommunityMessage.objects.get(id=message_id, sender=request.user)
+        except CommunityMessage.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Not found'}, status=404)
+
+    msg.delete()
+    return JsonResponse({'success': True})
+
+
+@login_required
+def community_admin_delete(request, slug, message_id):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+    if not is_staff_check(request.user):
+        return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+
+    try:
+        msg = CommunityMessage.objects.get(id=message_id)
+        msg.delete()
+        return JsonResponse({'success': True})
+    except CommunityMessage.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Not found'}, status=404)
+
+
+@login_required
+def community_clear_chat(request, slug):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+    if not is_staff_check(request.user):
+        return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+
+    try:
+        community = Community.objects.get(slug=slug)
+    except Community.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Not found'}, status=404)
+
+    community.chat_cleared_at = timezone.now()
+    community.save()
+    CommunityMessage.objects.filter(community=community).delete()
+    return JsonResponse({'success': True})
+
+
+@login_required
+def community_upload_image(request, slug):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+
+    if not is_staff_check(request.user):
+        return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+
+    try:
+        community = Community.objects.get(slug=slug)
+    except Community.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Community not found'}, status=404)
+
+    if not request.FILES.get('image'):
+        return JsonResponse({'success': False, 'error': 'No image provided'}, status=400)
+
+    uploaded = upload_to_cloudinary(request.FILES['image'], folder='knotspot/community_images')
+    if not uploaded:
+        return JsonResponse({'success': False, 'error': 'Upload failed'}, status=500)
+
+    community.image = uploaded
+    community.save()
+
+    return JsonResponse({'success': True, 'image_url': uploaded})

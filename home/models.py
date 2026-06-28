@@ -965,3 +965,59 @@ class Advertisement(models.Model):
 
     def __str__(self):
         return self.title or f"Ad #{self.id}"
+
+
+class Community(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
+    description = models.CharField(max_length=255, blank=True)
+    image = models.URLField(max_length=500, blank=True, default='')
+    member_count = models.PositiveIntegerField(default=0)
+    is_anonymous = models.BooleanField(default=False)
+    chat_cleared_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def get_image_url(self):
+        if isinstance(self.image, str) and self.image and (self.image.startswith('http://') or self.image.startswith('https://')):
+            if 'res.cloudinary.com' in self.image:
+                return self.image.replace('/upload/', '/upload/f_auto,q_auto,w_400/')
+            return self.image
+        return f"https://ui-avatars.com/api/?name={self.name.replace(' ', '+')}&background=004ac6&color=fff&size=256"
+
+
+class CommunityMessage(models.Model):
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_messages')
+    text = models.TextField(blank=True, default='')
+    timestamp = models.DateTimeField(auto_now_add=True)
+    reply_to = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replies')
+    sender_deleted = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['timestamp']
+
+    def __str__(self):
+        return f"{self.sender.username} in {self.community.name}: {self.text[:40]}"
+
+    @property
+    def sender_name(self):
+        if self.community.is_anonymous:
+            return "Anonymous"
+        if hasattr(self.sender, 'profile'):
+            return self.sender.profile.name or self.sender.username
+        return self.sender.username
+
+    @property
+    def sender_avatar(self):
+        if self.community.is_anonymous:
+            return "https://ui-avatars.com/api/?name=A&background=64748b&color=fff&size=128"
+        if hasattr(self.sender, 'profile'):
+            return self.sender.profile.get_profile_pic_url
+        return f"https://ui-avatars.com/api/?name={self.sender.username}&background=6366f1&color=fff&size=128"

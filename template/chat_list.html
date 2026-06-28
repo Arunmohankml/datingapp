@@ -42,7 +42,6 @@
         z-index: 10;
     }
 
-    /* ── Fixed top bar ── */
     .chat-topbar {
         flex-shrink: 0;
         background: rgba(247, 249, 251, 0.78);
@@ -78,7 +77,7 @@
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
         transition: 0.2s ease;
         flex-shrink: 0;
-lc         cursor: pointer;
+        cursor: pointer;
     }
     .match-back-btn .material-symbols-outlined {
         font-size: 22px;
@@ -107,7 +106,33 @@ lc         cursor: pointer;
         white-space: nowrap;
     }
 
-    /* ── Chat cards ── */
+    .tab-switcher {
+        display: flex;
+        gap: 6px;
+        padding: 12px 16px 8px;
+    }
+    .tab-btn {
+        flex: 1;
+        padding: 10px 16px;
+        border: none;
+        border-radius: 999px;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.22s ease;
+        background: transparent;
+        color: #6b7a90;
+    }
+    .tab-btn.active {
+        background: var(--primary);
+        color: #fff;
+        box-shadow: 0 8px 20px rgba(0, 74, 198, 0.2);
+    }
+    .tab-btn:active {
+        transform: scale(0.97);
+    }
+
     .feed-list {
         display: flex;
         flex-direction: column;
@@ -119,7 +144,7 @@ lc         cursor: pointer;
         flex: 1;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        padding: 16px 0 110px;
+        padding: 8px 0 110px;
         background: transparent;
         scrollbar-width: none;
         -ms-overflow-style: none;
@@ -312,35 +337,26 @@ lc         cursor: pointer;
     .btn-gradient:active {
         transform: scale(0.98);
     }
-/* ── Desktop & PC Layout (Min 768px) ── */
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .comm-avatar.anon-avatar {
+        background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+    }
+
 @media (min-width: 768px) {
-
-    .feed-list {
-         padding: 0 10px;
-        gap: 18px;
-    }
-
-    .chat-card {
-        padding: 16px 18px;
-        border-radius: 26px;
-    }
-
-    .chat-avatar {
-        width: 56px;
-        height: 56px;
-    }
-
-    .chat-name {
-        font-size: 16px;
-    }
-
-    .chat-snippet {
-        font-size: 14px;
-    }
-
-    .empty-state {
-        padding: 80px 20px;
-    }
+    .feed-list { padding: 0 10px; gap: 18px; }
+    .chat-card { padding: 16px 18px; border-radius: 26px; }
+    .chat-avatar { width: 56px; height: 56px; }
+    .chat-name { font-size: 16px; }
+    .chat-snippet { font-size: 14px; }
+    .empty-state { padding: 80px 20px; }
 }
 </style>
 {% endblock %}
@@ -359,73 +375,84 @@ lc         cursor: pointer;
     </div>
 
     <div class="feed-body">
-    {% if chats %}
-    <div class="feed-list">
-        {% for chat in chats %}
-        <div onclick="goToChat('{% url 'chat_view' chat.partner.id %}')" class="chat-card">
-            <img src="{{ chat.partner.profile.get_profile_pic_thumb_url }}" alt="Avatar" class="chat-avatar" loading="lazy" decoding="async" width="56" height="56">
+        <div class="tab-switcher">
+            <button class="tab-btn active" onclick="switchTab('chats')">Chats</button>
+            <button class="tab-btn" onclick="switchTab('communities')">Communities</button>
+        </div>
 
-            <div class="chat-details">
-                <div class="chat-info-row">
-                    <div class="chat-name">{{ chat.partner.profile.name|default:chat.partner.username }}</div>
-                    <span class="chat-time">
-                        {% if chat.timestamp.date == today %}
-                            {{ chat.timestamp|time:"h:i A" }}
-                        {% else %}
-                            {{ chat.timestamp|date:"M d" }}
-                        {% endif %}
-                    </span>
-                </div>
-
-                <div class="chat-snippet-row">
-                    <div class="chat-snippet">
-                        {% if chat.latest_message %}
-                            {% if chat.latest_message.image and not chat.latest_message.text %}
-                                {% if chat.latest_message.sender == request.user %}
-                                    <span style="color: #004ac6; font-weight: 700;">You</span> sent an image
+        <div id="tab-chats" class="tab-content active">
+        {% if chats %}
+        <div class="feed-list">
+            {% for chat in chats %}
+            <div onclick="goToChat('{% url 'chat_view' chat.partner.id %}')" class="chat-card">
+                <img src="{{ chat.partner.profile.get_profile_pic_thumb_url }}" alt="Avatar" class="chat-avatar" loading="lazy" decoding="async" width="56" height="56">
+                <div class="chat-details">
+                    <div class="chat-info-row">
+                        <div class="chat-name">{{ chat.partner.profile.name|default:chat.partner.username }}</div>
+                        <span class="chat-time">
+                            {% if chat.timestamp.date == today %}
+                                {{ chat.timestamp|time:"h:i A" }}
+                            {% else %}
+                                {{ chat.timestamp|date:"M d" }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="chat-snippet-row">
+                        <div class="chat-snippet">
+                            {% if chat.latest_message %}
+                                {% if chat.latest_message.image and not chat.latest_message.text %}
+                                    {% if chat.latest_message.sender == request.user %}
+                                        <span style="color: #004ac6; font-weight: 700;">You</span> sent an image
+                                    {% else %}
+                                        <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">image</span> sent an image
+                                    {% endif %}
                                 {% else %}
-                                    <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">image</span> sent an image
+                                    {% if chat.latest_message.sender == request.user %}
+                                        <span style="color: #004ac6; font-weight: 700;">You: </span>
+                                    {% endif %}
+                                    {% if chat.latest_message.image %}
+                                        <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">image</span>
+                                    {% endif %}
+                                    {{ chat.latest_message.text|truncatechars:40 }}
                                 {% endif %}
                             {% else %}
-                                {% if chat.latest_message.sender == request.user %}
-                                    <span style="color: #004ac6; font-weight: 700;">You: </span>
-                                {% endif %}
-                                {% if chat.latest_message.image %}
-                                    <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">image</span>
-                                {% endif %}
-                                {{ chat.latest_message.text|truncatechars:40 }}
+                                <span style="font-style: italic; color: #94a3b8;">No messages yet</span>
                             {% endif %}
-                        {% else %}
-                            <span style="font-style: italic; color: #94a3b8;">No messages yet</span>
-                        {% endif %}
-                    </div>
-                    <div style="display:flex; align-items:center; gap:6px;">
-                        {% if chat.spark_streak > 0 %}
-                        <span class="chat-streak-badge">⚡ {{ chat.spark_streak }} Day</span>
-                        {% endif %}
-                        {% if chat.unread_count > 0 %}
-                            <div class="unread-badge">{{ chat.unread_count }}</div>
-                        {% endif %}
-                        <a href="{% url 'delete_chat' chat.partner.id %}" class="delete-btn" onclick="confirmDeleteChat(event, '{% url 'delete_chat' chat.partner.id %}')">
-                            <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
-                        </a>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            {% if chat.spark_streak > 0 %}
+                            <span class="chat-streak-badge">⚡ {{ chat.spark_streak }} Day</span>
+                            {% endif %}
+                            {% if chat.unread_count > 0 %}
+                                <div class="unread-badge">{{ chat.unread_count }}</div>
+                            {% endif %}
+                            <a href="{% url 'delete_chat' chat.partner.id %}" class="delete-btn" onclick="confirmDeleteChat(event, '{% url 'delete_chat' chat.partner.id %}')">
+                                <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="empty-state">
-        <span class="material-symbols-outlined">chat_bubble</span>
-        <strong>No Chats Yet</strong>
-        <p>Start matching and chatting with people around campus!</p>
-        <a href="{% url 'connections' %}" class="btn-gradient">
-            <span class="material-symbols-outlined" style="font-size:18px;">favorite</span>
-            Find Matches
-        </a>
-    </div>
-    {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <span class="material-symbols-outlined">chat_bubble</span>
+            <strong>No Chats Yet</strong>
+            <p>Start matching and chatting with people around campus!</p>
+            <a href="{% url 'connections' %}" class="btn-gradient">
+                <span class="material-symbols-outlined" style="font-size:18px;">favorite</span>
+                Find Matches
+            </a>
+        </div>
+        {% endif %}
+        </div>
+
+        <div id="tab-communities" class="tab-content">
+            <div id="community-list-content">
+                <div class="feed-list" id="communityFeedList"></div>
+            </div>
+        </div>
     </div>
 
 </section>
@@ -450,5 +477,54 @@ function goToChat(baseUrl) {
     }
 }
 
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+    if (tab === 'chats') {
+        document.querySelector('.tab-btn:first-child').classList.add('active');
+        document.getElementById('tab-chats').classList.add('active');
+    } else {
+        document.querySelector('.tab-btn:last-child').classList.add('active');
+        document.getElementById('tab-communities').classList.add('active');
+        loadCommunities();
+    }
+}
+
+async function loadCommunities() {
+    const container = document.getElementById('communityFeedList');
+    if (container.dataset.loaded === 'true') return;
+    try {
+        const res = await fetch('/api/communities/list/');
+        const data = await res.json();
+        container.innerHTML = '';
+        if (data.communities && data.communities.length > 0) {
+            data.communities.forEach(c => {
+                const card = document.createElement('a');
+                card.href = `/community/${c.slug}/?from=chats`;
+                card.className = 'chat-card';
+                let avatarHtml;
+                if (c.is_anonymous) {
+                    avatarHtml = `<div class="chat-avatar comm-avatar anon-avatar"><span class="material-symbols-outlined" style="font-size:28px;">visibility_off</span></div>`;
+                } else {
+                    avatarHtml = `<img src="${c.image_url}" alt="${c.name}" class="chat-avatar" loading="lazy" decoding="async" width="56" height="56">`;
+                }
+                card.innerHTML = `${avatarHtml}<div class="chat-details"><div class="chat-info-row"><div class="chat-name">${c.name}</div><span class="chat-time">${c.member_count} members</span></div><div class="chat-snippet-row"><div class="chat-snippet">${c.description}</div></div></div><span class="material-symbols-outlined" style="font-size:20px; color:#94a3b8;">chevron_right</span>`;
+                container.appendChild(card);
+            });
+        } else {
+            container.innerHTML = '<div class="empty-state"><span class="material-symbols-outlined" style="font-size:48px; color:var(--primary); display:block; margin-bottom:12px;">groups</span><strong style="display:block; color:#151b27; font-size:18px;">No Communities</strong><p style="color:#6b7a90; margin-top:8px; font-size:14px;">No communities available yet.</p></div>';
+        }
+        container.dataset.loaded = 'true';
+    } catch (e) {
+        container.innerHTML = '<div class="empty-state"><p>Failed to load communities.</p></div>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('tab') === 'communities') {
+        switchTab('communities');
+    }
+});
 </script>
 {% endblock %}

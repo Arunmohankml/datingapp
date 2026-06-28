@@ -126,4 +126,12 @@ urlpatterns = [
     path("api/events/<int:id>/get/", views.event_api_get, name="event_api_get"),
     path("api/events/upcoming/", views.upcoming_events_api, name="upcoming_events_api"),
     path("master/events/", views.admin_events, name="admin_events"),
+    path("community/", views.community_list, name="community_list"),
+    path("community/<slug:slug>/", views.community_chat, name="community_chat"),
+    path("api/communities/list/", views.community_list_api, name="community_list_api"),
+    path("api/community/<slug:slug>/upload-image/", views.community_upload_image, name="community_upload_image"),
+    path("api/community/<slug:slug>/admin-delete/<int:message_id>/", views.community_admin_delete, name="community_admin_delete"),
+    path("api/community/<slug:slug>/clear-chat/", views.community_clear_chat, name="community_clear_chat"),
+    path("api/community/<slug:slug>/messages/", views.community_messages_api, name="community_messages_api"),
+    path("api/community/message/<int:message_id>/delete/", views.community_delete_message, name="community_delete_message"),
 ]

@@ -280,6 +280,33 @@
 
     .room-find-btn .material-symbols-outlined { font-size: 16px; font-weight: 700; }
 
+    /* Community CTA button */
+    .comm-cta-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 14px 24px;
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #004ac6, #3f7dff);
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 8px 24px rgba(0,74,198,0.2);
+        text-decoration: none;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        font-family: inherit;
+        box-sizing: border-box;
+        text-align: center;
+    }
+    .comm-cta-btn:active {
+        transform: scale(0.97);
+    }
+    .comm-cta-btn .material-symbols-outlined { font-size: 18px; }
+
         .hub-icon {
         width: 52px;
         height: 52px;
@@ -1448,6 +1475,18 @@
                     Find Rooms <span class="material-symbols-outlined">arrow_forward</span>
                 </span>
             </div>
+        </a>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <h2 class="panel-title"><span class="material-symbols-outlined">groups</span>Community</h2>
+            <span class="panel-badge">Campus</span>
+        </div>
+        <p style="margin:0 0 16px; font-size:13px; line-height:1.55; color:var(--text-muted);">Connect with students in your campus communities.</p>
+        <a href="{% url 'community_list' %}" class="comm-cta-btn">
+            <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span>
+            Go to Community
         </a>
     </div>
 
