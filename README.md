@@ -1,30 +1,134 @@
-# SRM Match - High-End Dating App
+# KnotSpot
 
-## Recent Improvements
-- **Skip/Pass Functionality**: You can now skip matches that don't vibe with you. This will prevent them from appearing in your feed again.
-- **Improved Feed Filtering**: Candidates you've liked or skipped are automatically filtered out of your feed and discovery cards.
-- **Discovery Mode**: Answer more questions to refine your match percentage and find better vibes.
+KnotSpot is a modern campus social networking platform that enables students to connect, communicate, and build meaningful relationships through real-time interactions and community-driven features.
 
-## Google Login Troubleshooting (401 Unauthorized)
+---
 
-If you see a `401 Unauthorized` error when logging in via Google on your Vercel deployment, please follow these steps:
+## ✨ Features
 
-### 1. Firebase Console Settings
-1. Go to the [Firebase Console](https://console.firebase.google.com/).
-2. Select your project: **datingapp-636fa**.
-3. Go to **Authentication** -> **Settings** -> **Authorized Domains**.
-4. Click **Add Domain** and enter: `datingapp-vert.vercel.app`.
+* 👤 User Authentication & Profiles
+* 💬 Anonymous Confessions
+* 🎙️ Real-time Voice Lounges
+* 🌟 Campus Spotlights
+* 📅 Campus Events
+* 🏠 Roommate Finder
+* 📢 Announcements
+* 💌 Match Discovery
+* 📊 Admin Analytics Dashboard
+* 📝 Feedback & Support Ticket System
+* 📱 Progressive Web App (PWA)
+* 🔔 Push Notifications
 
-### 2. Google Cloud Console Credentials
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
-2. Find the OAuth 2.0 Client ID used by Firebase (check `login.html` for the `client_id`).
-3. Under **Authorized JavaScript Origins**, add: `https://datingapp-vert.vercel.app`.
-4. Under **Authorized Redirect URIs**, ensure your Firebase Auth handler is present: `https://datingapp-636fa.firebaseapp.com/__/auth/handler`.
+---
 
-## Database Migrations
-Since the `MatchRequest` model was updated to include a `skipped` status, you must apply the migrations in your production database:
+## 🚀 Tech Stack
+
+**Backend**
+
+* Python
+* Django
+
+**Frontend**
+
+* HTML
+* CSS
+* JavaScript
+
+**Database**
+
+* SQLite (Development)
+
+**Cloud Services**
+
+* Cloudinary
+* Firebase Cloud Messaging
+
+**Real-time Communication**
+
+* PeerJS
+* Pusher
+
+**Deployment**
+
+* Vercel
+
+---
+
+## 📦 Installation
+
 ```bash
-python manage.py makemigrations home
+git clone https://github.com/SanjanaNomula/datingapp.git
+cd datingapp
+
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+
+pip install -r requirements.txt
+
+python manage.py makemigrations
 python manage.py migrate
+
+python manage.py runserver
 ```
-If using Vercel, ensuring your `vercel.json` or build settings includes a migration command is recommended.
+
+Visit:
+
+```
+http://127.0.0.1:8000/
+```
+
+---
+
+## 🔥 Major Features
+
+* Anonymous confession platform
+* Intelligent matchmaking
+* Real-time voice communication
+* Campus creator spotlights
+* Event management
+* Roommate discovery
+* Community networking
+* Admin moderation tools
+* Analytics dashboard
+* Mobile-first responsive design
+* Optimized performance
+* Progressive Web App support
+
+---
+
+## 📁 Project Structure
+
+```
+datingapp/
+├── home/
+├── template/
+├── static/
+├── datingapp/
+├── manage.py
+└── requirements.txt
+```
+
+---
+
+## 🛠 Recent Improvements
+
+* Redesigned mobile interface
+* Complete Events module
+* Voice Lounge stability improvements
+* Campus Spotlights
+* Analytics Dashboard
+* Feedback & Support System
+* Performance optimizations
+* SEO improvements
+* PWA enhancements
+* Improved caching
+* Cloudinary image optimization
+
+---
+
+## 📄 License
+
+This project is intended for educational, learning, and portfolio purposes.
+
