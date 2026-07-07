@@ -93,7 +93,7 @@ import base64
 import math
 from django.utils import timezone
 
-from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier, Conversation, RoomRequest, StaffMember, VoiceRoom, VoiceParticipant, BugReport, FeatureSuggestion, SupportTicket, TicketMessage, FeedbackNotification, Advertisement, CampusSpotlight, Event, Community, CommunityMessage
+from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier, Conversation, RoomRequest, StaffMember, VoiceRoom, VoiceParticipant, BugReport, FeatureSuggestion, SupportTicket, TicketMessage, FeedbackNotification, Advertisement, CampusSpotlight, Event, Community, CommunityMessage, CommunityReadStatus
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm, ProfileInitForm
 from .supabase_utils import delete_from_supabase_by_url
 from .cloudinary_utils import upload_to_cloudinary, upload_base64_to_cloudinary
@@ -330,7 +330,7 @@ def home_hub(request):
         "is_admin": is_admin_check(user),
         "spark_reward_earned": _check_daily_login_reward(user),
         "daily_sparks_used": DailySpark.objects.filter(sender=user, date=timezone.now().date()).count(),
-        "total_sparks_received": Spark.objects.filter(receiver=user).count(),
+        "total_sparks_received": getattr(user, 'profile', None).total_sparks if hasattr(user, 'profile') else 0,
         "today": today,
     })
 
@@ -1272,9 +1272,27 @@ def chat_list_view(request):
     for c in chats:
         c['spark_streak'] = _get_streak_for_pair(user, c['partner'])
 
+    # Calculate total unread community messages
+    communities = Community.objects.all()
+    total_community_unread = 0
+    read_statuses = {
+        s.community_id: s.last_read_at
+        for s in CommunityReadStatus.objects.filter(user=user)
+    }
+    for c in communities:
+        qs = CommunityMessage.objects.filter(community=c)
+        if c.chat_cleared_at:
+            qs = qs.filter(timestamp__gt=c.chat_cleared_at)
+        last_read = read_statuses.get(c.id)
+        if last_read:
+            total_community_unread += qs.filter(timestamp__gt=last_read).count()
+        else:
+            total_community_unread += qs.count()
+
     return render(request, 'chat_list.html', {
         'chats': chats,
         'today': timezone.localtime(timezone.now()).date(),
+        'total_community_unread': total_community_unread,
     })
 
 
@@ -1638,12 +1656,14 @@ def toggle_spark(request, user_id):
     spark_qs = Spark.objects.filter(sender=request.user, receiver=target_user)
     if spark_qs.exists():
         spark_qs.delete()
+        Profile.objects.filter(user=target_user, total_sparks__gt=0).update(total_sparks=F('total_sparks') - 1)
         action = 'removed'
     else:
         Spark.objects.create(sender=request.user, receiver=target_user)
+        Profile.objects.filter(user=target_user).update(total_sparks=F('total_sparks') + 1)
         action = 'added'
         
-    new_count = Spark.objects.filter(receiver=target_user).count()
+    new_count = Profile.objects.filter(user=target_user).values_list('total_sparks', flat=True).first() or 0
     return JsonResponse({'success': True, 'action': action, 'new_count': new_count})
 
 from .models import DailySpark, SparkStreak, DailyLoginReward
@@ -1730,6 +1750,8 @@ def api_send_daily_spark(request, user_id):
 def _check_daily_login_reward(user):
     today = timezone.now().date()
     reward, created = DailyLoginReward.objects.get_or_create(user=user, date=today)
+    if created:
+        Profile.objects.filter(user=user).update(total_sparks=F('total_sparks') + 1)
     return created
 
 def _profile_missing_fields(profile):
@@ -1931,7 +1953,7 @@ def edit_profile(request):
     form = ProfileEditForm(instance=profile)
     image_form = ProfileImageForm()
     gallery = profile.images.all()
-    spark_count = Spark.objects.filter(receiver=request.user).count()
+    spark_count = profile.total_sparks
 
     # Derive default college from profile campus, fallback to session preference
     from .campus_config import get_campus_by_alias
@@ -5309,8 +5331,20 @@ def _seed_communities():
 def community_list(request):
     _seed_communities()
     communities = Community.objects.all()
+    read_statuses = {
+        s.community_id: s.last_read_at
+        for s in CommunityReadStatus.objects.filter(user=request.user)
+    }
     for c in communities:
         c.member_count = CommunityMessage.objects.filter(community=c).values('sender').distinct().count()
+        qs = CommunityMessage.objects.filter(community=c)
+        if c.chat_cleared_at:
+            qs = qs.filter(timestamp__gt=c.chat_cleared_at)
+        last_read = read_statuses.get(c.id)
+        if last_read:
+            c.unread_count = qs.filter(timestamp__gt=last_read).count()
+        else:
+            c.unread_count = qs.count()
     return render(request, 'community_list.html', {
         'communities': communities,
         'is_admin': is_staff_check(request.user),
@@ -5321,9 +5355,23 @@ def community_list(request):
 def community_list_api(request):
     _seed_communities()
     communities = Community.objects.all()
+    read_statuses = {
+        s.community_id: s.last_read_at
+        for s in CommunityReadStatus.objects.filter(user=request.user)
+    }
     data = []
+    total_unread = 0
     for c in communities:
         member_count = CommunityMessage.objects.filter(community=c).values('sender').distinct().count()
+        qs = CommunityMessage.objects.filter(community=c)
+        if c.chat_cleared_at:
+            qs = qs.filter(timestamp__gt=c.chat_cleared_at)
+        last_read = read_statuses.get(c.id)
+        if last_read:
+            unread = qs.filter(timestamp__gt=last_read).count()
+        else:
+            unread = qs.count()
+        total_unread += unread
         data.append({
             'slug': c.slug,
             'name': c.name,
@@ -5331,8 +5379,9 @@ def community_list_api(request):
             'image_url': c.get_image_url,
             'member_count': member_count,
             'is_anonymous': c.is_anonymous,
+            'unread_count': unread,
         })
-    return JsonResponse({'communities': data})
+    return JsonResponse({'communities': data, 'total_unread': total_unread})
 
 
 @login_required
@@ -5377,6 +5426,12 @@ def community_chat(request, slug):
             reply_to=reply_to,
         )
 
+        CommunityReadStatus.objects.update_or_create(
+            user=request.user,
+            community=community,
+            defaults={'last_read_at': timezone.now()}
+        )
+
         if request.content_type == 'application/json':
             return JsonResponse({
                 'success': True,
@@ -5396,6 +5451,13 @@ def community_chat(request, slug):
                 }
             })
         return redirect('community_chat', slug=slug)
+
+    # Mark as read when user opens chat
+    CommunityReadStatus.objects.update_or_create(
+        user=request.user,
+        community=community,
+        defaults={'last_read_at': timezone.now()}
+    )
 
     chat_messages = CommunityMessage.objects.filter(community=community).select_related('sender', 'sender__profile', 'reply_to', 'reply_to__sender', 'reply_to__sender__profile').order_by('timestamp')
 
@@ -5446,6 +5508,13 @@ def community_messages_api(request, slug):
                 'sender_name': msg.reply_to.sender_name if msg.reply_to else '',
             } if msg.reply_to else None,
         })
+
+    if messages_data:
+        CommunityReadStatus.objects.update_or_create(
+            user=request.user,
+            community=community,
+            defaults={'last_read_at': timezone.now()}
+        )
 
     return JsonResponse({'messages': messages_data, 'all_ids': all_ids})
 

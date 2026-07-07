@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from django.utils import timezone
 from django.contrib.auth.models import User
 from .campus_config import get_campus_by_alias
 
@@ -1021,3 +1022,15 @@ class CommunityMessage(models.Model):
         if hasattr(self.sender, 'profile'):
             return self.sender.profile.get_profile_pic_url
         return f"https://ui-avatars.com/api/?name={self.sender.username}&background=6366f1&color=fff&size=128"
+
+
+class CommunityReadStatus(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_read_statuses')
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='read_statuses')
+    last_read_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        unique_together = ('user', 'community')
+
+    def __str__(self):
+        return f"{self.user.username} read {self.community.name} at {self.last_read_at}"

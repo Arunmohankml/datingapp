@@ -133,6 +133,25 @@
         transform: scale(0.97);
     }
 
+    .tab-unread-badge {
+        background: #ef4444;
+        color: white;
+        min-width: 20px;
+        height: 20px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        font-weight: 800;
+        padding: 0 6px;
+        margin-left: 4px;
+        vertical-align: middle;
+    }
+    .tab-btn.active .tab-unread-badge {
+        background: rgba(255,255,255,0.25);
+    }
+
     .feed-list {
         display: flex;
         flex-direction: column;
@@ -377,7 +396,7 @@
     <div class="feed-body">
         <div class="tab-switcher">
             <button class="tab-btn active" onclick="switchTab('chats')">Chats</button>
-            <button class="tab-btn" onclick="switchTab('communities')">Communities</button>
+            <button class="tab-btn" onclick="switchTab('communities')" id="communitiesTabBtn">Communities{% if total_community_unread > 0 %} <span class="tab-unread-badge">{{ total_community_unread }}</span>{% endif %}</button>
         </div>
 
         <div id="tab-chats" class="tab-content active">
@@ -492,7 +511,6 @@ function switchTab(tab) {
 
 async function loadCommunities() {
     const container = document.getElementById('communityFeedList');
-    if (container.dataset.loaded === 'true') return;
     try {
         const res = await fetch('/api/communities/list/');
         const data = await res.json();
@@ -508,13 +526,19 @@ async function loadCommunities() {
                 } else {
                     avatarHtml = `<img src="${c.image_url}" alt="${c.name}" class="chat-avatar" loading="lazy" decoding="async" width="56" height="56">`;
                 }
-                card.innerHTML = `${avatarHtml}<div class="chat-details"><div class="chat-info-row"><div class="chat-name">${c.name}</div><span class="chat-time">${c.member_count} members</span></div><div class="chat-snippet-row"><div class="chat-snippet">${c.description}</div></div></div><span class="material-symbols-outlined" style="font-size:20px; color:#94a3b8;">chevron_right</span>`;
+                const unreadBadge = c.unread_count > 0 ? `<div class="unread-badge" style="margin-left:8px;">${c.unread_count > 99 ? '99+' : c.unread_count}</div>` : '';
+                card.innerHTML = `${avatarHtml}<div class="chat-details"><div class="chat-info-row"><div class="chat-name">${c.name}</div><span class="chat-time">${c.member_count} members</span></div><div class="chat-snippet-row"><div class="chat-snippet">${c.description}</div>${unreadBadge}</div></div><span class="material-symbols-outlined" style="font-size:20px; color:#94a3b8;">chevron_right</span>`;
                 container.appendChild(card);
             });
+            if (data.total_unread > 0) {
+                const tabBtn = document.getElementById('communitiesTabBtn');
+                if (tabBtn) {
+                    tabBtn.innerHTML = `Communities <span class="tab-unread-badge">${data.total_unread > 99 ? '99+' : data.total_unread}</span>`;
+                }
+            }
         } else {
             container.innerHTML = '<div class="empty-state"><span class="material-symbols-outlined" style="font-size:48px; color:var(--primary); display:block; margin-bottom:12px;">groups</span><strong style="display:block; color:#151b27; font-size:18px;">No Communities</strong><p style="color:#6b7a90; margin-top:8px; font-size:14px;">No communities available yet.</p></div>';
         }
-        container.dataset.loaded = 'true';
     } catch (e) {
         container.innerHTML = '<div class="empty-state"><p>Failed to load communities.</p></div>';
     }
