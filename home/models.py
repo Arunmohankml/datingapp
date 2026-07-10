@@ -64,6 +64,7 @@ class Profile(models.Model):
     is_banned = models.BooleanField(default=False)
     is_discoverable = models.BooleanField(default=False)
     total_sparks = models.PositiveIntegerField(default=0)
+    quiz_completed = models.BooleanField(default=False)
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
