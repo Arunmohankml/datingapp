@@ -8,6 +8,17 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'datingapp.settings')
 # Get the WSGI application first
 application = get_wsgi_application()
 
+# Vercel can serve a new deployment before the database schema has caught up.
+# Run pending migrations during cold start so new-user inserts do not fail on
+# recently added Profile fields.
+if os.environ.get('VERCEL') and os.environ.get('DATABASE_URL'):
+    try:
+        from django.core.management import call_command
+        call_command('migrate', interactive=False, verbosity=1)
+    except Exception as exc:
+        print(f"Vercel startup migration failed: {exc}")
+        raise
+
 # Configure WhiteNoise to serve static files from the source static/ directory
 # (which is tracked in git and deployed to Vercel) rather than from STATIC_ROOT
 # (staticfiles/ which is not deployed to Vercel)
