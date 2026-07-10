@@ -11,7 +11,11 @@ application = get_wsgi_application()
 # Vercel can serve a new deployment before the database schema has caught up.
 # Run pending migrations during cold start so new-user inserts do not fail on
 # recently added Profile fields.
-if os.environ.get('VERCEL') and os.environ.get('DATABASE_URL'):
+if (
+    os.environ.get('VERCEL')
+    and os.environ.get('DATABASE_URL')
+    and os.environ.get('RUN_MIGRATIONS_ON_STARTUP', '').lower() == 'true'
+):
     try:
         from django.core.management import call_command
         call_command('migrate', interactive=False, verbosity=1)

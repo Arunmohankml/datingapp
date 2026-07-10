@@ -113,13 +113,35 @@ def _run_vercel_migrations_once():
     call_command('migrate', interactive=False, verbosity=1)
 
 
+def _looks_like_schema_error(exc):
+    msg = str(exc).lower()
+    schema_markers = (
+        'column',
+        'relation',
+        'table',
+        'does not exist',
+        'no such',
+        'undefined',
+    )
+    connection_markers = (
+        'max clients',
+        'too many clients',
+        'connection',
+        'timeout',
+        'pool',
+    )
+    return any(marker in msg for marker in schema_markers) and not any(
+        marker in msg for marker in connection_markers
+    )
+
+
 @login_required
 def complete_profile(request):
     user = request.user
     try:
         profile, created = Profile.objects.get_or_create(user=user, defaults={'name': '', 'gender': ''})
     except Exception as e:
-        if os.environ.get('VERCEL'):
+        if os.environ.get('VERCEL') and _looks_like_schema_error(e):
             safe_print(f"complete_profile profile create failed, retrying after migrations: {e}")
             _run_vercel_migrations_once()
             profile, created = Profile.objects.get_or_create(user=user, defaults={'name': '', 'gender': ''})

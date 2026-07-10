@@ -133,14 +133,15 @@ WSGI_APPLICATION = 'datingapp.wsgi.application'
 # Database Configuration
 # We prioritize Supabase/Postgres if DATABASE_URL is provided
 if os.environ.get('DATABASE_URL'):
+    is_vercel = bool(os.environ.get('VERCEL'))
     DATABASES = {
         'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL'),
-            conn_max_age=60,
+            conn_max_age=0 if is_vercel else 60,
             ssl_require=True
         )
     }
-    DATABASES['default']['CONN_HEALTH_CHECKS'] = True
+    DATABASES['default']['CONN_HEALTH_CHECKS'] = not is_vercel
 else:
     # Fallback to SQLite for local development if no DB URL is set
     DATABASES = {
