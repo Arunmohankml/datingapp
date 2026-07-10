@@ -1431,11 +1431,299 @@
     .voice-participant-avatar.speaking {
         box-shadow: 0 0 0 3px #22c55e, 0 0 12px rgba(34, 197, 94, 0.35);
     }
+
+    /* ── Question of the Day ── */
+    .qotd-widget {
+        background: rgba(255,255,255,0.84);
+        border: 1px solid rgba(0,74,198,0.08);
+        border-radius: 20px;
+        margin: 0 16px 12px;
+        box-shadow: 0 8px 20px rgba(15,23,42,0.06);
+        overflow: hidden;
+        transition: box-shadow 0.3s ease;
+    }
+    .qotd-widget.expanded {
+        box-shadow: 0 12px 32px rgba(15,23,42,0.1);
+    }
+    .qotd-trigger {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 18px;
+        cursor: pointer;
+        user-select: none;
+        gap: 12px;
+        transition: background 0.2s;
+    }
+    .qotd-trigger:active { background: rgba(0,0,0,0.02); }
+    .qotd-trigger-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        flex: 1;
+    }
+    .qotd-icon {
+        font-size: 22px;
+        color: var(--primary, #004ac6);
+        flex-shrink: 0;
+    }
+    .qotd-trigger-text {
+        font-size: 14px;
+        font-weight: 700;
+        color: #151b27;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .qotd-chevron {
+        font-size: 20px;
+        color: #94a3b8;
+        transition: transform 0.3s ease;
+        flex-shrink: 0;
+    }
+    .qotd-widget.expanded .qotd-chevron {
+        transform: rotate(180deg);
+    }
+    .qotd-body {
+        display: none;
+        padding: 0 18px 18px;
+        border-top: 1px solid rgba(0,74,198,0.06);
+        padding-top: 14px;
+    }
+    .qotd-widget.expanded .qotd-body {
+        display: block;
+    }
+    .qotd-questioner {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 10px;
+        font-size: 12px;
+        color: #6b7a90;
+        font-weight: 600;
+    }
+    .qotd-questioner img {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .qotd-questioner .qotd-q-avatar {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #004ac6, #3f7dff);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+    .qotd-questioner a {
+        color: #151b27;
+        text-decoration: none;
+        font-weight: 700;
+    }
+    .qotd-questioner a:hover {
+        text-decoration: underline;
+    }
+    .qotd-question-text {
+        font-size: 16px;
+        font-weight: 700;
+        color: #151b27;
+        line-height: 1.4;
+        margin-bottom: 14px;
+    }
+    .qotd-options {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .qotd-option {
+        position: relative;
+        background: #f7f9fb;
+        border: 1.5px solid #e8edf4;
+        border-radius: 14px;
+        padding: 12px 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        overflow: hidden;
+    }
+    .qotd-option:active {
+        transform: scale(0.98);
+    }
+    .qotd-option:hover {
+        border-color: var(--primary, #004ac6);
+        background: #f0f4ff;
+    }
+    .qotd-option.voted {
+        border-color: var(--primary, #004ac6);
+        background: #eef3ff;
+        cursor: default;
+    }
+    .qotd-option-bar {
+        position: absolute;
+        inset: 0;
+        height: 100%;
+        background: rgba(0,74,198,0.08);
+        border-radius: 14px;
+        transition: width 0.6s ease;
+        width: 0;
+    }
+    .qotd-option.voted .qotd-option-bar {
+        background: rgba(0,74,198,0.12);
+    }
+    .qotd-option-content {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+    }
+    .qotd-option-text {
+        font-size: 14px;
+        font-weight: 600;
+        color: #151b27;
+    }
+    .qotd-option-result {
+        display: none;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--primary, #004ac6);
+        white-space: nowrap;
+    }
+    .qotd-option.show-result .qotd-option-result {
+        display: flex;
+    }
+    .qotd-total-votes {
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 600;
+        margin-top: 10px;
+        text-align: center;
+    }
+    .qotd-footer {
+        margin-top: 14px;
+    }
+    .qotd-suggest-btn {
+        background: none;
+        border: none;
+        color: #6b7a90;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 6px 0;
+        text-decoration: underline dotted;
+        font-family: inherit;
+    }
+    .qotd-suggest-btn:hover {
+        color: var(--primary, #004ac6);
+    }
+    .qotd-suggest-form {
+        display: none;
+        margin-top: 12px;
+        background: #f7f9fb;
+        border-radius: 14px;
+        padding: 14px;
+        border: 1px solid #e8edf4;
+    }
+    .qotd-suggest-form.show {
+        display: block;
+    }
+    .qotd-input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1.5px solid #e8edf4;
+        border-radius: 10px;
+        font-size: 13px;
+        font-family: inherit;
+        font-weight: 600;
+        color: #151b27;
+        background: #fff;
+        outline: none;
+        margin-bottom: 8px;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+    }
+    .qotd-input:focus {
+        border-color: var(--primary, #004ac6);
+    }
+    .qotd-add-opt, .qotd-submit-suggest {
+        padding: 8px 16px;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        font-family: inherit;
+        cursor: pointer;
+        border: none;
+        transition: all 0.2s;
+        margin-top: 4px;
+    }
+    .qotd-add-opt {
+        background: #eef3ff;
+        color: var(--primary, #004ac6);
+        margin-right: 8px;
+    }
+    .qotd-add-opt:active { transform: scale(0.97); }
+    .qotd-submit-suggest {
+        background: linear-gradient(135deg, #004ac6, #3f7dff);
+        color: #fff;
+    }
+    .qotd-submit-suggest:active { transform: scale(0.97); }
+    .qotd-suggest-msg {
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 8px;
+        color: #22c55e;
+    }
+    .qotd-suggest-msg.error {
+        color: #ef4444;
+    }
+    @media (min-width: 768px) {
+        .qotd-widget { margin: 0 10px 12px; }
+    }
 </style>
 {% endblock %}
 
 {% block body %}
 <section class="hub-shell">
+
+    {% if has_question_today %}
+    <div class="qotd-widget" id="qotdWidget">
+        <div class="qotd-trigger" onclick="toggleQotd()">
+            <div class="qotd-trigger-left">
+                <span class="material-symbols-outlined qotd-icon">poll</span>
+                <span class="qotd-trigger-text" id="qotdTriggerText">Loading question...</span>
+            </div>
+            <span class="material-symbols-outlined qotd-chevron" id="qotdChevron">expand_more</span>
+        </div>
+        <div class="qotd-body" id="qotdBody">
+            <div class="qotd-questioner" id="qotdQuestioner"></div>
+            <div class="qotd-question-text" id="qotdQuestionText"></div>
+            <div class="qotd-options" id="qotdOptions"></div>
+            <div class="qotd-footer" id="qotdFooter">
+                <button class="qotd-suggest-btn" onclick="toggleSuggestForm()">Suggest tomorrow's question</button>
+                <div class="qotd-suggest-form" id="qotdSuggestForm">
+                    <input type="text" class="qotd-input" id="suggestQuestion" placeholder="Your question..." maxlength="200">
+                    <div id="suggestOptions">
+                        <input type="text" class="qotd-input" placeholder="Option 1" maxlength="100">
+                        <input type="text" class="qotd-input" placeholder="Option 2" maxlength="100">
+                    </div>
+                    <button class="qotd-add-opt" onclick="addSuggestOption()">+ Add option</button>
+                    <button class="qotd-submit-suggest" onclick="submitSuggestion()">Submit for review</button>
+                    <div class="qotd-suggest-msg" id="qotdSuggestMsg"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="hub-topbar">
         <div>
             <h1 class="hub-title">Welcome back to KnotSpot</h1>
@@ -2594,5 +2882,171 @@ document.getElementById('spotlightForm').addEventListener('submit', function(e) 
     });
 
 })();
+
+/* ── Question of the Day ── */
+var csrfToken = (document.querySelector('[name=csrfmiddlewaretoken]') || {}).value || '';
+var qotdExpanded = false;
+var qotdData = null;
+
+function toggleQotd() {
+    qotdExpanded = !qotdExpanded;
+    document.getElementById('qotdWidget').classList.toggle('expanded', qotdExpanded);
+    if (qotdExpanded && !qotdData) {
+        loadQotd();
+    }
+}
+
+function loadQotd() {
+    fetch('/api/question-of-the-day/')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.success) return;
+            qotdData = data.question;
+            renderQotd();
+        })
+        .catch(function(e) { console.error('QOTD load failed:', e); });
+}
+
+function renderQotd() {
+    var q = qotdData;
+    document.getElementById('qotdTriggerText').textContent = q.text;
+    var qer = document.getElementById('qotdQuestioner');
+    var qerHtml = '';
+    if (q.questioner.type === 'knotspot') {
+        qerHtml = '<div class="qotd-q-avatar">K</div><span>KnotSpot</span>';
+    } else {
+        qerHtml = '<a href="/profile/' + q.questioner.id + '/"><img src="' + q.questioner.avatar + '" alt="" onerror="this.src=\'https://ui-avatars.com/api/?name=' + encodeURIComponent(q.questioner.name) + '&background=6366f1&color=fff&size=64\'"> ' + q.questioner.name + '</a>';
+    }
+    qer.innerHTML = qerHtml;
+    document.getElementById('qotdQuestionText').textContent = q.text;
+
+    var optsEl = document.getElementById('qotdOptions');
+    optsEl.innerHTML = '';
+    q.options.forEach(function(opt) {
+        var div = document.createElement('div');
+        div.className = 'qotd-option' + (q.user_vote ? ' voted' : '') + (q.user_vote === opt.id ? ' voted' : '');
+        div.dataset.optId = opt.id;
+        var bar = '<div class="qotd-option-bar" style="width:' + (q.user_vote ? opt.percentage + '%' : '0') + '"></div>';
+        var result = '<span class="qotd-option-result">' + opt.vote_count + ' (' + opt.percentage + '%)</span>';
+        div.innerHTML = bar + '<div class="qotd-option-content"><span class="qotd-option-text">' + opt.text + '</span>' + result + '</div>';
+        if (!q.user_vote) {
+            div.addEventListener('click', function() { voteQotd(opt.id); });
+        }
+        if (q.user_vote) {
+            div.classList.add('show-result');
+        }
+        optsEl.appendChild(div);
+    });
+
+    var footer = document.getElementById('qotdFooter');
+    var totalEl = document.createElement('div');
+    totalEl.className = 'qotd-total-votes';
+    totalEl.textContent = q.total_votes + ' votes';
+    footer.insertBefore(totalEl, footer.firstChild);
+}
+
+function voteQotd(optionId) {
+    fetch('/api/question-of-the-day/vote/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({ option_id: optionId })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            var optsEl = document.getElementById('qotdOptions');
+            var options = optsEl.querySelectorAll('.qotd-option');
+            options.forEach(function(el) {
+                el.classList.add('voted', 'show-result');
+                el.style.cursor = 'default';
+                el.replaceWith(el.cloneNode(true));
+            });
+            data.options.forEach(function(opt) {
+                var bar = optsEl.querySelector('.qotd-option[data-opt-id="' + opt.id + '"] .qotd-option-bar');
+                if (bar) bar.style.width = opt.percentage + '%';
+                var result = optsEl.querySelector('.qotd-option[data-opt-id="' + opt.id + '"] .qotd-option-result');
+                if (result) result.textContent = opt.vote_count + ' (' + opt.percentage + '%)';
+            });
+            var totalEl = document.getElementById('qotdFooter').querySelector('.qotd-total-votes');
+            if (totalEl) totalEl.textContent = data.total_votes + ' votes';
+        } else {
+            if (window.showGlobalToast) window.showGlobalToast(data.error || 'Vote failed');
+        }
+    })
+    .catch(function(e) { console.error('Vote failed:', e); });
+}
+
+function toggleSuggestForm() {
+    document.getElementById('qotdSuggestForm').classList.toggle('show');
+}
+
+function addSuggestOption() {
+    var container = document.getElementById('suggestOptions');
+    var count = container.querySelectorAll('input').length + 1;
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'qotd-input';
+    input.placeholder = 'Option ' + count;
+    input.maxLength = 100;
+    container.appendChild(input);
+}
+
+function submitSuggestion() {
+    var question = document.getElementById('suggestQuestion').value.trim();
+    var inputs = document.getElementById('suggestOptions').querySelectorAll('input');
+    var options = [];
+    inputs.forEach(function(inp) {
+        var v = inp.value.trim();
+        if (v) options.push(v);
+    });
+    if (!question) { showSuggestMsg('Please enter a question', true); return; }
+    if (options.length < 2) { showSuggestMsg('At least 2 options required', true); return; }
+    var btn = document.querySelector('.qotd-submit-suggest');
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+    fetch('/api/question-of-the-day/suggest/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+        body: JSON.stringify({ question_text: question, options: options })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        btn.disabled = false;
+        btn.textContent = 'Submit for review';
+        if (data.success) {
+            showSuggestMsg(data.message, false);
+            document.getElementById('suggestQuestion').value = '';
+            document.getElementById('suggestOptions').innerHTML = '<input type="text" class="qotd-input" placeholder="Option 1" maxlength="100"><input type="text" class="qotd-input" placeholder="Option 2" maxlength="100">';
+        } else {
+            showSuggestMsg(data.error || 'Failed to submit', true);
+        }
+    })
+    .catch(function() {
+        btn.disabled = false;
+        btn.textContent = 'Submit for review';
+        showSuggestMsg('Network error', true);
+    });
+}
+
+function showSuggestMsg(msg, isError) {
+    var el = document.getElementById('qotdSuggestMsg');
+    el.textContent = msg;
+    el.className = 'qotd-suggest-msg' + (isError ? ' error' : '');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var triggerText = document.getElementById('qotdTriggerText');
+    if (triggerText) {
+        fetch('/api/question-of-the-day/')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    triggerText.textContent = data.question.text;
+                    qotdData = data.question;
+                }
+            })
+            .catch(function(e) {});
+    }
+});
 </script>
 {% endblock %}

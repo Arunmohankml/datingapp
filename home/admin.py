@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
-from .models import Profile, Question, Option, UserAnswer, RoomRequest, Conversation
+from django.utils.html import format_html
+from .models import Profile, Question, Option, UserAnswer, RoomRequest, Conversation, DailyQuestion, QuestionOption, QuestionVote, QuestionSuggestion
 
 
 # ✅ Inline options inside Question admin
@@ -72,4 +73,53 @@ class ConversationAdmin(admin.ModelAdmin):
     list_display = ('user1', 'user2', 'source', 'listing_id', 'request_id', 'created_at')
     list_filter = ('source',)
     search_fields = ('user1__username', 'user2__username')
+
+
+class QuestionOptionInline(admin.TabularInline):
+    model = QuestionOption
+    extra = 2
+
+
+@admin.register(DailyQuestion)
+class DailyQuestionAdmin(admin.ModelAdmin):
+    list_display = ('question_text', 'date', 'is_admin_question', 'created_by', 'vote_count')
+    list_filter = ('is_admin_question', 'date')
+    search_fields = ('question_text',)
+    inlines = [QuestionOptionInline]
+
+    def vote_count(self, obj):
+        return QuestionVote.objects.filter(option__question=obj).count()
+    vote_count.short_description = 'Votes'
+
+
+@admin.register(QuestionOption)
+class QuestionOptionAdmin(admin.ModelAdmin):
+    list_display = ('text', 'question', 'order', 'vote_count')
+    list_filter = ('question__date',)
+
+    def vote_count(self, obj):
+        return obj.votes.count()
+    vote_count.short_description = 'Votes'
+
+
+@admin.register(QuestionSuggestion)
+class QuestionSuggestionAdmin(admin.ModelAdmin):
+    list_display = ('question_text', 'suggested_by', 'status', 'created_at')
+    list_filter = ('status',)
+    search_fields = ('question_text', 'suggested_by__username')
+    actions = ['approve_suggestion', 'reject_suggestion']
+
+    def approve_suggestion(self, request, queryset):
+        queryset.update(status='approved')
+    approve_suggestion.short_description = 'Mark selected as Approved'
+
+    def reject_suggestion(self, request, queryset):
+        queryset.update(status='rejected')
+    reject_suggestion.short_description = 'Mark selected as Rejected'
+
+
+@admin.register(QuestionVote)
+class QuestionVoteAdmin(admin.ModelAdmin):
+    list_display = ('user', 'option', 'voted_at')
+    list_filter = ('option__question', 'voted_at')
 

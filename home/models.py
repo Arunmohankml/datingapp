@@ -1035,3 +1035,60 @@ class CommunityReadStatus(models.Model):
 
     def __str__(self):
         return f"{self.user.username} read {self.community.name} at {self.last_read_at}"
+
+
+class DailyQuestion(models.Model):
+    question_text = models.TextField()
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='created_questions')
+    is_admin_question = models.BooleanField(default=True)
+    date = models.DateField(unique=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return self.question_text[:60]
+
+
+class QuestionOption(models.Model):
+    question = models.ForeignKey(DailyQuestion, on_delete=models.CASCADE, related_name='options')
+    text = models.CharField(max_length=200)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.text
+
+
+class QuestionVote(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='question_votes')
+    option = models.ForeignKey(QuestionOption, on_delete=models.CASCADE, related_name='votes')
+    voted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'option')
+
+    def __str__(self):
+        return f"{self.user.username} voted {self.option.text[:20]}"
+
+
+class QuestionSuggestion(models.Model):
+    question_text = models.TextField()
+    options = models.JSONField(help_text='List of option strings')
+    suggested_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='question_suggestions')
+    status = models.CharField(
+        max_length=20,
+        choices=[('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')],
+        default='pending'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Suggestion by {self.suggested_by.username}: {self.question_text[:50]}"

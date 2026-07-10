@@ -93,7 +93,7 @@ import base64
 import math
 from django.utils import timezone
 
-from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier, Conversation, RoomRequest, StaffMember, VoiceRoom, VoiceParticipant, BugReport, FeatureSuggestion, SupportTicket, TicketMessage, FeedbackNotification, Advertisement, CampusSpotlight, Event, Community, CommunityMessage, CommunityReadStatus
+from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier, Conversation, RoomRequest, StaffMember, VoiceRoom, VoiceParticipant, BugReport, FeatureSuggestion, SupportTicket, TicketMessage, FeedbackNotification, Advertisement, CampusSpotlight, Event, Community, CommunityMessage, CommunityReadStatus, DailyQuestion, QuestionOption, QuestionVote, QuestionSuggestion
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm, ProfileInitForm
 from .supabase_utils import delete_from_supabase_by_url
 from .cloudinary_utils import upload_to_cloudinary, upload_base64_to_cloudinary
@@ -348,6 +348,7 @@ def home_hub(request):
         "daily_sparks_used": DailySpark.objects.filter(sender=user, date=timezone.now().date()).count(),
         "total_sparks_received": getattr(user, 'profile', None).total_sparks if hasattr(user, 'profile') else 0,
         "today": today,
+        "has_question_today": DailyQuestion.objects.filter(date=today, is_active=True).exists(),
     })
 
 
@@ -5614,3 +5615,118 @@ def community_upload_image(request, slug):
     community.save()
 
     return JsonResponse({'success': True, 'image_url': uploaded})
+
+
+@login_required
+def question_of_the_day_api(request):
+    today = timezone.now().date()
+    question = DailyQuestion.objects.filter(date=today, is_active=True).first()
+    if not question:
+        return JsonResponse({'success': False, 'error': 'No question today'})
+
+    options_data = []
+    user_vote = None
+    total_votes = QuestionVote.objects.filter(option__question=question).count()
+
+    for opt in question.options.all():
+        vote_count = opt.votes.count()
+        pct = round(vote_count / total_votes * 100, 1) if total_votes > 0 else 0
+        options_data.append({
+            'id': opt.id,
+            'text': opt.text,
+            'order': opt.order,
+            'vote_count': vote_count,
+            'percentage': pct,
+        })
+
+    existing_vote = QuestionVote.objects.filter(user=request.user, option__question=question).first()
+    if existing_vote:
+        user_vote = existing_vote.option_id
+
+    questioner = None
+    if question.is_admin_question or not question.created_by:
+        questioner = {'type': 'knotspot', 'name': 'KnotSpot'}
+    else:
+        p = getattr(question.created_by, 'profile', None)
+        questioner = {
+            'type': 'user',
+            'id': question.created_by.id,
+            'name': p.name if p else question.created_by.username,
+            'avatar': p.get_profile_pic_url if p else '',
+        }
+
+    return JsonResponse({
+        'success': True,
+        'question': {
+            'id': question.id,
+            'text': question.question_text,
+            'date': question.date.isoformat(),
+            'questioner': questioner,
+            'options': options_data,
+            'total_votes': total_votes,
+            'user_vote': user_vote,
+        }
+    })
+
+
+@login_required
+@require_POST
+def question_of_the_day_vote(request):
+    today = timezone.now().date()
+    question = DailyQuestion.objects.filter(date=today, is_active=True).first()
+    if not question:
+        return JsonResponse({'success': False, 'error': 'No question today'}, status=400)
+
+    try:
+        data = json.loads(request.body)
+        option_id = data.get('option_id')
+    except (json.JSONDecodeError, TypeError):
+        return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+
+    option = get_object_or_404(QuestionOption, id=option_id, question=question)
+
+    if QuestionVote.objects.filter(user=request.user, option__question=question).exists():
+        return JsonResponse({'success': False, 'error': 'Already voted'}, status=400)
+
+    QuestionVote.objects.create(user=request.user, option=option)
+
+    total_votes = QuestionVote.objects.filter(option__question=question).count()
+    options_data = []
+    for opt in question.options.all():
+        vote_count = opt.votes.count()
+        pct = round(vote_count / total_votes * 100, 1) if total_votes > 0 else 0
+        options_data.append({
+            'id': opt.id,
+            'text': opt.text,
+            'vote_count': vote_count,
+            'percentage': pct,
+        })
+
+    return JsonResponse({'success': True, 'total_votes': total_votes, 'options': options_data})
+
+
+@login_required
+@require_POST
+def question_of_the_day_suggest(request):
+    try:
+        data = json.loads(request.body)
+        question_text = data.get('question_text', '').strip()
+        options_list = data.get('options', [])
+    except (json.JSONDecodeError, TypeError):
+        return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+
+    if not question_text:
+        return JsonResponse({'success': False, 'error': 'Question is required'}, status=400)
+    if len(options_list) < 2:
+        return JsonResponse({'success': False, 'error': 'At least 2 options required'}, status=400)
+    if any(not o.strip() for o in options_list):
+        return JsonResponse({'success': False, 'error': 'All options must have text'}, status=400)
+
+    QuestionSuggestion.objects.create(
+        question_text=question_text,
+        options=[o.strip() for o in options_list],
+        suggested_by=request.user,
+        status='pending'
+    )
+
+    return JsonResponse({'success': True, 'message': 'Your question has been submitted for admin review!'})

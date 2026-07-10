@@ -134,4 +134,7 @@ urlpatterns = [
     path("api/community/<slug:slug>/clear-chat/", views.community_clear_chat, name="community_clear_chat"),
     path("api/community/<slug:slug>/messages/", views.community_messages_api, name="community_messages_api"),
     path("api/community/message/<int:message_id>/delete/", views.community_delete_message, name="community_delete_message"),
+    path("api/question-of-the-day/", views.question_of_the_day_api, name="question_of_the_day_api"),
+    path("api/question-of-the-day/vote/", views.question_of_the_day_vote, name="question_of_the_day_vote"),
+    path("api/question-of-the-day/suggest/", views.question_of_the_day_suggest, name="question_of_the_day_suggest"),
 ]
