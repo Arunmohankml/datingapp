@@ -110,7 +110,7 @@ def safe_print(msg):
 @login_required
 def complete_profile(request):
     user = request.user
-    profile, created = Profile.objects.get_or_create(user=user)
+    profile, created = Profile.objects.get_or_create(user=user, defaults={'name': '', 'gender': ''})
 
     if profile.name and profile.age and profile.gender and profile.campus and profile.native_place:
         if not profile.is_face_verified and not request.session.get('skipped_verification'):
@@ -218,7 +218,9 @@ def save_profile_progress(request):
 @login_required
 def verify(request):
     user = request.user
-    profile = get_object_or_404(Profile, user=user)
+    profile = getattr(user, 'profile', None)
+    if not profile:
+        return redirect('complete_profile')
 
     if profile.is_face_verified:
         return redirect('home')

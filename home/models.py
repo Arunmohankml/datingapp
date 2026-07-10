@@ -8,8 +8,8 @@ class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     # Basic Info
-    name = models.CharField(max_length=100)
-    gender = models.CharField(max_length=10, choices=[('male','Male'), ('female','Female'), ('other','Other')])
+    name = models.CharField(max_length=100, blank=True, default='')
+    gender = models.CharField(max_length=10, blank=True, default='', choices=[('male','Male'), ('female','Female'), ('other','Other')])
     profile_pic = models.URLField(max_length=500, blank=True, null=True)
     age = models.PositiveIntegerField(null=True, blank=True)
     clg_year = models.IntegerField(null=True, blank=True)
