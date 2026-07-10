@@ -9,9 +9,15 @@ def unread_messages_count(request):
         'admin_emails': getattr(settings, 'ADMIN_EMAILS', []),
     }
     if request.user.is_authenticated:
-        unread_count = Message.objects.filter(receiver=request.user, is_read=False).count()
-        pending_count = MatchRequest.objects.filter(receiver=request.user, status='pending').count()
-        fb_unread = SupportTicket.objects.filter(user=request.user, unread__gt=0).count()
+        try:
+            unread_count = Message.objects.filter(receiver=request.user, is_read=False).count()
+            pending_count = MatchRequest.objects.filter(receiver=request.user, status='pending').count()
+            fb_unread = SupportTicket.objects.filter(user=request.user, unread__gt=0).count()
+        except Exception as exc:
+            print(f"unread_messages_count context failed: {exc}")
+            unread_count = 0
+            pending_count = 0
+            fb_unread = 0
         return {
             **base_ctx,
             'global_unread_count': unread_count,

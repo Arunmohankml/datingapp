@@ -107,10 +107,24 @@ def safe_print(msg):
         print(str(msg).encode('ascii', 'ignore').decode('ascii'))
 
 
+def _run_vercel_migrations_once():
+    if not os.environ.get('VERCEL'):
+        return
+    call_command('migrate', interactive=False, verbosity=1)
+
+
 @login_required
 def complete_profile(request):
     user = request.user
-    profile, created = Profile.objects.get_or_create(user=user, defaults={'name': '', 'gender': ''})
+    try:
+        profile, created = Profile.objects.get_or_create(user=user, defaults={'name': '', 'gender': ''})
+    except Exception as e:
+        if os.environ.get('VERCEL'):
+            safe_print(f"complete_profile profile create failed, retrying after migrations: {e}")
+            _run_vercel_migrations_once()
+            profile, created = Profile.objects.get_or_create(user=user, defaults={'name': '', 'gender': ''})
+        else:
+            raise
 
     if profile.name and profile.age and profile.gender and profile.campus and profile.native_place:
         if not profile.is_face_verified and not request.session.get('skipped_verification'):
