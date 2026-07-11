@@ -288,6 +288,12 @@
                 {% endif %}
                 {% endwith %}
             </button>
+            <button class="admin-tab" data-tab="qotd" onclick="switchAdminTab('qotd', this)">
+                <i class="fas fa-question-circle"></i><span class="admin-tab-text">QOTD</span>
+                {% if pending_suggestions.count > 0 %}
+                <span class="tab-badge">{{ pending_suggestions.count }}</span>
+                {% endif %}
+            </button>
             {% if is_admin %}
             <button class="admin-tab" onclick="switchAdminTab('users', this)"><i class="fas fa-users"></i><span class="admin-tab-text">Users Directory</span></button>
             <button class="admin-tab" onclick="switchAdminTab('system', this)"><i class="fas fa-terminal"></i><span class="admin-tab-text">System</span></button>
@@ -334,6 +340,7 @@
                     <a href="{% url 'admin_spotlights' %}" class="btn btn-primary"><i class="fas fa-star"></i> Spotlights</a>
                     <a href="{% url 'admin_events' %}" class="btn btn-primary" style="position:relative;"><i class="fas fa-calendar-alt"></i> Events{% if pending_events_count %}<span style="position:absolute;top:-6px;right:-6px;background:#dc2626;color:#fff;font-size:10px;font-weight:800;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;box-shadow:0 2px 4px rgba(220,38,38,0.3);">{{ pending_events_count }}</span>{% endif %}</a>
                     <a href="{% url 'admin_giveaway_control' %}" class="btn btn-primary"><i class="fas fa-gift"></i> Giveaway Control</a>
+                    <a href="javascript:void(0)" class="btn btn-primary" onclick="switchAdminTab('qotd', null)"><i class="fas fa-question-circle"></i> Question of the Day</a>
                     {% if is_admin %}
                     <a href="{% url 'admin_manage_staff' %}" class="btn btn-outline"><i class="fas fa-users-cog"></i> Manage Staff</a>
                     <a href="{% url 'admin_manual_verification' %}" class="btn btn-success"><i class="fas fa-user-check"></i> Manual Verify Page</a>
@@ -657,6 +664,192 @@
                 </form>
             </div>
         </div>
+
+        <!-- ================= QOTD TAB ================= -->
+        <div id="tab-qotd" class="admin-panel">
+
+            <!-- Today's Question -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3><i class="fas fa-question-circle"></i> Today's Question</h3>
+                </div>
+                {% if today_question %}
+                <div class="list-group">
+                    <div class="list-item">
+                        <div class="item-header">
+                            <div>
+                                <div class="item-title">{{ today_question.question_text }}</div>
+                                <div class="item-meta">
+                                    {% if today_question.is_admin_question %}
+                                    Posted by KnotSpot
+                                    {% elif today_question.created_by %}
+                                    Suggested by {{ today_question.created_by.profile.name|default:today_question.created_by.username }}
+                                    {% endif %}
+                                    &middot; {{ today_question.date }} &middot;
+                                    <span style="color:{{ today_question.is_active|yesno:'#16a34a,#dc2626' }};">
+                                        {{ today_question.is_active|yesno:'Active,Inactive' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin:8px 0; display:flex; flex-wrap:wrap; gap:6px;">
+                            {% for opt in today_question.options.all %}
+                            <span style="background:#f1f5f9; padding:4px 12px; border-radius:8px; font-size:12px; font-weight:600; color:#334155;">
+                                {{ opt.text }} ({{ opt.votes.count }} votes)
+                            </span>
+                            {% endfor %}
+                        </div>
+                        <div class="action-row">
+                            <form action="{% url 'admin_action' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="qotd_toggle_active">
+                                <input type="hidden" name="target_id" value="{{ today_question.id }}">
+                                <button type="submit" class="btn btn-outline">
+                                    <i class="fas fa-{{ today_question.is_active|yesno:'pause,play' }}"></i>
+                                    {{ today_question.is_active|yesno:'Deactivate,Activate' }}
+                                </button>
+                            </form>
+                            <form action="{% url 'admin_action' %}" method="POST" onsubmit="return confirm('Delete today\'s question?')">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="qotd_delete_question">
+                                <input type="hidden" name="target_id" value="{{ today_question.id }}">
+                                <button type="submit" class="btn btn-danger"><i class="fas fa-trash"></i> Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="empty-state"><i class="fas fa-question-circle" style="color:#94a3b8;"></i><h3>No question for today</h3><p>Post one below or approve a user suggestion.</p></div>
+                {% endif %}
+            </div>
+
+            <!-- Post New Question -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3><i class="fas fa-plus-circle"></i> Post New Question</h3>
+                </div>
+                <form action="{% url 'admin_action' %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="qotd_post_question">
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <input type="text" name="question_text" placeholder="Question text..." required
+                               style="padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:12px; font-size:14px; font-family:inherit;">
+                        <label style="font-size:12px; font-weight:600; color:#64748b;">Date</label>
+                        <input type="date" name="date" value="{{ today|date:'Y-m-d' }}" required
+                               style="padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:12px; font-size:14px; font-family:inherit;">
+                        <label style="font-size:12px; font-weight:600; color:#64748b;">Options</label>
+                        <div id="qotdOptionsContainer">
+                            <input type="text" name="options[]" placeholder="Option 1" required
+                                   style="padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:12px; font-size:14px; font-family:inherit; margin-bottom:6px; width:100%; box-sizing:border-box;">
+                            <input type="text" name="options[]" placeholder="Option 2" required
+                                   style="padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:12px; font-size:14px; font-family:inherit; margin-bottom:6px; width:100%; box-sizing:border-box;">
+                        </div>
+                        <button type="button" class="btn btn-outline" onclick="addQotdOption()" style="align-self:flex-start;">
+                            <i class="fas fa-plus"></i> Add option
+                        </button>
+                        <button type="submit" class="btn btn-success" style="align-self:flex-start;">
+                            <i class="fas fa-paper-plane"></i> Post Question
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Pending User Suggestions -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3><i class="fas fa-lightbulb"></i> User Suggestions ({{ pending_suggestions.count }})</h3>
+                </div>
+                {% if pending_suggestions %}
+                <div class="list-group">
+                    {% for s in pending_suggestions %}
+                    <div class="list-item">
+                        <div class="item-header">
+                            <div>
+                                <div class="item-title">{{ s.question_text }}</div>
+                                <div class="item-meta">
+                                    by <a href="{% url 'admin_view_user' s.suggested_by.id %}" style="color:var(--primary); text-decoration:none;">
+                                        {{ s.suggested_by.profile.name|default:s.suggested_by.username }}
+                                    </a>
+                                    &middot; {{ s.created_at|date:"M d, Y h:i A" }}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="margin:6px 0; display:flex; flex-wrap:wrap; gap:4px;">
+                            {% for opt_text in s.options %}
+                            <span style="background:#f1f5f9; padding:3px 10px; border-radius:6px; font-size:11px; font-weight:600; color:#475569;">{{ opt_text }}</span>
+                            {% endfor %}
+                        </div>
+                        <div class="action-row">
+                            <form action="{% url 'admin_action' %}" method="POST" style="flex:1;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="qotd_approve_suggestion">
+                                <input type="hidden" name="target_id" value="{{ s.id }}">
+                                <button type="submit" class="btn btn-success" style="width:100%; justify-content:center;">
+                                    <i class="fas fa-check"></i> Approve & Post
+                                </button>
+                            </form>
+                            <form action="{% url 'admin_action' %}" method="POST" style="flex:1;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="qotd_reject_suggestion">
+                                <input type="hidden" name="target_id" value="{{ s.id }}">
+                                <button type="submit" class="btn btn-outline" style="width:100%; justify-content:center; border-color:#fca5a5; color:#dc2626;">
+                                    <i class="fas fa-times"></i> Reject
+                                </button>
+                            </form>
+                            <form action="{% url 'admin_action' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="qotd_delete_suggestion">
+                                <input type="hidden" name="target_id" value="{{ s.id }}">
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this suggestion?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state"><i class="fas fa-lightbulb" style="color:#16a34a;"></i><h3>No pending suggestions</h3></div>
+                {% endif %}
+            </div>
+
+            <!-- Question History -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3><i class="fas fa-history"></i> Recent Questions</h3>
+                </div>
+                {% if question_history %}
+                <div class="list-group">
+                    {% for q in question_history %}
+                    <div class="list-item">
+                        <div class="item-header">
+                            <div>
+                                <div class="item-title">{{ q.question_text }}</div>
+                                <div class="item-meta">{{ q.date }} &middot;
+                                    {% if q.is_admin_question %}KnotSpot{% elif q.created_by %}{{ q.created_by.profile.name|default:q.created_by.username }}{% endif %}
+                                    &middot; <span style="color:{{ q.is_active|yesno:'#16a34a,#94a3b8' }};">{{ q.is_active|yesno:'Active,Inactive' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="action-row">
+                            <form action="{% url 'admin_action' %}" method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="qotd_delete_question">
+                                <input type="hidden" name="target_id" value="{{ q.id }}">
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this question and all its votes?')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state"><i class="fas fa-history" style="color:#94a3b8;"></i><h3>No questions yet</h3></div>
+                {% endif %}
+            </div>
+
+        </div>
         {% endif %}
 
     </div>
@@ -704,6 +897,9 @@ function switchAdminTab(tabId, tabBtn) {
         tabBtn.classList.add('active');
     } else if (typeof event !== 'undefined' && event.currentTarget) {
         event.currentTarget.classList.add('active');
+    } else {
+        const btn = document.querySelector('.admin-tab[data-tab="' + tabId + '"]');
+        if (btn) btn.classList.add('active');
     }
     document.getElementById('tab-' + tabId).classList.add('active');
 }
@@ -769,6 +965,20 @@ function confirmAdminAction(action, targetId, title, desc) {
 
 function closeAdminConfirm() {
     document.getElementById('admin-confirm-overlay').style.display = 'none';
+}
+
+// ── QOTD: Add dynamic option input ──
+let qotdOptionCount = 2;
+function addQotdOption() {
+    qotdOptionCount++;
+    const container = document.getElementById('qotdOptionsContainer');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'options[]';
+    input.placeholder = 'Option ' + qotdOptionCount;
+    input.required = true;
+    input.style.cssText = 'padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:12px; font-size:14px; font-family:inherit; margin-bottom:6px; width:100%; box-sizing:border-box;';
+    container.appendChild(input);
 }
 
 async function confirmClearWall() {

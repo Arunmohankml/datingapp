@@ -17,10 +17,16 @@
 
     .hub-topbar {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
-        gap: 16px;
+        gap: 12px;
         padding: 8px 2px 4px;
+    }
+
+    .hub-topbar .qotd-widget {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
     }
 
 
@@ -1434,16 +1440,18 @@
 
     /* ── Question of the Day ── */
     .qotd-widget {
-        background: rgba(255,255,255,0.84);
+        position: relative;
+        z-index: 100;
+        background: #ffffff;
         border: 1px solid rgba(0,74,198,0.08);
         border-radius: 20px;
-        margin: 0 16px 12px;
+        margin: 0;
         box-shadow: 0 8px 20px rgba(15,23,42,0.06);
-        overflow: hidden;
-        transition: box-shadow 0.3s ease;
+        transition: box-shadow 0.3s ease, border-radius 0.2s ease;
     }
     .qotd-widget.expanded {
-        box-shadow: 0 12px 32px rgba(15,23,42,0.1);
+        border-radius: 20px 20px 0 0;
+        box-shadow: none;
     }
     .qotd-trigger {
         display: flex;
@@ -1463,10 +1471,33 @@
         min-width: 0;
         flex: 1;
     }
-    .qotd-icon {
-        font-size: 22px;
-        color: var(--primary, #004ac6);
+    .qotd-trigger-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        overflow: hidden;
         flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e8edf4;
+    }
+    .qotd-trigger-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .qotd-trigger-k {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #004ac6, #3f7dff);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 800;
     }
     .qotd-trigger-text {
         font-size: 14px;
@@ -1486,49 +1517,30 @@
         transform: rotate(180deg);
     }
     .qotd-body {
-        display: none;
-        padding: 0 18px 18px;
-        border-top: 1px solid rgba(0,74,198,0.06);
-        padding-top: 14px;
+        position: absolute;
+        top: 100%;
+        left: -1px;
+        right: -1px;
+        z-index: 101;
+        background: #ffffff;
+        border: 1px solid rgba(0,74,198,0.08);
+        border-top: none;
+        border-radius: 0 0 20px 20px;
+        padding: 14px 18px 18px;
+        box-shadow: 0 16px 38px rgba(15,23,42,0.14);
+        transform-origin: top center;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: scaleY(0.9) translateY(-4px);
+        transition: opacity 0.26s ease, transform 0.26s ease, visibility 0s linear 0.26s;
     }
     .qotd-widget.expanded .qotd-body {
-        display: block;
-    }
-    .qotd-questioner {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 10px;
-        font-size: 12px;
-        color: #6b7a90;
-        font-weight: 600;
-    }
-    .qotd-questioner img {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        object-fit: cover;
-    }
-    .qotd-questioner .qotd-q-avatar {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #004ac6, #3f7dff);
-        color: #fff;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 11px;
-        font-weight: 800;
-        flex-shrink: 0;
-    }
-    .qotd-questioner a {
-        color: #151b27;
-        text-decoration: none;
-        font-weight: 700;
-    }
-    .qotd-questioner a:hover {
-        text-decoration: underline;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: scaleY(1) translateY(0);
+        transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1), transform 0.32s cubic-bezier(0.16, 1, 0.3, 1), visibility 0s linear 0s;
     }
     .qotd-question-text {
         font-size: 16px;
@@ -1625,17 +1637,6 @@
     .qotd-suggest-btn:hover {
         color: var(--primary, #004ac6);
     }
-    .qotd-suggest-form {
-        display: none;
-        margin-top: 12px;
-        background: #f7f9fb;
-        border-radius: 14px;
-        padding: 14px;
-        border: 1px solid #e8edf4;
-    }
-    .qotd-suggest-form.show {
-        display: block;
-    }
     .qotd-input {
         width: 100%;
         padding: 10px 12px;
@@ -1685,8 +1686,87 @@
     .qotd-suggest-msg.error {
         color: #ef4444;
     }
+
+    /* ── Suggest Modal ── */
+    .qotd-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,0.55);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .qotd-modal-overlay.show {
+        display: flex;
+        animation: qotdFade 0.25s ease;
+    }
+    @keyframes qotdFade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    .qotd-modal {
+        background: #fff;
+        border-radius: 24px;
+        padding: 28px 24px 22px;
+        width: 100%;
+        max-width: 420px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 30px 70px rgba(0,0,0,0.3);
+        position: relative;
+        animation: qotdPop 0.3s ease;
+    }
+    @keyframes qotdPop {
+        from { opacity: 0; transform: translateY(20px) scale(0.96); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .qotd-modal-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: #f1f5f9;
+        color: #64748b;
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
+    .qotd-modal-close:hover { background: #e2e8f0; }
+    .qotd-modal-title {
+        margin: 0 0 6px;
+        font-size: 19px;
+        font-weight: 800;
+        color: #151b27;
+        padding-right: 32px;
+    }
+    .qotd-modal-sub {
+        margin: 0 0 18px;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #64748b;
+    }
+    .qotd-modal .qotd-input {
+        margin-bottom: 10px;
+    }
+    .qotd-modal .qotd-submit-suggest {
+        width: 100%;
+        padding: 12px;
+        font-size: 14px;
+        margin-top: 8px;
+    }
     @media (min-width: 768px) {
-        .qotd-widget { margin: 0 10px 12px; }
+        .qotd-widget { margin: 0; }
     }
 </style>
 {% endblock %}
@@ -1694,41 +1774,25 @@
 {% block body %}
 <section class="hub-shell">
 
-    {% if has_question_today %}
-    <div class="qotd-widget" id="qotdWidget">
-        <div class="qotd-trigger" onclick="toggleQotd()">
-            <div class="qotd-trigger-left">
-                <span class="material-symbols-outlined qotd-icon">poll</span>
-                <span class="qotd-trigger-text" id="qotdTriggerText">Loading question...</span>
+    <div class="hub-topbar">
+        {% if has_question_today %}
+        <div class="qotd-widget" id="qotdWidget">
+            <div class="qotd-trigger" onclick="toggleQotd()">
+                <div class="qotd-trigger-left">
+                    <span class="qotd-trigger-avatar" id="qotdTriggerAvatar"></span>
+                    <span class="qotd-trigger-text" id="qotdTriggerText">Loading question...</span>
+                </div>
+                <span class="material-symbols-outlined qotd-chevron" id="qotdChevron">expand_more</span>
             </div>
-            <span class="material-symbols-outlined qotd-chevron" id="qotdChevron">expand_more</span>
-        </div>
-        <div class="qotd-body" id="qotdBody">
-            <div class="qotd-questioner" id="qotdQuestioner"></div>
-            <div class="qotd-question-text" id="qotdQuestionText"></div>
-            <div class="qotd-options" id="qotdOptions"></div>
-            <div class="qotd-footer" id="qotdFooter">
-                <button class="qotd-suggest-btn" onclick="toggleSuggestForm()">Suggest tomorrow's question</button>
-                <div class="qotd-suggest-form" id="qotdSuggestForm">
-                    <input type="text" class="qotd-input" id="suggestQuestion" placeholder="Your question..." maxlength="200">
-                    <div id="suggestOptions">
-                        <input type="text" class="qotd-input" placeholder="Option 1" maxlength="100">
-                        <input type="text" class="qotd-input" placeholder="Option 2" maxlength="100">
-                    </div>
-                    <button class="qotd-add-opt" onclick="addSuggestOption()">+ Add option</button>
-                    <button class="qotd-submit-suggest" onclick="submitSuggestion()">Submit for review</button>
-                    <div class="qotd-suggest-msg" id="qotdSuggestMsg"></div>
+            <div class="qotd-body" id="qotdBody">
+                <div class="qotd-question-text" id="qotdQuestionText"></div>
+                <div class="qotd-options" id="qotdOptions"></div>
+                <div class="qotd-footer" id="qotdFooter">
+                    <button class="qotd-suggest-btn" onclick="openSuggestModal()">Suggest tomorrow's question</button>
                 </div>
             </div>
         </div>
-    </div>
-    {% endif %}
-
-    <div class="hub-topbar">
-        <div>
-            <h1 class="hub-title">Welcome back to KnotSpot</h1>
-            <p class="hub-subtitle">Find friends, roommates, events, and your campus community — all in one place.</p>
-        </div>
+        {% endif %}
         <div class="hub-chip">
             <span class="material-symbols-outlined">groups</span>
            <span><span class="metric">{{ total_users|add:"273" }}</span> users</span>
@@ -1966,6 +2030,23 @@
     </div>
 
 </section>
+
+<!-- QOTD Suggest Modal -->
+<div class="qotd-modal-overlay" id="qotdSuggestOverlay">
+    <div class="qotd-modal">
+        <button class="qotd-modal-close" onclick="closeSuggestModal()" aria-label="Close">&times;</button>
+        <h3 class="qotd-modal-title">Suggest tomorrow's question</h3>
+        <p class="qotd-modal-sub">Got a fun question? Submit it for the community to vote on tomorrow.</p>
+        <input type="text" class="qotd-input qotd-modal-input" id="suggestQuestion" placeholder="Your question..." maxlength="200">
+        <div id="suggestOptions">
+            <input type="text" class="qotd-input qotd-modal-input" placeholder="Option 1" maxlength="100">
+            <input type="text" class="qotd-input qotd-modal-input" placeholder="Option 2" maxlength="100">
+        </div>
+        <button class="qotd-add-opt" onclick="addSuggestOption()">+ Add option</button>
+        <button class="qotd-submit-suggest" onclick="submitSuggestion()">Submit for review</button>
+        <div class="qotd-suggest-msg" id="qotdSuggestMsg"></div>
+    </div>
+</div>
 
 <div class="voice-panel-overlay" id="voicePanelOverlay">
     <div class="voice-panel" id="voicePanel">
@@ -2887,12 +2968,18 @@ document.getElementById('spotlightForm').addEventListener('submit', function(e) 
 var csrfToken = (document.querySelector('[name=csrfmiddlewaretoken]') || {}).value || '';
 var qotdExpanded = false;
 var qotdData = null;
+var qotdRendered = false;
 
 function toggleQotd() {
     qotdExpanded = !qotdExpanded;
     document.getElementById('qotdWidget').classList.toggle('expanded', qotdExpanded);
-    if (qotdExpanded && !qotdData) {
-        loadQotd();
+    if (qotdExpanded && !qotdRendered) {
+        if (qotdData) {
+            renderQotd();
+            qotdRendered = true;
+        } else {
+            loadQotd();
+        }
     }
 }
 
@@ -2903,6 +2990,7 @@ function loadQotd() {
             if (!data.success) return;
             qotdData = data.question;
             renderQotd();
+            qotdRendered = true;
         })
         .catch(function(e) { console.error('QOTD load failed:', e); });
 }
@@ -2910,33 +2998,41 @@ function loadQotd() {
 function renderQotd() {
     var q = qotdData;
     document.getElementById('qotdTriggerText').textContent = q.text;
-    var qer = document.getElementById('qotdQuestioner');
-    var qerHtml = '';
+
+    var avatarEl = document.getElementById('qotdTriggerAvatar');
     if (q.questioner.type === 'knotspot') {
-        qerHtml = '<div class="qotd-q-avatar">K</div><span>KnotSpot</span>';
+        avatarEl.innerHTML = '<div class="qotd-trigger-k">K</div>';
     } else {
-        qerHtml = '<a href="/profile/' + q.questioner.id + '/"><img src="' + q.questioner.avatar + '" alt="" onerror="this.src=\'https://ui-avatars.com/api/?name=' + encodeURIComponent(q.questioner.name) + '&background=6366f1&color=fff&size=64\'"> ' + q.questioner.name + '</a>';
+        avatarEl.innerHTML = '<img src="' + q.questioner.avatar + '" alt="" onerror="this.src=\'https://ui-avatars.com/api/?name=' + encodeURIComponent(q.questioner.name) + '&background=6366f1&color=fff&size=64\'">';
     }
-    qer.innerHTML = qerHtml;
+
     document.getElementById('qotdQuestionText').textContent = q.text;
 
     var optsEl = document.getElementById('qotdOptions');
     optsEl.innerHTML = '';
-    q.options.forEach(function(opt) {
-        var div = document.createElement('div');
-        div.className = 'qotd-option' + (q.user_vote ? ' voted' : '') + (q.user_vote === opt.id ? ' voted' : '');
-        div.dataset.optId = opt.id;
-        var bar = '<div class="qotd-option-bar" style="width:' + (q.user_vote ? opt.percentage + '%' : '0') + '"></div>';
-        var result = '<span class="qotd-option-result">' + opt.vote_count + ' (' + opt.percentage + '%)</span>';
-        div.innerHTML = bar + '<div class="qotd-option-content"><span class="qotd-option-text">' + opt.text + '</span>' + result + '</div>';
-        if (!q.user_vote) {
-            div.addEventListener('click', function() { voteQotd(opt.id); });
-        }
-        if (q.user_vote) {
-            div.classList.add('show-result');
-        }
-        optsEl.appendChild(div);
-    });
+    console.log('QOTD options:', q.options);
+    if (q.options && q.options.length > 0) {
+        q.options.forEach(function(opt) {
+            var div = document.createElement('div');
+            div.className = 'qotd-option';
+            if (q.user_vote) div.classList.add('voted');
+            if (q.user_vote === opt.id) div.classList.add('voted');
+            div.dataset.optId = opt.id;
+            var pct = q.user_vote ? opt.percentage : 0;
+            var bar = '<div class="qotd-option-bar" style="width:' + pct + '%"></div>';
+            var result = '<span class="qotd-option-result">' + opt.vote_count + ' (' + opt.percentage + '%)</span>';
+            div.innerHTML = bar + '<div class="qotd-option-content"><span class="qotd-option-text">' + opt.text + '</span>' + result + '</div>';
+            if (!q.user_vote) {
+                div.addEventListener('click', function() { voteQotd(opt.id); });
+            }
+            if (q.user_vote) {
+                div.classList.add('show-result');
+            }
+            optsEl.appendChild(div);
+        });
+    } else {
+        optsEl.innerHTML = '<div style="padding:12px; text-align:center; color:#94a3b8; font-size:13px;">No options available</div>';
+    }
 
     var footer = document.getElementById('qotdFooter');
     var totalEl = document.createElement('div');
@@ -2959,13 +3055,15 @@ function voteQotd(optionId) {
             options.forEach(function(el) {
                 el.classList.add('voted', 'show-result');
                 el.style.cursor = 'default';
-                el.replaceWith(el.cloneNode(true));
             });
             data.options.forEach(function(opt) {
-                var bar = optsEl.querySelector('.qotd-option[data-opt-id="' + opt.id + '"] .qotd-option-bar');
-                if (bar) bar.style.width = opt.percentage + '%';
-                var result = optsEl.querySelector('.qotd-option[data-opt-id="' + opt.id + '"] .qotd-option-result');
-                if (result) result.textContent = opt.vote_count + ' (' + opt.percentage + '%)';
+                var optEl = optsEl.querySelector('.qotd-option[data-opt-id="' + opt.id + '"]');
+                if (optEl) {
+                    var bar = optEl.querySelector('.qotd-option-bar');
+                    if (bar) bar.style.width = opt.percentage + '%';
+                    var result = optEl.querySelector('.qotd-option-result');
+                    if (result) result.textContent = opt.vote_count + ' (' + opt.percentage + '%)';
+                }
             });
             var totalEl = document.getElementById('qotdFooter').querySelector('.qotd-total-votes');
             if (totalEl) totalEl.textContent = data.total_votes + ' votes';
@@ -2976,8 +3074,18 @@ function voteQotd(optionId) {
     .catch(function(e) { console.error('Vote failed:', e); });
 }
 
-function toggleSuggestForm() {
-    document.getElementById('qotdSuggestForm').classList.toggle('show');
+function openSuggestModal() {
+    qotdExpanded = false;
+    document.getElementById('qotdWidget').classList.remove('expanded');
+    document.getElementById('qotdSuggestOverlay').classList.add('show');
+    setTimeout(function() {
+        var q = document.getElementById('suggestQuestion');
+        if (q) q.focus();
+    }, 150);
+}
+
+function closeSuggestModal() {
+    document.getElementById('qotdSuggestOverlay').classList.remove('show');
 }
 
 function addSuggestOption() {
@@ -2985,7 +3093,7 @@ function addSuggestOption() {
     var count = container.querySelectorAll('input').length + 1;
     var input = document.createElement('input');
     input.type = 'text';
-    input.className = 'qotd-input';
+    input.className = 'qotd-input qotd-modal-input';
     input.placeholder = 'Option ' + count;
     input.maxLength = 100;
     container.appendChild(input);
@@ -3016,7 +3124,8 @@ function submitSuggestion() {
         if (data.success) {
             showSuggestMsg(data.message, false);
             document.getElementById('suggestQuestion').value = '';
-            document.getElementById('suggestOptions').innerHTML = '<input type="text" class="qotd-input" placeholder="Option 1" maxlength="100"><input type="text" class="qotd-input" placeholder="Option 2" maxlength="100">';
+            document.getElementById('suggestOptions').innerHTML = '<input type="text" class="qotd-input qotd-modal-input" placeholder="Option 1" maxlength="100"><input type="text" class="qotd-input qotd-modal-input" placeholder="Option 2" maxlength="100">';
+            setTimeout(function() { closeSuggestModal(); }, 1600);
         } else {
             showSuggestMsg(data.error || 'Failed to submit', true);
         }
@@ -3043,10 +3152,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     triggerText.textContent = data.question.text;
                     qotdData = data.question;
+                    var avatarEl = document.getElementById('qotdTriggerAvatar');
+                    if (data.question.questioner.type === 'knotspot') {
+                        avatarEl.innerHTML = '<div class="qotd-trigger-k">K</div>';
+                    } else {
+                        avatarEl.innerHTML = '<img src="' + data.question.questioner.avatar + '" alt="" onerror="this.src=\'https://ui-avatars.com/api/?name=' + encodeURIComponent(data.question.questioner.name) + '&background=6366f1&color=fff&size=64\'">';
+                    }
                 }
             })
             .catch(function(e) {});
     }
+});
+
+/* QOTD Suggest Modal: backdrop click + ESC to close */
+document.addEventListener('DOMContentLoaded', function() {
+    var overlay = document.getElementById('qotdSuggestOverlay');
+    if (overlay) {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) closeSuggestModal();
+        });
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            var ov = document.getElementById('qotdSuggestOverlay');
+            if (ov && ov.classList.contains('show')) closeSuggestModal();
+        }
+    });
 });
 </script>
 {% endblock %}

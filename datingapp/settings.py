@@ -137,7 +137,7 @@ if os.environ.get('DATABASE_URL'):
     DATABASES = {
         'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL'),
-            conn_max_age=0 if is_vercel else 60,
+            conn_max_age=0,
             ssl_require=True
         )
     }

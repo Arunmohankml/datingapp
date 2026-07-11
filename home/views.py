@@ -3050,6 +3050,11 @@ def admin_dashboard(request):
 
     pending_events_count = Event.objects.filter(status='pending').count()
 
+    today = timezone.now().date()
+    today_question = DailyQuestion.objects.filter(date=today).first()
+    pending_suggestions = QuestionSuggestion.objects.filter(status='pending').select_related('suggested_by__profile').order_by('-created_at')
+    question_history = DailyQuestion.objects.all().select_related('created_by__profile').order_by('-date')[:20]
+
     return render(request, 'admin_dashboard.html', {
         'reported_confessions':  reported_confessions,
         'pending_confessions':   pending_confessions,
@@ -3058,6 +3063,10 @@ def admin_dashboard(request):
         'face_reviews':          face_reviews,
         'banned_identifiers':    banned_identifiers,
         'pending_events_count':  pending_events_count,
+        'today_question':        today_question,
+        'pending_suggestions':   pending_suggestions,
+        'question_history':      question_history,
+        'today':                 today,
         'is_admin':              is_admin,
         'is_staff':              True,
     })
@@ -3372,6 +3381,70 @@ def admin_action(request):
                             state.save()
                             messages.success(request, f"{winner_type.title()} winner selected: {selected.user.email}")
                             
+        elif action == 'qotd_post_question':
+            if not is_admin:
+                messages.error(request, "Only admins can post questions.")
+            else:
+                question_text = request.POST.get('question_text', '').strip()
+                date_str = request.POST.get('date', '').strip()
+                option_texts = request.POST.getlist('options[]')
+                if question_text and date_str and len(option_texts) >= 2:
+                    try:
+                        q_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        messages.error(request, "Invalid date format.")
+                    else:
+                        DailyQuestion.objects.filter(date=q_date).delete()
+                        q = DailyQuestion.objects.create(
+                            question_text=question_text,
+                            date=q_date,
+                            is_admin_question=True,
+                            created_by=request.user,
+                            is_active=True
+                        )
+                        for i, opt_text in enumerate(option_texts):
+                            opt_text = opt_text.strip()
+                            if opt_text:
+                                QuestionOption.objects.create(question=q, text=opt_text, order=i)
+                        messages.success(request, f"Question posted for {q_date}!")
+                else:
+                    messages.error(request, "Question text, date, and at least 2 options required.")
+
+        elif action == 'qotd_toggle_active':
+            q = get_object_or_404(DailyQuestion, id=target_id)
+            q.is_active = not q.is_active
+            q.save()
+            messages.success(request, f"Question {'activated' if q.is_active else 'deactivated'}.")
+
+        elif action == 'qotd_approve_suggestion':
+            suggestion = get_object_or_404(QuestionSuggestion, id=target_id)
+            suggestion.status = 'approved'
+            suggestion.save()
+            today = timezone.now().date()
+            DailyQuestion.objects.filter(date=today).delete()
+            q = DailyQuestion.objects.create(
+                question_text=suggestion.question_text,
+                date=today,
+                is_admin_question=False,
+                created_by=suggestion.suggested_by,
+                is_active=True
+            )
+            for i, opt_text in enumerate(suggestion.options):
+                QuestionOption.objects.create(question=q, text=opt_text.strip(), order=i)
+            messages.success(request, f"Suggestion approved and posted as today's question!")
+
+        elif action == 'qotd_reject_suggestion':
+            QuestionSuggestion.objects.filter(id=target_id).update(status='rejected')
+            messages.info(request, "Suggestion rejected.")
+
+        elif action == 'qotd_delete_suggestion':
+            QuestionSuggestion.objects.filter(id=target_id).delete()
+            messages.success(request, "Suggestion deleted.")
+
+        elif action == 'qotd_delete_question':
+            DailyQuestion.objects.filter(id=target_id).delete()
+            messages.success(request, "Question deleted.")
+
         elif action == 'giveaway_reset':
             from .models import GiveawayState, GiveawayWinner, GiveawayEntry
             if not is_admin:

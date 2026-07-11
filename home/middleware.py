@@ -1,6 +1,7 @@
 import traceback
 import sys
 import re
+import os
 from django.http import HttpResponseForbidden
 from django.utils.html import format_html
 
@@ -46,12 +47,56 @@ class ExceptionLoggingMiddleware:
             response = self.get_response(request)
             return response
         except Exception as e:
+            if self._should_retry_after_migrations(request, e):
+                print(f"Schema error on {request.path}; running migrations and retrying once: {e}")
+                try:
+                    from django.core.management import call_command
+                    from django.db import connections
+                    connections.close_all()
+                    call_command('migrate', interactive=False, verbosity=1)
+                    connections.close_all()
+                    request._schema_migration_retry = True
+                    return self.get_response(request)
+                except Exception as retry_error:
+                    print(f"Schema migration retry failed on {request.path}: {retry_error}")
+
             print("--- EXCEPTION LOG START ---")
             print(f"Path: {request.path}")
             print(f"Error: {str(e)}")
             traceback.print_exc()
             print("--- EXCEPTION LOG END ---")
             raise e
+
+    @staticmethod
+    def _should_retry_after_migrations(request, exc):
+        if not os.environ.get('VERCEL'):
+            return False
+        if getattr(request, '_schema_migration_retry', False):
+            return False
+        if request.method not in ('GET', 'HEAD'):
+            return False
+
+        msg = str(exc).lower()
+        schema_markers = (
+            'column',
+            'relation',
+            'table',
+            'does not exist',
+            'no such',
+            'undefinedtable',
+            'undefinedcolumn',
+        )
+        connection_markers = (
+            'max clients',
+            'too many clients',
+            'connection',
+            'timeout',
+            'pool',
+            'emaxconn',
+        )
+        return any(marker in msg for marker in schema_markers) and not any(
+            marker in msg for marker in connection_markers
+        )
 
 
 class BanMiddleware:
