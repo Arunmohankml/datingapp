@@ -394,17 +394,18 @@
             {% regroup chat_messages by sender.id as sender_groups %}
             {% for sender_group in sender_groups %}
                 {% with sender_messages=sender_group.list %}
-                    {% for msg in sender_messages %}
-                        {% ifchanged msg.timestamp|date:"Y-m-d" %}
-                        <div class="chat-date-divider" data-date="{{ msg.timestamp|date:'Y-m-d' }}">
+                    {% with first_msg=sender_messages.0 %}
+                        {% ifchanged first_msg.timestamp|date:"Y-m-d" %}
+                        <div class="chat-date-divider" data-date="{{ first_msg.timestamp|date:'Y-m-d' }}">
                             <div class="chat-date-pill">
-                                {% if msg.timestamp|date:"Y-m-d" == today|date:"Y-m-d" %}Today
-                                {% elif msg.timestamp|date:"Y-m-d" == yesterday|date:"Y-m-d" %}Yesterday
-                                {% else %}{{ msg.timestamp|date:"F j, Y" }}{% endif %}
+                                {% if first_msg.timestamp|date:"Y-m-d" == today|date:"Y-m-d" %}Today
+                                {% elif first_msg.timestamp|date:"Y-m-d" == yesterday|date:"Y-m-d" %}Yesterday
+                                {% else %}{{ first_msg.timestamp|date:"F j, Y" }}{% endif %}
                             </div>
                         </div>
                         {% endifchanged %}
-
+                    {% endwith %}
+                    {% for msg in sender_messages %}
                         {% if forloop.first %}
                         <div class="message-group {% if msg.sender == request.user %}sent{% else %}received{% endif %}{% if not forloop.parentloop.first %} sender-changed{% endif %}" data-sender="{{ msg.sender.id }}">
                             {% if msg.sender != request.user and not community.is_anonymous %}
@@ -495,6 +496,19 @@ document.querySelectorAll('.message[data-id]').forEach(el => {
     if (id) renderedIds.add(id);
     lastSenderInChat = el.dataset.sender;
 });
+
+function removeDuplicateDateDividers() {
+    const seenDates = new Set();
+    chatBox.querySelectorAll('.chat-date-divider[data-date]').forEach(divider => {
+        const date = divider.dataset.date;
+        if (seenDates.has(date)) {
+            divider.remove();
+            return;
+        }
+        seenDates.add(date);
+    });
+}
+removeDuplicateDateDividers();
 
 function scrollToBottom(smooth) {
     requestAnimationFrame(() => {
