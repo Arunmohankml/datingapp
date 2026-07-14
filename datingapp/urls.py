@@ -29,6 +29,7 @@ urlpatterns = [
     path('campuses/', seo_views.seo_campuses_view, name='seo_campuses'),
     path('student-matching/', seo_views.seo_student_matching_view, name='seo_student_matching'),
     path('college-roommate-finder/', seo_views.seo_roommate_finder_view, name='seo_roommate_finder'),
+    path('knots-campus-discussions/', seo_views.seo_knots_view, name='seo_knots'),
     path('anonymous-campus-confessions/', seo_views.seo_confessions_view, name='seo_confessions'),
     path('campus-events/', seo_views.seo_campus_events_view, name='seo_campus_events'),
     path('campus/<slug:slug>/', seo_views.seo_campus_view, name='seo_campus'),

@@ -42,7 +42,22 @@ def _feature_page_context(request, page_key):
         {"name": "Home", "url": seo_config.BASE_URL + "/"},
         {"name": page["h1"], "url": seo_config.BASE_URL + page["url_path"]},
     ]
-    ctx = _base_context(request, breadcrumbs, faq_page_key=page.get("page_key"))
+    web_page_schema = {
+        "@type": "WebPage",
+        "name": page["title"],
+        "headline": page["h1"],
+        "description": page["meta_description"],
+        "url": seo_config.BASE_URL + page["url_path"],
+        "isPartOf": {"@type": "WebSite", "name": "KnotSpot", "url": seo_config.BASE_URL + "/"},
+    }
+    if page_key == "knots":
+        web_page_schema["@type"] = ["WebPage", "CollectionPage"]
+        web_page_schema["about"] = {
+            "@type": "Thing",
+            "name": "Knots campus discussion threads",
+            "description": "Reddit-style public campus threads on KnotSpot for student questions, advice, and college discussions.",
+        }
+    ctx = _base_context(request, breadcrumbs, faq_page_key=page.get("page_key"), extra_schema=web_page_schema)
     ctx.update({
         "page": page,
         "internal_links": seo_config.INTERNAL_LINKS.get(page_key, []),
@@ -63,6 +78,11 @@ def seo_student_matching_view(request):
 
 def seo_roommate_finder_view(request):
     ctx = _feature_page_context(request, "college_roommate_finder")
+    return render(request, "seo/feature_page.html", ctx)
+
+
+def seo_knots_view(request):
+    ctx = _feature_page_context(request, "knots")
     return render(request, "seo/feature_page.html", ctx)
 
 

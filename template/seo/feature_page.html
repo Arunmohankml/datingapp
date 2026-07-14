@@ -39,8 +39,10 @@
             <a href="{% url 'seo_confessions' %}" class="seo-btn seo-btn-glass">Campus Confessions</a>
             {% elif page.page_key == 'anonymous_campus_confessions' %}
             <a href="{% url 'seo_campus_events' %}" class="seo-btn seo-btn-glass">Campus Events</a>
+            {% elif page.page_key == 'knots' %}
+            <a href="{% url 'knots_feed' %}" class="seo-btn seo-btn-glass">Read Knots</a>
             {% else %}
-            <a href="{% url 'seo_campuses' %}" class="seo-btn seo-btn-glass">All Campuses</a>
+            <a href="{% url 'seo_knots' %}" class="seo-btn seo-btn-glass">Knots Threads</a>
             {% endif %}
         </div>
     </header>
@@ -62,6 +64,8 @@
                 <a href="{% url 'seo_confessions' %}">Read anonymous campus confessions</a>.
                 {% elif section.heading == 'Campus Events and Networking' and forloop.last %}
                 <a href="{% url 'seo_campus_events' %}">See campus events</a>.
+                {% elif section.heading == 'Campus Discussion Threads' and forloop.last %}
+                <a href="{% url 'knots_feed' %}">Read public Knots threads</a>.
                 {% endif %}
             </p>
             {% endfor %}

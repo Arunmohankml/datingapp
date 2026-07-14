@@ -5,12 +5,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="google-site-verification" content="X4viSHKffVA_JGTZMiKQlf-ugS7MBoGgyMrrwF_xmwQ" />
-<title>KnotSpot – SRM Student Social Platform | Confessions, Roommate Finder & Events</title>
-<meta name="description" content="KnotSpot connects college students across SRM, VIT & Amrita campuses. Post anonymous confessions, find roommates, discover campus events, and build meaningful friendships.">
-<meta name="keywords" content="KnotSpot, student social platform, college confessions, campus roommate finder, SRM, VIT, Amrita, college friend finder, student community India">
+<title>KnotSpot – Student Social Platform | Knots, Confessions, Roommate Finder & Events</title>
+<meta name="description" content="KnotSpot connects college students across SRM, VIT & Amrita campuses. Read Knots campus threads, post anonymous confessions, find roommates, discover events, and build friendships.">
+<meta name="keywords" content="KnotSpot, Knots, student social platform, campus discussion threads, college confessions, campus roommate finder, SRM, VIT, Amrita, college friend finder, student community India">
 <meta property="og:site_name" content="KnotSpot">
-<meta property="og:title" content="KnotSpot – Student Social Platform for SRM Campuses">
-<meta property="og:description" content="Meet college students, post anonymous confessions, find roommates, and connect with campus communities across SRM, VIT & Amrita campuses.">
+<meta property="og:title" content="KnotSpot – Student Social Platform with Knots Campus Threads">
+<meta property="og:description" content="Meet college students, read Knots discussions, post anonymous confessions, find roommates, and connect with campus communities across SRM, VIT & Amrita campuses.">
 <meta property="og:image" content="https://knotspot.online/static/favicon.png">
 <meta property="og:url" content="{{ request.build_absolute_uri }}">
 <meta property="og:type" content="website">
@@ -25,7 +25,7 @@
   "@type": "WebSite",
   "name": "KnotSpot",
   "url": "https://knotspot.online",
-  "description": "Student social platform for SRM campuses — anonymous confessions, roommate finder, events, and matching.",
+  "description": "Student social platform for campus discussions, anonymous confessions, roommate finder, events, and matching.",
   "inLanguage": "en-IN",
   "audience": {
     "@type": "Audience",
@@ -892,8 +892,8 @@ body::before {
     <!-- Hero Content -->
     <div class="hero-content">
         <h1 class="hero-title">KnotSpot</h1>
-        <h2 class="hero-sub" style="margin-bottom:12px; font-weight:800; color:#151b27; font-size:24px; letter-spacing: -0.5px; line-height: 1.25;">Find Friends, Roommates &amp; Campus Connections</h2>
-        <p class="hero-sub">KnotSpot is a student social platform that helps college students find friends, roommates, campus communities, anonymous confessions, room rentals, flatmates, and meaningful connections.</p>
+        <h2 class="hero-sub" style="margin-bottom:12px; font-weight:800; color:#151b27; font-size:24px; letter-spacing: -0.5px; line-height: 1.25;">Find Friends, Roommates &amp; Campus Conversations</h2>
+        <p class="hero-sub">KnotSpot is a student social platform that helps college students read Knots campus threads, find friends, roommates, campus communities, anonymous confessions, room rentals, flatmates, and meaningful connections.</p>
     </div>
 
     <!-- Actions (Confession & Login) -->
@@ -913,7 +913,7 @@ body::before {
 
         <div class="glass-card">
             <h2>Join the Hub</h2>
-            <p class="desc">Login to unlock KnotSpot, campus updates, and exclusive student features.</p>
+            <p class="desc">Login to create Knots, comment, match, chat, and unlock exclusive student features.</p>
             <button type="button" onclick="triggerGoogleLogin()" class="google-btn">
                 <svg viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
                 Sign in with Google
@@ -930,6 +930,13 @@ body::before {
     <!-- SEO Content -->
     <div class="seo-section">
         <div class="seo-grid">
+            <a href="{% url 'knots_feed' %}" class="seo-feature" style="text-decoration:none;color:inherit;">
+                <div class="seo-icon" style="background:#eef4ff; color:#2563eb;"><span class="material-symbols-outlined">hub</span></div>
+                <div>
+                    <h4>Knots Campus Threads</h4>
+                    <p>Read Reddit-style college discussions, questions, advice, and campus updates.</p>
+                </div>
+            </a>
             <a href="{% url 'confessions_feed' %}" class="seo-feature" style="text-decoration:none;color:inherit;">
                 <div class="seo-icon"><i class="fas fa-mask"></i></div>
                 <div>
@@ -966,6 +973,7 @@ body::before {
                 <li><span class="material-symbols-outlined check-icon">check_circle</span> Find roommates near campus</li>
                 <li><span class="material-symbols-outlined check-icon">check_circle</span> Discover rooms and PGs</li>
                 <li><span class="material-symbols-outlined check-icon">check_circle</span> Meet students with similar interests</li>
+                <li><span class="material-symbols-outlined check-icon">check_circle</span> Read and create Knots campus threads</li>
                 <li><span class="material-symbols-outlined check-icon">check_circle</span> Share anonymous confessions</li>
                 <li><span class="material-symbols-outlined check-icon">check_circle</span> Join campus discussions</li>
                 <li><span class="material-symbols-outlined check-icon">check_circle</span> Connect with verified college students</li>
@@ -974,7 +982,7 @@ body::before {
 
         <div class="why-us-card">
             <h4 class="why-us-title">Why Students Use KnotSpot</h4>
-            <p class="why-us-text">Whether you're looking for a roommate, searching for rooms near campus, making new friends, finding study partners, sharing confessions anonymously, or exploring student communities, KnotSpot provides a safe and student-focused platform.</p>
+            <p class="why-us-text">Whether you're looking for a roommate, searching for rooms near campus, reading Knots discussions, making new friends, finding study partners, sharing confessions anonymously, or exploring student communities, KnotSpot provides a safe and student-focused platform.</p>
         </div>
 
         <div class="popular-searches">
@@ -985,6 +993,8 @@ body::before {
                 <span class="search-tag">SRM room finder</span>
                 <span class="search-tag">Chennai student rooms</span>
                 <span class="search-tag">College confessions</span>
+                <span class="search-tag">Campus discussion threads</span>
+                <span class="search-tag">KnotSpot Knots</span>
                 <span class="search-tag">Student social platform</span>
                 <span class="search-tag">Campus connections</span>
                 <span class="search-tag">Roommates near me</span>

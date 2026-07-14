@@ -356,6 +356,17 @@
         background: #eef2f6;
     }
     .knot-author-copy { min-width: 0; }
+    .knot-admin-email {
+        max-width: 210px;
+        margin-top: 1px;
+        overflow: hidden;
+        color: #b42318;
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 1.2;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
     .knot-profile-link { color: inherit; text-decoration: none; }
     .knot-avatar-link { display: inline-flex; flex: 0 0 auto; border-radius: 999px; }
     .knot-profile-click { cursor: pointer; }
@@ -519,6 +530,126 @@
         background: rgba(15, 23, 42, .48);
     }
     .knot-sheet-scrim.open { display: flex; }
+    .knot-rules-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 4200;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(15, 23, 42, .58);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+    .knot-rules-overlay.open { display: flex; }
+    .knot-login-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 4300;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(15, 23, 42, .55);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+    .knot-login-overlay.open { display: flex; }
+    .knot-login-dialog {
+        position: relative;
+        width: min(100%, 390px);
+        padding: 24px 20px 20px;
+        border-radius: 28px;
+        background: #fff;
+        box-shadow: 0 30px 80px rgba(15, 23, 42, .28);
+        box-sizing: border-box;
+        text-align: center;
+        animation: knotRulesPop .22s ease both;
+    }
+    .knot-login-close { position: absolute; top: 12px; right: 12px; }
+    .knot-login-icon {
+        display: inline-flex;
+        width: 54px;
+        height: 54px;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 13px;
+        border-radius: 20px;
+        background: #eef4ff;
+        color: var(--knot-primary);
+    }
+    .knot-login-icon .material-symbols-outlined { font-size: 29px; }
+    .knot-login-dialog h2 { margin: 0 28px 8px; color: #172033; font-size: 21px; font-weight: 900; letter-spacing: -.03em; }
+    .knot-login-dialog p { margin: 0 0 18px; color: #667085; font-size: 13px; font-weight: 650; line-height: 1.5; }
+    .knot-login-actions { display: grid; gap: 10px; }
+    .knot-rules-dialog {
+        width: min(100%, 420px);
+        padding: 22px;
+        border-radius: 28px;
+        background: #fff;
+        box-shadow: 0 30px 80px rgba(15, 23, 42, .28);
+        box-sizing: border-box;
+        animation: knotRulesPop .22s ease both;
+    }
+    @keyframes knotRulesPop {
+        from { opacity: 0; transform: translateY(12px) scale(.97); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .knot-rules-icon {
+        display: inline-flex;
+        width: 46px;
+        height: 46px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 18px;
+        background: #eef4ff;
+        color: var(--knot-primary);
+        margin-bottom: 12px;
+    }
+    .knot-rules-icon .material-symbols-outlined { font-size: 25px; }
+    .knot-rules-dialog h2 {
+        margin: 0 0 6px;
+        color: #172033;
+        font-size: 21px;
+        font-weight: 900;
+        letter-spacing: -.03em;
+    }
+    .knot-rules-dialog p {
+        margin: 0 0 13px;
+        color: #667085;
+        font-size: 13px;
+        font-weight: 650;
+        line-height: 1.5;
+    }
+    .knot-rules-dialog ul {
+        display: grid;
+        gap: 9px;
+        margin: 0 0 18px;
+        padding-left: 18px;
+        color: #344054;
+        font-size: 13px;
+        font-weight: 650;
+        line-height: 1.48;
+    }
+    .knot-rules-dialog .knot-primary-btn { width: 100%; }
+    .sticky-login-cta { padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px)); }
+    .sticky-login-cta button {
+        display: flex;
+        width: 100%;
+        min-height: 48px;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 0;
+        border-radius: 999px;
+        background: #fff;
+        color: var(--knot-primary);
+        box-shadow: var(--knot-shadow-soft);
+        font: 800 13px/1 'Plus Jakarta Sans', sans-serif;
+        cursor: pointer;
+    }
+    .sticky-login-cta .material-symbols-outlined { font-size: 18px; }
     .knot-sheet {
         width: min(100%, 560px);
         max-height: min(78dvh, 680px);
@@ -539,6 +670,65 @@
     .campus-options { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; padding: 5px 0 0 28px; }
     .campus-options .filter-check { min-height: 34px; color: #667085; font-size: 11.5px; }
     .sheet-actions, .knot-form-actions { display: flex; gap: 10px; margin-top: 15px; }
+    .sheet-subtitle { margin: 4px 0 0; color: #667085; font-size: 12px; line-height: 1.45; }
+    .knot-report-sheet { padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
+    .report-target {
+        margin: 4px 0 12px;
+        padding: 10px 12px;
+        border-radius: 16px;
+        background: #f8fafc;
+        color: #344054;
+        font-size: 12px;
+        font-weight: 750;
+        line-height: 1.35;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .report-reasons { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; }
+    .report-option {
+        display: flex;
+        min-height: 58px;
+        align-items: center;
+        gap: 11px;
+        padding: 11px 12px;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, .07);
+        color: #172033;
+        cursor: pointer;
+        transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+    .report-option:active { transform: scale(.99); }
+    .report-option:has(input:checked) { background: #eef4ff; box-shadow: 0 8px 24px rgba(37, 99, 235, .13); }
+    .report-option input { width: 18px; height: 18px; margin: 0; accent-color: var(--knot-primary); }
+    .report-option span { display: grid; gap: 2px; min-width: 0; }
+    .report-option strong { font-size: 13px; font-weight: 850; }
+    .report-option small { color: #667085; font-size: 11px; font-weight: 650; line-height: 1.3; }
+    .report-details-label {
+        display: flex;
+        justify-content: space-between;
+        margin: 13px 0 7px;
+        color: #344054;
+        font-size: 12px;
+        font-weight: 800;
+    }
+    .report-details-label span { color: #98a2b3; font-weight: 700; }
+    #reportDetails {
+        width: 100%;
+        min-height: 88px;
+        resize: vertical;
+        padding: 12px 13px;
+        border: 0;
+        border-radius: 18px;
+        outline: 0;
+        background: #f8fafc;
+        box-shadow: inset 0 0 0 1px #edf0f5;
+        color: #172033;
+        font: 650 13px/1.45 'Plus Jakarta Sans', sans-serif;
+        box-sizing: border-box;
+    }
+    #reportDetails:focus { box-shadow: inset 0 0 0 2px rgba(37, 99, 235, .22); }
     .knot-primary-btn, .knot-secondary-btn, .knot-page-btn {
         display: inline-flex;
         min-height: 44px;
@@ -552,6 +742,8 @@
     }
     .knot-primary-btn { flex: 1; background: var(--knot-primary); color: #fff; }
     .knot-primary-btn:hover { background: var(--knot-primary-strong); }
+    .danger-primary { background: #dc2626; }
+    .danger-primary:hover { background: #b91c1c; }
     .knot-secondary-btn, .knot-page-btn { flex: 1; background: #fff; color: #475467; box-shadow: var(--knot-shadow-soft); }
     button:disabled { opacity: .55; cursor: not-allowed; }
 

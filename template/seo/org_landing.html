@@ -124,8 +124,8 @@
         <section class="reveal">
             <h2>More Than a Feed — A Full Campus Hub</h2>
             <p>
-                KnotSpot combines matching, housing, confessions, events, voice lounges, creative walls,
-                and creator spotlights into one {{ org_name }} student community platform. It is free,
+                KnotSpot combines matching, housing, Knots campus discussion threads, confessions, events,
+                voice lounges, creative walls, and creator spotlights into one {{ org_name }} student community platform. It is free,
                 student-built, and not officially affiliated with {{ org_name }} administration — an
                 independent space made for students, by students.
             </p>
@@ -140,9 +140,11 @@
         <h2 style="text-align:center;font-size:22px;font-weight:800;margin-bottom:16px;">Quick Links</h2>
         <div class="feature-pills" style="justify-content:center;">
             <a href="{% url 'seo_student_matching' %}" class="feature-pill">Student Matching</a>
+            <a href="{% url 'seo_knots' %}" class="feature-pill">Knots Threads</a>
             <a href="{% url 'seo_roommate_finder' %}" class="feature-pill">Roommate Finder</a>
             <a href="{% url 'seo_confessions' %}" class="feature-pill">Confessions</a>
             <a href="{% url 'seo_campus_events' %}" class="feature-pill">Events</a>
+            <a href="{% url 'knots_feed' %}" class="feature-pill">Open Knots</a>
             <a href="{% url 'confessions_feed' %}" class="feature-pill">Open Confessions</a>
             <a href="{% url 'roomfinder_feed' %}" class="feature-pill">Open Roomie</a>
         </div>

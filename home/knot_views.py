@@ -134,6 +134,11 @@ def _normalize_plain_spacing(text, keep_line_breaks=False):
     return text.strip()
 
 
+def _plain_content_for_display(value, keep_line_breaks=False):
+    """Convert sanitized Knot HTML into readable plain text for excerpts/schema."""
+    return _normalize_plain_spacing(unescape(strip_tags(str(value or ''))), keep_line_breaks=keep_line_breaks)
+
+
 def _is_moderator(user):
     if not user or not user.is_authenticated:
         return False
@@ -260,29 +265,33 @@ def _notify_after_commit(user, title, body, url):
 
 
 def _annotated_posts(user):
-    voted = KnotVote.objects.filter(post=OuterRef('pk'), user=user)
+    is_authenticated = bool(user and user.is_authenticated)
+    voted = KnotVote.objects.filter(post=OuterRef('pk'), user=user) if is_authenticated else None
     recent = timezone.now() - timedelta(days=7)
-    return KnotPost.objects.select_related('user__profile').annotate(
-        upvote_count=Count('votes', distinct=True),
-        comment_count=Count('comments', distinct=True),
-        recent_vote_count=Count('votes', filter=Q(votes__created_at__gte=recent), distinct=True),
-        recent_comment_count=Count('comments', filter=Q(comments__created_at__gte=recent), distinct=True),
-        user_has_voted=Exists(voted),
-    )
+    annotations = {
+        'upvote_count': Count('votes', distinct=True),
+        'comment_count': Count('comments', distinct=True),
+        'recent_vote_count': Count('votes', filter=Q(votes__created_at__gte=recent), distinct=True),
+        'recent_comment_count': Count('comments', filter=Q(comments__created_at__gte=recent), distinct=True),
+        'user_has_voted': Exists(voted) if is_authenticated else Value(False, output_field=BooleanField()),
+    }
+    return KnotPost.objects.select_related('user__profile').annotate(**annotations)
 
 
 def _annotated_comments(user):
-    liked = KnotCommentLike.objects.filter(comment=OuterRef('pk'), user=user)
+    is_authenticated = bool(user and user.is_authenticated)
+    liked = KnotCommentLike.objects.filter(comment=OuterRef('pk'), user=user) if is_authenticated else None
     return KnotComment.objects.select_related('user__profile', 'post', 'parent').annotate(
         like_count=Count('likes', distinct=True),
         reply_count=Count('replies', distinct=True),
-        user_has_liked=Exists(liked),
+        user_has_liked=Exists(liked) if is_authenticated else Value(False, output_field=BooleanField()),
     )
 
 
 def _comment_payload(comment, user):
     profile = getattr(comment.user, 'profile', None)
     is_moderator = _is_moderator(user)
+    is_authenticated = bool(user and user.is_authenticated)
     return {
         'id': comment.id,
         'post_id': comment.post_id,
@@ -298,19 +307,27 @@ def _comment_payload(comment, user):
         'like_count': comment.like_count,
         'reply_count': comment.reply_count,
         'liked': comment.user_has_liked,
-        'can_manage': not comment.is_deleted and (comment.user_id == user.id or is_moderator),
+        'can_manage': not comment.is_deleted and is_authenticated and (comment.user_id == user.id or is_moderator),
         'can_admin_delete': is_moderator,
-        'can_report': not comment.is_deleted and comment.user_id != user.id,
+        'can_report': not comment.is_deleted and is_authenticated and comment.user_id != user.id,
         'is_author_anonymous': comment.post.is_anonymous if comment.post else False,
     }
 
 
-@login_required
 @require_GET
 def knots_feed(request):
-    preference, _ = KnotPreference.objects.get_or_create(user=request.user)
+    if request.user.is_authenticated:
+        preference, _ = KnotPreference.objects.get_or_create(user=request.user)
+        default_sort = preference.sort
+        default_colleges = preference.colleges
+        default_campuses = preference.campuses
+    else:
+        preference = None
+        default_sort = 'newest'
+        default_colleges = []
+        default_campuses = []
     filters_submitted = request.GET.get('filters') == '1'
-    sort = request.GET.get('sort', preference.sort)
+    sort = request.GET.get('sort', default_sort)
     if sort not in SORTS:
         sort = 'newest'
 
@@ -320,10 +337,10 @@ def knots_feed(request):
         colleges = [value for value in request.GET.getlist('colleges') if value in valid_colleges]
         campuses = [value for value in request.GET.getlist('campuses') if value in valid_campuses]
     else:
-        colleges = [value for value in preference.colleges if value in valid_colleges]
-        campuses = [value for value in preference.campuses if value in valid_campuses]
+        colleges = [value for value in default_colleges if value in valid_colleges]
+        campuses = [value for value in default_campuses if value in valid_campuses]
 
-    if preference.sort != sort or preference.colleges != colleges or preference.campuses != campuses:
+    if preference and (preference.sort != sort or preference.colleges != colleges or preference.campuses != campuses):
         preference.sort, preference.colleges, preference.campuses = sort, colleges, campuses
         preference.save(update_fields=['sort', 'colleges', 'campuses', 'updated_at'])
 
@@ -354,6 +371,25 @@ def knots_feed(request):
         posts = posts.order_by('-created_at')
 
     page_obj = Paginator(posts, 12).get_page(request.GET.get('page', 1))
+    feed_items = []
+    for index, post in enumerate(page_obj.object_list, start=1):
+        post.plain_excerpt = _plain_content_for_display(post.content)
+        post_url = f'/knots/{post.id}/{post.slug}/'
+        feed_items.append({
+            '@type': 'ListItem',
+            'position': index,
+            'url': request.build_absolute_uri(post_url),
+            'name': post.title,
+            'description': post.plain_excerpt[:260],
+        })
+    feed_schema_json = json.dumps({
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        'name': 'Knots campus discussion threads',
+        'description': 'Public campus discussion threads on KnotSpot for student questions, advice, and college life.',
+        'url': request.build_absolute_uri(request.path),
+        'itemListElement': feed_items,
+    }, ensure_ascii=False)
     selected_campuses = [valid_campuses[code] for code in campuses]
     sort_options = [('newest','Newest'),('hot','Hot'),('top','Top'),('oldest','Oldest')]
     return render(request, 'knots/feed.html', {
@@ -362,6 +398,8 @@ def knots_feed(request):
         'selected_campus_codes': campuses, 'campus_groups': get_org_groups(),
         'selected_filter_count': len(colleges) + len(campuses),
         'is_moderator': _is_moderator(request.user), 'sort_options': sort_options,
+        'login_url': settings.LOGIN_URL if hasattr(settings, 'LOGIN_URL') else '/login/',
+        'feed_schema_json': feed_schema_json,
     })
 
 
@@ -474,17 +512,38 @@ def knot_image_upload(request):
     return JsonResponse({'success': True, 'data': {'url': uploaded}}, status=201)
 
 
-@login_required
 @require_GET
 def knot_detail(request, post_id, slug=None):
     post = get_object_or_404(_annotated_posts(request.user), id=post_id)
     if slug != post.slug:
         return redirect('knot_detail_slug', post_id=post.id, slug=post.slug)
+    post.plain_excerpt = _plain_content_for_display(post.content, keep_line_breaks=True)
     comments = _annotated_comments(request.user).filter(post=post, parent__isnull=True).order_by('created_at', 'id')
     page_obj = Paginator(comments, 20).get_page(request.GET.get('page', 1))
+    post_schema_json = json.dumps({
+        '@context': 'https://schema.org',
+        '@type': 'DiscussionForumPosting',
+        'headline': post.title,
+        'articleBody': post.plain_excerpt,
+        'url': request.build_absolute_uri(f'/knots/{post.id}/{post.slug}/'),
+        'datePublished': post.created_at.isoformat(),
+        'dateModified': post.updated_at.isoformat(),
+        'commentCount': post.comment_count,
+        'author': {
+            '@type': 'Person',
+            'name': post.display_name,
+        },
+        'publisher': {
+            '@type': 'Organization',
+            'name': 'KnotSpot',
+            'url': 'https://knotspot.online/',
+        },
+    }, ensure_ascii=False)
     return render(request, 'knots/detail.html', {
         'post': post, 'comments': page_obj, 'is_moderator': _is_moderator(request.user),
         'hide_bottom_nav': True,
+        'login_url': settings.LOGIN_URL if hasattr(settings, 'LOGIN_URL') else '/login/',
+        'post_schema_json': post_schema_json,
     })
 
 
@@ -653,7 +712,6 @@ def knot_comment_report(request, comment_id):
     return JsonResponse({'success': True, 'data': {'reported': True}}, status=201)
 
 
-@login_required
 @require_GET
 def knot_replies_api(request, comment_id):
     parent = get_object_or_404(KnotComment, id=comment_id)
@@ -661,7 +719,6 @@ def knot_replies_api(request, comment_id):
     return JsonResponse({'success': True, 'data': [_comment_payload(reply, request.user) for reply in replies]})
 
 
-@login_required
 @require_GET
 def knot_thread(request, comment_id):
     root = get_object_or_404(_annotated_comments(request.user), id=comment_id)

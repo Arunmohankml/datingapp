@@ -2,8 +2,12 @@
 (function () {
     'use strict';
     var csrf = (document.cookie.match(/(?:^|; )csrftoken=([^;]+)/) || [])[1] || '';
+    var viewerAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
     var toastTimer;
     var replyParent = null;
+    var reportPostId = null;
+    var knotRulesStorageKey = 'knotspot.knots.rulesAccepted.v1';
+    var bodyOverflowBeforeSheet = '';
     var bodyOverflowBeforeLightbox = '';
     var commentForm = document.getElementById('commentForm');
     if (commentForm && commentForm.dataset.defaultParent) replyParent = commentForm.dataset.defaultParent;
@@ -71,6 +75,79 @@
         if (buttonRect.bottom + menuHeight + 8 > safeBottom && buttonRect.top > menuHeight + 8) {
             menu.classList.add('open-up');
         }
+    }
+    function closeReportSheet() {
+        var sheet = document.getElementById('reportSheet');
+        if (!sheet || !sheet.classList.contains('open')) return;
+        sheet.classList.remove('open');
+        sheet.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = bodyOverflowBeforeSheet;
+        reportPostId = null;
+    }
+    function closeLoginPrompt() {
+        var prompt = document.getElementById('knotLoginPrompt');
+        if (!prompt || !prompt.classList.contains('open')) return;
+        prompt.classList.remove('open');
+        prompt.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = bodyOverflowBeforeSheet;
+    }
+    function openLoginPrompt(reason) {
+        var prompt = document.getElementById('knotLoginPrompt');
+        if (!prompt) {
+            window.location.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search);
+            return;
+        }
+        var text = document.getElementById('knotLoginText');
+        var link = document.getElementById('knotLoginLink');
+        if (text) text.textContent = (reason || 'Join Knots') + ' after logging in. You can keep reading public Knots without an account.';
+        if (link) link.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search);
+        bodyOverflowBeforeSheet = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        prompt.classList.add('open');
+        prompt.setAttribute('aria-hidden', 'false');
+        if (link) link.focus({preventScroll:true});
+    }
+    function openRulesDialog() {
+        var dialog = document.getElementById('knotRulesDialog');
+        if (!dialog) return;
+        var accepted = false;
+        try { accepted = localStorage.getItem(knotRulesStorageKey) === '1'; } catch (ignore) {}
+        if (accepted) return;
+        bodyOverflowBeforeSheet = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        dialog.classList.add('open');
+        dialog.setAttribute('aria-hidden', 'false');
+        var button = dialog.querySelector('[data-action="agree-rules"]');
+        if (button) button.focus({preventScroll:true});
+    }
+    function acceptRulesDialog() {
+        var dialog = document.getElementById('knotRulesDialog');
+        try { localStorage.setItem(knotRulesStorageKey, '1'); } catch (ignore) {}
+        if (dialog) {
+            dialog.classList.remove('open');
+            dialog.setAttribute('aria-hidden', 'true');
+        }
+        document.body.style.overflow = bodyOverflowBeforeSheet;
+    }
+    function openReportSheet(card) {
+        var sheet = document.getElementById('reportSheet');
+        var form = document.getElementById('knotReportForm');
+        if (!sheet || !form || !card) return;
+        reportPostId = card.dataset.postId;
+        var postInput = document.getElementById('reportPostId');
+        var target = document.getElementById('reportTarget');
+        var details = document.getElementById('reportDetails');
+        var checked = form.querySelector('input[name="reason"][value="spam"]');
+        if (postInput) postInput.value = reportPostId || '';
+        if (target) target.textContent = 'Reporting: ' + normalizeCopyText((card.querySelector('h2') || {}).textContent || 'this Knot');
+        if (details) details.value = '';
+        if (checked) checked.checked = true;
+        bodyOverflowBeforeSheet = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        sheet.classList.add('open');
+        sheet.setAttribute('aria-hidden', 'false');
+        var firstReason = form.querySelector('input[name="reason"]');
+        if (firstReason) firstReason.focus({preventScroll:true});
     }
     function closeImageLightbox() {
         var lightbox = document.getElementById('knotImageLightbox');
@@ -189,6 +266,33 @@
         var card = actionEl.closest('[data-post-id]');
         var comment = actionEl.closest('[data-comment-id]');
 
+        if (action === 'close-login-prompt') {
+            event.preventDefault();
+            closeLoginPrompt();
+            return;
+        }
+        if (action === 'require-login') {
+            event.preventDefault();
+            closeMenus();
+            openLoginPrompt(actionEl.dataset.loginReason || actionEl.textContent.trim() || 'Use this Knots feature');
+            return;
+        }
+        if (!viewerAuthenticated && ['vote','like-comment','reply','report-post','report-comment'].indexOf(action) !== -1) {
+            event.preventDefault();
+            closeMenus();
+            openLoginPrompt(actionEl.dataset.loginReason || (action === 'vote' ? 'Star this Knot' : action === 'reply' ? 'Reply on Knots' : action === 'like-comment' ? 'Like this comment' : 'Report this content'));
+            return;
+        }
+        if (action === 'close-report') {
+            event.preventDefault();
+            closeReportSheet();
+            return;
+        }
+        if (action === 'agree-rules') {
+            event.preventDefault();
+            acceptRulesDialog();
+            return;
+        }
         if (action === 'menu') {
             event.preventDefault(); event.stopPropagation();
             var menu = actionEl.parentElement.querySelector('.knot-menu');
@@ -221,8 +325,10 @@
             actionEl.disabled=true;             request('/api/knots/'+card.dataset.postId+'/delete/', {method:'POST',body:'{}'}).then(function(){ if(location.pathname.match(/^\/knots\/\d+\/(?:[^/]+\/)?$/)) location.href='/knots/'; else card.remove(); toast('Knot deleted'); }).catch(function(err){ actionEl.disabled=false; toast(err.message); }); return;
         }
         if (action === 'report-post') {
-            event.preventDefault(); closeMenus(); if (!confirm('Report this Knot to the moderation team?')) return;
-            request('/api/knots/'+card.dataset.postId+'/report/', {method:'POST',body:JSON.stringify({reason:'other'})}).then(function(){toast('Report sent to the moderation team');}).catch(function(err){toast(err.message);}); return;
+            event.preventDefault();
+            closeMenus();
+            openReportSheet(card);
+            return;
         }
         if (action === 'like-comment') {
             event.preventDefault(); var undoLike=optimisticToggle(actionEl);
@@ -280,10 +386,18 @@
             location.href = profileTarget.dataset.profileUrl;
             return;
         }
-        if (event.key === 'Escape') closeImageLightbox();
+        if (event.key === 'Escape') {
+            closeImageLightbox();
+            closeReportSheet();
+            closeLoginPrompt();
+        }
     });
 
     var filterSheet=document.getElementById('filterSheet'); if(filterSheet) filterSheet.addEventListener('click',function(e){if(e.target===filterSheet){filterSheet.classList.remove('open');filterSheet.setAttribute('aria-hidden','true');document.body.style.overflow='';}});
+    var reportSheet=document.getElementById('reportSheet'); if(reportSheet) reportSheet.addEventListener('click',function(e){if(e.target===reportSheet)closeReportSheet();});
+    var loginPrompt=document.getElementById('knotLoginPrompt'); if(loginPrompt) loginPrompt.addEventListener('click',function(e){if(e.target===loginPrompt)closeLoginPrompt();});
+    var reportForm=document.getElementById('knotReportForm'); if(reportForm) reportForm.addEventListener('submit',function(event){event.preventDefault();var selected=reportForm.querySelector('input[name="reason"]:checked');var details=document.getElementById('reportDetails');var button=reportForm.querySelector('button[type="submit"]');var postId=(document.getElementById('reportPostId')||{}).value||reportPostId;if(!postId){toast('Could not find this Knot');return;}if(button)button.disabled=true;request('/api/knots/'+postId+'/report/',{method:'POST',body:JSON.stringify({reason:selected?selected.value:'other',details:normalizePlainInput(details?details.value:'')})}).then(function(){closeReportSheet();toast('Report sent to the moderation team');}).catch(function(err){toast(err.message);}).finally(function(){if(button)button.disabled=false;});});
+    openRulesDialog();
     document.querySelectorAll('[data-college]').forEach(function(input){input.addEventListener('change',function(){var group=document.querySelector('[data-campus-group="'+CSS.escape(input.value)+'"]');if(group)group.hidden=!input.checked;savePreferenceFromForm(input.form);});});
     document.querySelectorAll('input[name="campuses"]').forEach(function(input){input.addEventListener('change',function(){savePreferenceFromForm(input.form);});});
     document.querySelectorAll('[data-remove-filter]').forEach(function(button){button.addEventListener('click',function(){var selector='input[name="'+button.dataset.removeFilter+'"][value="'+CSS.escape(button.dataset.value)+'"]';var input=document.querySelector(selector);if(input)input.checked=false;savePreferenceFromForm(document.getElementById('knotFilterForm'));document.getElementById('knotFilterForm').submit();});});

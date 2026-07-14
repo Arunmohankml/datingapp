@@ -1,0 +1,30 @@
+<div class="knot-sheet-scrim" id="reportSheet" aria-hidden="true">
+    <div class="knot-sheet knot-report-sheet" role="dialog" aria-modal="true" aria-labelledby="reportTitle" aria-describedby="reportHelp">
+        <div class="sheet-handle"></div>
+        <div class="sheet-header">
+            <div>
+                <h2 id="reportTitle">Report Knot</h2>
+                <p id="reportHelp" class="sheet-subtitle">Pick a reason and add anything the moderation team should know.</p>
+            </div>
+            <button class="sheet-close-btn" type="button" data-action="close-report" aria-label="Close report menu"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <form id="knotReportForm">
+            <input type="hidden" id="reportPostId" name="post_id">
+            <div class="report-target" id="reportTarget">Reporting this Knot</div>
+            <fieldset class="report-reasons">
+                <legend class="sr-only">Report reason</legend>
+                <label class="report-option"><input type="radio" name="reason" value="spam" checked><span><strong>Spam</strong><small>Promotions, scams, repeated junk.</small></span></label>
+                <label class="report-option"><input type="radio" name="reason" value="harassment"><span><strong>Harassment</strong><small>Bullying, hate, abuse or targeted attacks.</small></span></label>
+                <label class="report-option"><input type="radio" name="reason" value="unsafe"><span><strong>Unsafe or harmful</strong><small>Threats, self-harm, illegal or dangerous content.</small></span></label>
+                <label class="report-option"><input type="radio" name="reason" value="misinformation"><span><strong>Misinformation</strong><small>False or misleading campus information.</small></span></label>
+                <label class="report-option"><input type="radio" name="reason" value="other"><span><strong>Other</strong><small>Something else moderators should review.</small></span></label>
+            </fieldset>
+            <label class="report-details-label" for="reportDetails">Custom reason <span>(optional)</span></label>
+            <textarea id="reportDetails" name="details" maxlength="500" rows="3" placeholder="Write more details here..."></textarea>
+            <div class="sheet-actions">
+                <button class="knot-secondary-btn" type="button" data-action="close-report">Cancel</button>
+                <button class="knot-primary-btn danger-primary" type="submit">Send report</button>
+            </div>
+        </form>
+    </div>
+</div>

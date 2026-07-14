@@ -28,7 +28,7 @@
     <header class="seo-hero">
         <div class="pill"><i class="fas fa-map-marker-alt"></i> {{ campus.org }}</div>
         <h1>{{ campus.name }}</h1>
-        <p class="subtitle">Your campus hub for friends, roommates, confessions, events, and student communities on KnotSpot.</p>
+        <p class="subtitle">Your campus hub for friends, roommates, Knots discussion threads, confessions, events, and student communities on KnotSpot.</p>
         <div class="cta-row">
             <a href="{% url 'home' %}" class="seo-btn seo-btn-primary">Join {{ campus.code }} Students</a>
             <a href="{% url 'seo_campus' slug=org_slug %}" class="seo-btn seo-btn-glass">All {{ campus.org }} Campuses</a>
@@ -56,6 +56,7 @@
             <h2>Features for {{ campus.name }} Students</h2>
             <div class="feature-pills">
                 <a href="{% url 'seo_student_matching' %}" class="feature-pill">Friend Finder</a>
+                <a href="{% url 'seo_knots' %}" class="feature-pill">Knots Threads</a>
                 <a href="{% url 'seo_roommate_finder' %}" class="feature-pill">Roommate Finder</a>
                 <a href="{% url 'seo_confessions' %}" class="feature-pill">Confessions</a>
                 <a href="{% url 'seo_campus_events' %}" class="feature-pill">Events</a>
@@ -69,7 +70,8 @@
                 or vulgarity. <strong>Events</strong> let clubs and students advertise campus activities.
             </p>
             <p>
-                Beyond core feeds, KnotSpot includes a <strong>public drawing wall</strong> for creative expression,
+                Beyond core feeds, KnotSpot includes <strong>Knots discussion threads</strong> for questions and advice,
+                a <strong>public drawing wall</strong> for creative expression,
                 <strong>voice channels</strong> for live student hangouts, and <strong>Spotlight</strong> to
                 showcase your Instagram or creator profile to campus peers.
             </p>

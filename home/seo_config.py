@@ -97,6 +97,16 @@ PAGE_FAQ_EXTRA = {
             ),
         },
     ],
+    "knots": [
+        {
+            "question": "What are Knots on KnotSpot?",
+            "answer": (
+                "Knots are Reddit-style campus discussion threads where students ask questions, share advice, "
+                "post useful links, and discuss college life. Anyone can read public Knots, while posting, "
+                "commenting, starring, and replying require login."
+            ),
+        },
+    ],
     "campus_events": [
         {
             "question": "Can I advertise my campus event on KnotSpot?",
@@ -157,25 +167,35 @@ def breadcrumb_schema_json(items):
 INTERNAL_LINKS = {
     "campuses": [
         {"title": "Student Matching", "url_name": "seo_student_matching", "desc": "Find friends through interests and personality quizzes."},
+        {"title": "Knots Campus Threads", "url_name": "seo_knots", "desc": "Read Reddit-style campus questions and advice."},
         {"title": "Roommate Finder", "url_name": "seo_roommate_finder", "desc": "Browse flats, PGs, and verified student roommates."},
         {"title": "Campus Confessions", "url_name": "seo_confessions", "desc": "Share anonymous campus stories safely."},
         {"title": "Campus Events", "url_name": "seo_campus_events", "desc": "Discover fests, workshops, and club activities."},
     ],
     "student_matching": [
+        {"title": "Knots Campus Threads", "url_name": "seo_knots", "desc": "Ask questions and join campus discussions."},
         {"title": "Roommate Finder", "url_name": "seo_roommate_finder", "desc": "Found a match? Find a place to live together."},
         {"title": "Campus Confessions", "url_name": "seo_confessions", "desc": "Join campus conversations anonymously."},
     ],
     "college_roommate_finder": [
+        {"title": "Knots Campus Threads", "url_name": "seo_knots", "desc": "Ask housing questions and get student advice."},
         {"title": "Campus Confessions", "url_name": "seo_confessions", "desc": "Housing stress? You're not alone — read campus stories."},
         {"title": "Campus Events", "url_name": "seo_campus_events", "desc": "Meet potential roommates at campus events."},
     ],
     "anonymous_campus_confessions": [
+        {"title": "Knots Campus Threads", "url_name": "seo_knots", "desc": "Move from anonymous stories to useful campus discussions."},
         {"title": "Campus Events", "url_name": "seo_campus_events", "desc": "Turn online energy into real-world meetups."},
         {"title": "All Campuses", "url_name": "seo_campuses", "desc": "Explore SRM, VIT, and Amrita communities."},
     ],
     "campus_events": [
+        {"title": "Knots Campus Threads", "url_name": "seo_knots", "desc": "Discuss events and campus updates with students."},
         {"title": "Student Communities", "url_name": "seo_campuses", "desc": "Find your campus hub and connect with peers."},
         {"title": "Student Matching", "url_name": "seo_student_matching", "desc": "Meet people before the next fest."},
+    ],
+    "knots": [
+        {"title": "Student Matching", "url_name": "seo_student_matching", "desc": "Meet students after useful campus conversations."},
+        {"title": "Campus Confessions", "url_name": "seo_confessions", "desc": "Read anonymous stories alongside public threads."},
+        {"title": "Roommate Finder", "url_name": "seo_roommate_finder", "desc": "Turn housing questions into roommate searches."},
     ],
 }
 
@@ -385,6 +405,60 @@ FEATURE_PAGES = {
                 "heading": "Start Searching",
                 "paragraphs": [
                     "Open the Roomie feed, pick your campus, and browse active listings. Posting is free for students. If you are searching for an SRM roommate finder, VIT roommate finder, or Amrita roommate finder, KnotSpot is built for exactly that.",
+                ],
+            },
+        ],
+    },
+    "knots": {
+        "page_key": "knots",
+        "url_path": "/knots-campus-discussions/",
+        "title": "Knots Campus Discussion Threads | KnotSpot",
+        "meta_description": (
+            "Read Knots on KnotSpot — Reddit-style campus discussion threads for SRM, VIT, "
+            "Amrita, and college students. Ask questions, share advice, and follow student conversations."
+        ),
+        "h1": "Knots Campus Discussion Threads",
+        "subtitle": "Reddit-style student threads for campus questions, advice, useful links, and respectful college discussions.",
+        "sections": [
+            {
+                "heading": "What Are Knots?",
+                "paragraphs": [
+                    "Knots are public campus discussion threads inside KnotSpot. Students use them to ask questions, share advice, post useful links, discuss campus life, and keep conversations organized without depending on scattered WhatsApp groups or anonymous pages.",
+                    "The format is intentionally familiar: a title, body, optional link or image, stars, comments, and replies. It feels close to Reddit threads, but built around real student campuses such as SRM, VIT, Amrita, and other supported colleges.",
+                ],
+            },
+            {
+                "heading": "Public Reading, Login-Only Participation",
+                "paragraphs": [
+                    "Knots can be read publicly so prospective students, freshers, and search engines can understand what the campus community is discussing. To keep the feature safer, users must log in before creating a Knot, starring a thread, commenting, replying, or reporting content.",
+                    "This balance makes Knots useful for discovery while protecting the community from spam and drive-by abuse.",
+                ],
+            },
+            {
+                "heading": "Campus Questions and Student Advice",
+                "paragraphs": [
+                    "Students can ask practical questions about hostels, classes, clubs, events, placements, food, transport, study spots, and college life. Other students can reply with real experiences instead of generic advice.",
+                    "Because Knots support college and campus labels, a question about SRM Ramapuram, VIT Vellore, or Amrita Coimbatore stays easier to understand and filter.",
+                ],
+            },
+            {
+                "heading": "Respectful Moderated Discussions",
+                "paragraphs": [
+                    "Knots are designed for meaningful discussions, not vulgarity, defamation, NSFW content, spam, malicious links, or self-promotion. The community rules explain these expectations before users join the feature.",
+                    "Students who want to promote something are asked to contact the admin team through the feedback ticket flow instead of posting advertisements into the discussion feed.",
+                ],
+            },
+            {
+                "heading": "How Knots Connect to Other KnotSpot Features",
+                "paragraphs": [
+                    "Knots connect naturally with the rest of KnotSpot. A housing question can lead into Roomie, an event discussion can lead to campus events, and a useful thread can help students find people with similar interests before matching or chatting.",
+                    "Together with confessions, roommate finder, events, communities, and matching, Knots make KnotSpot feel like a complete student social platform rather than a single-purpose app.",
+                ],
+            },
+            {
+                "heading": "Start Reading Knots",
+                "paragraphs": [
+                    "Open the Knots feed to browse public campus threads. Log in when you want to create your own Knot, star helpful posts, comment on discussions, or reply to other students.",
                 ],
             },
         ],

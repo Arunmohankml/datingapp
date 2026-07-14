@@ -4473,6 +4473,8 @@ def sitemap_view(request):
         {"loc": "/campuses/", "changefreq": "monthly", "priority": "0.9"},
         {"loc": "/student-matching/", "changefreq": "monthly", "priority": "0.9"},
         {"loc": "/college-roommate-finder/", "changefreq": "monthly", "priority": "0.9"},
+        {"loc": "/knots/", "changefreq": "hourly", "priority": "0.9"},
+        {"loc": "/knots-campus-discussions/", "changefreq": "monthly", "priority": "0.8"},
         {"loc": "/anonymous-campus-confessions/", "changefreq": "monthly", "priority": "0.9"},
         {"loc": "/campus-events/", "changefreq": "monthly", "priority": "0.9"},
         {"loc": "/confessions/", "changefreq": "hourly", "priority": "0.9"},
@@ -4501,7 +4503,7 @@ def sitemap_view(request):
         xml += '  </url>\n'
         
     try:
-        from .models import Confession, RoomListing
+        from .models import Confession, KnotPost, RoomListing
         
         # Dynamic Confessions
         confessions = Confession.objects.filter(moderation_status='approved').order_by('-created_at')
@@ -4521,6 +4523,16 @@ def sitemap_view(request):
             xml += f'    <lastmod>{e.created_at.strftime("%Y-%m-%d")}</lastmod>\n'
             xml += '    <changefreq>weekly</changefreq>\n'
             xml += '    <priority>0.8</priority>\n'
+            xml += '  </url>\n'
+
+        # Dynamic public Knots
+        knots = KnotPost.objects.order_by('-created_at')[:1000]
+        for post in knots:
+            xml += '  <url>\n'
+            xml += f'    <loc>{base_url}/knots/{post.id}/{post.slug}/</loc>\n'
+            xml += f'    <lastmod>{post.updated_at.strftime("%Y-%m-%d")}</lastmod>\n'
+            xml += '    <changefreq>weekly</changefreq>\n'
+            xml += '    <priority>0.7</priority>\n'
             xml += '  </url>\n'
 
         # Dynamic Room Listings

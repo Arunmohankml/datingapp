@@ -2,9 +2,9 @@
 
 {% block title %}About KnotSpot – Student Social Platform{% endblock %}
 
-{% block meta_description %}Learn about KnotSpot, the student-built social platform for SRM, VIT, and Amrita campuses featuring matching, confessions, roommate finder, and campus community features.{% endblock %}
+{% block meta_description %}Learn about KnotSpot, the student-built social platform founded and developed by Arun Mohan K, featuring Knots campus threads, matching, confessions, roommate finder, and student communities.{% endblock %}
 {% block og_title %}About KnotSpot – Student Social Platform{% endblock %}
-{% block og_description %}Learn about KnotSpot, the student-built social platform for SRM, VIT, and Amrita campuses featuring matching, confessions, roommate finder, and campus community features.{% endblock %}
+{% block og_description %}Learn about KnotSpot, the student-built social platform founded and developed by Arun Mohan K, featuring Knots campus threads, matching, confessions, roommate finder, and student communities.{% endblock %}
 
 {% block head %}
 <style>
@@ -346,7 +346,7 @@
     <section class="hero-section">
         <div class="hero-pill"><i class="fas fa-sparkles"></i> For Students, By Students</div>
         <h1>About <span class="text-gradient">KnotSpot</span></h1>
-        <p>KnotSpot is a completely independent social platform designed to help you connect, socialize, find roommates, and interact safely across SRM, VIT, Amrita, and growing college campuses.</p>
+        <p>KnotSpot is a completely independent social platform designed to help you connect, read Knots campus discussions, find roommates, and interact safely across SRM, VIT, Amrita, and growing college campuses.</p>
         <div class="hero-actions">
             <a href="{% url 'home' %}" class="btn btn-primary">Open App <i class="fas fa-arrow-right"></i></a>
             <a href="{% url 'seo_campuses' %}" class="btn btn-glass">Explore Campuses</a>
@@ -375,6 +375,15 @@
                     <li><i class="fas fa-check"></i> Interest-based connections</li>
                     <li><i class="fas fa-check"></i> Deep compatibility quizzes</li>
                     <li><i class="fas fa-check"></i> Cross-campus discovery</li>
+                </ul>
+            </a>
+            <a href="{% url 'seo_knots' %}" class="glass-card comm" style="text-decoration:none;color:inherit;display:block;">
+                <div class="icon-box"><i class="fas fa-comments"></i></div>
+                <h3>Knots Campus Threads</h3>
+                <ul>
+                    <li><i class="fas fa-check"></i> Reddit-style student discussions</li>
+                    <li><i class="fas fa-check"></i> Questions, advice, and campus updates</li>
+                    <li><i class="fas fa-check"></i> Public reading with safe login-only posting</li>
                 </ul>
             </a>
             <a href="{% url 'seo_confessions' %}" class="glass-card confess" style="text-decoration:none;color:inherit;display:block;">
@@ -436,8 +445,9 @@
     <section class="reveal">
         <div class="glass-card" style="text-align: center; border-color: rgba(37, 99, 235, 0.2); background: rgba(255,255,255,0.85);">
             <div style="font-size: 32px; margin-bottom: 12px;">👨‍💻</div>
-            <h3 style="margin-bottom: 12px;">Built by a Student</h3>
-            <p style="font-size: 14px; color: #475569; line-height: 1.6; margin: 0 0 16px;">KnotSpot was founded and developed by <a href="{% url 'founder' %}" style="color:#2563eb;font-weight:700;">Arun Mohan K</a>, a CSE student at SRM Ramapuram from Malappuram, Kerala.</p>
+            <h3 style="margin-bottom: 12px;">Built by Arun Mohan K</h3>
+            <p style="font-size: 14px; color: #475569; line-height: 1.6; margin: 0 0 10px;">KnotSpot was founded, owned, and developed by <a href="{% url 'founder' %}" style="color:#2563eb;font-weight:700;">Arun Mohan K</a>, a Computer Science and Engineering student at SRM Institute of Science and Technology, Ramapuram Campus, from Malappuram, Kerala.</p>
+            <p style="font-size: 13px; color: #64748b; line-height: 1.6; margin: 0 0 16px;">If someone searches who is the developer of KnotSpot, who is the owner of KnotSpot, or who is Arun Mohan K, the answer is Arun Mohan K — founder and developer of KnotSpot.</p>
             <a href="{% url 'founder' %}" class="btn btn-glass" style="max-width:200px;margin:0 auto;">Meet the Founder</a>
         </div>
     </section>

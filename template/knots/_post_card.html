@@ -4,6 +4,7 @@
             <img class="knot-avatar{% if not post.is_anonymous %} knot-profile-click{% endif %}" src="{{ post.display_pic }}" alt="{{ post.display_name }}" width="38" height="38" loading="lazy"{% if not post.is_anonymous %} data-profile-url="{% url 'view_profile' post.user_id %}" role="link" tabindex="0"{% endif %}>
             <div class="knot-author-copy">
                 <div class="knot-author-name{% if not post.is_anonymous %} knot-profile-click{% endif %}"{% if not post.is_anonymous %} data-profile-url="{% url 'view_profile' post.user_id %}" role="link" tabindex="0"{% endif %}>{{ post.display_name }}</div>
+                {% if is_moderator and post.is_anonymous %}<div class="knot-admin-email" title="Visible only to admins">{{ post.user.email }}</div>{% endif %}
                 <div class="knot-meta">{{ post.created_at|timesince }} ago{% if post.is_edited %} · edited{% endif %}</div>
             </div>
             {% if post.category or post.college or post.campus %}<div class="knot-chips-row">
@@ -15,7 +16,7 @@
         {% if detail %}
         <div class="knot-content knot-rich-content">{{ post.content|safe }}</div>
         {% else %}
-        <p class="knot-content knot-list-excerpt">{{ post.content|striptags|truncatechars:260 }}</p>
+        <p class="knot-content knot-list-excerpt">{{ post.plain_excerpt|default:post.content|truncatechars:260 }}</p>
         {% endif %}
     </a>
     {% if post.link %}<a class="knot-link" href="{{ post.link }}" target="_blank" rel="noopener noreferrer"><span class="material-symbols-outlined">link</span><span>{{ post.link }}</span></a>{% endif %}

@@ -1,5 +1,11 @@
 {% extends 'base.html' %}
-{% block title %}Knots | KnotSpot{% endblock %}
+{% block title %}Knots | Campus Discussion Threads on KnotSpot{% endblock %}
+{% block meta_description %}Read Knots on KnotSpot — Reddit-style campus discussion threads for SRM, VIT, Amrita and college students. Ask questions, share advice, and follow student conversations.{% endblock %}
+{% block meta_keywords %}KnotSpot Knots, campus discussion threads, college forum, student questions, SRM discussion, VIT discussion, Amrita discussion, Reddit-style campus threads{% endblock %}
+{% block og_title %}Knots | Campus Discussion Threads on KnotSpot{% endblock %}
+{% block og_description %}Browse public campus discussion threads on KnotSpot. Students can read Knots freely and log in to create, star, comment, or reply.{% endblock %}
+{% block robots_tag %}<meta name="robots" content="index, follow">{% endblock %}
+{% block json_ld %}{% if feed_schema_json %}<script type="application/ld+json">{{ feed_schema_json|safe }}</script>{% endif %}{% endblock %}
 {% block head %}{% include 'knots/_styles.html' %}{% endblock %}
 {% block body %}
 <div class="knots-shell">
@@ -62,15 +68,18 @@
         <div class="knots-body-inner">
             <section class="knot-feed" aria-live="polite">
                 {% for post in posts %}{% include 'knots/_post_card.html' with detail=False %}
-                {% empty %}<div class="knot-empty"><span class="material-symbols-outlined">forum</span><h2>{% if search_query or selected_filter_count %}No results match these filters{% else %}No Knots have been posted yet{% endif %}</h2><p>{% if search_query or selected_filter_count %}Try a different search or clear your filters.{% else %}Be the first person to start this discussion.{% endif %}</p><a class="knot-primary-btn" href="{% url 'knot_create' %}">Create a Knot</a></div>{% endfor %}
+                {% empty %}<div class="knot-empty"><span class="material-symbols-outlined">forum</span><h2>{% if search_query or selected_filter_count %}No results match these filters{% else %}No Knots have been posted yet{% endif %}</h2><p>{% if search_query or selected_filter_count %}Try a different search or clear your filters.{% else %}Be the first person to start this discussion.{% endif %}</p><a class="knot-primary-btn" href="{% if user.is_authenticated %}{% url 'knot_create' %}{% else %}#{% endif %}" {% if not user.is_authenticated %}data-action="require-login" data-login-reason="Create a Knot"{% endif %}>Create a Knot</a></div>{% endfor %}
             </section>
             {% if posts.has_other_pages %}<nav class="knot-pagination" aria-label="Feed pages">{% if posts.has_previous %}<a class="knot-page-btn" href="?page={{ posts.previous_page_number }}&sort={{ current_sort }}&q={{ search_query|urlencode }}&filters=1{% for college in selected_colleges %}&colleges={{ college|urlencode }}{% endfor %}{% for campus in selected_campus_codes %}&campuses={{ campus|urlencode }}{% endfor %}">Previous</a>{% endif %}{% if posts.has_next %}<a class="knot-page-btn" href="?page={{ posts.next_page_number }}&sort={{ current_sort }}&q={{ search_query|urlencode }}&filters=1{% for college in selected_colleges %}&colleges={{ college|urlencode }}{% endfor %}{% for campus in selected_campus_codes %}&campuses={{ campus|urlencode }}{% endfor %}">Load more</a>{% endif %}</nav>{% endif %}
         </div>
     </div>
-    <a class="knots-fab" href="{% url 'knot_create' %}" aria-label="Create Knot">
+    <a class="knots-fab" href="{% if user.is_authenticated %}{% url 'knot_create' %}{% else %}#{% endif %}" aria-label="Create Knot"{% if not user.is_authenticated %} data-action="require-login" data-login-reason="Create a Knot"{% endif %}>
         <span class="material-symbols-outlined">edit</span>
     </a>
 </div>
+{% include 'knots/_rules_dialog.html' %}
+{% include 'knots/_login_prompt.html' %}
+{% include 'knots/_report_sheet.html' %}
 <div class="knot-toast" id="knotToast" role="status" aria-live="polite"></div>
 {% include 'knots/_scripts.html' %}
 {% endblock %}

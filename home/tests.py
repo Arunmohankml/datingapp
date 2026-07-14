@@ -10,7 +10,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from .models import Conversation, DailyMatchAction, KnotComment, KnotPost, KnotPreference, KnotVote, MatchRequest, Profile
+from .models import Conversation, DailyMatchAction, DailyQuestion, KnotComment, KnotPost, KnotPreference, KnotReport, KnotVote, MatchRequest, Profile, QuestionOption
 
 
 class TestDatabaseSafetyTests(TestCase):
@@ -206,6 +206,162 @@ class KnotsFeatureTests(TestCase):
         self.post.save(update_fields=['is_anonymous'])
         anonymous = self.client.get('/knots/')
         self.assertNotContains(anonymous, f'data-profile-url="{profile_url}"')
+
+    def test_public_can_read_knots_feed_but_actions_prompt_login(self):
+        response = self.client.get('/knots/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Library hours')
+        self.assertContains(response, 'id="knotLoginPrompt"')
+        self.assertContains(response, 'viewerAuthenticated = false')
+        self.assertContains(response, 'data-action="require-login"', html=False)
+        self.assertContains(response, 'You can read Knots publicly')
+        self.assertContains(response, 'content="index, follow"', html=False)
+
+    def test_public_can_read_knot_detail_and_replies(self):
+        root = KnotComment.objects.create(post=self.post, user=self.other, content='Public parent')
+        reply = KnotComment.objects.create(post=self.post, user=self.owner, parent=root, content='Public reply')
+
+        detail = self.client.get(f'/knots/{self.post.id}/{self.post.slug}/')
+        replies = self.client.get(f'/api/knots/comments/{root.id}/replies/')
+
+        self.assertEqual(detail.status_code, 200)
+        self.assertContains(detail, 'Public parent')
+        self.assertContains(detail, 'Log in to comment on this Knot')
+        self.assertEqual(replies.status_code, 200)
+        self.assertEqual(replies.json()['data'][0]['id'], reply.id)
+        self.assertFalse(replies.json()['data'][0]['can_report'])
+
+    def test_admin_sees_anonymous_knot_author_email_only_for_moderation(self):
+        self.post.is_anonymous = True
+        self.post.save(update_fields=['is_anonymous'])
+
+        self.client.force_login(self.admin)
+        admin_response = self.client.get('/knots/')
+
+        self.assertContains(admin_response, 'Anonymous')
+        self.assertContains(admin_response, 'class="knot-admin-email"', html=False)
+        self.assertContains(admin_response, self.owner.email)
+
+        self.client.force_login(self.other)
+        user_response = self.client.get('/knots/')
+        self.assertContains(user_response, 'Anonymous')
+        self.assertNotContains(user_response, 'class="knot-admin-email"', html=False)
+        self.assertNotContains(user_response, self.owner.email)
+
+    def test_knot_report_uses_custom_reason_sheet_instead_of_browser_confirm(self):
+        self.client.force_login(self.other)
+
+        response = self.client.get('/knots/')
+
+        self.assertContains(response, 'id="reportSheet"')
+        self.assertContains(response, 'id="knotReportForm"')
+        self.assertContains(response, 'value="harassment"')
+        self.assertContains(response, 'value="unsafe"')
+        self.assertContains(response, 'value="misinformation"')
+        self.assertContains(response, 'id="reportDetails"')
+        self.assertContains(response, 'data-action="report-post"', html=False)
+        self.assertContains(response, 'openReportSheet(card)')
+        self.assertContains(response, "details:normalizePlainInput(details?details.value:'')", html=False)
+        self.assertNotContains(response, "confirm('Report this Knot", html=False)
+
+    def test_knots_feed_has_one_time_rules_dialog(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.get('/knots/')
+
+        self.assertContains(response, 'id="knotRulesDialog"')
+        self.assertContains(response, 'Knots community rules')
+        self.assertContains(response, 'No vulgar words, NSFW content, harassment or character defamation.')
+        self.assertContains(response, 'No spam, self-promotion or malicious links.')
+        self.assertContains(response, 'More → Feedback')
+        self.assertContains(response, 'knotspot.knots.rulesAccepted.v1')
+        self.assertContains(response, "localStorage.setItem(knotRulesStorageKey, '1')")
+        self.assertContains(response, 'data-action="agree-rules"', html=False)
+
+    def test_knot_report_stores_selected_reason_and_custom_details(self):
+        self.client.force_login(self.other)
+
+        response = self._post_json(f'/api/knots/{self.post.id}/report/', {
+            'reason': 'harassment',
+            'details': 'Targeting a student by name',
+        })
+
+        self.assertEqual(response.status_code, 201)
+        report = KnotReport.objects.get(post=self.post, reporter=self.other)
+        self.assertEqual(report.reason, 'harassment')
+        self.assertEqual(report.details, 'Targeting a student by name')
+
+    def test_knots_seo_login_and_about_copy_are_present(self):
+        login_response = self.client.get('/login/')
+        about_response = self.client.get('/about/')
+        seo_response = self.client.get('/knots-campus-discussions/')
+        sitemap_response = self.client.get('/sitemap.xml')
+
+        self.assertContains(login_response, 'Knots Campus Threads')
+        self.assertContains(login_response, 'href="/knots/"', html=False)
+        self.assertContains(about_response, 'KnotSpot was founded, owned, and developed by')
+        self.assertContains(about_response, 'who is the developer of KnotSpot')
+        self.assertContains(about_response, 'Knots Campus Threads')
+        self.assertContains(seo_response, 'Knots Campus Discussion Threads')
+        self.assertContains(seo_response, 'Public Reading, Login-Only Participation')
+        self.assertContains(seo_response, 'CollectionPage')
+        self.assertContains(login_response, 'href="/knots/"', html=False)
+        self.assertContains(about_response, 'href="/knots/"', html=False)
+        self.assertContains(sitemap_response, 'https://knotspot.online/knots/')
+        self.assertContains(sitemap_response, 'https://knotspot.online/knots-campus-discussions/')
+
+    def test_knot_list_excerpt_decodes_html_entities_for_readable_google_safe_text(self):
+        KnotPost.objects.create(
+            user=self.owner,
+            title='Freshers in SRM Ramapuram',
+            content='<p>Hey guys I&#x27;m anuhiya, I&#x27;m a fresher in cse IOT. Let&#x27;s all meet.</p>',
+            college='SRM',
+            campus='Vadapalani Campus',
+            is_anonymous=True,
+        )
+
+        response = self.client.get('/knots/')
+
+        rendered = response.content.decode()
+        self.assertIn("I'm anuhiya", rendered.replace('&#x27;', "'"))
+        self.assertIn("Let's all meet", rendered.replace('&#x27;', "'"))
+        self.assertNotContains(response, 'I&amp;#x27;m', html=False)
+        self.assertNotContains(response, 'Let&amp;#x27;s', html=False)
+        self.assertNotContains(response, 'DiscussionForumPosting')
+        self.assertContains(response, 'ItemList')
+
+    def test_qotd_shows_author_profile_hook_and_suggestion_privacy_note(self):
+        question = DailyQuestion.objects.create(
+            question_text='What do you do after class?',
+            created_by=self.other,
+            is_admin_question=False,
+            date=timezone.now().date(),
+            is_active=True,
+        )
+        QuestionOption.objects.create(question=question, text='Library', order=0)
+        QuestionOption.objects.create(question=question, text='Room', order=1)
+        Profile.objects.filter(user=self.owner).update(age=20, gender='male', native_place='Chennai')
+        self.client.force_login(self.owner)
+        session = self.client.session
+        session['skipped_verification'] = True
+        session.save()
+
+        response = self.client.get('/')
+        api_response = self.client.get('/api/question-of-the-day/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'function qotdTriggerMarkup(question)')
+        self.assertContains(response, 'class="qotd-trigger-author"')
+        self.assertContains(response, 'data-qotd-profile-url="/profile/\' + encodeURIComponent(questioner.id) + \'/\"', html=False)
+        self.assertContains(response, 'window.location.href = profileTarget.dataset.qotdProfileUrl')
+        self.assertNotContains(response, 'id="qotdAuthorSlot"')
+        self.assertNotContains(response, 'id="qotdQuestionText"')
+        self.assertContains(response, 'Your profile will be visible to others if your question is selected.')
+        data = api_response.json()['question']['questioner']
+        self.assertEqual(data['type'], 'user')
+        self.assertEqual(data['id'], self.other.id)
+        self.assertEqual(data['name'], self.other.profile.name)
 
     def test_feed_hides_total_badge_and_filter_controls_can_bubble(self):
         self.client.force_login(self.owner)

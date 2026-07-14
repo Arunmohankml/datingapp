@@ -1,0 +1,12 @@
+<div class="knot-login-overlay" id="knotLoginPrompt" aria-hidden="true">
+    <div class="knot-login-dialog" role="dialog" aria-modal="true" aria-labelledby="knotLoginTitle" aria-describedby="knotLoginText">
+        <button class="sheet-close-btn knot-login-close" type="button" data-action="close-login-prompt" aria-label="Close login prompt"><span class="material-symbols-outlined">close</span></button>
+        <div class="knot-login-icon" aria-hidden="true"><span class="material-symbols-outlined">hub</span></div>
+        <h2 id="knotLoginTitle">Log in to join Knots</h2>
+        <p id="knotLoginText">You can read Knots publicly. Create posts, star threads, comment, and reply after logging in.</p>
+        <div class="knot-login-actions">
+            <a class="knot-primary-btn" id="knotLoginLink" href="{% url 'login' %}?next={{ request.path|urlencode }}">Log in</a>
+            <button class="knot-secondary-btn" type="button" data-action="close-login-prompt">Keep reading</button>
+        </div>
+    </div>
+</div>

@@ -1487,6 +1487,12 @@
         height: 100%;
         object-fit: cover;
     }
+    [data-qotd-profile-url] { cursor: pointer; }
+    [data-qotd-profile-url]:focus-visible {
+        outline: 2px solid rgba(0, 74, 198, .28);
+        outline-offset: 3px;
+        border-radius: 999px;
+    }
     .qotd-trigger-k {
         width: 30px;
         height: 30px;
@@ -1500,9 +1506,24 @@
         font-weight: 800;
     }
     .qotd-trigger-text {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+    }
+    .qotd-trigger-author {
+        color: #475569;
+        font-size: 12px;
+        font-weight: 850;
+        line-height: 1.15;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .qotd-trigger-question {
         font-size: 14px;
         font-weight: 700;
         color: #151b27;
+        line-height: 1.22;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1756,6 +1777,21 @@
         line-height: 1.5;
         color: #64748b;
     }
+    .qotd-privacy-note {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        margin: -4px 0 14px;
+        color: #7c8da5;
+        font-size: 11px;
+        font-weight: 650;
+        line-height: 1.4;
+    }
+    .qotd-privacy-note .material-symbols-outlined {
+        color: #94a3b8;
+        font-size: 15px;
+        line-height: 1;
+    }
     .qotd-modal .qotd-input {
         margin-bottom: 10px;
     }
@@ -1780,12 +1816,11 @@
             <div class="qotd-trigger" onclick="toggleQotd()">
                 <div class="qotd-trigger-left">
                     <span class="qotd-trigger-avatar" id="qotdTriggerAvatar"></span>
-                    <span class="qotd-trigger-text" id="qotdTriggerText">Loading question...</span>
+                    <span class="qotd-trigger-text" id="qotdTriggerText"><span class="qotd-trigger-question">Loading question...</span></span>
                 </div>
                 <span class="material-symbols-outlined qotd-chevron" id="qotdChevron">expand_more</span>
             </div>
             <div class="qotd-body" id="qotdBody">
-                <div class="qotd-question-text" id="qotdQuestionText"></div>
                 <div class="qotd-options" id="qotdOptions"></div>
                 <div class="qotd-footer" id="qotdFooter">
                     <button class="qotd-suggest-btn" onclick="openSuggestModal()">Suggest tomorrow's question</button>
@@ -2037,6 +2072,7 @@
         <button class="qotd-modal-close" onclick="closeSuggestModal()" aria-label="Close">&times;</button>
         <h3 class="qotd-modal-title">Suggest tomorrow's question</h3>
         <p class="qotd-modal-sub">Got a fun question? Submit it for the community to vote on tomorrow.</p>
+        <p class="qotd-privacy-note"><span class="material-symbols-outlined">visibility</span><span>Your profile will be visible to others if your question is selected.</span></p>
         <input type="text" class="qotd-input qotd-modal-input" id="suggestQuestion" placeholder="Your question..." maxlength="200">
         <div id="suggestOptions">
             <input type="text" class="qotd-input qotd-modal-input" placeholder="Option 1" maxlength="100">
@@ -2970,6 +3006,26 @@ var qotdExpanded = false;
 var qotdData = null;
 var qotdRendered = false;
 
+function qotdEscape(value) {
+    return String(value == null ? '' : value).replace(/[&<>'"]/g, function(ch) {
+        return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch];
+    });
+}
+
+function qotdTriggerMarkup(question) {
+    var questioner = question && question.questioner;
+    var questionText = question ? question.text : 'Loading question...';
+    if (!questioner) return '';
+    var name = questioner.name || 'KnotSpot';
+    var profileAttr = questioner.type === 'user' && questioner.id ? ' data-qotd-profile-url="/profile/' + encodeURIComponent(questioner.id) + '/" role="link" tabindex="0"' : '';
+    return '<span class="qotd-trigger-author"' + profileAttr + '>' + qotdEscape(name) + '</span><span class="qotd-trigger-question">' + qotdEscape(questionText) + '</span>';
+}
+
+function setQotdTrigger(question) {
+    var triggerText = document.getElementById('qotdTriggerText');
+    if (triggerText) triggerText.innerHTML = qotdTriggerMarkup(question);
+}
+
 function toggleQotd() {
     qotdExpanded = !qotdExpanded;
     document.getElementById('qotdWidget').classList.toggle('expanded', qotdExpanded);
@@ -2997,16 +3053,20 @@ function loadQotd() {
 
 function renderQotd() {
     var q = qotdData;
-    document.getElementById('qotdTriggerText').textContent = q.text;
+    setQotdTrigger(q);
 
     var avatarEl = document.getElementById('qotdTriggerAvatar');
     if (q.questioner.type === 'knotspot') {
         avatarEl.innerHTML = '<div class="qotd-trigger-k">K</div>';
+        avatarEl.removeAttribute('data-qotd-profile-url');
+        avatarEl.removeAttribute('role');
+        avatarEl.removeAttribute('tabindex');
     } else {
         avatarEl.innerHTML = '<img src="' + q.questioner.avatar + '" alt="" onerror="this.src=\'https://ui-avatars.com/api/?name=' + encodeURIComponent(q.questioner.name) + '&background=6366f1&color=fff&size=64\'">';
+        avatarEl.dataset.qotdProfileUrl = '/profile/' + encodeURIComponent(q.questioner.id) + '/';
+        avatarEl.setAttribute('role', 'link');
+        avatarEl.tabIndex = 0;
     }
-
-    document.getElementById('qotdQuestionText').textContent = q.text;
 
     var optsEl = document.getElementById('qotdOptions');
     optsEl.innerHTML = '';
@@ -3150,18 +3210,38 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (data.success) {
-                    triggerText.textContent = data.question.text;
                     qotdData = data.question;
+                    setQotdTrigger(qotdData);
                     var avatarEl = document.getElementById('qotdTriggerAvatar');
                     if (data.question.questioner.type === 'knotspot') {
                         avatarEl.innerHTML = '<div class="qotd-trigger-k">K</div>';
+                        avatarEl.removeAttribute('data-qotd-profile-url');
+                        avatarEl.removeAttribute('role');
+                        avatarEl.removeAttribute('tabindex');
                     } else {
                         avatarEl.innerHTML = '<img src="' + data.question.questioner.avatar + '" alt="" onerror="this.src=\'https://ui-avatars.com/api/?name=' + encodeURIComponent(data.question.questioner.name) + '&background=6366f1&color=fff&size=64\'">';
+                        avatarEl.dataset.qotdProfileUrl = '/profile/' + encodeURIComponent(data.question.questioner.id) + '/';
+                        avatarEl.setAttribute('role', 'link');
+                        avatarEl.tabIndex = 0;
                     }
                 }
             })
             .catch(function(e) {});
     }
+    document.addEventListener('click', function(e) {
+        var profileTarget = e.target.closest('[data-qotd-profile-url]');
+        if (!profileTarget) return;
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href = profileTarget.dataset.qotdProfileUrl;
+    });
+    document.addEventListener('keydown', function(e) {
+        var profileTarget = e.target.closest('[data-qotd-profile-url]');
+        if (!profileTarget || (e.key !== 'Enter' && e.key !== ' ')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href = profileTarget.dataset.qotdProfileUrl;
+    });
 });
 
 /* QOTD Suggest Modal: backdrop click + ESC to close */

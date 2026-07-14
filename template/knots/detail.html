@@ -1,5 +1,11 @@
 {% extends 'base.html' %}
 {% block title %}{{ post.title }} | Knots{% endblock %}
+{% block meta_description %}{{ post.title }} — read this KnotSpot campus discussion thread and follow student replies on Knots.{% endblock %}
+{% block meta_keywords %}KnotSpot Knots, {{ post.title }}, campus discussion, student thread, college forum{% endblock %}
+{% block og_title %}{{ post.title }} | Knots on KnotSpot{% endblock %}
+{% block og_description %}Read this KnotSpot campus discussion thread. Log in to star, comment, or reply on Knots.{% endblock %}
+{% block robots_tag %}<meta name="robots" content="index, follow">{% endblock %}
+{% block json_ld %}{% if post_schema_json %}<script type="application/ld+json">{{ post_schema_json|safe }}</script>{% endif %}{% endblock %}
 {% block head %}{% include 'knots/_styles.html' %}{% endblock %}
 {% block body %}
 <div class="knots-detail-shell">
@@ -30,15 +36,17 @@
             {% if comments.has_next %}<nav class="knot-pagination"><a class="knot-page-btn" href="?page={{ comments.next_page_number }}#comments">More comments</a></nav>{% endif %}
         </div>
     </div>
-    <form class="sticky-comment" id="commentForm" data-post-id="{{ post.id }}">
+    {% if user.is_authenticated %}<form class="sticky-comment" id="commentForm" data-post-id="{{ post.id }}">
         <div class="replying-to" id="replyingTo"><span>Replying to <strong id="replyingName"></strong></span><button type="button" class="knot-icon-btn" data-action="cancel-reply" aria-label="Cancel reply"><span class="material-symbols-outlined">close</span></button></div>
         <div class="sticky-comment-inner">
             <label for="commentInput" class="sr-only">Add a comment</label>
             <textarea id="commentInput" maxlength="1200" rows="1" placeholder="Add a comment…" required></textarea>
             <button class="knot-send-btn" type="submit" aria-label="Post comment"><span class="material-symbols-outlined">send</span></button>
         </div>
-    </form>
+    </form>{% else %}<div class="sticky-comment sticky-login-cta"><button type="button" data-action="require-login" data-login-reason="Comment on Knots"><span class="material-symbols-outlined">lock</span><span>Log in to comment on this Knot</span></button></div>{% endif %}
 </div>
+{% include 'knots/_login_prompt.html' %}
+{% include 'knots/_report_sheet.html' %}
 <div class="knot-toast" id="knotToast" role="status" aria-live="polite"></div>
 {% include 'knots/_scripts.html' %}
 {% endblock %}
