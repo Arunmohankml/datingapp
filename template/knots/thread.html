@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Continue thread | Knots{% endblock %}
+{% block head %}{% include 'knots/_styles.html' %}{% endblock %}
+{% block body %}
+<div class="knots-detail-shell">
+    <header class="knots-header">
+        <div class="knots-header-main">
+            <a href="{% url 'knot_detail_slug' post.id post.slug %}#comment-{{ root_comment.id }}" class="knots-back-btn" aria-label="Back to discussion">
+                <span class="material-symbols-outlined" style="font-size:20px;">arrow_back</span>
+            </a>
+            <h2>Continue thread</h2>
+        </div>
+        <span class="knots-header-badge" style="max-width:160px; overflow:hidden; text-overflow:ellipsis;">{{ post.title|truncatechars:18 }}</span>
+    </header>
+    <div class="knots-body">
+        <div class="knots-body-inner" style="padding-top:10px;">
+            <div class="thread-context">{% include 'knots/_comment.html' with comment=root_comment %}</div>
+            <div class="comments-panel">
+                <div class="comments-heading">
+                    <span class="material-symbols-outlined">forum</span>
+                    <h2>Replies</h2>
+                </div>
+                <div class="comment-list" id="commentList">{% for comment in comments %}{% include 'knots/_comment.html' %}{% empty %}<div class="knot-empty"><span class="material-symbols-outlined">chat_bubble</span><h2>No replies yet</h2><p>Add the first reply to continue this thread.</p></div>{% endfor %}</div>
+            </div>
+            {% if comments.has_next %}<nav class="knot-pagination"><a class="knot-page-btn" href="?page={{ comments.next_page_number }}">More replies</a></nav>{% endif %}
+        </div>
+    </div>
+    <form class="sticky-comment" id="commentForm" data-post-id="{{ post.id }}" data-default-parent="{{ root_comment.id }}">
+        <div class="replying-to show" id="replyingTo"><span>Replying in this thread</span><button type="button" data-action="cancel-reply" aria-label="Reply to thread root"><span class="material-symbols-outlined">subdirectory_arrow_left</span></button></div>
+        <div class="sticky-comment-inner">
+            <label for="commentInput" class="sr-only">Add a reply</label>
+            <textarea id="commentInput" maxlength="1200" rows="1" placeholder="Add a reply…" required></textarea>
+            <button class="knot-send-btn" type="submit" aria-label="Post reply"><span class="material-symbols-outlined">send</span></button>
+        </div>
+    </form>
+</div>
+<div class="knot-toast" id="knotToast" role="status" aria-live="polite"></div>
+{% include 'knots/_scripts.html' %}
+{% endblock %}

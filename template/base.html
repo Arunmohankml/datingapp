@@ -465,7 +465,7 @@
     <script src="{% static 'js/app-select.js' %}" defer></script>
 </head>
 <body>
-    {% if user.is_authenticated %}
+    {% if user.is_authenticated and not hide_bottom_nav %}
     <nav>
         <div class="nav-inner">
             <a href="{% url 'home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
@@ -487,6 +487,12 @@
                 </div>
                 <span>Confess</span>
             </a>
+            <a href="{% url 'knots_feed' %}" class="nav-link {% if 'knot' in request.resolver_match.url_name %}active{% endif %}">
+                <div class="nav-icon-wrapper">
+                    <span class="material-symbols-outlined">hub</span>
+                </div>
+                <span>Knots</span>
+            </a>
             <a href="{% url 'edit_profile' %}" class="nav-link {% if request.resolver_match.url_name == 'edit_profile' %}active{% endif %}">
                 <div class="nav-icon-wrapper">
                     <span class="material-symbols-outlined">person</span>
@@ -495,7 +501,7 @@
             </a>
             <a href="{% url 'more_menu' %}" class="nav-link {% if request.resolver_match.url_name == 'more_menu' %}active{% endif %}">
                 <div class="nav-icon-wrapper">
-                    <span class="material-symbols-outlined">hub</span>
+                    <span class="material-symbols-outlined">apps</span>
                 </div>
                 <span>More</span>
             </a>

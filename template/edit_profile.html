@@ -240,8 +240,11 @@
   .ep-profile-actions {
     display: flex;
     align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
     gap: 12px;
   }
+  .ep-profile-actions form { margin: 0; }
 
   .ep-btn-outline {
     display: inline-flex;
@@ -281,6 +284,14 @@
     transform: scale(0.98);
     box-shadow: 0 4px 12px rgba(0, 74, 198, 0.12);
   }
+  .ep-admin-action {
+    min-height: 44px; padding: 0 16px; border-radius: 999px;
+    border: 1px solid rgba(0,74,198,.18); background: #fff; color: #004ac6;
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    font: 700 12px 'Plus Jakarta Sans', sans-serif; cursor: pointer;
+  }
+  .ep-admin-action .material-symbols-outlined { font-size: 18px; }
+  .ep-admin-action.danger { color: #b91c1c; border-color: #fecaca; background: #fff7f7; }
 
   .ep-tabs-wrap {
     display: flex;
@@ -1086,6 +1097,22 @@
         <a href="{% url 'verify' %}" class="ep-btn-gradient">Verify</a>
         {% else %}
         <a href="{% url 'view_profile' profile.user.id %}" class="ep-btn-gradient">Preview</a>
+        {% endif %}
+        {% if is_admin_editing %}
+        <form method="POST" action="{% url 'admin_edit_user_profile' profile.user.id %}">
+          {% csrf_token %}
+          <button type="submit" name="start_admin_chat" value="1" class="ep-admin-action">
+            <span class="material-symbols-outlined">chat</span>Message user
+          </button>
+        </form>
+        {% if profile.profile_pic %}
+        <form method="POST" action="{% url 'admin_edit_user_profile' profile.user.id %}" onsubmit="return confirm('Remove this profile photo and disable matching for this user?');">
+          {% csrf_token %}
+          <button type="submit" name="remove_profile_pic" value="1" class="ep-admin-action danger">
+            <span class="material-symbols-outlined">person_remove</span>Remove photo
+          </button>
+        </form>
+        {% endif %}
         {% endif %}
       </div>
     </section>

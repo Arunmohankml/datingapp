@@ -87,13 +87,14 @@ def get_firebase_app():
             raise e
     return firebase_admin.get_app()
 from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
 from django.db.models import Q, Prefetch, F
 from django.core.files.base import ContentFile
 import base64
 import math
 from django.utils import timezone
 
-from .models import Profile, Question, Option, UserAnswer, MatchRequest, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier, Conversation, RoomRequest, StaffMember, VoiceRoom, VoiceParticipant, BugReport, FeatureSuggestion, SupportTicket, TicketMessage, FeedbackNotification, Advertisement, CampusSpotlight, Event, Community, CommunityMessage, CommunityReadStatus, DailyQuestion, QuestionOption, QuestionVote, QuestionSuggestion
+from .models import Profile, Question, Option, UserAnswer, MatchRequest, DailyMatchAction, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier, Conversation, RoomRequest, StaffMember, VoiceRoom, VoiceParticipant, BugReport, FeatureSuggestion, SupportTicket, TicketMessage, FeedbackNotification, Advertisement, CampusSpotlight, Event, Community, CommunityMessage, CommunityReadStatus, DailyQuestion, QuestionOption, QuestionVote, QuestionSuggestion
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm, ProfileInitForm
 from .supabase_utils import delete_from_supabase_by_url
 from .cloudinary_utils import upload_to_cloudinary, upload_base64_to_cloudinary
@@ -483,6 +484,38 @@ def more_menu(request):
     })
 
 # ---------------- MATCHING FEED ----------------
+def daily_match_action_limit(user):
+    """Female profiles receive 13 daily match actions; every other profile receives 8."""
+    profile = getattr(user, 'profile', None)
+    return 13 if profile and profile.gender == 'female' else 8
+
+
+def daily_match_action_state(user):
+    used = DailyMatchAction.objects.filter(user=user, date=timezone.localdate()).count()
+    limit = daily_match_action_limit(user)
+    return {'used': used, 'limit': limit, 'remaining': max(0, limit - used), 'reached': used >= limit}
+
+
+def reserve_match_action(user, receiver, status):
+    """Atomically reserve one daily Skip/Connect action, or return the existing interaction."""
+    with transaction.atomic():
+        Profile.objects.select_for_update().get(user=user)
+        existing = MatchRequest.objects.filter(sender=user, receiver=receiver).first()
+        if existing:
+            return existing, False, daily_match_action_state(user)
+        state = daily_match_action_state(user)
+        if state['reached']:
+            return None, False, state
+        request_obj = MatchRequest.objects.create(sender=user, receiver=receiver, status=status)
+        DailyMatchAction.objects.create(
+            user=user, target=receiver, action='skip' if status == 'skipped' else 'connect',
+        )
+        state['used'] += 1
+        state['remaining'] = max(0, state['limit'] - state['used'])
+        state['reached'] = state['used'] >= state['limit']
+        return request_obj, True, state
+
+
 @login_required
 def match_feed(request):
     user = request.user
@@ -518,6 +551,19 @@ def match_feed(request):
             "checklist": checklist,
             "profile_complete": len(missing) == 0,
             "is_verified": profile.is_face_verified,
+        })
+
+    daily_action_state = daily_match_action_state(user)
+    if daily_action_state['reached']:
+        request.session['current_match_id'] = None
+        return render(request, "home.html", {
+            "daily_limit_reached": True,
+            "daily_match_used": daily_action_state['used'],
+            "daily_match_limit": daily_action_state['limit'],
+            "daily_match_remaining": 0,
+            "matches": [],
+            "profile": profile,
+            "quiz_round_size": quiz_round_size(user),
         })
 
     # Get answered questions count
@@ -833,6 +879,11 @@ def check_match(request):
     if profile is None:
         return redirect('match_feed')
 
+    daily_action_state = daily_match_action_state(user)
+    if daily_action_state['reached']:
+        request.session['current_match_id'] = None
+        return redirect('match_feed')
+
     # Exclude ANY users where a MatchRequest exists, UNLESS they only skipped us
     users_i_acted_on = list(MatchRequest.objects.filter(sender=user).values_list('receiver_id', flat=True))
     users_who_acted_on_me_excluding_skips = list(MatchRequest.objects.filter(receiver=user).exclude(status='skipped').values_list('sender_id', flat=True))
@@ -859,7 +910,9 @@ def check_match(request):
             return render(request, "match_popup.html", {
                 "match": best_match,
                 "score": score,
-                "reasons": admin_reasons if request.user.email in settings.ADMIN_EMAILS else []
+                "reasons": admin_reasons if request.user.email in settings.ADMIN_EMAILS else [],
+                "daily_match_remaining": daily_action_state['remaining'],
+                "daily_match_limit": daily_action_state['limit'],
             })
 
     # IDs of users already shown to this user in previous rounds (stored in session)
@@ -950,7 +1003,9 @@ def check_match(request):
         return render(request, "match_popup.html", {
             "match": best_match,
             "score": best_score,
-            "reasons": best_reasons
+            "reasons": best_reasons,
+            "daily_match_remaining": daily_action_state['remaining'],
+            "daily_match_limit": daily_action_state['limit'],
         })
 
     # No one left to show — reset seen list and send back to quiz
@@ -1100,7 +1155,16 @@ def send_match_request(request, receiver_id):
     if request.method == 'POST':
         receiver = get_object_or_404(User, id=receiver_id)
         if receiver != request.user:
-            req, created = MatchRequest.objects.get_or_create(sender=request.user, receiver=receiver, defaults={'status': 'pending'})
+            req, created, action_state = reserve_match_action(request.user, receiver, 'pending')
+            if req is None:
+                message = f"Daily match limit reached ({action_state['limit']}/{action_state['limit']}). Come back tomorrow."
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': False, 'error': message, 'code': 'daily_limit_reached',
+                        'used': action_state['used'], 'limit': action_state['limit'], 'remaining': 0,
+                    }, status=429)
+                messages.info(request, message)
+                return redirect('match_feed')
             
             # Check for mutual match: if receiver already sent a pending request to sender
             mutual = MatchRequest.objects.filter(sender=receiver, receiver=request.user, status='pending').first()
@@ -1139,7 +1203,10 @@ def send_match_request(request, receiver_id):
                 status = 'already_sent'
             
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return JsonResponse({'success': True, 'status': status, 'mutual': status == 'matched'})
+                return JsonResponse({
+                    'success': True, 'status': status, 'mutual': status == 'matched',
+                    'daily_remaining': action_state['remaining'], 'daily_limit': action_state['limit'],
+                })
             if status == 'sent':
                 messages.success(request, "Connection request sent!")
             elif status == 'already_sent':
@@ -1159,11 +1226,22 @@ def skip_match(request, receiver_id):
     if request.method == 'POST':
         receiver = get_object_or_404(User, id=receiver_id)
         if receiver != request.user:
-            MatchRequest.objects.get_or_create(
-                sender=request.user, 
-                receiver=receiver, 
-                defaults={'status': 'skipped'}
-            )
+            req, created, action_state = reserve_match_action(request.user, receiver, 'skipped')
+            if req is None:
+                message = f"Daily match limit reached ({action_state['limit']}/{action_state['limit']}). Come back tomorrow."
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': False, 'error': message, 'code': 'daily_limit_reached',
+                        'used': action_state['used'], 'limit': action_state['limit'], 'remaining': 0,
+                    }, status=429)
+                messages.info(request, message)
+                return redirect('match_feed')
+            request.session['current_match_id'] = None
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return JsonResponse({
+                    'success': True, 'status': 'skipped' if created else 'already_acted',
+                    'daily_remaining': action_state['remaining'], 'daily_limit': action_state['limit'],
+                })
     return redirect('match_feed')
 
 @login_required
@@ -3484,7 +3562,22 @@ def admin_edit_user_profile(request, user_id):
     
     if request.method == "POST":
         # We reuse the logic from edit_profile but for the target_user
-        if 'update_profile' in request.POST:
+        if 'remove_profile_pic' in request.POST:
+            profile.profile_pic = ''
+            profile.is_discoverable = False
+            profile.save(update_fields=['profile_pic', 'is_discoverable', 'updated_at'])
+            messages.success(request, f"Profile photo removed for {profile.display_name}. Matching has been disabled until they upload a new photo.")
+            return redirect('admin_edit_user_profile', user_id=user_id)
+
+        elif 'start_admin_chat' in request.POST:
+            if target_user == request.user:
+                messages.error(request, "You cannot start a chat with yourself.")
+                return redirect('admin_edit_user_profile', user_id=user_id)
+            user1, user2 = (request.user, target_user) if request.user.id < target_user.id else (target_user, request.user)
+            Conversation.objects.get_or_create(user1=user1, user2=user2, defaults={'source': 'admin'})
+            return redirect('chat_view', partner_id=target_user.id)
+
+        elif 'update_profile' in request.POST:
             form = ProfileEditForm(request.POST, request.FILES, instance=profile)
             if form.is_valid():
                 updated_profile = form.save(commit=False)

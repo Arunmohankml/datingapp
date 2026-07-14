@@ -1,0 +1,29 @@
+<article class="comment" id="comment-{{ comment.id }}" data-comment-id="{{ comment.id }}" data-post-id="{{ comment.post_id }}">
+    <div class="knot-author">
+        <a class="knot-profile-link knot-avatar-link" href="{% url 'view_profile' comment.user_id %}" aria-label="View {{ comment.user.profile.display_name }} profile"><img class="knot-avatar" src="{{ comment.user.profile.get_profile_pic_thumb_url }}" alt="{{ comment.user.profile.display_name }}" width="34" height="34" loading="lazy"></a>
+        <div class="knot-author-copy">
+            <div class="comment-author-line"><a class="knot-profile-link knot-author-name" href="{% url 'view_profile' comment.user_id %}">{{ comment.user.profile.display_name }}</a><span class="comment-time">· {{ comment.compact_age }}{% if comment.is_edited %} · edited{% endif %}</span></div>
+        </div>
+    </div>
+    <div class="knot-menu-wrap">
+        <button class="knot-menu-btn" type="button" data-action="menu" aria-label="Comment actions" aria-expanded="false"><span class="material-symbols-outlined">more_horiz</span></button>
+        <div class="knot-menu" role="menu">
+            {% if not comment.is_deleted %}
+                <button type="button" data-action="copy-comment-text"><span class="material-symbols-outlined">content_paste</span>Copy text</button>
+                {% if comment.user_id == user.id or is_moderator %}
+                <button type="button" data-action="edit-comment"><span class="material-symbols-outlined">edit</span>{% if comment.user_id != user.id %}Admin edit{% else %}Edit{% endif %}</button>
+                <button type="button" class="danger" data-action="delete-comment"><span class="material-symbols-outlined">delete</span>{% if comment.user_id != user.id %}Admin delete{% else %}Delete{% endif %}</button>
+                {% else %}
+                <button type="button" class="danger" data-action="report-comment"><span class="material-symbols-outlined">flag</span>Report</button>
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    <p class="comment-body {% if comment.is_deleted %}deleted{% endif %}" data-comment-body>{% if comment.is_deleted %}Comment deleted{% else %}{{ comment.content }}{% endif %}</p>
+    <div class="comment-actions">
+        {% if not comment.is_deleted %}<button class="knot-action comment-icon-action {% if comment.user_has_liked %}active{% endif %}" type="button" data-action="like-comment" aria-label="Like comment ({{ comment.like_count }} likes)" aria-pressed="{% if comment.user_has_liked %}true{% else %}false{% endif %}"><span class="material-symbols-outlined">favorite</span><span class="sr-only" data-count>{{ comment.like_count }}</span></button>{% endif %}
+        {% if not comment.is_deleted %}<button class="knot-action comment-icon-action" type="button" data-action="reply" data-author="{{ comment.user.profile.display_name }}" aria-label="Reply to {{ comment.user.profile.display_name }}"><span class="material-symbols-outlined">reply</span></button>{% endif %}
+        {% if comment.reply_count %}<button class="view-replies" type="button" data-action="replies" aria-expanded="false"><span class="material-symbols-outlined">expand_more</span><span>View {{ comment.reply_count }} repl{{ comment.reply_count|pluralize:"y,ies" }}</span></button>{% endif %}
+    </div>
+    <div class="reply-children" data-reply-children></div>
+</article>

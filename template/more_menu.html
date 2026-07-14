@@ -251,6 +251,18 @@
 
     <div class="more-body">
     <div class="more-list">
+        <a href="{% url 'knots_feed' %}" class="menu-card">
+            <div class="menu-main">
+                <div class="menu-icon" style="background:#eff6ff;color:#2563eb;">
+                    <span class="material-symbols-outlined">forum</span>
+                </div>
+                <div class="menu-copy">
+                    <h3>Knots</h3>
+                    <p>Ask questions, share advice, and join campus discussions.</p>
+                </div>
+            </div>
+            <span class="material-symbols-outlined chevron">chevron_right</span>
+        </a>
         {% if is_staff or user.is_staff or user.is_superuser or user.email in admin_emails %}
         <a href="{% url 'admin_dashboard' %}" class="menu-card">
             <div class="menu-main">

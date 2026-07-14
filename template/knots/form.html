@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+{% block title %}{% if post %}Edit{% else %}Create{% endif %} Knot | KnotSpot{% endblock %}
+{% block head %}{% include 'knots/_styles.html' %}{% endblock %}
+{% block body %}
+<div class="knot-composer-shell">
+    <form id="knotForm" class="knot-composer" data-post-id="{% if post %}{{ post.id }}{% endif %}">
+        <div class="knot-composer-topbar">
+            <a href="{% if post %}{% url 'knot_detail_slug' post.id post.slug %}{% else %}{% url 'knots_feed' %}{% endif %}" class="knot-composer-back" aria-label="Back to Knots">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+            <input id="knotCollege" name="college" type="hidden" value="{{ profile_college|default:'' }}">
+            <div class="knot-custom-select" data-custom-select data-target="knotCollege">
+                <button class="knot-composer-select" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Select college">
+                    <span data-selected-label>General</span><span class="material-symbols-outlined">expand_more</span>
+                </button>
+                <div class="knot-select-menu" role="listbox">
+                    <button type="button" role="option" data-value="">General</button>
+                    {% for org in campus_groups %}<button type="button" role="option" data-value="{{ org }}">{{ org }}</button>{% endfor %}
+                </div>
+            </div>
+            <input id="knotCampus" name="campus" type="hidden" value="{{ profile_campus|default:'' }}">
+            <div class="knot-custom-select" data-custom-select data-target="knotCampus">
+                <button class="knot-composer-select" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Select campus, optional">
+                    <span data-selected-label>General</span><span class="material-symbols-outlined">expand_more</span>
+                </button>
+                <div class="knot-select-menu" role="listbox">
+                    <button type="button" role="option" data-value="">General</button>
+                    {% for org, campuses in campus_groups.items %}{% for c in campuses %}<button type="button" role="option" data-value="{{ c.name }}" data-org="{{ org }}">{{ c.code }}</button>{% endfor %}{% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="knot-form-error knot-composer-error" id="formError" role="alert"></div>
+        <main class="knot-composer-main">
+            <label class="sr-only" for="knotTitle">Title</label>
+            <input id="knotTitle" class="knot-composer-title" name="title" maxlength="180" required value="{{ post.title|default:'' }}" placeholder="Title" autocomplete="off">
+            <div class="knot-composer-divider"></div>
+            <label class="sr-only" id="knotBodyLabel" for="knotRichEditor">Body text</label>
+            <div id="knotRichEditor" class="knot-rich-editor" contenteditable="true" role="textbox" aria-labelledby="knotBodyLabel" aria-multiline="true" data-placeholder="Body">{% if post %}{{ post.content|safe }}{% endif %}</div>
+            <textarea id="knotContent" name="content" hidden></textarea>
+        </main>
+
+        <div class="knot-selection-tools" id="knotSelectionTools" aria-label="Text formatting tools" hidden>
+            <button type="button" data-format="bold" aria-label="Bold selected text"><strong>B</strong></button>
+            <button type="button" data-format="italic" aria-label="Italicize selected text"><em>I</em></button>
+            <button type="button" data-format="insertUnorderedList" aria-label="Turn selected lines into a bullet list"><span class="material-symbols-outlined">format_list_bulleted</span></button>
+            <button type="button" data-format="formatBlock" data-value="H2" aria-label="Make selected text a heading"><strong>H</strong></button>
+        </div>
+
+        <footer class="knot-composer-footer">
+            <div class="knot-composer-attachments">
+                <button type="button" class="knot-composer-tool" id="knotLinkButton" aria-label="Insert link">
+                    <span class="material-symbols-outlined">link</span><span>Link</span>
+                </button>
+                <button type="button" class="knot-composer-tool" id="knotImageButton" aria-label="Insert image">
+                    <span class="material-symbols-outlined">image</span><span>Image</span>
+                </button>
+                <span class="knot-upload-status" id="knotUploadStatus" role="status" aria-live="polite"></span>
+            </div>
+            <div class="knot-publish-actions">
+                <label class="knot-anon-toggle" for="knotAnonymous"><span data-anon-label>{% if post.is_anonymous %}Anonymous{% else %}Profile{% endif %}</span><span class="knot-mini-switch" aria-hidden="true"></span></label>
+                <button class="knot-composer-publish" id="publishBtn" type="submit">{% if post %}Save{% else %}Post{% endif %}</button>
+            </div>
+        </footer>
+        <input id="knotImageInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" hidden>
+        <input id="knotCategory" type="hidden" value="{{ post.category|default:'' }}">
+        <input id="knotLink" type="hidden" value="{{ post.link|default:'' }}">
+        <input id="knotAnonymous" type="checkbox" {% if post.is_anonymous %}checked{% endif %} hidden>
+    </form>
+</div>
+<div class="knot-link-dialog" id="knotLinkDialog" aria-hidden="true">
+    <div class="knot-link-card" role="dialog" aria-modal="true" aria-labelledby="knotLinkTitle">
+        <h2 id="knotLinkTitle">Add link</h2>
+        <input id="knotLinkInput" type="url" inputmode="url" autocomplete="off" placeholder="https://example.com">
+        <div class="knot-link-actions">
+            <button type="button" class="knot-link-cancel" data-link-cancel>Cancel</button>
+            <button type="button" class="knot-link-apply" data-link-apply>Add</button>
+        </div>
+    </div>
+</div>
+<div class="knot-toast" id="knotToast" role="status" aria-live="polite"></div>
+{% include 'knots/_scripts.html' %}
+<script>
+(function () {
+    'use strict';
+    var form = document.getElementById('knotForm');
+    var editor = document.getElementById('knotRichEditor');
+    var title = document.getElementById('knotTitle');
+    var college = document.getElementById('knotCollege');
+    var campus = document.getElementById('knotCampus');
+    var campusOptions = document.querySelectorAll('[data-custom-select][data-target="knotCampus"] [role="option"][data-org]');
+    var customSelects = document.querySelectorAll('[data-custom-select]');
+    var selectionTools = document.getElementById('knotSelectionTools');
+    var imageInput = document.getElementById('knotImageInput');
+    var imageButton = document.getElementById('knotImageButton');
+    var uploadStatus = document.getElementById('knotUploadStatus');
+    var publish = document.getElementById('publishBtn');
+    var linkDialog = document.getElementById('knotLinkDialog');
+    var linkInput = document.getElementById('knotLinkInput');
+    var anonInput = document.getElementById('knotAnonymous');
+    var anonToggle = document.querySelector('.knot-anon-toggle');
+    var savedRange = null;
+    var csrf = (document.cookie.match(/(?:^|; )csrftoken=([^;]+)/) || [])[1] || '';
+
+    function closeCustomSelects(except) {
+        customSelects.forEach(function (wrap) {
+            if (wrap === except) return;
+            wrap.classList.remove('open');
+            var button = wrap.querySelector('.knot-composer-select');
+            if (button) button.setAttribute('aria-expanded', 'false');
+        });
+    }
+
+    function optionForValue(wrap, value) {
+        var match = null;
+        wrap.querySelectorAll('[role="option"]').forEach(function (option) {
+            if (match || option.dataset.value !== value) return;
+            match = option;
+        });
+        return match;
+    }
+
+    function syncCustomSelect(field) {
+        var wrap = document.querySelector('[data-custom-select][data-target="' + field.id + '"]');
+        if (!wrap) return;
+        var selected = optionForValue(wrap, field.value);
+        var label = wrap.querySelector('[data-selected-label]');
+        var value = selected ? selected.dataset.value : '';
+        var text = selected ? selected.textContent.trim() : 'General';
+        label.textContent = text || 'General';
+        wrap.classList.toggle('disabled', field.disabled);
+        wrap.querySelectorAll('[role="option"]').forEach(function (option) {
+            option.setAttribute('aria-selected', String(option.dataset.value === value));
+        });
+    }
+
+    function updateAnonToggle() {
+        if (!anonToggle || !anonInput) return;
+        anonToggle.classList.toggle('is-anon', anonInput.checked);
+        var label = anonToggle.querySelector('[data-anon-label]');
+        if (label) label.textContent = anonInput.checked ? 'Anonymous' : 'Profile';
+    }
+
+    function filterCampuses() {
+        var org = college.value;
+        campusOptions.forEach(function (option) {
+            var allowed = Boolean(org) && option.dataset.org === org;
+            option.hidden = !allowed;
+            option.disabled = !allowed;
+        });
+        var campusWrap = document.querySelector('[data-custom-select][data-target="knotCampus"]');
+        var selectedCampus = campusWrap ? optionForValue(campusWrap, campus.value) : null;
+        if (!org || (selectedCampus && selectedCampus.dataset.org && selectedCampus.dataset.org !== org)) campus.value = '';
+        campus.disabled = !org;
+        syncCustomSelect(college);
+        syncCustomSelect(campus);
+    }
+
+    function rememberRange() {
+        var selection = window.getSelection();
+        if (selection.rangeCount && editor.contains(selection.anchorNode)) savedRange = selection.getRangeAt(0).cloneRange();
+    }
+
+    function restoreRange() {
+        editor.focus();
+        if (!savedRange) return;
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(savedRange);
+    }
+
+    function showFormattingTools() {
+        var selection = window.getSelection();
+        var visible = selection.rangeCount && !selection.isCollapsed && editor.contains(selection.anchorNode);
+        selectionTools.hidden = !visible;
+        if (!visible) return;
+        savedRange = selection.getRangeAt(0).cloneRange();
+        var rect = savedRange.getBoundingClientRect();
+        var shellRect = form.getBoundingClientRect();
+        selectionTools.style.left = Math.max(8, Math.min(shellRect.width - selectionTools.offsetWidth - 8, rect.left - shellRect.left)) + 'px';
+        selectionTools.style.top = Math.max(62, rect.top - shellRect.top - 48) + 'px';
+    }
+
+    function insertNodeAtCursor(node) {
+        restoreRange();
+        var selection = window.getSelection();
+        var range = selection.rangeCount ? selection.getRangeAt(0) : null;
+        if (!range || !editor.contains(range.commonAncestorContainer)) {
+            editor.appendChild(node);
+        } else {
+            range.deleteContents();
+            range.insertNode(node);
+            range.setStartAfter(node);
+            range.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            savedRange = range.cloneRange();
+        }
+        editor.dispatchEvent(new Event('input', {bubbles:true}));
+    }
+
+    function getSelectedEditorRange() {
+        restoreRange();
+        var selection = window.getSelection();
+        if (!selection.rangeCount || selection.isCollapsed) return null;
+        var range = selection.getRangeAt(0);
+        if (!editor.contains(range.commonAncestorContainer)) return null;
+        return range;
+    }
+
+    function selectInsertedNode(node) {
+        var range = document.createRange();
+        range.setStartAfter(node);
+        range.collapse(true);
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        savedRange = range.cloneRange();
+    }
+
+    function replaceSelectedRange(node) {
+        var range = getSelectedEditorRange();
+        if (!range) return false;
+        range.deleteContents();
+        range.insertNode(node);
+        selectInsertedNode(node);
+        editor.dispatchEvent(new Event('input', {bubbles:true}));
+        return true;
+    }
+
+    function wrapSelectedRange(tagName, className) {
+        var range = getSelectedEditorRange();
+        if (!range) return false;
+        var wrapper = document.createElement(tagName);
+        if (className) wrapper.className = className;
+        wrapper.appendChild(range.extractContents());
+        if (!wrapper.textContent.trim() && !wrapper.querySelector('img')) return false;
+        range.insertNode(wrapper);
+        selectInsertedNode(wrapper);
+        editor.dispatchEvent(new Event('input', {bubbles:true}));
+        return true;
+    }
+
+    function bulletSelectedRange() {
+        var range = getSelectedEditorRange();
+        if (!range) return false;
+        var fragment = range.extractContents();
+        var text = fragment.textContent || '';
+        var lines = text.split(/\n+/).map(function (line) { return line.trim(); }).filter(Boolean);
+        if (!lines.length) return false;
+        var list = document.createElement('ul');
+        lines.forEach(function (line) {
+            var item = document.createElement('li');
+            item.textContent = line;
+            list.appendChild(item);
+        });
+        range.insertNode(list);
+        selectInsertedNode(list);
+        editor.dispatchEvent(new Event('input', {bubbles:true}));
+        return true;
+    }
+
+    function applySelectionFormat(button) {
+        var format = button.dataset.format;
+        if (format === 'bold') return wrapSelectedRange('strong');
+        if (format === 'italic') return wrapSelectedRange('em');
+        if (format === 'formatBlock') return wrapSelectedRange('span', 'knot-inline-heading');
+        if (format === 'insertUnorderedList') return bulletSelectedRange();
+        restoreRange();
+        document.execCommand(format, false, button.dataset.value || null);
+        editor.dispatchEvent(new Event('input', {bubbles:true}));
+        return true;
+    }
+
+    customSelects.forEach(function (wrap) {
+        var target = document.getElementById(wrap.dataset.target);
+        var button = wrap.querySelector('.knot-composer-select');
+        button.addEventListener('click', function () {
+            if (target.disabled) return;
+            var open = !wrap.classList.contains('open');
+            closeCustomSelects(wrap);
+            wrap.classList.toggle('open', open);
+            button.setAttribute('aria-expanded', String(open));
+        });
+        wrap.querySelectorAll('[role="option"]').forEach(function (option) {
+            option.addEventListener('click', function () {
+                if (option.disabled) return;
+                target.value = option.dataset.value;
+                target.dispatchEvent(new Event('change', {bubbles:true}));
+                closeCustomSelects();
+            });
+        });
+        syncCustomSelect(target);
+    });
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('[data-custom-select]')) closeCustomSelects();
+    });
+
+    college.addEventListener('change', filterCampuses);
+    campus.addEventListener('change', function () { syncCustomSelect(campus); });
+    filterCampuses();
+    updateAnonToggle();
+    if (anonInput) anonInput.addEventListener('change', updateAnonToggle);
+    if (anonToggle) anonToggle.addEventListener('click', function (event) {
+        event.preventDefault();
+        anonInput.checked = !anonInput.checked;
+        anonInput.dispatchEvent(new Event('change', {bubbles:true}));
+        saveDraft();
+    });
+    editor.addEventListener('keyup', rememberRange);
+    editor.addEventListener('mouseup', function () { rememberRange(); requestAnimationFrame(showFormattingTools); });
+    editor.addEventListener('touchend', function () { rememberRange(); setTimeout(showFormattingTools, 50); });
+    document.addEventListener('selectionchange', showFormattingTools);
+
+    selectionTools.querySelectorAll('[data-format]').forEach(function (button) {
+        button.addEventListener('mousedown', function (event) { event.preventDefault(); });
+        button.addEventListener('click', function () {
+            applySelectionFormat(button);
+            rememberRange();
+            selectionTools.hidden = true;
+        });
+    });
+
+    function openLinkDialog() {
+        rememberRange();
+        linkInput.value = document.getElementById('knotLink').value || '';
+        linkDialog.classList.add('open');
+        linkDialog.setAttribute('aria-hidden', 'false');
+        setTimeout(function () { linkInput.focus(); }, 20);
+    }
+
+    function closeLinkDialog() {
+        linkDialog.classList.remove('open');
+        linkDialog.setAttribute('aria-hidden', 'true');
+    }
+
+    function applyLink() {
+        var url = linkInput.value;
+        if (!url) return;
+        url = url.trim();
+        if (!/^https?:\/\//i.test(url)) {
+            document.getElementById('formError').textContent = 'Link must start with http:// or https://.';
+            document.getElementById('formError').classList.add('show');
+            return;
+        }
+        restoreRange();
+        var selection = window.getSelection();
+        if (selection.rangeCount && !selection.isCollapsed && editor.contains(selection.anchorNode)) {
+            document.execCommand('createLink', false, url);
+        } else {
+            var anchor = document.createElement('a');
+            anchor.href = url; anchor.textContent = url; anchor.target = '_blank'; anchor.rel = 'nofollow noopener noreferrer';
+            insertNodeAtCursor(anchor);
+        }
+        document.getElementById('knotLink').value = url;
+        closeLinkDialog();
+        rememberRange();
+    }
+
+    document.getElementById('knotLinkButton').addEventListener('click', openLinkDialog);
+    document.querySelector('[data-link-cancel]').addEventListener('click', closeLinkDialog);
+    document.querySelector('[data-link-apply]').addEventListener('click', applyLink);
+    linkInput.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') { event.preventDefault(); applyLink(); }
+        if (event.key === 'Escape') closeLinkDialog();
+    });
+    linkDialog.addEventListener('click', function (event) { if (event.target === linkDialog) closeLinkDialog(); });
+
+    imageButton.addEventListener('click', function () { rememberRange(); imageInput.click(); });
+    imageInput.addEventListener('change', function () {
+        var file = imageInput.files[0];
+        if (!file) return;
+        if (file.size > 8 * 1024 * 1024) { uploadStatus.textContent = 'Image must be under 8 MB'; imageInput.value = ''; return; }
+        var data = new FormData(); data.append('image', file);
+        imageButton.disabled = true; uploadStatus.textContent = 'Uploading…';
+        fetch('/api/knots/images/', {method:'POST', headers:{'X-CSRFToken':csrf}, body:data})
+            .then(function (response) { return response.json().then(function (body) { if (!response.ok) throw new Error(body.error || 'Upload failed'); return body; }); })
+            .then(function (body) {
+                var image = document.createElement('img'); image.src = body.data.url; image.alt = file.name.replace(/\.[^.]+$/, '') || 'Knot image';
+                insertNodeAtCursor(image); uploadStatus.textContent = 'Image added';
+            })
+            .catch(function (error) { uploadStatus.textContent = error.message; })
+            .finally(function () { imageButton.disabled = false; imageInput.value = ''; });
+    });
+
+    function normalizedEditorHtml() {
+        return editor.innerHTML
+            .replace(/(?:\s*<br\s*\/?\s*>\s*){3,}/gi, '<br><br>')
+            .replace(/(?:<div>\s*<br\s*\/?\s*>\s*<\/div>\s*){3,}/gi, '<div><br></div><div><br></div>')
+            .replace(/(?:<p>\s*<br\s*\/?\s*>\s*<\/p>\s*){3,}/gi, '<p><br></p><p><br></p>')
+            .replace(/[ \t\f\v]{2,}/g, ' ');
+    }
+
+    function saveDraft() {
+        if (form.dataset.postId) return;
+        try { localStorage.setItem('knotDraft', JSON.stringify({title:title.value, html:normalizedEditorHtml(), college:college.value, campus:campus.value, is_anonymous:anonInput.checked})); } catch (ignore) {}
+    }
+    var draftTimer;
+    [title, editor, college, campus, anonInput].forEach(function (field) { field.addEventListener('input', function () { clearTimeout(draftTimer); draftTimer = setTimeout(saveDraft, 250); }); });
+    editor.addEventListener('paste', function () {
+        setTimeout(function () {
+            editor.innerHTML = normalizedEditorHtml();
+            editor.dispatchEvent(new Event('input', {bubbles:true}));
+        }, 0);
+    });
+    if (!form.dataset.postId && !title.value && !editor.textContent.trim()) {
+        try {
+            var draft = JSON.parse(localStorage.getItem('knotDraft') || 'null');
+            if (draft) { title.value = draft.title || ''; editor.innerHTML = draft.html || ''; college.value = draft.college || ''; filterCampuses(); campus.value = draft.campus || ''; if (draft.is_anonymous) anonInput.checked = true; updateAnonToggle(); syncCustomSelect(campus); }
+        } catch (ignore) {}
+    }
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        var error = document.getElementById('formError');
+        var plain = editor.innerText.trim();
+        error.classList.remove('show');
+        if (!title.value.trim() || !plain) { error.textContent = 'Add a title and body text.'; error.classList.add('show'); return; }
+        if (title.value.trim().length > 180) { error.textContent = 'Title must be 180 characters or fewer.'; error.classList.add('show'); return; }
+        if (plain.length > 5000) { error.textContent = 'Body text must be 5000 characters or fewer.'; error.classList.add('show'); return; }
+        var payload = {
+            title: title.value.trim(), content: plain, content_html: normalizedEditorHtml(),
+            college: college.value, campus: campus.value,
+            link: document.getElementById('knotLink').value,
+            category: document.getElementById('knotCategory').value,
+            is_anonymous: document.getElementById('knotAnonymous').checked
+        };
+        publish.disabled = true; publish.textContent = form.dataset.postId ? 'Saving…' : 'Posting…';
+        fetch(location.pathname, {method:'POST', headers:{'X-CSRFToken':csrf,'Content-Type':'application/json'}, body:JSON.stringify(payload)})
+            .then(function (response) { return response.json().then(function (body) { if (!response.ok) throw new Error(body.error || 'Could not save Knot'); return body; }); })
+            .then(function (body) { try { localStorage.removeItem('knotDraft'); } catch (ignore) {} location.href = body.data.url; })
+            .catch(function (failure) { error.textContent = failure.message; error.classList.add('show'); publish.disabled = false; publish.textContent = form.dataset.postId ? 'Save' : 'Post'; });
+    });
+})();
+</script>
+{% endblock %}

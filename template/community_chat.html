@@ -488,6 +488,7 @@ const currentUserId = {{ request.user.id }};
 const isAnonymous = {{ community.is_anonymous|yesno:'true,false' }};
 const isAdmin = {{ is_admin|yesno:'true,false' }};
 const renderedIds = new Set();
+const pendingServerIds = new Set();
 let lastSubmitTime = 0;
 let lastSenderInChat = null;
 
@@ -590,7 +591,10 @@ function appendMessage(msg) {
         if (tempEl && tempEl.querySelector('.message-text').innerText.trim() === (msg.text||'').trim()) {
             tempEl.dataset.id = msg.id;
             tempEl.classList.remove('sending');
-            renderedIds.add(parseInt(msg.id));
+            const savedId = parseInt(msg.id);
+            renderedIds.add(savedId);
+            pendingServerIds.add(savedId);
+            setTimeout(() => pendingServerIds.delete(savedId), 10000);
             return;
         }
     }
@@ -691,9 +695,12 @@ chatForm.addEventListener('submit', async (e) => {
         if (data.success) {
             const tempEl = chatBox.querySelector('.message[data-id="'+tempId+'"]');
             if (tempEl) {
-                tempEl.dataset.id = data.message.id;
+                const savedId = parseInt(data.message.id);
+                tempEl.dataset.id = savedId;
                 tempEl.classList.remove('sending');
-                renderedIds.add(data.message.id);
+                renderedIds.add(savedId);
+                pendingServerIds.add(savedId);
+                setTimeout(() => pendingServerIds.delete(savedId), 10000);
             }
         }
     } catch (error) {
@@ -712,9 +719,12 @@ async function fetchNewMessages() {
 
         if (data.all_ids) {
             const serverIdSet = new Set(data.all_ids.map(Number));
+            pendingServerIds.forEach(id => {
+                if (serverIdSet.has(id)) pendingServerIds.delete(id);
+            });
             let removed = false;
             renderedIds.forEach(id => {
-                if (typeof id === 'number' && !serverIdSet.has(id)) {
+                if (typeof id === 'number' && !serverIdSet.has(id) && !pendingServerIds.has(id)) {
                     const el = chatBox.querySelector('.message[data-id="'+id+'"]');
                     if (el) {
                         const group = el.closest('.message-group');
@@ -820,6 +830,7 @@ async function clearChat() {
     if (!confirmed) return;
     chatBox.innerHTML = '<div class="chat-empty"><span class="material-symbols-outlined">forum</span><p>Chat was cleared.</p></div>';
     renderedIds.clear();
+    pendingServerIds.clear();
     lastSenderInChat = null;
     try { await fetch('/api/community/'+communitySlug+'/clear-chat/', {method:'POST',headers:{'X-CSRFToken':csrfToken}}); } catch(e) {}
 }

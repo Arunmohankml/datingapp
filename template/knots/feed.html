@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Knots | KnotSpot{% endblock %}
+{% block head %}{% include 'knots/_styles.html' %}{% endblock %}
+{% block body %}
+<div class="knots-shell">
+    <header class="knots-header">
+        <div class="knots-header-main">
+            <div class="knots-header-icon" aria-hidden="true">
+                <span class="material-symbols-outlined">hub</span>
+            </div>
+            <div>
+                <h1>Knots</h1>
+                <p class="knots-header-sub">Reddit-style campus threads for questions, advice and discussions.</p>
+            </div>
+        </div>
+    </header>
+    <div class="knots-body">
+        <form id="knotFilterForm" method="get" style="padding:0;">
+
+            <input type="hidden" name="filters" value="1">
+            <input type="hidden" name="sort" value="{{ current_sort }}">
+            <div class="knots-toolbar">
+                <div class="knots-search-wrap">
+                    <span class="material-symbols-outlined">search</span>
+                    <label for="knotSearch" class="sr-only">Search Knots</label>
+                    <input id="knotSearch" type="search" name="q" value="{{ search_query }}" placeholder="Search Knots" autocomplete="off">
+                    {% if search_query %}<button type="button" class="knots-search-clear" data-action="clear-search" aria-label="Clear search"><span class="material-symbols-outlined">close</span></button>{% endif %}
+                </div>
+                <details class="knots-sort-menu">
+                    <summary class="knots-compact-btn" aria-label="Sort Knots">Sort<span class="material-symbols-outlined">expand_more</span></summary>
+                    <div class="knots-sort-dropdown" role="menu" aria-label="Sort Knots">
+                        {% for key, label in sort_options %}
+                        <button type="button" class="knots-sort-btn {% if current_sort == key %}active{% endif %}" data-sort="{{ key }}" role="menuitemradio" aria-checked="{% if current_sort == key %}true{% else %}false{% endif %}">{{ label }}{% if current_sort == key %}<span class="material-symbols-outlined">check</span>{% endif %}</button>
+                        {% endfor %}
+                    </div>
+                </details>
+                <button class="knots-filter-btn knots-compact-btn" type="button" data-action="open-filters" aria-label="Filter Knots">
+                    <span>Filter</span>
+                    {% if selected_filter_count %}<span class="filter-count">{{ selected_filter_count }}</span>{% endif %}
+                </button>
+            </div>
+            {% if selected_filter_count %}<div class="filter-chips" aria-label="Active filters">
+                {% for college in selected_colleges %}<span class="filter-chip">{{ college }}<button type="button" data-remove-filter="colleges" data-value="{{ college }}" aria-label="Remove {{ college }}"><span class="material-symbols-outlined">close</span></button></span>{% endfor %}
+                {% for campus in selected_campuses %}<span class="filter-chip">{{ campus.org }} {{ campus.code }}<button type="button" data-remove-filter="campuses" data-value="{{ campus.code }}" aria-label="Remove {{ campus.name }}"><span class="material-symbols-outlined">close</span></button></span>{% endfor %}
+            </div>{% endif %}
+            <div class="knot-sheet-scrim" id="filterSheet" aria-hidden="true">
+                <div class="knot-sheet" role="dialog" aria-modal="true" aria-labelledby="filterTitle">
+                    <div class="sheet-handle"></div>
+                    <div class="sheet-header"><h2 id="filterTitle">Filter Knots</h2><button class="sheet-close-btn" type="button" data-action="close-filters" aria-label="Close filters"><span class="material-symbols-outlined">close</span></button></div>
+                    {% for org, campuses in campus_groups.items %}
+                    <div class="filter-group">
+                        <label class="filter-check"><input type="checkbox" name="colleges" value="{{ org }}" {% if org in selected_colleges %}checked{% endif %} data-college="{{ org }}"><strong>{{ org }}</strong></label>
+                        <div class="campus-options" data-campus-group="{{ org }}" {% if org not in selected_colleges %}hidden{% endif %}>
+                            {% for campus in campuses %}<label class="filter-check"><input type="checkbox" name="campuses" value="{{ campus.code }}" {% if campus.code in selected_campus_codes %}checked{% endif %}>{{ campus.name }}</label>{% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div class="sheet-actions"><button class="knot-secondary-btn" type="button" data-action="clear-filters">Clear all</button><button class="knot-primary-btn" type="submit">Apply filters</button></div>
+                </div>
+            </div>
+        </form>
+        <div class="knots-body-inner">
+            <section class="knot-feed" aria-live="polite">
+                {% for post in posts %}{% include 'knots/_post_card.html' with detail=False %}
+                {% empty %}<div class="knot-empty"><span class="material-symbols-outlined">forum</span><h2>{% if search_query or selected_filter_count %}No results match these filters{% else %}No Knots have been posted yet{% endif %}</h2><p>{% if search_query or selected_filter_count %}Try a different search or clear your filters.{% else %}Be the first person to start this discussion.{% endif %}</p><a class="knot-primary-btn" href="{% url 'knot_create' %}">Create a Knot</a></div>{% endfor %}
+            </section>
+            {% if posts.has_other_pages %}<nav class="knot-pagination" aria-label="Feed pages">{% if posts.has_previous %}<a class="knot-page-btn" href="?page={{ posts.previous_page_number }}&sort={{ current_sort }}&q={{ search_query|urlencode }}&filters=1{% for college in selected_colleges %}&colleges={{ college|urlencode }}{% endfor %}{% for campus in selected_campus_codes %}&campuses={{ campus|urlencode }}{% endfor %}">Previous</a>{% endif %}{% if posts.has_next %}<a class="knot-page-btn" href="?page={{ posts.next_page_number }}&sort={{ current_sort }}&q={{ search_query|urlencode }}&filters=1{% for college in selected_colleges %}&colleges={{ college|urlencode }}{% endfor %}{% for campus in selected_campus_codes %}&campuses={{ campus|urlencode }}{% endfor %}">Load more</a>{% endif %}</nav>{% endif %}
+        </div>
+    </div>
+    <a class="knots-fab" href="{% url 'knot_create' %}" aria-label="Create Knot">
+        <span class="material-symbols-outlined">edit</span>
+    </a>
+</div>
+<div class="knot-toast" id="knotToast" role="status" aria-live="polite"></div>
+{% include 'knots/_scripts.html' %}
+{% endblock %}

@@ -1,0 +1,40 @@
+<article class="knot-card {% if detail %}knot-card-detail{% endif %}" data-post-id="{{ post.id }}" data-slug="{{ post.slug }}">
+    <a class="knot-card-link" href="{% url 'knot_detail_slug' post.id post.slug %}" {% if detail %}onclick="return false"{% endif %}>
+        <div class="knot-author">
+            <img class="knot-avatar{% if not post.is_anonymous %} knot-profile-click{% endif %}" src="{{ post.display_pic }}" alt="{{ post.display_name }}" width="38" height="38" loading="lazy"{% if not post.is_anonymous %} data-profile-url="{% url 'view_profile' post.user_id %}" role="link" tabindex="0"{% endif %}>
+            <div class="knot-author-copy">
+                <div class="knot-author-name{% if not post.is_anonymous %} knot-profile-click{% endif %}"{% if not post.is_anonymous %} data-profile-url="{% url 'view_profile' post.user_id %}" role="link" tabindex="0"{% endif %}>{{ post.display_name }}</div>
+                <div class="knot-meta">{{ post.created_at|timesince }} ago{% if post.is_edited %} · edited{% endif %}</div>
+            </div>
+            {% if post.category or post.college or post.campus %}<div class="knot-chips-row">
+                {% if post.category %}<span class="knot-category">{{ post.get_category_display }}</span>{% endif %}
+                {% if post.campus %}<span class="knot-campus-chip">{{ post.campus_display }}</span>{% elif post.college %}<span class="knot-campus-chip">{{ post.college }}</span>{% endif %}
+            </div>{% endif %}
+        </div>
+        <h2>{{ post.title }}</h2>
+        {% if detail %}
+        <div class="knot-content knot-rich-content">{{ post.content|safe }}</div>
+        {% else %}
+        <p class="knot-content knot-list-excerpt">{{ post.content|striptags|truncatechars:260 }}</p>
+        {% endif %}
+    </a>
+    {% if post.link %}<a class="knot-link" href="{{ post.link }}" target="_blank" rel="noopener noreferrer"><span class="material-symbols-outlined">link</span><span>{{ post.link }}</span></a>{% endif %}
+    <div class="knot-menu-wrap">
+        <button class="knot-menu-btn" type="button" data-action="menu" aria-label="More actions" aria-expanded="false"><span class="material-symbols-outlined">more_horiz</span></button>
+        <div class="knot-menu" role="menu">
+            <button type="button" data-action="copy"><span class="material-symbols-outlined">content_copy</span>Copy link</button>
+            <button type="button" data-action="copy-post-text"><span class="material-symbols-outlined">content_paste</span>Copy text</button>
+            {% if post.user_id == user.id or is_moderator %}
+            <a href="{% url 'knot_edit' post.id %}"><span class="material-symbols-outlined">edit</span>{% if post.user_id != user.id %}Admin edit{% else %}Edit{% endif %}</a>
+            <button type="button" class="danger" data-action="delete-post"><span class="material-symbols-outlined">delete</span>{% if post.user_id != user.id %}Admin delete{% else %}Delete{% endif %}</button>
+            {% else %}
+            <button type="button" class="danger" data-action="report-post"><span class="material-symbols-outlined">flag</span>Report</button>
+            {% endif %}
+        </div>
+    </div>
+    <div class="knot-actions">
+        <button type="button" class="knot-action {% if post.user_has_voted %}active{% endif %}" data-action="vote" aria-pressed="{% if post.user_has_voted %}true{% else %}false{% endif %}"><span class="material-symbols-outlined">star</span><span data-count>{{ post.upvote_count }}</span></button>
+        <a class="knot-action" href="{% url 'knot_detail_slug' post.id post.slug %}#comments"><span class="material-symbols-outlined">chat_bubble</span><span>{{ post.comment_count }}</span></a>
+        <button type="button" class="knot-action share" data-action="share"><span class="material-symbols-outlined">share</span><span>Share</span></button>
+    </div>
+</article>

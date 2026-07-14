@@ -2,6 +2,7 @@ from django.db import models
 from django.utils.text import slugify
 from django.utils import timezone
 from django.contrib.auth.models import User
+from datetime import timedelta
 from .campus_config import get_campus_by_alias
 
 class Profile(models.Model):
@@ -208,6 +209,26 @@ class MatchRequest(models.Model):
 
     def __str__(self):
         return f"{self.sender.username} -> {self.receiver.username} ({self.status})"
+
+
+class DailyMatchAction(models.Model):
+    ACTION_CHOICES = (('connect', 'Connect'), ('skip', 'Skip'))
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='daily_match_actions')
+    target = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_daily_match_actions')
+    action = models.CharField(max_length=10, choices=ACTION_CHOICES)
+    date = models.DateField(default=timezone.localdate, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'target', 'date'], name='unique_daily_match_action'),
+        ]
+        indexes = [
+            models.Index(fields=['user', 'date'], name='daily_match_user_date_idx'),
+        ]
+
+    def __str__(self):
+        return f"{self.user_id} {self.action} {self.target_id} on {self.date}"
 
 class Message(models.Model):
     sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
@@ -1092,3 +1113,159 @@ class QuestionSuggestion(models.Model):
 
     def __str__(self):
         return f"Suggestion by {self.suggested_by.username}: {self.question_text[:50]}"
+
+
+class KnotPost(models.Model):
+    CATEGORY_CHOICES = [
+        ('question', 'Question'), ('advice', 'Advice'),
+        ('information', 'Information'), ('discussion', 'Discussion'),
+        ('resources', 'Resources'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='knot_posts')
+    title = models.CharField(max_length=180)
+    content = models.TextField(max_length=5000)
+    link = models.URLField(max_length=1000, blank=True)
+    category = models.CharField(max_length=24, choices=CATEGORY_CHOICES, blank=True)
+    college = models.CharField(max_length=80, db_index=True, blank=True, default='')
+    campus = models.CharField(max_length=100, db_index=True, blank=True, default='')
+    is_anonymous = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['college', 'campus', '-created_at'], name='knot_col_camp_new_idx'),
+        ]
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def is_edited(self):
+        return self.updated_at > self.created_at + timedelta(seconds=2)
+
+    @property
+    def slug(self):
+        return slugify(self.title) or 'knot'
+
+    @property
+    def display_name(self):
+        if self.is_anonymous:
+            return 'Anonymous'
+        if self.user and hasattr(self.user, 'profile'):
+            return self.user.profile.display_name
+        return 'Unknown'
+
+    @property
+    def display_pic(self):
+        if self.is_anonymous:
+            return 'https://ui-avatars.com/api/?name=K&background=004ac6&color=fff&size=128'
+        if self.user and hasattr(self.user, 'profile'):
+            return self.user.profile.get_profile_pic_thumb_url
+        return 'https://ui-avatars.com/api/?name=U&background=004ac6&color=fff&size=128'
+
+    @property
+    def campus_display(self):
+        from .campus_config import get_campus_by_alias
+        c = get_campus_by_alias(self.campus)
+        return f"{c['org']} {c['code']}" if c else self.campus
+
+
+class KnotVote(models.Model):
+    post = models.ForeignKey(KnotPost, on_delete=models.CASCADE, related_name='votes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='knot_votes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['post', 'user'], name='unique_knot_vote')]
+        indexes = [models.Index(fields=['post', 'created_at'], name='knot_vote_post_idx')]
+
+
+class KnotComment(models.Model):
+    post = models.ForeignKey(KnotPost, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='knot_comments')
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+    content = models.TextField(max_length=2000)
+    is_deleted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['created_at']
+        indexes = [models.Index(fields=['post', 'parent', 'created_at'], name='knot_comment_tree_idx')]
+
+    def __str__(self):
+        return 'Comment deleted' if self.is_deleted else self.content[:80]
+
+    @property
+    def is_edited(self):
+        return self.updated_at > self.created_at + timedelta(seconds=2)
+
+    @property
+    def compact_age(self):
+        seconds = max(0, int((timezone.now() - self.created_at).total_seconds()))
+        if seconds < 60:
+            return 'just now'
+        minutes = seconds // 60
+        if minutes < 60:
+            return f'{minutes}m ago'
+        hours, minutes = divmod(minutes, 60)
+        if hours < 24:
+            return f'{hours}h {minutes}m ago' if minutes else f'{hours}h ago'
+        days, hours = divmod(hours, 24)
+        return f'{days}d {hours}h ago' if hours else f'{days}d ago'
+
+
+class KnotCommentLike(models.Model):
+    comment = models.ForeignKey(KnotComment, on_delete=models.CASCADE, related_name='likes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='knot_comment_likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['comment', 'user'], name='unique_knot_comment_like')
+        ]
+
+
+class KnotReport(models.Model):
+    REPORT_CHOICES = [
+        ('spam', 'Spam'), ('harassment', 'Harassment'), ('unsafe', 'Unsafe or harmful'),
+        ('misinformation', 'Misinformation'), ('other', 'Other'),
+    ]
+
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='knot_reports')
+    post = models.ForeignKey(KnotPost, on_delete=models.CASCADE, null=True, blank=True, related_name='reports')
+    comment = models.ForeignKey(KnotComment, on_delete=models.CASCADE, null=True, blank=True, related_name='reports')
+    reason = models.CharField(max_length=24, choices=REPORT_CHOICES, default='other')
+    details = models.CharField(max_length=500, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['reporter', 'post'], condition=models.Q(post__isnull=False), name='unique_knot_post_report'),
+            models.UniqueConstraint(fields=['reporter', 'comment'], condition=models.Q(comment__isnull=False), name='unique_knot_comment_report'),
+            models.CheckConstraint(
+                condition=(models.Q(post__isnull=False, comment__isnull=True) | models.Q(post__isnull=True, comment__isnull=False)),
+                name='knot_report_one_target',
+            ),
+        ]
+
+
+class KnotPreference(models.Model):
+    SORT_CHOICES = [('newest', 'Newest'), ('hot', 'Hot'), ('top', 'Top'), ('oldest', 'Oldest')]
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='knot_preference')
+    sort = models.CharField(max_length=10, choices=SORT_CHOICES, default='newest')
+    colleges = models.JSONField(default=list, blank=True)
+    campuses = models.JSONField(default=list, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class KnotEngagementNotice(models.Model):
+    post = models.ForeignKey(KnotPost, on_delete=models.CASCADE, related_name='engagement_notices')
+    threshold = models.PositiveSmallIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['post', 'threshold'], name='unique_knot_notice')]

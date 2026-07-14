@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Profile, Question, Option, UserAnswer, RoomRequest, Conversation, DailyQuestion, QuestionOption, QuestionVote, QuestionSuggestion
+from .models import Profile, Question, Option, UserAnswer, RoomRequest, Conversation, DailyQuestion, QuestionOption, QuestionVote, QuestionSuggestion, KnotPost, KnotComment, KnotReport
 
 
 # ✅ Inline options inside Question admin
@@ -116,6 +116,31 @@ class QuestionSuggestionAdmin(admin.ModelAdmin):
     def reject_suggestion(self, request, queryset):
         queryset.update(status='rejected')
     reject_suggestion.short_description = 'Mark selected as Rejected'
+
+
+@admin.register(KnotPost)
+class KnotPostAdmin(admin.ModelAdmin):
+    list_display = ('title', 'user', 'college', 'campus', 'category', 'created_at')
+    list_filter = ('college', 'campus', 'category', 'created_at')
+    search_fields = ('title', 'content', 'user__username', 'user__email')
+
+
+@admin.register(KnotComment)
+class KnotCommentAdmin(admin.ModelAdmin):
+    list_display = ('short_content', 'user', 'post', 'parent', 'is_deleted', 'created_at')
+    list_filter = ('is_deleted', 'created_at')
+    search_fields = ('content', 'user__username', 'post__title')
+
+    @admin.display(description='Comment')
+    def short_content(self, obj):
+        return str(obj)[:80]
+
+
+@admin.register(KnotReport)
+class KnotReportAdmin(admin.ModelAdmin):
+    list_display = ('reporter', 'reason', 'post', 'comment', 'created_at')
+    list_filter = ('reason', 'created_at')
+    search_fields = ('reporter__username', 'details', 'post__title', 'comment__content')
 
 
 @admin.register(QuestionVote)

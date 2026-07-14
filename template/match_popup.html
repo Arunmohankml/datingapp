@@ -281,6 +281,11 @@
         transition: 0.2s;
     }
     .btn-skip:hover { background: #e2e8f0; }
+    .daily-match-status {
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        margin: 10px 0 12px; color: var(--text-muted); font-size: 12px; font-weight: 700;
+    }
+    .daily-match-status .material-symbols-outlined { font-size: 17px; color: var(--primary); }
 </style>
 {% endblock %}
 
@@ -438,6 +443,10 @@
 {% endif %}
 
 <!-- Actions -->
+<div class="daily-match-status" aria-live="polite">
+    <span class="material-symbols-outlined">schedule</span>
+    {{ daily_match_remaining }} of {{ daily_match_limit }} match actions left today
+</div>
 <div class="actions">
     <form action="{% url 'send_match_request' match.user.id %}" method="POST" style="flex:2;">
         {% csrf_token %}

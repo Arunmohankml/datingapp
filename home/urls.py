@@ -2,7 +2,25 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from django.views.generic import TemplateView
 from . import views
+from . import knot_views
 urlpatterns = [
+    path("knots/", knot_views.knots_feed, name="knots_feed"),
+    path("knots/create/", knot_views.knot_form, name="knot_create"),
+    path("knots/<int:post_id>/edit/", knot_views.knot_form, name="knot_edit"),
+    path("knots/<int:post_id>/", knot_views.knot_detail, name="knot_detail"),
+    path("knots/<int:post_id>/<slug:slug>/", knot_views.knot_detail, name="knot_detail_slug"),
+    path("knots/replies/<int:comment_id>/", knot_views.knot_thread, name="knot_thread"),
+    path("api/knots/preferences/", knot_views.knot_preferences, name="knot_preferences"),
+    path("api/knots/images/", knot_views.knot_image_upload, name="knot_image_upload"),
+    path("api/knots/<int:post_id>/delete/", knot_views.knot_delete, name="knot_delete"),
+    path("api/knots/<int:post_id>/vote/", knot_views.knot_vote, name="knot_vote"),
+    path("api/knots/<int:post_id>/report/", knot_views.knot_report, name="knot_report"),
+    path("api/knots/<int:post_id>/comments/", knot_views.knot_comment_create, name="knot_comment_create"),
+    path("api/knots/comments/<int:comment_id>/edit/", knot_views.knot_comment_edit, name="knot_comment_edit"),
+    path("api/knots/comments/<int:comment_id>/delete/", knot_views.knot_comment_delete, name="knot_comment_delete"),
+    path("api/knots/comments/<int:comment_id>/like/", knot_views.knot_comment_like, name="knot_comment_like"),
+    path("api/knots/comments/<int:comment_id>/report/", knot_views.knot_comment_report, name="knot_comment_report"),
+    path("api/knots/comments/<int:comment_id>/replies/", knot_views.knot_replies_api, name="knot_replies_api"),
     path("login/", views.login_view, name="login"),
     path("logout/", auth_views.LogoutView.as_view(next_page='login'), name="logout"),
     path("api/verify-token/", views.api_verify_token, name="api_verify_token"),

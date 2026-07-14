@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+import sys
 import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -131,8 +132,17 @@ WSGI_APPLICATION = 'datingapp.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 # Database Configuration
-# We prioritize Supabase/Postgres if DATABASE_URL is provided
-if os.environ.get('DATABASE_URL'):
+# Tests must never use DATABASE_URL: Django's test runner flushes its target DB.
+RUNNING_TESTS = any(arg == 'test' or arg.endswith('\\test') or arg.endswith('/test') for arg in sys.argv)
+
+if RUNNING_TESTS:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:',
+        }
+    }
+elif os.environ.get('DATABASE_URL'):
     is_vercel = bool(os.environ.get('VERCEL'))
     DATABASES = {
         'default': dj_database_url.config(

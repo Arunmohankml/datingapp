@@ -498,7 +498,17 @@
         {% else %}
             
             <!-- Quiz Mode UI -->
-            {% if question %}
+            {% if daily_limit_reached %}
+                <div class="all-done">
+                    <div class="icon"><span class="material-symbols-outlined" style="font-size:52px;">schedule</span></div>
+                    <h2>Daily match limit reached</h2>
+                    <p style="color:var(--text-muted);line-height:1.6;">
+                        You used all {{ daily_match_limit }} Skip/Connect actions for today.<br>
+                        Your daily limit resets tomorrow.
+                    </p>
+                    <a href="{% url 'connections' %}" class="btn-discover" style="margin-top:18px;">View connections</a>
+                </div>
+            {% elif question %}
                 <div class="quiz-card" id="quiz-container">
                     <div class="quiz-loading" id="quiz-loader">
                         <i class="fas fa-spinner fa-spin" style="font-size: 32px; color: var(--primary); margin-bottom: 12px;"></i>

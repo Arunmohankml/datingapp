@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}{{ post.title }} | Knots{% endblock %}
+{% block head %}{% include 'knots/_styles.html' %}{% endblock %}
+{% block body %}
+<div class="knots-detail-shell">
+    <header class="knots-header">
+        <div class="knots-header-main">
+            <a href="{% url 'knots_feed' %}" class="knots-back-btn" aria-label="Back to Knots">
+                <span class="material-symbols-outlined" style="font-size:20px;">arrow_back</span>
+            </a>
+            <h2>Discussion</h2>
+        </div>
+        <span class="knots-header-badge">
+            <span class="material-symbols-outlined" style="font-size:13px; vertical-align:middle;">chat_bubble</span>
+            {{ post.comment_count }}
+        </span>
+    </header>
+    <div class="knots-body">
+        <div class="knots-body-inner" style="padding-top:10px;">
+            <section class="knot-discussion-card">
+                {% include 'knots/_post_card.html' with detail=True %}
+                <div class="comments-panel" id="comments" aria-labelledby="commentsTitle">
+                    <div class="comments-heading">
+                        <span class="material-symbols-outlined">forum</span>
+                        <h2 id="commentsTitle">Comments <span style="font-weight:400;color:#94a3b8;font-size:13px;">({{ post.comment_count }})</span></h2>
+                    </div>
+                    <div class="comment-list" id="commentList">{% for comment in comments %}{% include 'knots/_comment.html' %}{% empty %}<div class="knot-empty" id="commentsEmpty"><span class="material-symbols-outlined">chat_bubble</span><h2>No comments yet</h2><p>Be the first person to add to this discussion.</p></div>{% endfor %}</div>
+                </div>
+            </section>
+            {% if comments.has_next %}<nav class="knot-pagination"><a class="knot-page-btn" href="?page={{ comments.next_page_number }}#comments">More comments</a></nav>{% endif %}
+        </div>
+    </div>
+    <form class="sticky-comment" id="commentForm" data-post-id="{{ post.id }}">
+        <div class="replying-to" id="replyingTo"><span>Replying to <strong id="replyingName"></strong></span><button type="button" class="knot-icon-btn" data-action="cancel-reply" aria-label="Cancel reply"><span class="material-symbols-outlined">close</span></button></div>
+        <div class="sticky-comment-inner">
+            <label for="commentInput" class="sr-only">Add a comment</label>
+            <textarea id="commentInput" maxlength="1200" rows="1" placeholder="Add a comment…" required></textarea>
+            <button class="knot-send-btn" type="submit" aria-label="Post comment"><span class="material-symbols-outlined">send</span></button>
+        </div>
+    </form>
+</div>
+<div class="knot-toast" id="knotToast" role="status" aria-live="polite"></div>
+{% include 'knots/_scripts.html' %}
+{% endblock %}

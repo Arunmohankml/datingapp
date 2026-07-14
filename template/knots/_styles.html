@@ -1,0 +1,1129 @@
+<style id="knots-styles">
+    :root {
+        --knot-primary: #2563eb;
+        --knot-primary-strong: #1d4ed8;
+        --knot-primary-soft: #eff6ff;
+        --knot-text: #172033;
+        --knot-muted: #667085;
+        --knot-border: #e4e9f2;
+        --knot-surface: #ffffff;
+        --knot-bg: #f5f7fb;
+        --knot-danger: #dc2626;
+        --knot-shadow: 0 12px 34px rgba(15, 23, 42, .09);
+        --knot-shadow-soft: 0 5px 16px rgba(15, 23, 42, .08);
+        --knot-shadow-raised: 0 18px 46px rgba(15, 23, 42, .16);
+    }
+
+    body { background: var(--knot-bg); }
+    html,
+    body,
+    .container,
+    .knots-shell,
+    .knots-detail-shell,
+    .knots-body,
+    .filter-sheet,
+    .filter-panel,
+    .knot-composer-shell,
+    .knot-composer,
+    .knot-composer-main,
+    .knot-options-menu,
+    .knot-rich-editor {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar,
+    .container::-webkit-scrollbar,
+    .knots-shell::-webkit-scrollbar,
+    .knots-detail-shell::-webkit-scrollbar,
+    .knots-body::-webkit-scrollbar,
+    .filter-sheet::-webkit-scrollbar,
+    .filter-panel::-webkit-scrollbar,
+    .knot-composer-shell::-webkit-scrollbar,
+    .knot-composer::-webkit-scrollbar,
+    .knot-composer-main::-webkit-scrollbar,
+    .knot-options-menu::-webkit-scrollbar,
+    .knot-rich-editor::-webkit-scrollbar {
+        display: none;
+    }
+    .container {
+        width: 100%;
+        max-width: 560px;
+        min-height: 100dvh;
+        margin: 0 auto;
+        padding: 0 0 112px;
+        background: var(--knot-bg);
+        box-sizing: border-box;
+    }
+    .sr-only {
+        position: absolute !important;
+        width: 1px; height: 1px;
+        padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0, 0, 0, 0);
+        white-space: nowrap; border: 0;
+    }
+    [hidden] { display: none !important; }
+    .knots-shell, .knots-detail-shell {
+        width: 100%;
+        min-height: calc(100dvh - 112px);
+        color: var(--knot-text);
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        box-sizing: border-box;
+    }
+
+    .knots-header {
+        position: sticky;
+        top: 0;
+        z-index: 40;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 72px;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, .94);
+        border-bottom: 0;
+        box-shadow: 0 5px 20px rgba(15, 23, 42, .07);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        box-sizing: border-box;
+    }
+    .knots-header-main {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        min-width: 0;
+    }
+    .knots-header h1, .knots-header h2 {
+        margin: 0;
+        color: var(--knot-text);
+        font-size: 21px;
+        line-height: 1.2;
+        font-weight: 800;
+        letter-spacing: -.025em;
+    }
+    .knots-header-sub {
+        max-width: 350px;
+        margin: 3px 0 0;
+        color: var(--knot-muted);
+        font-size: 11.5px;
+        line-height: 1.35;
+        font-weight: 500;
+    }
+    .knots-back-btn, .knot-icon-btn, .sheet-close-btn {
+        display: inline-flex;
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 0;
+        border-radius: 17px;
+        background: #fff;
+        box-shadow: var(--knot-shadow-soft);
+        color: #344054;
+        text-decoration: none;
+        cursor: pointer;
+        box-sizing: border-box;
+        transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+    }
+    .knots-header-icon {
+        display: inline-flex;
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 17px;
+        background: var(--knot-primary-soft);
+        color: var(--knot-primary);
+        box-shadow: var(--knot-shadow-soft);
+        box-sizing: border-box;
+    }
+    .knots-back-btn .material-symbols-outlined { font-size: 21px; }
+    .knots-header-icon .material-symbols-outlined {
+        font-size: 25px;
+        font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+    }
+    .knots-back-btn:active, .knot-icon-btn:active, .sheet-close-btn:active { transform: scale(.96); }
+    .knots-header-badge {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        min-width: 31px;
+        height: 28px;
+        padding: 0 9px;
+        border-radius: 999px;
+        background: var(--knot-primary-soft);
+        color: var(--knot-primary-strong);
+        font-size: 12px;
+        font-weight: 800;
+        box-sizing: border-box;
+    }
+
+    .knots-body { width: 100%; box-sizing: border-box; }
+    .knots-body-inner { padding: 0 12px 20px; box-sizing: border-box; }
+    .knots-detail-shell .knots-body-inner { padding-right: 0; padding-left: 0; }
+    #knotFilterForm { margin: 0; }
+    .knots-toolbar {
+        position: relative;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px;
+        background: var(--knot-bg);
+        box-sizing: border-box;
+    }
+    .knots-search-wrap {
+        position: relative;
+        display: flex;
+        flex: 1 1 auto;
+        min-width: 0;
+        align-items: center;
+    }
+    .knots-search-wrap > .material-symbols-outlined {
+        position: absolute;
+        left: 12px;
+        z-index: 1;
+        color: #98a2b3;
+        font-size: 19px;
+        pointer-events: none;
+    }
+    .knots-search-wrap input[type="search"] {
+        width: 100%;
+        height: 44px;
+        min-width: 0;
+        margin: 0;
+        padding: 0 38px;
+        border: 0;
+        border-radius: 17px;
+        outline: 0;
+        background: #fff;
+        color: var(--knot-text);
+        font: 600 14px/1 'Plus Jakarta Sans', sans-serif;
+        box-shadow: var(--knot-shadow-soft);
+        box-sizing: border-box;
+        appearance: none;
+    }
+    .knots-search-wrap input[type="search"]:focus {
+        border-color: #7aa7fa;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+    }
+    .knots-search-clear {
+        position: absolute;
+        right: 5px;
+        display: inline-flex;
+        width: 34px;
+        height: 34px;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: #667085;
+        cursor: pointer;
+    }
+    .knots-search-clear .material-symbols-outlined { font-size: 18px; }
+    .knots-compact-btn {
+        display: inline-flex;
+        flex: 0 0 auto;
+        height: 44px;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: var(--knot-shadow-soft);
+        color: #344054;
+        font: 700 12px/1 'Plus Jakarta Sans', sans-serif;
+        white-space: nowrap;
+        cursor: pointer;
+        box-sizing: border-box;
+        list-style: none;
+        user-select: none;
+    }
+    .knots-compact-btn::-webkit-details-marker { display: none; }
+    .knots-compact-btn .material-symbols-outlined { font-size: 17px; }
+    .knots-sort-menu { position: relative; flex: 0 0 auto; }
+    .knots-sort-menu[open] > .knots-compact-btn {
+        background: var(--knot-primary-soft);
+        color: var(--knot-primary-strong);
+        box-shadow: 0 7px 20px rgba(37, 99, 235, .14);
+    }
+    .knots-sort-menu[open] > .knots-compact-btn .material-symbols-outlined { transform: rotate(180deg); }
+    .knots-sort-dropdown {
+        position: absolute;
+        top: calc(100% + 7px);
+        right: 0;
+        z-index: 80;
+        width: 142px;
+        padding: 6px;
+        border: 0;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, .16);
+        box-sizing: border-box;
+    }
+    .knots-sort-btn {
+        display: flex;
+        width: 100%;
+        min-height: 40px;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 9px;
+        background: transparent;
+        color: #475467;
+        font: 650 13px/1 'Plus Jakarta Sans', sans-serif;
+        cursor: pointer;
+    }
+    .knots-sort-btn:hover, .knots-sort-btn.active { background: var(--knot-primary-soft); color: var(--knot-primary-strong); }
+    .knots-sort-btn .material-symbols-outlined { font-size: 17px; }
+    .knots-filter-btn { position: relative; min-width: 58px; }
+    .filter-count {
+        display: inline-flex;
+        min-width: 18px;
+        height: 18px;
+        align-items: center;
+        justify-content: center;
+        padding: 0 5px;
+        border-radius: 999px;
+        background: var(--knot-primary);
+        color: #fff;
+        font-size: 10px;
+        box-sizing: border-box;
+    }
+
+    .filter-chips {
+        display: flex;
+        gap: 7px;
+        overflow-x: auto;
+        padding: 0 12px 10px;
+        scrollbar-width: none;
+    }
+    .filter-chips::-webkit-scrollbar { display: none; }
+    .filter-chip, .knot-category, .knot-campus-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        min-height: 25px;
+        padding: 0 9px;
+        border-radius: 999px;
+        background: var(--knot-primary-soft);
+        color: var(--knot-primary-strong);
+        font-size: 10.5px;
+        font-weight: 800;
+        letter-spacing: .02em;
+        white-space: nowrap;
+        box-sizing: border-box;
+    }
+    .filter-chip button {
+        display: inline-flex;
+        width: 24px; height: 24px;
+        align-items: center; justify-content: center;
+        margin-right: -7px;
+        padding: 0; border: 0;
+        background: transparent; color: inherit;
+        cursor: pointer;
+    }
+    .filter-chip button .material-symbols-outlined { font-size: 15px; }
+    .knot-category { background: #f2f4f7; color: #475467; }
+
+    .knot-feed { display: grid; gap: 10px; }
+    .knot-card {
+        position: relative;
+        padding: 14px;
+        border: 0;
+        border-radius: 24px;
+        background: var(--knot-surface);
+        box-shadow: var(--knot-shadow);
+        box-sizing: border-box;
+    }
+    .knot-card-link { display: block; color: inherit; text-decoration: none; }
+    .knot-author { display: flex; align-items: center; gap: 10px; min-width: 0; padding-right: 36px; }
+    .knot-avatar {
+        flex: 0 0 auto;
+        width: 38px; height: 38px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: #eef2f6;
+    }
+    .knot-author-copy { min-width: 0; }
+    .knot-profile-link { color: inherit; text-decoration: none; }
+    .knot-avatar-link { display: inline-flex; flex: 0 0 auto; border-radius: 999px; }
+    .knot-profile-click { cursor: pointer; }
+    .comment[data-profile-url] .knot-avatar,
+    .comment[data-profile-url] .knot-author-name { cursor: pointer; }
+    .knot-profile-link:hover .knot-avatar,
+    .knot-avatar.knot-profile-click:hover { filter: brightness(.96); }
+    .knot-profile-link:focus-visible,
+    .knot-profile-click:focus-visible {
+        outline: 2px solid rgba(37, 99, 235, .28);
+        outline-offset: 3px;
+        border-radius: 999px;
+    }
+    .knot-author-name {
+        overflow: hidden;
+        color: #263244;
+        font-size: 14px;
+        font-weight: 750;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .knot-meta { margin-top: 2px; color: #7c8798; font-size: 11.5px; line-height: 1.35; font-weight: 600; }
+    .knot-chips-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 11px 0 8px; }
+    .knot-author > .knot-chips-row {
+        flex: 0 1 auto;
+        max-width: 52%;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+        gap: 4px;
+        margin: 0 0 0 auto;
+        overflow: hidden;
+    }
+    .knot-author > .knot-chips-row > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .knot-card h2 {
+        margin: 9px 0 7px;
+        color: #172033;
+        font-size: 18.5px;
+        line-height: 1.35;
+        font-weight: 800;
+        letter-spacing: -.018em;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    .knot-content {
+        display: -webkit-box;
+        overflow: hidden;
+        margin: 0;
+        color: #344054;
+        font-size: 14.5px;
+        line-height: 1.62;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        -webkit-line-clamp: 4;
+        -webkit-box-orient: vertical;
+    }
+    .knot-list-excerpt {
+        text-overflow: ellipsis;
+    }
+    .knot-card-detail .knot-content { display: block; overflow: visible; -webkit-line-clamp: unset; }
+    .knot-link {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+        margin-top: 11px;
+        padding: 9px 10px;
+        border-radius: 15px;
+        background: #f8fafc;
+        color: var(--knot-primary-strong);
+        font-size: 12.5px;
+        font-weight: 650;
+        text-decoration: none;
+    }
+    .knot-link .material-symbols-outlined { flex: 0 0 auto; font-size: 17px; }
+    .knot-link span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .knot-menu-wrap { position: absolute; top: 11px; right: 10px; z-index: 12; }
+    .knot-menu-btn {
+        display: inline-flex;
+        width: 38px; height: 38px;
+        align-items: center; justify-content: center;
+        padding: 0; border: 0; border-radius: 12px;
+        background: transparent; color: #667085;
+        cursor: pointer;
+    }
+    .knot-menu-btn .material-symbols-outlined { font-size: 21px; }
+    .knot-menu {
+        position: absolute;
+        top: 40px; right: 0;
+        display: none;
+        width: 158px;
+        padding: 6px;
+        border: 0;
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 16px 38px rgba(15, 23, 42, .18);
+    }
+    .knot-menu.open { display: block; }
+    .knot-menu a, .knot-menu button {
+        display: flex;
+        width: 100%; min-height: 40px;
+        align-items: center; gap: 8px;
+        padding: 0 10px;
+        border: 0; border-radius: 9px;
+        background: transparent; color: #344054;
+        font: 650 12.5px/1 'Plus Jakarta Sans', sans-serif;
+        text-decoration: none; cursor: pointer;
+        box-sizing: border-box;
+    }
+    .knot-menu a:hover, .knot-menu button:hover { background: #f8fafc; }
+    .knot-menu .material-symbols-outlined { font-size: 17px; }
+    .knot-menu .danger { color: var(--knot-danger); }
+    .knot-actions, .comment-actions { display: flex; align-items: center; gap: 7px; margin-top: 12px; }
+    .knot-action {
+        display: inline-flex;
+        min-width: 44px; height: 36px;
+        align-items: center; justify-content: center; gap: 4px;
+        padding: 0 10px;
+        border: 1px solid #edf0f5;
+        border-radius: 11px;
+        background: #f8fafc;
+        box-shadow: none;
+        color: #667085;
+        font: 700 12px/1 'Plus Jakarta Sans', sans-serif;
+        text-decoration: none; cursor: pointer;
+        box-sizing: border-box;
+    }
+    .knot-action .material-symbols-outlined { font-size: 17px; }
+    .knot-action:hover,
+    .knot-action:focus-visible { border-color: #dfe5ed; background: #f8fafc; box-shadow: none; }
+    .knot-action.active { border-color: #bfdbfe; background: var(--knot-primary-soft); color: var(--knot-primary-strong); box-shadow: none; }
+    .knot-action.share { margin-left: auto; }
+
+    .knots-fab {
+        position: fixed;
+        right: max(18px, calc((100vw - 560px) / 2 + 18px));
+        bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+        z-index: 45;
+        display: flex;
+        width: 52px; height: 52px;
+        align-items: center; justify-content: center;
+        border-radius: 20px;
+        background: var(--knot-primary);
+        color: #fff;
+        text-decoration: none;
+        box-shadow: 0 12px 28px rgba(37, 99, 235, .32);
+    }
+    .knots-fab:active { transform: scale(.96); }
+
+    .knot-sheet-scrim {
+        position: fixed;
+        inset: 0;
+        z-index: 3000;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 0;
+        background: rgba(15, 23, 42, .48);
+    }
+    .knot-sheet-scrim.open { display: flex; }
+    .knot-sheet {
+        width: min(100%, 560px);
+        max-height: min(78dvh, 680px);
+        overflow-y: auto;
+        padding: 9px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+        border-radius: 24px 24px 0 0;
+        background: #fff;
+        box-shadow: 0 -20px 50px rgba(15, 23, 42, .18);
+        box-sizing: border-box;
+    }
+    .sheet-handle { width: 38px; height: 4px; margin: 0 auto 10px; border-radius: 999px; background: #d0d5dd; }
+    .sheet-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .sheet-header h2 { margin: 0; font-size: 19px; font-weight: 800; }
+    .sheet-close-btn { flex-basis: 40px; width: 40px; height: 40px; }
+    .filter-group { padding: 12px 0; border-top: 0; }
+    .filter-check { display: flex; min-height: 40px; align-items: center; gap: 10px; color: #344054; font-size: 13px; cursor: pointer; }
+    .filter-check input { width: 18px; height: 18px; margin: 0; accent-color: var(--knot-primary); }
+    .campus-options { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px; padding: 5px 0 0 28px; }
+    .campus-options .filter-check { min-height: 34px; color: #667085; font-size: 11.5px; }
+    .sheet-actions, .knot-form-actions { display: flex; gap: 10px; margin-top: 15px; }
+    .knot-primary-btn, .knot-secondary-btn, .knot-page-btn {
+        display: inline-flex;
+        min-height: 44px;
+        align-items: center; justify-content: center;
+        padding: 0 16px;
+        border: 0;
+        border-radius: 16px;
+        font: 750 13px/1 'Plus Jakarta Sans', sans-serif;
+        text-decoration: none; cursor: pointer;
+        box-sizing: border-box;
+    }
+    .knot-primary-btn { flex: 1; background: var(--knot-primary); color: #fff; }
+    .knot-primary-btn:hover { background: var(--knot-primary-strong); }
+    .knot-secondary-btn, .knot-page-btn { flex: 1; background: #fff; color: #475467; box-shadow: var(--knot-shadow-soft); }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+
+    .knot-empty { padding: 40px 20px; text-align: center; color: var(--knot-muted); }
+    .knot-empty > .material-symbols-outlined { font-size: 34px; color: #98a2b3; }
+    .knot-empty h2 { margin: 10px 0 5px; font-size: 16px; color: #344054; }
+    .knot-empty p { margin: 0 0 16px; font-size: 12px; line-height: 1.5; }
+    .knot-empty .knot-primary-btn { width: max-content; margin: 0 auto; }
+    .knot-pagination { position: static; display: flex; justify-content: center; width: auto; margin: 14px 0 0; padding: 0; border: 0; background: none; box-shadow: none; transform: none; }
+    .knot-page-btn { flex: 0 0 auto; }
+
+    .knot-form-card, .knot-preview {
+        padding: 16px;
+        border: 0;
+        border-radius: 24px;
+        background: #fff;
+        box-shadow: var(--knot-shadow);
+    }
+    .knot-preview { display: none; margin-bottom: 12px; }
+    .knot-preview.show { display: block; }
+    .knot-field { position: relative; margin-bottom: 18px; }
+    .knot-field > label {
+        display: block;
+        margin: 0 0 7px;
+        color: #344054;
+        font-size: 12px;
+        font-weight: 750;
+    }
+    .knot-required { color: var(--knot-danger); }
+    .knot-help { color: #8a94a6; font-size: 10.5px; line-height: 1.45; font-weight: 500; }
+    .knot-field input, .knot-field textarea, .knot-field select, .knot-native-select {
+        width: 100%;
+        min-height: 48px;
+        margin: 0;
+        padding: 0 13px;
+        border: 0;
+        border-radius: 16px;
+        outline: 0;
+        background: #fff;
+        box-shadow: var(--knot-shadow-soft);
+        color: #263244;
+        font: 600 14px/1.4 'Plus Jakarta Sans', sans-serif;
+        box-sizing: border-box;
+    }
+    .knot-field textarea { min-height: 150px; padding-top: 12px; resize: vertical; }
+    .knot-field input:focus, .knot-field textarea:focus, .knot-field select:focus {
+        border-color: #7aa7fa;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .11);
+    }
+    .knot-native-select { appearance: auto; cursor: pointer; }
+    .knot-counter { margin-top: 5px; color: #98a2b3; font-size: 10px; text-align: right; }
+    .knot-form-error { display: none; margin-bottom: 14px; padding: 11px 12px; border-radius: 11px; background: #fef2f2; color: #b42318; font-size: 12px; line-height: 1.4; }
+    .knot-form-error.show { display: block; }
+    .knot-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 0; border-top: 0; }
+    .knot-toggle-info { display: grid; gap: 4px; }
+    .knot-toggle-label { color: #344054; font-size: 13px; font-weight: 750; }
+    .knot-toggle-hint { color: #8a94a6; font-size: 10px; line-height: 1.45; }
+    .knot-switch { position: relative; flex: 0 0 46px; width: 46px; height: 27px; cursor: pointer; }
+    .knot-switch input { position: absolute; opacity: 0; }
+    .knot-switch-slider { position: absolute; inset: 0; border-radius: 999px; background: #d0d5dd; transition: background .2s ease; }
+    .knot-switch-slider::after { content: ''; position: absolute; top: 3px; left: 3px; width: 21px; height: 21px; border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(15,23,42,.2); transition: transform .2s ease; }
+    .knot-switch input:checked + .knot-switch-slider { background: var(--knot-primary); }
+    .knot-switch input:checked + .knot-switch-slider::after { transform: translateX(19px); }
+
+    .knot-discussion-card {
+        overflow: visible;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+    .knot-discussion-card > .knot-card {
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+    .comments-panel { margin-top: 12px; border: 0; border-radius: 24px; background: #fff; overflow: hidden; box-shadow: var(--knot-shadow); }
+    .knot-discussion-card > .comments-panel {
+        margin-top: 8px;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+    .comments-heading { display: flex; align-items: center; gap: 8px; padding: 14px 15px; border-bottom: 0; }
+    .comments-heading > .material-symbols-outlined { color: var(--knot-primary); font-size: 19px; }
+    .comments-heading h2 { margin: 0; color: #344054; font-size: 15.5px; font-weight: 800; }
+    .comment-list { padding: 0 14px; }
+    #commentList { display: grid; gap: 6px; padding: 6px 0; background: var(--knot-bg); }
+    .comment { position: relative; padding: 14px 0; border-bottom: 0; }
+    .comment:last-child { border-bottom: 0; }
+    #commentList > .comment { margin: 0; padding: 10px 16px 14px; border: 0; border-radius: 0; background: #fff; box-shadow: none; }
+    .comment .knot-author-copy { transform: translateY(-5px); }
+    .comment-body { margin: -13px 0 0 48px; color: #344054; font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .comment-author-line {
+        display: flex;
+        min-width: 0;
+        align-items: baseline;
+        gap: 4px;
+        line-height: 1.1;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+    .comment-author-line .knot-author-name { flex: 0 1 auto; }
+    .comment-time {
+        flex: 0 1 auto;
+        overflow: hidden;
+        color: #8a94a6;
+        font-size: 11.5px;
+        font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .comment-body.deleted { color: #98a2b3; font-style: italic; }
+    .comment-actions { gap: 2px; margin: 8px 0 0 44px; }
+    .comment-actions .comment-icon-action {
+        position: relative;
+        width: 32px;
+        min-width: 32px;
+        height: 32px;
+        padding: 0;
+        border-color: #edf0f5;
+        background: #f8fafc;
+        box-shadow: none;
+    }
+    .comment-actions .comment-icon-action::after { content: ''; position: absolute; inset: -4px; }
+    .comment-actions .comment-icon-action:hover,
+    .comment-actions .comment-icon-action:focus-visible { border-color: #dfe5ed; background: #f5f7fa; }
+    .comment-actions .comment-icon-action.active { border-color: #bfdbfe; background: var(--knot-primary-soft); color: var(--knot-primary-strong); box-shadow: none; }
+    .comment-actions .comment-icon-action .material-symbols-outlined { font-size: 16px; }
+    .view-replies {
+        display: inline-flex;
+        min-height: 32px;
+        align-items: center;
+        gap: 3px;
+        margin: 3px 0 0 44px;
+        padding: 0 6px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: var(--knot-primary-strong);
+        font: 700 12px/1 'Plus Jakarta Sans', sans-serif;
+        cursor: pointer;
+        transition: background .18s ease;
+    }
+    .view-replies:hover, .view-replies:focus-visible { background: #f0f4fa; }
+    .view-replies .material-symbols-outlined { font-size: 15px; }
+    .comment-actions .view-replies { margin: 0 0 0 2px; }
+    .continue-thread { display: inline-flex; min-height: 34px; align-items: center; gap: 5px; margin: 8px 0 0 44px; padding: 0 8px; border-radius: 9px; background: var(--knot-primary-soft); color: var(--knot-primary-strong); font: 700 12px/1 'Plus Jakarta Sans', sans-serif; text-decoration: none; }
+    .continue-thread .material-symbols-outlined { font-size: 16px; }
+    .reply-children { display: none; margin: 10px 0 0 24px; padding-left: 12px; border-left: 2px solid #dbeafe; }
+    .reply-children.open { display: block; }
+    .thread-context { margin-bottom: 12px; padding: 0 14px; border: 0; border-radius: 22px; background: #fff; box-shadow: var(--knot-shadow); }
+
+    .sticky-comment {
+        position: fixed;
+        left: 50%;
+        bottom: env(safe-area-inset-bottom, 0px);
+        z-index: 55;
+        width: min(100%, 560px);
+        padding: 8px 12px;
+        border-top: 0;
+        background: rgba(255,255,255,.96);
+        box-shadow: 0 -8px 28px rgba(15, 23, 42, .09);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        transform: translateX(-50%);
+        box-sizing: border-box;
+    }
+    .sticky-comment-inner { display: flex; align-items: flex-end; gap: 8px; width: 100%; }
+    .sticky-comment textarea {
+        flex: 1;
+        min-height: 44px;
+        max-height: 100px;
+        margin: 0;
+        padding: 11px 13px;
+        border: 0;
+        border-radius: 22px;
+        outline: 0;
+        background: #fff;
+        box-shadow: var(--knot-shadow-soft);
+        color: var(--knot-text);
+        font: 500 13px/1.4 'Plus Jakarta Sans', sans-serif;
+        resize: none;
+        box-sizing: border-box;
+    }
+    .knot-send-btn { display: inline-flex; flex: 0 0 44px; width: 44px; height: 44px; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 50%; background: var(--knot-primary); color: #fff; box-shadow: 0 8px 20px rgba(37, 99, 235, .28); cursor: pointer; }
+    .knot-send-btn .material-symbols-outlined { font-size: 19px; }
+    .replying-to { display: none; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px 7px; color: #667085; font-size: 10.5px; }
+    .replying-to.show { display: flex; }
+    .replying-to button { width: 32px; height: 32px; flex-basis: 32px; border: 0; background: transparent; }
+    .knot-toast { position: fixed; left: 50%; bottom: 150px; z-index: 5000; max-width: calc(100% - 32px); padding: 10px 14px; border-radius: 12px; background: #172033; color: #fff; font-size: 12px; font-weight: 650; opacity: 0; pointer-events: none; transform: translate(-50%, 8px); transition: opacity .2s ease, transform .2s ease; }
+    .knot-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .knot-composer-shell {
+        width: 100%;
+        min-height: 100dvh;
+        margin-bottom: -112px;
+        background: #fff;
+    }
+    .knot-composer { position: relative; min-height: 100dvh; padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; }
+    .knot-composer-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr);
+        align-items: center;
+        gap: 8px;
+        min-height: 64px;
+        padding: 10px 12px;
+        border-bottom: 0;
+        background: rgba(255,255,255,.97);
+        box-shadow: 0 5px 20px rgba(15, 23, 42, .07);
+        box-sizing: border-box;
+    }
+    .knot-composer-back {
+        display: inline-flex;
+        width: 44px;
+        height: 44px;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 17px;
+        background: #fff;
+        box-shadow: var(--knot-shadow-soft);
+        color: #344054;
+        text-decoration: none;
+        box-sizing: border-box;
+    }
+    .knot-composer-back .material-symbols-outlined { font-size: 20px; }
+    .knot-composer-select {
+        display: inline-flex;
+        width: 100%;
+        min-width: 0;
+        height: 44px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 4px;
+        margin: 0;
+        padding: 0 9px 0 11px;
+        border: 0;
+        border-radius: 16px;
+        outline: 0;
+        background: #fff;
+        box-shadow: var(--knot-shadow-soft);
+        color: #344054;
+        font: 700 12px/1 'Plus Jakarta Sans', sans-serif;
+        cursor: pointer;
+        box-sizing: border-box;
+    }
+    .knot-composer-select > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .knot-composer-select .material-symbols-outlined { flex: 0 0 auto; font-size: 17px; transition: transform .18s ease; }
+    .knot-custom-select { position: relative; min-width: 0; }
+    .knot-custom-select.open .knot-composer-select {
+        background: var(--knot-primary-soft);
+        color: var(--knot-primary-strong);
+    }
+    .knot-custom-select.open .knot-composer-select .material-symbols-outlined { transform: rotate(180deg); }
+    .knot-custom-select.disabled .knot-composer-select { color: #98a2b3; opacity: .72; cursor: default; }
+    .knot-select-menu {
+        position: absolute;
+        top: calc(100% + 7px);
+        left: 0;
+        right: 0;
+        z-index: 95;
+        display: none;
+        max-height: 250px;
+        overflow-y: auto;
+        padding: 6px;
+        border: 0;
+        border-radius: 17px;
+        background: #fff;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, .18);
+        box-sizing: border-box;
+    }
+    .knot-custom-select.open .knot-select-menu { display: grid; gap: 2px; }
+    .knot-select-menu button {
+        min-height: 38px;
+        padding: 0 9px;
+        border: 0;
+        border-radius: 10px;
+        background: transparent;
+        color: #344054;
+        font: 750 12px/1 'Plus Jakarta Sans', sans-serif;
+        text-align: left;
+        cursor: pointer;
+    }
+    .knot-select-menu button:hover,
+    .knot-select-menu button[aria-selected="true"] { background: var(--knot-primary-soft); color: var(--knot-primary-strong); }
+    .knot-select-menu button[hidden] { display: none; }
+    .knot-composer-error { margin: 10px 14px 0; }
+    .knot-composer-main { min-height: calc(100dvh - 136px); padding: 6px 18px 28px; background: #fff; box-sizing: border-box; }
+    .knot-composer-title {
+        width: 100%;
+        min-height: 62px;
+        margin: 0;
+        padding: 15px 0 12px;
+        border: 0;
+        border-radius: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--knot-text);
+        font: 800 24px/1.3 'Plus Jakarta Sans', sans-serif;
+        letter-spacing: -.025em;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        box-sizing: border-box;
+    }
+    .knot-composer-title::placeholder { color: #98a2b3; }
+    .knot-composer-divider { height: 0; background: transparent; }
+    .knot-rich-editor {
+        min-height: calc(100dvh - 225px);
+        padding: 16px 0 28px;
+        outline: 0;
+        color: #344054;
+        font: 500 15px/1.65 'Plus Jakarta Sans', sans-serif;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        white-space: normal;
+    }
+    .knot-rich-editor:empty::before { content: attr(data-placeholder); color: #98a2b3; pointer-events: none; }
+    .knot-rich-editor p, .knot-rich-content p { margin: 0 0 10px; }
+    .knot-rich-editor h2, .knot-rich-content h2 { margin: 14px 0 8px; font-size: 1.28em; line-height: 1.35; }
+    .knot-rich-editor .knot-inline-heading, .knot-rich-content .knot-inline-heading { font-size: 1.16em; font-weight: 800; line-height: 1.35; }
+    .knot-rich-editor ul, .knot-rich-editor ol, .knot-rich-content ul, .knot-rich-content ol { margin: 8px 0; padding-left: 24px; }
+    .knot-rich-editor a, .knot-rich-content a { color: var(--knot-primary-strong); text-decoration: underline; overflow-wrap: anywhere; }
+    .knot-rich-editor img, .knot-rich-content img {
+        display: block;
+        width: auto;
+        max-width: 100%;
+        max-height: 520px;
+        margin: 12px 0;
+        border-radius: 18px;
+        object-fit: contain;
+        box-shadow: var(--knot-shadow-soft);
+        cursor: zoom-in;
+    }
+    .knot-rich-content { display: block; white-space: normal; }
+    .knot-rich-content,
+    .knot-rich-content * {
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    .knot-rich-content br + br + br,
+    .knot-rich-content p:empty + p:empty + p:empty { display: none; }
+    .knot-card:not(.knot-card-detail) .knot-rich-content { max-height: 6.4em; overflow: hidden; }
+    .knot-card:not(.knot-card-detail) .knot-rich-content img { display: none; }
+    .knot-card-detail .knot-rich-content { max-height: none; overflow: visible; }
+    .knot-selection-tools {
+        position: absolute;
+        z-index: 80;
+        display: flex;
+        gap: 2px;
+        padding: 4px;
+        border: 0;
+        border-radius: 15px;
+        background: #172033;
+        box-shadow: 0 8px 24px rgba(15,23,42,.2);
+    }
+    .knot-selection-tools[hidden] { display: none; }
+    .knot-selection-tools button {
+        display: inline-flex;
+        width: 36px;
+        height: 36px;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        color: #fff;
+        font: 700 14px/1 'Plus Jakarta Sans', sans-serif;
+        cursor: pointer;
+    }
+    .knot-selection-tools button:hover, .knot-selection-tools button:focus-visible { background: rgba(255,255,255,.14); }
+    .knot-selection-tools .material-symbols-outlined { font-size: 18px; }
+    .knot-composer-footer {
+        position: fixed;
+        left: 50%;
+        bottom: 0;
+        z-index: 70;
+        display: flex;
+        width: min(100%, 560px);
+        min-height: 64px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+        border-top: 0;
+        background: rgba(255,255,255,.97);
+        box-shadow: 0 -8px 28px rgba(15, 23, 42, .09);
+        box-sizing: border-box;
+        transform: translateX(-50%);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+    }
+    .knot-composer-attachments { display: flex; min-width: 0; align-items: center; gap: 4px; }
+    .knot-composer-tool {
+        display: inline-flex;
+        min-width: 44px;
+        height: 44px;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 0 8px;
+        border: 0;
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: var(--knot-shadow-soft);
+        color: #475467;
+        font: 700 11px/1 'Plus Jakarta Sans', sans-serif;
+        cursor: pointer;
+    }
+    .knot-composer-tool:hover, .knot-composer-tool:focus-visible { background: #f2f4f7; }
+    .knot-composer-tool .material-symbols-outlined { font-size: 19px; }
+    .knot-composer-tool:disabled { opacity: .5; cursor: wait; }
+    .knot-upload-status { max-width: 90px; overflow: hidden; color: #667085; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+    .knot-publish-actions { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 8px; }
+    .knot-anon-toggle {
+        display: inline-flex;
+        height: 42px;
+        align-items: center;
+        gap: 7px;
+        min-width: 112px;
+        justify-content: center;
+        padding: 0 10px;
+        border: 0;
+        border-radius: 15px;
+        background: #fff;
+        box-shadow: var(--knot-shadow-soft);
+        color: #475467;
+        font: 800 11px/1 'Plus Jakarta Sans', sans-serif;
+        cursor: pointer;
+        user-select: none;
+    }
+    .knot-mini-switch {
+        position: relative;
+        width: 32px;
+        height: 19px;
+        border-radius: 999px;
+        background: #d0d5dd;
+        transition: background .18s ease;
+    }
+    .knot-mini-switch::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, .22);
+        transition: transform .18s ease;
+    }
+    .knot-anon-toggle.is-anon { color: var(--knot-primary-strong); }
+    .knot-anon-toggle.is-anon .knot-mini-switch { background: var(--knot-primary); }
+    .knot-anon-toggle.is-anon .knot-mini-switch::after { transform: translateX(13px); }
+    .knot-composer-publish {
+        flex: 0 0 auto;
+        min-width: 68px;
+        height: 42px;
+        padding: 0 16px;
+        border: 0;
+        border-radius: 16px;
+        background: var(--knot-primary);
+        color: #fff;
+        font: 800 12px/1 'Plus Jakarta Sans', sans-serif;
+        cursor: pointer;
+    }
+    .knot-composer-publish:disabled { opacity: .58; cursor: wait; }
+
+    .knot-link-dialog {
+        position: fixed;
+        inset: 0;
+        z-index: 9000;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 16px;
+        background: rgba(15, 23, 42, .44);
+        box-sizing: border-box;
+    }
+    .knot-link-dialog.open { display: flex; }
+    .knot-link-card {
+        width: min(100%, 520px);
+        padding: 16px;
+        border-radius: 24px;
+        background: #fff;
+        box-shadow: 0 24px 64px rgba(15, 23, 42, .22);
+        box-sizing: border-box;
+    }
+    .knot-link-card h2 { margin: 0 0 10px; color: var(--knot-text); font-size: 17px; font-weight: 850; }
+    .knot-link-card input {
+        width: 100%;
+        height: 46px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 15px;
+        outline: 0;
+        background: #f8fafc;
+        color: var(--knot-text);
+        font: 650 13px/1 'Plus Jakarta Sans', sans-serif;
+        box-sizing: border-box;
+    }
+    .knot-link-card input:focus { box-shadow: inset 0 0 0 1px #bfdbfe; }
+    .knot-link-actions { display: flex; gap: 9px; margin-top: 12px; }
+    .knot-link-actions button {
+        flex: 1;
+        height: 42px;
+        border: 0;
+        border-radius: 15px;
+        font: 800 12px/1 'Plus Jakarta Sans', sans-serif;
+        cursor: pointer;
+    }
+    .knot-link-cancel { background: #f2f4f7; color: #475467; }
+    .knot-link-apply { background: var(--knot-primary); color: #fff; }
+
+    .knot-image-lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: rgba(15, 23, 42, .62);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        opacity: 0;
+        visibility: hidden;
+        cursor: zoom-out;
+        transition: opacity .2s ease, visibility .2s ease;
+        box-sizing: border-box;
+    }
+    .knot-image-lightbox.open { opacity: 1; visibility: visible; }
+    .knot-image-lightbox img {
+        display: block;
+        width: auto;
+        height: auto;
+        max-width: min(92vw, 720px);
+        max-height: 86dvh;
+        border-radius: 24px;
+        object-fit: contain;
+        box-shadow: 0 28px 80px rgba(0, 0, 0, .36);
+        transform: scale(.96);
+        transition: transform .22s ease;
+    }
+    .knot-image-lightbox.open img { transform: scale(1); }
+
+    :is(.knots-shell, .knots-detail-shell, .knot-composer-shell) button:focus-visible,
+    :is(.knots-shell, .knots-detail-shell, .knot-composer-shell) a:focus-visible,
+    :is(.knots-shell, .knots-detail-shell, .knot-composer-shell) summary:focus-visible,
+    :is(.knots-shell, .knots-detail-shell, .knot-composer-shell) input:focus-visible,
+    :is(.knots-shell, .knots-detail-shell, .knot-composer-shell) textarea:focus-visible,
+    :is(.knots-shell, .knots-detail-shell, .knot-composer-shell) select:focus-visible {
+        outline: 2px solid rgba(37, 99, 235, .45);
+        outline-offset: 2px;
+    }
+    .knot-rich-editor:focus,
+    .knot-rich-editor:focus-visible { outline: 0; }
+
+    @media (max-width: 380px) {
+        .knots-toolbar { gap: 6px; padding-inline: 10px; }
+        .knots-compact-btn { padding-inline: 8px; font-size: 11px; }
+        .knots-filter-btn { min-width: 52px; }
+        .knots-header { padding-inline: 12px; }
+        .knots-header-badge { display: none; }
+        .knots-header-sub { max-width: 260px; font-size: 10.5px; }
+        .campus-options { grid-template-columns: 1fr; }
+    }
+    @media (min-width: 720px) {
+        .container { border: 0; box-shadow: 0 24px 70px rgba(15,23,42,.08); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+</style>
