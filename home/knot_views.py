@@ -1,5 +1,6 @@
 import json
 import re
+from io import BytesIO
 from html import escape, unescape
 from html.parser import HTMLParser
 from datetime import timedelta
@@ -33,6 +34,10 @@ REPORT_REASONS = {choice[0] for choice in KnotReport.REPORT_CHOICES}
 CONTROL_CHARS = re.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]')
 RICH_TEXT_TAGS = {'p', 'div', 'br', 'strong', 'em', 'span', 'ul', 'ol', 'li', 'h2', 'a', 'img'}
 COMMENT_MAX_LENGTH = 1200
+KNOT_MAX_IMAGES = 4
+KNOT_CREATE_COOLDOWN = timedelta(hours=1)
+KNOT_IMAGE_TARGET_BYTES = 150 * 1024
+KNOT_IMAGE_MAX_DIMENSION = 1280
 
 
 class _KnotRichTextSanitizer(HTMLParser):
@@ -107,6 +112,8 @@ def _clean_rich_content(value):
     cleaned = re.sub(r'(?:\s*<br>\s*){3,}', '<br><br>', cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r'(?:<p>\s*(?:<br>\s*)?</p>\s*){2,}', '<br><br>', cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r'\n(?:[ \t]*\n){2,}', '\n\n', cleaned)
+    if len(re.findall(r'<img\b', cleaned, flags=re.IGNORECASE)) > KNOT_MAX_IMAGES:
+        raise ValidationError(f'You can add up to {KNOT_MAX_IMAGES} images in one Knot.')
     plain = CONTROL_CHARS.sub('', unescape(strip_tags(cleaned))).replace('\xa0', ' ').strip()
     if not plain:
         raise ValidationError('Content is required.')
@@ -187,6 +194,55 @@ def _profile_snapshot(user):
 
 def _rate_limited(model, user, since, limit):
     return model.objects.filter(user=user, created_at__gte=since).count() >= limit
+
+
+def _optimized_knot_image(image_file):
+    image_file.seek(0)
+    with Image.open(image_file) as source:
+        if getattr(source, 'is_animated', False) or source.format == 'GIF':
+            image_file.seek(0)
+            return image_file
+
+        image = source
+        if image.mode not in ('RGB', 'L'):
+            background = Image.new('RGB', image.size, (255, 255, 255))
+            if image.mode in ('RGBA', 'LA'):
+                background.paste(image.convert('RGBA'), mask=image.convert('RGBA').getchannel('A'))
+            else:
+                background.paste(image.convert('RGB'))
+            image = background
+        elif image.mode != 'RGB':
+            image = image.convert('RGB')
+        else:
+            image = image.copy()
+
+    if max(image.size) > KNOT_IMAGE_MAX_DIMENSION:
+        image.thumbnail((KNOT_IMAGE_MAX_DIMENSION, KNOT_IMAGE_MAX_DIMENSION), Image.Resampling.LANCZOS)
+
+    best = None
+    best_size = None
+    quality_steps = (82, 76, 70, 64, 58, 52)
+    for _ in range(4):
+        for quality in quality_steps:
+            output = BytesIO()
+            image.save(output, format='WEBP', quality=quality, method=6, optimize=True)
+            size = output.tell()
+            if best is None or size < best_size:
+                output.seek(0)
+                best = output
+                best_size = size
+            if size <= KNOT_IMAGE_TARGET_BYTES:
+                output.seek(0)
+                output.name = 'knot-image.webp'
+                return output
+        width, height = image.size
+        if width <= 720 and height <= 720:
+            break
+        image = image.resize((max(1, int(width * .85)), max(1, int(height * .85))), Image.Resampling.LANCZOS)
+
+    best.seek(0)
+    best.name = 'knot-image.webp'
+    return best
 
 
 def _safe_push(user, title, body, url):
@@ -353,8 +409,8 @@ def knot_form(request, post_id=None):
             college = college or campus_record['org']
             campus = campus_record['name']
         if not post:
-            if _rate_limited(KnotPost, request.user, timezone.now() - timedelta(minutes=10), 3):
-                return _error('You are posting too quickly. Try again in a few minutes.', 429)
+            if _rate_limited(KnotPost, request.user, timezone.now() - KNOT_CREATE_COOLDOWN, 1):
+                return _error('You can post only one Knot per hour. Try again later.', 429)
             if not location_supplied and not college and not campus:
                 profile_college, profile_campus = _profile_snapshot(request.user)
                 college, campus = profile_college, profile_campus
@@ -409,7 +465,8 @@ def knot_image_upload(request):
         return _error('Too many image uploads. Try again in a minute.', 429)
     cache.set(rate_key, upload_count + 1, 90)
 
-    uploaded = upload_to_cloudinary(image_file, folder='knotspot/knot_images')
+    optimized_image = _optimized_knot_image(image_file)
+    uploaded = upload_to_cloudinary(optimized_image, folder='knotspot/knot_images', optimize=False)
     if not uploaded:
         return _error('Image upload failed. Try again.', 502)
     return JsonResponse({'success': True, 'data': {'url': uploaded}}, status=201)

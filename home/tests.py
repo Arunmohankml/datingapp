@@ -28,6 +28,8 @@ class KnotsFeatureTests(TestCase):
             user=self.owner, title='Library hours', content='Does anyone know the weekend hours?',
             category='question', college='SRM', campus='SRM Kattankulathur (KTR)',
         )
+        KnotPost.objects.filter(id=self.post.id).update(created_at=timezone.now() - timedelta(hours=2))
+        self.post.refresh_from_db()
 
     @staticmethod
     def _user(username, email, campus):
@@ -231,6 +233,8 @@ class KnotsFeatureTests(TestCase):
         self.assertContains(response, "if (format === 'insertUnorderedList') return bulletSelectedRange();")
         self.assertNotContains(response, 'document.execCommand(button.dataset.format', html=False)
         self.assertContains(response, 'id="knotImageInput"')
+        self.assertContains(response, 'var maxKnotImages = 4;')
+        self.assertContains(response, 'Max 4 images per Knot')
         self.assertContains(response, 'id="knotLinkDialog"')
         self.assertContains(response, 'class="knot-anon-toggle"')
         self.assertContains(response, 'Anonymous')
@@ -314,6 +318,56 @@ class KnotsFeatureTests(TestCase):
         self.assertIn('<span class="knot-inline-heading">selected words</span>', post.content)
         self.assertNotIn(' bad', post.content)
 
+    def test_create_rejects_more_than_four_images(self):
+        self.client.force_login(self.owner)
+        images = ''.join(
+            f'<img src="https://res.cloudinary.com/demo/image/upload/knot-{index}.webp" alt="Image {index}">'
+            for index in range(5)
+        )
+
+        response = self._post_json('/knots/create/', {
+            'title': 'Too many images',
+            'content': 'This knot has too many images',
+            'content_html': f'<p>This knot has too many images</p>{images}',
+            'college': '',
+            'campus': '',
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('up to 4 images', response.json()['error'])
+        self.assertFalse(KnotPost.objects.filter(title='Too many images').exists())
+
+    def test_create_allows_only_one_knot_per_hour(self):
+        recent = KnotPost.objects.create(
+            user=self.other,
+            title='Recent Knot',
+            content='Posted recently.',
+            college='VIT',
+            campus='VIT Vellore (VLR)',
+        )
+        self.client.force_login(self.other)
+
+        blocked = self._post_json('/knots/create/', {
+            'title': 'Second Knot',
+            'content': 'Trying again too soon.',
+            'college': '',
+            'campus': '',
+        })
+
+        self.assertEqual(blocked.status_code, 429)
+        self.assertIn('one Knot per hour', blocked.json()['error'])
+        self.assertFalse(KnotPost.objects.filter(title='Second Knot').exists())
+
+        KnotPost.objects.filter(id=recent.id).update(created_at=timezone.now() - timedelta(hours=1, minutes=1))
+        allowed = self._post_json('/knots/create/', {
+            'title': 'After Cooldown',
+            'content': 'This one is allowed now.',
+            'college': '',
+            'campus': '',
+        })
+
+        self.assertEqual(allowed.status_code, 201)
+
     def test_rich_content_caps_blank_lines_and_repeated_spaces(self):
         self.client.force_login(self.owner)
 
@@ -357,6 +411,28 @@ class KnotsFeatureTests(TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json()['data']['url'], upload.return_value)
         upload.assert_called_once()
+        self.assertFalse(upload.call_args.kwargs['optimize'])
+
+    @patch('home.knot_views.upload_to_cloudinary', return_value='https://res.cloudinary.com/demo/image/upload/optimized.webp')
+    def test_knot_image_upload_compresses_normal_images_before_cloudinary(self, upload):
+        self.client.force_login(self.owner)
+        image_bytes = BytesIO()
+        image = Image.effect_noise((1600, 1100), 42).convert('RGB')
+        image.save(image_bytes, format='JPEG', quality=95)
+        original_size = image_bytes.tell()
+        image_file = SimpleUploadedFile('large-knot.jpg', image_bytes.getvalue(), content_type='image/jpeg')
+
+        response = self.client.post('/api/knots/images/', {'image': image_file})
+
+        self.assertEqual(response.status_code, 201)
+        optimized_file = upload.call_args.args[0]
+        optimized_file.seek(0, 2)
+        optimized_size = optimized_file.tell()
+        optimized_file.seek(0)
+        self.assertLess(optimized_size, original_size)
+        self.assertLessEqual(optimized_size, 150 * 1024)
+        self.assertEqual(Image.open(optimized_file).format, 'WEBP')
+        self.assertFalse(upload.call_args.kwargs['optimize'])
 
     @patch('home.knot_views.upload_to_cloudinary')
     def test_knot_image_upload_rejects_non_image(self, upload):

@@ -27,9 +27,9 @@ def _convert_to_webp(file_obj, quality=85):
         file_obj.seek(0)
         return file_obj
 
-def upload_to_cloudinary(file_obj, folder="srm_match/misc", public_id=None):
+def upload_to_cloudinary(file_obj, folder="srm_match/misc", public_id=None, optimize=True):
     try:
-        webp_data = _convert_to_webp(file_obj)
+        upload_data = _convert_to_webp(file_obj) if optimize else file_obj
         params = {
             "folder": folder,
             "resource_type": "image",
@@ -38,7 +38,7 @@ def upload_to_cloudinary(file_obj, folder="srm_match/misc", public_id=None):
             params["public_id"] = public_id
             params["overwrite"] = True
 
-        upload_result = cloudinary.uploader.upload(webp_data, **params)
+        upload_result = cloudinary.uploader.upload(upload_data, **params)
         return upload_result.get('secure_url')
     except Exception as e:
         print(f"Cloudinary Upload Error: {e}")

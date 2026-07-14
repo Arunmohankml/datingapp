@@ -101,6 +101,7 @@
     var anonToggle = document.querySelector('.knot-anon-toggle');
     var savedRange = null;
     var csrf = (document.cookie.match(/(?:^|; )csrftoken=([^;]+)/) || [])[1] || '';
+    var maxKnotImages = 4;
 
     function closeCustomSelects(except) {
         customSelects.forEach(function (wrap) {
@@ -197,6 +198,10 @@
             savedRange = range.cloneRange();
         }
         editor.dispatchEvent(new Event('input', {bubbles:true}));
+    }
+
+    function knotImageCount() {
+        return editor.querySelectorAll('img').length;
     }
 
     function getSelectedEditorRange() {
@@ -366,10 +371,18 @@
     });
     linkDialog.addEventListener('click', function (event) { if (event.target === linkDialog) closeLinkDialog(); });
 
-    imageButton.addEventListener('click', function () { rememberRange(); imageInput.click(); });
+    imageButton.addEventListener('click', function () {
+        rememberRange();
+        if (knotImageCount() >= maxKnotImages) {
+            uploadStatus.textContent = 'Max 4 images per Knot';
+            return;
+        }
+        imageInput.click();
+    });
     imageInput.addEventListener('change', function () {
         var file = imageInput.files[0];
         if (!file) return;
+        if (knotImageCount() >= maxKnotImages) { uploadStatus.textContent = 'Max 4 images per Knot'; imageInput.value = ''; return; }
         if (file.size > 8 * 1024 * 1024) { uploadStatus.textContent = 'Image must be under 8 MB'; imageInput.value = ''; return; }
         var data = new FormData(); data.append('image', file);
         imageButton.disabled = true; uploadStatus.textContent = 'Uploading…';
@@ -418,6 +431,7 @@
         if (!title.value.trim() || !plain) { error.textContent = 'Add a title and body text.'; error.classList.add('show'); return; }
         if (title.value.trim().length > 180) { error.textContent = 'Title must be 180 characters or fewer.'; error.classList.add('show'); return; }
         if (plain.length > 5000) { error.textContent = 'Body text must be 5000 characters or fewer.'; error.classList.add('show'); return; }
+        if (knotImageCount() > maxKnotImages) { error.textContent = 'You can add up to 4 images in one Knot.'; error.classList.add('show'); return; }
         var payload = {
             title: title.value.trim(), content: plain, content_html: normalizedEditorHtml(),
             college: college.value, campus: campus.value,
