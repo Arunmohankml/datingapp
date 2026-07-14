@@ -1528,6 +1528,12 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
+    .qotd-widget.expanded .qotd-trigger-question {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        display: block;
+    }
     .qotd-chevron {
         font-size: 20px;
         color: #94a3b8;
@@ -3017,8 +3023,7 @@ function qotdTriggerMarkup(question) {
     var questionText = question ? question.text : 'Loading question...';
     if (!questioner) return '';
     var name = questioner.name || 'KnotSpot';
-    var profileAttr = questioner.type === 'user' && questioner.id ? ' data-qotd-profile-url="/profile/' + encodeURIComponent(questioner.id) + '/" role="link" tabindex="0"' : '';
-    return '<span class="qotd-trigger-author"' + profileAttr + '>' + qotdEscape(name) + '</span><span class="qotd-trigger-question">' + qotdEscape(questionText) + '</span>';
+    return '<span class="qotd-trigger-author">' + qotdEscape(name) + '</span><span class="qotd-trigger-question">' + qotdEscape(questionText) + '</span>';
 }
 
 function setQotdTrigger(question) {
