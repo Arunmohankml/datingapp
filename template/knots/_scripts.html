@@ -53,10 +53,24 @@
         document.querySelectorAll('.knot-menu.open').forEach(function (menu) {
             if (menu !== except) {
                 menu.classList.remove('open');
+                menu.classList.remove('open-up');
+                var commentItem = menu.closest('.comment');
+                if (commentItem) commentItem.classList.remove('menu-open');
                 var button = menu.parentElement.querySelector('[data-action="menu"]');
                 if (button) button.setAttribute('aria-expanded', 'false');
             }
         });
+    }
+    function placeMenu(menu, button) {
+        menu.classList.remove('open-up');
+        var sticky = document.querySelector('.sticky-comment');
+        var stickyTop = sticky ? sticky.getBoundingClientRect().top : window.innerHeight;
+        var buttonRect = button.getBoundingClientRect();
+        var menuHeight = Math.max(menu.offsetHeight || 0, menu.scrollHeight || 0, 120);
+        var safeBottom = Math.min(window.innerHeight, stickyTop) - 12;
+        if (buttonRect.bottom + menuHeight + 8 > safeBottom && buttonRect.top > menuHeight + 8) {
+            menu.classList.add('open-up');
+        }
     }
     function closeImageLightbox() {
         var lightbox = document.getElementById('knotImageLightbox');
@@ -119,6 +133,7 @@
     }
     function commentHtml(item, depth) {
         var copy = item.is_deleted ? '' : '<button type="button" data-action="copy-comment-text"><span class="material-symbols-outlined">content_paste</span>Copy text</button>';
+        var adminDelete = item.can_admin_delete ? '<button type="button" class="danger" data-action="admin-delete-comment"><span class="material-symbols-outlined">delete_forever</span>Admin delete</button>' : '';
         var manage = item.can_manage ? '<button type="button" data-action="edit-comment"><span class="material-symbols-outlined">edit</span>Edit</button><button type="button" class="danger" data-action="delete-comment"><span class="material-symbols-outlined">delete</span>Delete</button>' : (item.can_report ? '<button type="button" class="danger" data-action="report-comment"><span class="material-symbols-outlined">flag</span>Report</button>' : '');
         var actions = item.is_deleted ? '' : '<button class="knot-action comment-icon-action '+(item.liked?'active':'')+'" type="button" data-action="like-comment" aria-label="Like comment ('+item.like_count+' likes)" aria-pressed="'+String(item.liked)+'"><span class="material-symbols-outlined">favorite</span><span class="sr-only" data-count>'+item.like_count+'</span></button><button class="knot-action comment-icon-action" type="button" data-action="reply" data-author="'+escapeHtml(item.name)+'" aria-label="Reply to '+escapeHtml(item.name)+'"><span class="material-symbols-outlined">reply</span></button>';
         var profileUrl = item.profile_url || ('/profile/'+item.user_id+'/');
@@ -130,7 +145,7 @@
         }
         return '<article class="comment" id="comment-'+item.id+'" data-comment-id="'+item.id+'" data-post-id="'+item.post_id+'" data-profile-url="'+escapeHtml(profileUrl)+'">'+
             '<div class="knot-author"><img class="knot-avatar" src="'+escapeHtml(item.avatar)+'" alt="'+escapeHtml(item.name)+'" width="34" height="34" loading="lazy"><div class="knot-author-copy"><div class="comment-author-line"><span class="knot-author-name">'+escapeHtml(item.name)+'</span><span class="comment-time">· '+relativeTime(item.created_at)+(item.updated?' · edited':'')+'</span></div></div></div>'+
-            '<div class="knot-menu-wrap"><button class="knot-menu-btn" type="button" data-action="menu" aria-label="Comment actions" aria-expanded="false"><span class="material-symbols-outlined">more_horiz</span></button><div class="knot-menu" role="menu">'+copy+manage+'</div></div>'+
+            '<div class="knot-menu-wrap"><button class="knot-menu-btn" type="button" data-action="menu" aria-label="Comment actions" aria-expanded="false"><span class="material-symbols-outlined">more_horiz</span></button><div class="knot-menu" role="menu">'+copy+manage+adminDelete+'</div></div>'+
             '<p class="comment-body '+(item.is_deleted?'deleted':'')+'" data-comment-body>'+escapeHtml(item.content)+'</p><div class="comment-actions">'+actions+replies+'</div><div class="reply-children" data-reply-children></div></article>';
     }
     function savePreferenceFromForm(form) {
@@ -177,7 +192,14 @@
         if (action === 'menu') {
             event.preventDefault(); event.stopPropagation();
             var menu = actionEl.parentElement.querySelector('.knot-menu');
-            var open = !menu.classList.contains('open'); closeMenus(menu); menu.classList.toggle('open', open); actionEl.setAttribute('aria-expanded', String(open)); return;
+            var open = !menu.classList.contains('open');
+            closeMenus(menu);
+            menu.classList.toggle('open', open);
+            var commentItem = menu.closest('.comment');
+            if (commentItem) commentItem.classList.toggle('menu-open', open);
+            if (open) placeMenu(menu, actionEl);
+            else menu.classList.remove('open-up');
+            actionEl.setAttribute('aria-expanded', String(open)); return;
         }
         if (action === 'copy') { event.preventDefault(); copyText(postUrl(card), 'Knot link copied'); closeMenus(); return; }
         if (action === 'copy-post-text') {
@@ -225,6 +247,10 @@
         if (action === 'delete-comment') {
             event.preventDefault(); closeMenus(); if(!confirm('Delete this comment?')) return; actionEl.disabled=true;
             request('/api/knots/comments/'+comment.dataset.commentId+'/delete/', {method:'POST',body:'{}'}).then(function(res){if(res.data.soft_deleted){var b=comment.querySelector('[data-comment-body]');b.textContent='Comment deleted';b.classList.add('deleted');comment.querySelector('.comment-actions').innerHTML='';comment.querySelector('.knot-menu').innerHTML='';}else comment.remove();toast('Comment deleted');}).catch(function(err){actionEl.disabled=false;toast(err.message);}); return;
+        }
+        if (action === 'admin-delete-comment') {
+            event.preventDefault(); closeMenus(); if(!confirm('Admin delete this comment and all of its replies forever?')) return; actionEl.disabled=true;
+            request('/api/knots/comments/'+comment.dataset.commentId+'/delete/', {method:'POST',body:JSON.stringify({force:true})}).then(function(){comment.remove();toast('Comment thread deleted');}).catch(function(err){actionEl.disabled=false;toast(err.message);}); return;
         }
         if (action === 'report-comment') {
             event.preventDefault(); closeMenus(); if(!confirm('Report this comment to the moderation team?')) return;

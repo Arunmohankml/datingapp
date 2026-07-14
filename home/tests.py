@@ -93,6 +93,42 @@ class KnotsFeatureTests(TestCase):
         self.assertEqual(comment.content, '')
         self.assertTrue(KnotComment.objects.filter(id=reply.id, parent=comment).exists())
 
+    def test_user_delete_comment_with_replies_soft_deletes_placeholder(self):
+        comment = KnotComment.objects.create(post=self.post, user=self.owner, content='Owner parent')
+        reply = KnotComment.objects.create(post=self.post, user=self.other, parent=comment, content='Visible reply')
+        self.client.force_login(self.owner)
+
+        response = self._post_json(f'/api/knots/comments/{comment.id}/delete/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['data']['soft_deleted'])
+        comment.refresh_from_db()
+        self.assertTrue(comment.is_deleted)
+        self.assertEqual(comment.content, '')
+        self.assertTrue(KnotComment.objects.filter(id=reply.id, parent=comment).exists())
+
+    def test_admin_can_hard_delete_comment_and_all_replies_with_force(self):
+        comment = KnotComment.objects.create(post=self.post, user=self.other, content='Remove whole thread')
+        child = KnotComment.objects.create(post=self.post, user=self.owner, parent=comment, content='Child reply')
+        grandchild = KnotComment.objects.create(post=self.post, user=self.other, parent=child, content='Nested reply')
+        self.client.force_login(self.admin)
+
+        response = self._post_json(f'/api/knots/comments/{comment.id}/delete/', {'force': True})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['data']['hard_deleted'])
+        self.assertFalse(KnotComment.objects.filter(id__in=[comment.id, child.id, grandchild.id]).exists())
+
+    def test_non_admin_cannot_force_delete_comment_thread(self):
+        comment = KnotComment.objects.create(post=self.post, user=self.owner, content='Protected parent')
+        reply = KnotComment.objects.create(post=self.post, user=self.other, parent=comment, content='Protected reply')
+        self.client.force_login(self.owner)
+
+        response = self._post_json(f'/api/knots/comments/{comment.id}/delete/', {'force': True})
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(KnotComment.objects.filter(id__in=[comment.id, reply.id]).exists())
+
     def test_non_owner_cannot_edit_or_delete_comment(self):
         comment = KnotComment.objects.create(post=self.post, user=self.owner, content='Owner comment')
         self.client.force_login(self.other)
@@ -455,6 +491,11 @@ class KnotsFeatureTests(TestCase):
         self.assertEqual([item['id'] for item in data], [child.id])
         self.assertEqual(data[0]['reply_count'], 1)
         self.assertEqual(data[0]['profile_url'], f'/profile/{self.other.id}/')
+        self.assertFalse(data[0]['can_admin_delete'])
+
+        self.client.force_login(self.admin)
+        admin_response = self.client.get(f'/api/knots/comments/{root.id}/replies/')
+        self.assertTrue(admin_response.json()['data'][0]['can_admin_delete'])
 
     def test_comment_author_avatar_and_name_link_to_profile(self):
         KnotComment.objects.create(post=self.post, user=self.other, content='Profile tap')
@@ -477,6 +518,41 @@ class KnotsFeatureTests(TestCase):
         self.assertContains(response, "var copy = item.is_deleted ? '' : '<button type=\"button\" data-action=\"copy-comment-text\"", html=False)
         self.assertContains(response, "copyText(commentCopyText(comment), 'Comment text copied');", html=False)
         self.assertContains(response, 'Copy this comment')
+
+    def test_admin_comment_menu_has_separate_hard_delete_action(self):
+        KnotComment.objects.create(post=self.post, user=self.other, content='Moderate this comment')
+        self.client.force_login(self.admin)
+
+        response = self.client.get(f'/knots/{self.post.id}/{self.post.slug}/')
+
+        self.assertContains(response, 'data-action="delete-comment"', html=False)
+        self.assertContains(response, 'data-action="admin-delete-comment"', html=False)
+        self.assertContains(response, '>Admin delete</button>', html=False)
+        self.assertContains(response, "var adminDelete = item.can_admin_delete", html=False)
+        self.assertContains(response, "body:JSON.stringify({force:true})", html=False)
+        self.assertContains(response, "toast('Comment thread deleted')", html=False)
+
+    def test_admin_can_hard_delete_soft_deleted_placeholder_from_menu(self):
+        KnotComment.objects.create(post=self.post, user=self.other, content='', is_deleted=True)
+        self.client.force_login(self.admin)
+
+        response = self.client.get(f'/knots/{self.post.id}/{self.post.slug}/')
+
+        self.assertContains(response, 'Comment deleted')
+        self.assertContains(response, 'data-action="admin-delete-comment"', html=False)
+
+    def test_comment_menu_can_open_above_sticky_comment_bar(self):
+        KnotComment.objects.create(post=self.post, user=self.other, content='Only comment')
+        self.client.force_login(self.owner)
+
+        response = self.client.get(f'/knots/{self.post.id}/{self.post.slug}/')
+
+        self.assertContains(response, '.comments-panel { margin-top: 12px; border: 0; border-radius: 24px; background: #fff; overflow: visible;')
+        self.assertContains(response, '.knot-menu.open-up')
+        self.assertContains(response, 'function placeMenu(menu, button)')
+        self.assertContains(response, "menu.classList.add('open-up');")
+        self.assertContains(response, '#commentList > .comment.menu-open { z-index: 60; }')
+        self.assertContains(response, "commentItem.classList.toggle('menu-open', open);")
 
     def test_detail_has_no_bottom_nav_and_uses_one_discussion_container(self):
         root = KnotComment.objects.create(post=self.post, user=self.other, content='Top level comment')

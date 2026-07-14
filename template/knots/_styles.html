@@ -452,6 +452,10 @@
         background: #fff;
         box-shadow: 0 16px 38px rgba(15, 23, 42, .18);
     }
+    .knot-menu.open-up {
+        top: auto;
+        bottom: 40px;
+    }
     .knot-menu.open { display: block; }
     .knot-menu a, .knot-menu button {
         display: flex;
@@ -625,7 +629,7 @@
         border-radius: 0;
         box-shadow: none;
     }
-    .comments-panel { margin-top: 12px; border: 0; border-radius: 24px; background: #fff; overflow: hidden; box-shadow: var(--knot-shadow); }
+    .comments-panel { margin-top: 12px; border: 0; border-radius: 24px; background: #fff; overflow: visible; box-shadow: var(--knot-shadow); }
     .knot-discussion-card > .comments-panel {
         margin-top: 8px;
         border: 0;
@@ -639,7 +643,9 @@
     #commentList { display: grid; gap: 6px; padding: 6px 0; background: var(--knot-bg); }
     .comment { position: relative; padding: 14px 0; border-bottom: 0; }
     .comment:last-child { border-bottom: 0; }
-    #commentList > .comment { margin: 0; padding: 10px 16px 14px; border: 0; border-radius: 0; background: #fff; box-shadow: none; }
+    #commentList > .comment { margin: 0; padding: 10px 16px 14px; border: 0; border-radius: 0; background: #fff; box-shadow: none; z-index: 1; }
+    #commentList > .comment:has(.knot-menu.open),
+    #commentList > .comment.menu-open { z-index: 60; }
     .comment .knot-author-copy { transform: translateY(-5px); }
     .comment-body { margin: -13px 0 0 48px; color: #344054; font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
     .comment-author-line {

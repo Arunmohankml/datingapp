@@ -282,6 +282,7 @@ def _annotated_comments(user):
 
 def _comment_payload(comment, user):
     profile = getattr(comment.user, 'profile', None)
+    is_moderator = _is_moderator(user)
     return {
         'id': comment.id,
         'post_id': comment.post_id,
@@ -297,7 +298,8 @@ def _comment_payload(comment, user):
         'like_count': comment.like_count,
         'reply_count': comment.reply_count,
         'liked': comment.user_has_liked,
-        'can_manage': not comment.is_deleted and (comment.user_id == user.id or _is_moderator(user)),
+        'can_manage': not comment.is_deleted and (comment.user_id == user.id or is_moderator),
+        'can_admin_delete': is_moderator,
         'can_report': not comment.is_deleted and comment.user_id != user.id,
         'is_author_anonymous': comment.post.is_anonymous if comment.post else False,
     }
@@ -594,8 +596,16 @@ def knot_comment_edit(request, comment_id):
 @require_POST
 def knot_comment_delete(request, comment_id):
     comment = get_object_or_404(KnotComment, id=comment_id)
-    if comment.user_id != request.user.id and not _is_moderator(request.user):
+    data = _json_body(request) or {}
+    force_delete = bool(data.get('force'))
+    is_moderator = _is_moderator(request.user)
+    if force_delete and not is_moderator:
+        return _error('Only admins can permanently delete comment threads.', 403)
+    if comment.user_id != request.user.id and not is_moderator:
         return _error('You cannot delete this comment.', 403)
+    if force_delete:
+        comment.delete()
+        return JsonResponse({'success': True, 'data': {'deleted': True, 'soft_deleted': False, 'hard_deleted': True}})
     if comment.replies.exists():
         comment.content = ''
         comment.is_deleted = True

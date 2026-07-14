@@ -12,10 +12,13 @@
                 <button type="button" data-action="copy-comment-text"><span class="material-symbols-outlined">content_paste</span>Copy text</button>
                 {% if comment.user_id == user.id or is_moderator %}
                 <button type="button" data-action="edit-comment"><span class="material-symbols-outlined">edit</span>{% if comment.user_id != user.id %}Admin edit{% else %}Edit{% endif %}</button>
-                <button type="button" class="danger" data-action="delete-comment"><span class="material-symbols-outlined">delete</span>{% if comment.user_id != user.id %}Admin delete{% else %}Delete{% endif %}</button>
+                <button type="button" class="danger" data-action="delete-comment"><span class="material-symbols-outlined">delete</span>Delete</button>
                 {% else %}
                 <button type="button" class="danger" data-action="report-comment"><span class="material-symbols-outlined">flag</span>Report</button>
                 {% endif %}
+            {% endif %}
+            {% if is_moderator %}
+                <button type="button" class="danger" data-action="admin-delete-comment"><span class="material-symbols-outlined">delete_forever</span>Admin delete</button>
             {% endif %}
         </div>
     </div>
