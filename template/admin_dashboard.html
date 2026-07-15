@@ -651,18 +651,6 @@
                 {% endif %}
             </div>
 
-            <!-- Wall Controls -->
-            <div class="admin-card">
-                <div class="admin-card-header">
-                    <h3><i class="fas fa-paint-brush"></i> Public Wall Reset</h3>
-                </div>
-                <p style="font-size:13px; color:#64748b; margin-bottom:16px;">Completely wipe all scribbles and images from the anonymous campus wall. Cannot be undone.</p>
-                <form action="{% url 'admin_action' %}" method="POST" id="clearWallForm">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="clear_wall">
-                    <button type="button" class="btn btn-danger" onclick="confirmClearWall()"><i class="fas fa-eraser"></i> Erase Wall</button>
-                </form>
-            </div>
         </div>
 
         <!-- ================= QOTD TAB ================= -->
@@ -981,16 +969,5 @@ function addQotdOption() {
     container.appendChild(input);
 }
 
-async function confirmClearWall() {
-    // Using the site-wide customConfirm if available, fallback to built in
-    if (typeof customConfirm !== 'undefined') {
-        const confirmed = await customConfirm("Are you sure you want to erase everything on the wall? This cannot be undone.", "Erase Wall", "Erase", "Cancel");
-        if (confirmed) document.getElementById('clearWallForm').submit();
-    } else {
-        if (confirm("Are you sure you want to erase the entire public wall?")) {
-            document.getElementById('clearWallForm').submit();
-        }
-    }
-}
 </script>
 {% endblock %}

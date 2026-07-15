@@ -5,255 +5,207 @@
 
 {% block head %}
 <style>
-    html, body {
-        height: 100%;
-        height: 100dvh;
-        overflow: hidden;
-        position: fixed;
-        width: 100%;
-        background: #f7f9fb;
-        padding: 0 !important;
-        margin: 0 !important;
-    }
+nav { display: none !important; }
+html, body {
+    height: 100dvh; overflow: hidden; position: fixed; width: 100%;
+    background: #f7f9fb; padding: 0 !important; margin: 0 !important;
+}
+.container {
+    max-width: 100% !important; width: 100% !important; padding: 0 !important;
+    margin: 0 !important; height: 100%; box-sizing: border-box;
+    background: transparent !important; border: none !important; box-shadow: none !important;
+}
+.comm-shell {
+    display: flex; flex-direction: column; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    width: 100%; max-width: 560px; margin: 0 auto;
+    background: linear-gradient(180deg, #fbfcff 0%, #f7f9fb 58%, #eff4fb 100%); z-index: 10;
+}
 
-    .container {
-        max-width: 100% !important;
-        width: 100% !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        height: 100%;
-        box-sizing: border-box;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-    }
+/* Header */
+.comm-topbar {
+    flex-shrink: 0;
+    padding: calc(6px + env(safe-area-inset-top)) 20px 10px;
+    background: rgba(247,249,251,0.78);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid rgba(0,74,198,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    z-index: 20;
+}
+.comm-topbar-main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+.match-back-btn {
+    width: 44px; height: 44px; border-radius: 16px;
+    background: rgba(255,255,255,0.88);
+    display: flex; justify-content: center; align-items: center;
+    text-decoration: none; color: var(--primary, #004ac6);
+    border: 1px solid rgba(0,74,198,0.08);
+    box-shadow: 0 10px 24px rgba(15,23,42,0.06);
+    transition: 0.2s ease; flex-shrink: 0; cursor: pointer;
+}
+.match-back-btn .material-symbols-outlined { font-size: 22px; }
+.match-back-btn:active { transform: scale(0.94); }
 
-    .comm-shell {
-        display: flex;
-        flex-direction: column;
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        width: 100%;
-        max-width: 560px;
-        margin: 0 auto;
-        background: linear-gradient(180deg, #fbfcff 0%, #f7f9fb 58%, #eff4fb 100%);
-        z-index: 10;
-    }
+.comm-topbar h2 {
+    margin: 0; font-size: 28px; font-weight: 800;
+    color: #151b27; letter-spacing: -0.04em;
+}
 
-    .comm-topbar {
-        flex-shrink: 0;
-        background: rgba(247, 249, 251, 0.78);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
-        border-bottom: 1px solid rgba(0, 74, 198, 0.08);
-        padding: calc(10px + env(safe-area-inset-top)) 20px 16px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-        z-index: 20;
-    }
+.panel-badge {
+    padding: 8px 12px; border-radius: 999px;
+    background: #eef3fb; color: #496179;
+    font-size: 11px; font-weight: 800;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    white-space: nowrap;
+}
 
-    .comm-topbar-main {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 0;
-    }
+/* Feed */
+.feed-body {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 16px 0 110px; background: transparent;
+    scrollbar-width: none; -ms-overflow-style: none;
+}
+.feed-body::-webkit-scrollbar { display: none; }
 
-    .match-back-btn {
-        width: 44px;
-        height: 44px;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.88);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        text-decoration: none;
-        color: var(--primary, #004ac6);
-        border: 1px solid rgba(0, 74, 198, 0.08);
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-        transition: 0.2s ease;
-        flex-shrink: 0;
-        cursor: pointer;
-    }
-    .match-back-btn .material-symbols-outlined {
-        font-size: 22px;
-    }
-    .match-back-btn:active {
-        transform: scale(0.94);
-    }
+.comm-list {
+    display: flex; flex-direction: column; gap: 12px; padding: 0 16px;
+}
 
-    .comm-topbar h2 {
-        margin: 0;
-        font-size: 28px;
-        color: #151b27;
-        font-weight: 800;
-        letter-spacing: -0.04em;
-    }
+/* Community Card */
+.comm-card {
+    background: rgba(255,255,255,0.84);
+    border: 1px solid rgba(0,74,198,0.08);
+    border-radius: 22px;
+    padding: 16px;
+    box-shadow: 0 8px 20px rgba(15,23,42,0.05);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.comm-card:active { transform: scale(0.985); }
+.comm-card:not(.is-member) { cursor: default; }
+.comm-card:focus-within { border-color: rgba(0,74,198,0.32); box-shadow: 0 0 0 3px rgba(0,74,198,0.1); }
 
-    .panel-badge {
-        padding: 8px 12px;
-        border-radius: 999px;
-        background: #eef3fb;
-        color: #496179;
-        font-size: 11px;
-        font-weight: 800;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }
+.comm-avatar-wrap {
+    position: relative; flex-shrink: 0;
+}
+.comm-avatar {
+    width: 52px; height: 52px; border-radius: 16px;
+    object-fit: cover; flex-shrink: 0;
+    box-shadow: 0 6px 14px rgba(15,23,42,0.08);
+    background: #f1f5f9;
+}
+.comm-avatar.anon {
+    background: linear-gradient(135deg, #64748b, #475569);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 24px;
+}
 
-    .feed-body {
-        flex: 1;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-        padding: 16px 0 110px;
-        background: transparent;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-    }
-    .feed-body::-webkit-scrollbar {
-        display: none;
-    }
+.admin-avatar-overlay {
+    position: absolute; inset: 0; border-radius: 16px;
+    background: rgba(0,0,0,0.45); display: none;
+    align-items: center; justify-content: center; cursor: pointer;
+}
+.admin-avatar-overlay .material-symbols-outlined { font-size: 22px; color: #fff; }
+.comm-avatar-wrap:hover .admin-avatar-overlay { display: flex; }
 
-    .comm-list {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        padding: 0 16px;
-    }
+.comm-details {
+    flex: 1; min-width: 0;
+}
+.comm-details-link { text-decoration: none; color: inherit; border-radius: 12px; }
+.comm-details-link:focus-visible, .match-back-btn:focus-visible, .comm-join-btn:focus-visible {
+    outline: 3px solid rgba(0,74,198,0.24); outline-offset: 3px;
+}
+.comm-info-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 3px; gap: 8px;
+}
+.comm-name {
+    font-weight: 700; font-size: 15px; color: #151b27;
+    letter-spacing: -0.02em;
+}
+.comm-members {
+    font-size: 11px; font-weight: 700; color: #6b7a90; white-space: nowrap;
+}
+.comm-desc {
+    font-size: 12px; color: #6b7a90; line-height: 1.4; margin: 0;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
 
-    .comm-card {
-        background: rgba(255, 255, 255, 0.84);
-        border: 1px solid rgba(0, 74, 198, 0.08);
-        border-radius: 28px;
-        padding: 18px 20px;
-        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        text-decoration: none;
-        color: inherit;
-        cursor: pointer;
-        transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-    }
+/* Join Button */
+.comm-join-btn {
+    flex-shrink: 0;
+    min-height: 44px; padding: 8px 18px;
+    border-radius: 999px;
+    border: none;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.comm-join-btn.join {
+    background: var(--primary, #004ac6);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0,74,198,0.2);
+}
+.comm-join-btn.join:active {
+    transform: scale(0.95);
+}
+.comm-join-btn.joined {
+    background: #f1f5f9;
+    color: #64748b;
+}
+.comm-join-btn.joined:active {
+    transform: scale(0.95);
+}
+.comm-join-btn:disabled {
+    cursor: wait;
+    opacity: 0.88;
+}
+.comm-join-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.42);
+    border-top-color: #fff;
+    border-radius: 50%;
+    display: inline-block;
+    animation: commJoinSpin 0.7s linear infinite;
+}
+@keyframes commJoinSpin {
+    to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .comm-join-spinner { animation-duration: 1.4s; }
+}
 
-    .comm-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 22px 40px rgba(15, 23, 42, 0.08);
-        border-color: rgba(0, 74, 198, 0.14);
-    }
+/* Unread badge */
+.community-unread {
+    background: linear-gradient(135deg, #004ac6, #3f7dff);
+    color: white; min-width: 22px; height: 22px;
+    border-radius: 11px; display: inline-flex;
+    align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; padding: 0 8px;
+    box-shadow: 0 6px 14px rgba(0,74,198,0.2);
+}
 
-    .comm-card:active {
-        transform: scale(0.985);
-    }
-
-    .comm-avatar-wrap {
-        position: relative;
-        flex-shrink: 0;
-    }
-
-    .comm-avatar {
-        width: 56px;
-        height: 56px;
-        border-radius: 18px;
-        object-fit: cover;
-        flex-shrink: 0;
-        box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
-        background: #f1f5f9;
-    }
-
-    .comm-avatar.anon {
-        background: linear-gradient(135deg, #64748b 0%, #475569 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 24px;
-    }
-
-    .admin-avatar-overlay {
-        position: absolute;
-        inset: 0;
-        border-radius: 18px;
-        background: rgba(0,0,0,0.45);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: opacity 0.2s;
-    }
-    .admin-avatar-overlay .material-symbols-outlined {
-        font-size: 22px;
-        color: #fff;
-    }
-    .comm-avatar-wrap:hover .admin-avatar-overlay {
-        display: flex;
-    }
-
-    .comm-details {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .comm-info-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 4px;
-        gap: 8px;
-    }
-
-    .comm-name {
-        font-weight: 700;
-        font-size: 16px;
-        color: #151b27;
-        letter-spacing: -0.02em;
-    }
-
-    .comm-members {
-        font-size: 11px;
-        font-weight: 700;
-        color: #6b7a90;
-        white-space: nowrap;
-    }
-
-    .comm-desc {
-        font-size: 13px;
-        color: #6b7a90;
-        line-height: 1.4;
-        margin: 0;
-    }
-
-    .comm-arrow {
-        flex-shrink: 0;
-        color: #94a3b8;
-        transition: transform 0.2s ease;
-    }
-
-    .comm-card:hover .comm-arrow {
-        transform: translateX(3px);
-        color: var(--primary);
-    }
-
-    .community-unread {
-        background: linear-gradient(135deg, #004ac6 0%, #3f7dff 100%);
-        color: white;
-        min-width: 22px;
-        height: 22px;
-        border-radius: 11px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 11px;
-        font-weight: 800;
-        padding: 0 8px;
-        box-shadow: 0 6px 14px rgba(0, 74, 198, 0.2);
-        margin-left: auto;
-    }
+/* Arrow for joined */
+.comm-arrow {
+    flex-shrink: 0; color: #94a3b8; font-size: 20px;
+}
+button, a { touch-action: manipulation; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
 </style>
 {% endblock %}
 
@@ -262,7 +214,7 @@
 
     <div class="comm-topbar">
         <div class="comm-topbar-main">
-            <a href="{% url 'home' %}" class="match-back-btn">
+            <a href="{% url 'home' %}" class="match-back-btn" aria-label="Back to home">
                 <span class="material-symbols-outlined">arrow_back</span>
             </a>
             <h2>Community</h2>
@@ -273,16 +225,16 @@
     <div class="feed-body">
         <div class="comm-list">
             {% for community in communities %}
-            <div class="comm-card" onclick="window.location.href='{% url 'community_chat' community.slug %}'">
+            <div class="comm-card{% if community.is_member %} is-member{% endif %}" id="commCard{{ community.slug }}">
                 <div class="comm-avatar-wrap">
                     {% if community.is_anonymous %}
                     <div class="comm-avatar anon">
                         <span class="material-symbols-outlined" style="font-size:28px;">visibility_off</span>
                     </div>
                     {% else %}
-                    <img src="{{ community.get_image_url }}" alt="{{ community.name }}" class="comm-avatar" id="commAvatar{{ community.slug }}" loading="lazy" decoding="async" width="56" height="56"
+                    <img src="{{ community.get_image_url }}" alt="{{ community.name }}" class="comm-avatar" id="commAvatar{{ community.slug }}" loading="lazy" decoding="async" width="52" height="52"
                          onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="comm-avatar anon" style="display:none; background:linear-gradient(135deg, #004ac6 0%, #3f7dff 100%);">
+                    <div class="comm-avatar anon" style="display:none; background:linear-gradient(135deg, #004ac6, #3f7dff);">
                         <span style="font-size:20px; font-weight:800;">{{ community.name|first }}</span>
                     </div>
                     {% endif %}
@@ -295,18 +247,22 @@
                     {% endif %}
                 </div>
 
-                <div class="comm-details">
+                {% if community.is_member %}<a class="comm-details comm-details-link" href="{% url 'community_chat' community.slug %}?from=communities" aria-label="Open {{ community.name }} chat">{% else %}<div class="comm-details">{% endif %}
                     <div class="comm-info-row">
                         <div class="comm-name">{{ community.name }}</div>
                         <span class="comm-members">{{ community.member_count }} members</span>
                     </div>
                     <p class="comm-desc">{{ community.description }}</p>
-                </div>
+                {% if community.is_member %}</a>{% else %}</div>{% endif %}
 
-                {% if community.unread_count > 0 %}
-                <span class="community-unread">{% if community.unread_count > 99 %}99+{% else %}{{ community.unread_count }}{% endif %}</span>
+                {% if community.is_member %}
+                    {% if community.unread_count > 0 %}
+                    <span class="community-unread">{% if community.unread_count > 99 %}99+{% else %}{{ community.unread_count }}{% endif %}</span>
+                    {% endif %}
+                    <span class="comm-arrow material-symbols-outlined">chevron_right</span>
+                {% else %}
+                    <button type="button" class="comm-join-btn join" onclick="joinCommunity('{{ community.slug }}', this)" id="joinBtn{{ community.slug }}" aria-label="Join {{ community.name }}">Join</button>
                 {% endif %}
-                <span class="comm-arrow material-symbols-outlined" style="font-size:20px;">chevron_right</span>
             </div>
             {% endfor %}
         </div>
@@ -315,7 +271,35 @@
 </section>
 
 <script>
-const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '';
+const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ? document.querySelector('[name=csrfmiddlewaretoken]').value : '{{ csrf_token }}';
+
+async function joinCommunity(slug, btn) {
+    const originalLabel = btn.getAttribute('aria-label') || 'Join community';
+    btn.disabled = true;
+    btn.setAttribute('aria-busy', 'true');
+    btn.setAttribute('aria-label', 'Joining community');
+    btn.innerHTML = '<span class="comm-join-spinner" aria-hidden="true"></span>';
+    try {
+        const res = await fetch(`/api/community/${slug}/join/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.location.assign(data.chat_url || `{% url 'community_chat' 'SLUG' %}`.replace('SLUG', slug));
+        } else {
+            btn.textContent = 'Join';
+            btn.disabled = false;
+            btn.removeAttribute('aria-busy');
+            btn.setAttribute('aria-label', originalLabel);
+        }
+    } catch (e) {
+        btn.textContent = 'Join';
+        btn.disabled = false;
+        btn.removeAttribute('aria-busy');
+        btn.setAttribute('aria-label', originalLabel);
+    }
+}
 
 function triggerListImageUpload(slug) {
     document.getElementById('listImageInput' + slug).click();
@@ -326,7 +310,6 @@ async function uploadListCommunityImage(input, slug) {
     const file = input.files[0];
     const formData = new FormData();
     formData.append('image', file);
-
     try {
         const res = await fetch(`/api/community/${slug}/upload-image/`, {
             method: 'POST',
@@ -336,14 +319,9 @@ async function uploadListCommunityImage(input, slug) {
         const data = await res.json();
         if (data.success && data.image_url) {
             const img = document.getElementById('commAvatar' + slug);
-            if (img) {
-                img.src = data.image_url;
-                img.style.display = '';
-            }
+            if (img) { img.src = data.image_url; img.style.display = ''; }
         }
-    } catch (e) {
-        console.error('Upload failed', e);
-    }
+    } catch (e) { console.error('Upload failed', e); }
     input.value = '';
 }
 </script>

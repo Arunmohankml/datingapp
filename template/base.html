@@ -202,17 +202,47 @@
             font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
         }
 
+        .nav-profile-pic {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
         .nav-link.active {
             color: var(--primary);
         }
 
         .nav-link.active .nav-icon-wrapper {
-            background: var(--primary-soft);
+            background: transparent;
         }
 
         .nav-link.active .material-symbols-outlined,
         .nav-link.active .material-symbols-rounded {
             font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .nav-link.active .nav-profile-pic {
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        /* When Install btn is visible (7 items), shrink everything */
+        .nav-inner:has(#nav-install-btn:not([style*="display: none"])) .nav-link {
+            gap: 4px;
+            font-size: 10px;
+            padding: 4px 1px;
+        }
+        .nav-inner:has(#nav-install-btn:not([style*="display: none"])) .nav-icon-wrapper {
+            width: 44px;
+            height: 28px;
+        }
+        .nav-inner:has(#nav-install-btn:not([style*="display: none"])) .nav-icon-wrapper .material-symbols-outlined,
+        .nav-inner:has(#nav-install-btn:not([style*="display: none"])) .nav-icon-wrapper .material-symbols-rounded {
+            font-size: 19px;
+        }
+        .nav-inner:has(#nav-install-btn:not([style*="display: none"])) .nav-profile-pic {
+            width: 20px;
+            height: 20px;
         }
 
         .nav-link:active {
@@ -498,7 +528,11 @@
             </a>
             <a href="{% url 'edit_profile' %}" class="nav-link {% if request.resolver_match.url_name == 'edit_profile' %}active{% endif %}">
                 <div class="nav-icon-wrapper">
-                    <span class="material-symbols-outlined">person</span>
+                    {% if user.profile.profile_pic %}
+                        <img src="{{ user.profile.get_profile_pic_url }}" alt="Profile" class="nav-profile-pic">
+                    {% else %}
+                        <span class="material-symbols-outlined">person</span>
+                    {% endif %}
                 </div>
                 <span>Profile</span>
             </a>
@@ -901,7 +935,7 @@
 
             if (Notification.permission === 'denied') {
                 if (isForced) {
-                    customAlert("Notifications are currently blocked. To receive chats, match requests, and Knots comments or replies, please enable notifications in your browser's site settings.", "Notifications Blocked");
+                    customAlert("Notifications are currently blocked. To receive direct chats, joined-community messages, match requests, and Knots replies, enable notifications in your browser's site settings.", "Notifications Blocked");
                 }
                 return;
             }
@@ -920,7 +954,7 @@
                         <i class="fas fa-bell"></i>
                     </div>
                     <h3 style="margin:0 0 12px; font-size:22px; font-weight:800; color:#1e3a8a;">Enable Notifications</h3>
-                    <p style="margin:0 0 24px; color:#64748b; font-size:15px; line-height:1.6;">Enable notifications to receive chats, match requests, and Knots comments or replies even when you are outside the browser.</p>
+                    <p style="margin:0 0 24px; color:#64748b; font-size:15px; line-height:1.6;">Enable notifications for direct chats, messages from communities you join, match requests, and Knots replies.</p>
                     <div style="display:flex; flex-direction:column; gap:10px;">
                         <button id="enable-notif-btn" style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:14px; font-weight:700; cursor:pointer; font-size:15px; transition:0.2s;">Enable Notifications</button>
                         <button id="dismiss-notif-btn" style="width:100%; padding:12px; background:none; color:#64748b; border:none; font-weight:600; cursor:pointer; font-size:14px;">Not Now</button>
@@ -966,7 +1000,7 @@
         };
 
         if ('Notification' in window) {
-            const isChatPage = window.location.pathname.startsWith('/chat/') || window.location.pathname.startsWith('/chats/');
+            const isChatPage = window.location.pathname.startsWith('/chat/') || window.location.pathname.startsWith('/chats/') || window.location.pathname.startsWith('/community/');
             if (Notification.permission === 'granted') {
                 registerPushToken();
             } else if (Notification.permission === 'default' && isChatPage) {

@@ -88,13 +88,13 @@ def get_firebase_app():
     return firebase_admin.get_app()
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
-from django.db.models import Q, Prefetch, F
+from django.db.models import Q, Prefetch, F, Count
 from django.core.files.base import ContentFile
 import base64
 import math
 from django.utils import timezone
 
-from .models import Profile, Question, Option, UserAnswer, MatchRequest, DailyMatchAction, Message, ProfileImage, WallStroke, WallImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier, Conversation, RoomRequest, StaffMember, VoiceRoom, VoiceParticipant, BugReport, FeatureSuggestion, SupportTicket, TicketMessage, FeedbackNotification, Advertisement, CampusSpotlight, Event, Community, CommunityMessage, CommunityReadStatus, DailyQuestion, QuestionOption, QuestionVote, QuestionSuggestion
+from .models import Profile, Question, Option, UserAnswer, MatchRequest, DailyMatchAction, Message, ProfileImage, Confession, ConfessionComment, ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser, Announcement, FavoriteMovie, FavoriteSong, FCMToken, BannedIdentifier, Conversation, RoomRequest, StaffMember, VoiceRoom, VoiceParticipant, BugReport, FeatureSuggestion, SupportTicket, TicketMessage, FeedbackNotification, Advertisement, CampusSpotlight, Event, Community, CommunityMessage, CommunityReadStatus, CommunityMember, CommunityMute, DailyQuestion, QuestionOption, QuestionVote, QuestionSuggestion
 from .forms import ProfileForm, ProfileEditForm, ProfileImageForm, ProfileInitForm
 from .supabase_utils import delete_from_supabase_by_url
 from .cloudinary_utils import upload_to_cloudinary, upload_base64_to_cloudinary
@@ -371,7 +371,7 @@ def home_hub(request):
         "daily_sparks_used": DailySpark.objects.filter(sender=user, date=timezone.now().date()).count(),
         "total_sparks_received": getattr(user, 'profile', None).total_sparks if hasattr(user, 'profile') else 0,
         "today": today,
-        "has_question_today": DailyQuestion.objects.filter(date=today, is_active=True).exists(),
+        "has_question_today": DailyQuestion.objects.filter(is_active=True).exists(),
     })
 
 
@@ -650,16 +650,15 @@ def match_feed(request):
             if campus_names:
                 candidates = candidates.filter(campus__in=campus_names)
         
-        user_ans = UserAnswer.objects.filter(user=user).select_related('option')
-        user_dict = {ans.question_id: ans.option.id for ans in user_ans}
+        user_dict = dict(UserAnswer.objects.filter(user=user).values_list('question_id', 'option_id'))
         
         cand_user_ids = [c.user_id for c in candidates]
-        all_cand_ans = UserAnswer.objects.filter(user_id__in=cand_user_ids).select_related('option')
-        
         cand_ans_map = {}
-        for ans in all_cand_ans:
-            if ans.user_id not in cand_ans_map: cand_ans_map[ans.user_id] = {}
-            cand_ans_map[ans.user_id][ans.question_id] = ans.option.id
+        for user_id, question_id, option_id in UserAnswer.objects.filter(
+            user_id__in=cand_user_ids
+        ).values_list('user_id', 'question_id', 'option_id'):
+            if user_id not in cand_ans_map: cand_ans_map[user_id] = {}
+            cand_ans_map[user_id][question_id] = option_id
 
         matches_list = []
         for c in candidates:
@@ -897,10 +896,8 @@ def check_match(request):
     if current_match_id and current_match_id not in interacted_user_ids and current_match_id not in blocked_user_ids:
         best_match = Profile.objects.filter(user__id=current_match_id, is_discoverable=True, is_face_verified=True).first()
         if best_match:
-            user_ans = UserAnswer.objects.filter(user=user).select_related('option')
-            user_dict = {ans.question_id: ans.option.id for ans in user_ans}
-            cand_ans = UserAnswer.objects.filter(user=best_match.user).select_related('option')
-            cand_dict = {ans.question_id: ans.option.id for ans in cand_ans}
+            user_dict = dict(UserAnswer.objects.filter(user=user).values_list('question_id', 'option_id'))
+            cand_dict = dict(UserAnswer.objects.filter(user=best_match.user).values_list('question_id', 'option_id'))
             score, reasons, _, debug_info = calculate_intelligent_match(profile, best_match, user_dict, cand_dict)
             
             admin_reasons = []
@@ -934,16 +931,15 @@ def check_match(request):
             if campus_names:
                 candidates = candidates.filter(campus__in=campus_names)
 
-        user_ans = UserAnswer.objects.filter(user=user).select_related('option')
-        user_dict = {ans.question_id: ans.option.id for ans in user_ans}
+        user_dict = dict(UserAnswer.objects.filter(user=user).values_list('question_id', 'option_id'))
         
         cand_user_ids = [c.user_id for c in candidates]
-        all_cand_ans = UserAnswer.objects.filter(user_id__in=cand_user_ids).select_related('option')
-        
         cand_ans_map = {}
-        for ans in all_cand_ans:
-            if ans.user_id not in cand_ans_map: cand_ans_map[ans.user_id] = {}
-            cand_ans_map[ans.user_id][ans.question_id] = ans.option.id
+        for user_id, question_id, option_id in UserAnswer.objects.filter(
+            user_id__in=cand_user_ids
+        ).values_list('user_id', 'question_id', 'option_id'):
+            if user_id not in cand_ans_map: cand_ans_map[user_id] = {}
+            cand_ans_map[user_id][question_id] = option_id
 
         matches_list = []
         for c in candidates:
@@ -1149,6 +1145,57 @@ def send_push_to_user(user, title, body, url='/'):
         raise Exception(f"FCM Send Error: {str(e)}")
 
 
+def send_community_push(community, sender, text):
+    """Notify joined, unmuted members without loading user or profile rows."""
+    muted_user_ids = CommunityMute.objects.filter(
+        community=community,
+        is_muted=True,
+    ).values_list('user_id', flat=True)
+    tokens = list(
+        FCMToken.objects.filter(user__community_memberships__community=community)
+        .exclude(user=sender)
+        .exclude(user_id__in=muted_user_ids)
+        .values_list('token', flat=True)
+        .distinct()
+    )
+    if not tokens:
+        return None
+
+    get_firebase_app()
+    domain = os.environ.get('VERCEL_URL') or 'knotspot.online'
+    if not domain.startswith('http'):
+        domain = f"https://{domain}"
+    elif domain.startswith('http://'):
+        domain = domain.replace('http://', 'https://', 1)
+
+    url = f"/community/{community.slug}/?from=chats"
+    absolute_url = f"{domain.rstrip('/')}/{url.lstrip('/')}"
+    sender_name = getattr(getattr(sender, 'profile', None), 'name', '') or sender.username
+    preview = text.strip().replace('\n', ' ')[:120]
+    body = preview if community.is_anonymous else f"{sender_name}: {preview}"
+    responses = []
+
+    # Firebase accepts at most 500 registration tokens per multicast request.
+    for start in range(0, len(tokens), 500):
+        message = messaging.MulticastMessage(
+            notification=messaging.Notification(title=community.name, body=body),
+            data={'url': url, 'title': community.name, 'body': body},
+            tokens=tokens[start:start + 500],
+            webpush=messaging.WebpushConfig(
+                headers={'Urgency': 'high'},
+                notification=messaging.WebpushNotification(
+                    icon='https://knotspot.online/favicon.ico',
+                    badge='https://knotspot.online/favicon.ico',
+                    tag=f'community-{community.id}',
+                    renotify=True,
+                ),
+                fcm_options=messaging.WebpushFCMOptions(link=absolute_url),
+            ),
+        )
+        responses.append(messaging.send_each_for_multicast(message))
+    return responses
+
+
 # ---------------- SOCIAL & CONNECTIONS ----------------
 @login_required
 def send_match_request(request, receiver_id):
@@ -1330,6 +1377,32 @@ def connections_view(request):
 # ---------------- CHAT INBOX ----------------
 from django.views.decorators.cache import never_cache
 
+
+def _joined_community_unread_total(user):
+    memberships = list(
+        CommunityMember.objects.filter(user=user)
+        .select_related('community')
+    )
+    if not memberships:
+        return 0
+
+    read_statuses = {
+        status.community_id: status.last_read_at
+        for status in CommunityReadStatus.objects.filter(
+            user=user,
+            community_id__in=[membership.community_id for membership in memberships],
+        )
+    }
+    total = 0
+    for membership in memberships:
+        community = membership.community
+        qs = CommunityMessage.objects.filter(community=community)
+        if community.chat_cleared_at:
+            qs = qs.filter(timestamp__gt=community.chat_cleared_at)
+        last_read = read_statuses.get(community.id)
+        total += qs.filter(timestamp__gt=last_read).count() if last_read else qs.count()
+    return total
+
 @never_cache
 @login_required
 def chat_list_view(request):
@@ -1354,7 +1427,10 @@ def chat_list_view(request):
             partners.append(req.sender)
     
     if not partners:
-        return render(request, 'chat_list.html', {'chats': []})
+        return render(request, 'chat_list.html', {
+            'chats': [],
+            'total_community_unread': _joined_community_unread_total(user),
+        })
 
     # Fetch all recent messages involving these partners in one query
     all_msgs = Message.objects.filter(
@@ -1389,27 +1465,10 @@ def chat_list_view(request):
     for c in chats:
         c['spark_streak'] = _get_streak_for_pair(user, c['partner'])
 
-    # Calculate total unread community messages
-    communities = Community.objects.all()
-    total_community_unread = 0
-    read_statuses = {
-        s.community_id: s.last_read_at
-        for s in CommunityReadStatus.objects.filter(user=user)
-    }
-    for c in communities:
-        qs = CommunityMessage.objects.filter(community=c)
-        if c.chat_cleared_at:
-            qs = qs.filter(timestamp__gt=c.chat_cleared_at)
-        last_read = read_statuses.get(c.id)
-        if last_read:
-            total_community_unread += qs.filter(timestamp__gt=last_read).count()
-        else:
-            total_community_unread += qs.count()
-
     return render(request, 'chat_list.html', {
         'chats': chats,
         'today': timezone.localtime(timezone.now()).date(),
-        'total_community_unread': total_community_unread,
+        'total_community_unread': _joined_community_unread_total(user),
     })
 
 
@@ -1589,10 +1648,11 @@ def chat_view(request, partner_id):
         if is_ajax:
             return JsonResponse({'success': False, 'error': 'Empty message'}, status=400)
             
-    chat_messages = Message.objects.filter(
+    chat_messages_qs = Message.objects.filter(
         (Q(sender=request.user, receiver=partner, sender_deleted=False)) |
         (Q(sender=partner, receiver=request.user, receiver_deleted=False))
-    ).exclude(text__startswith='__SPIN__:').select_related('reply_to__sender__profile').order_by('timestamp')
+    ).exclude(text__startswith='__SPIN__:').select_related('reply_to__sender__profile').order_by('-timestamp')
+    chat_messages = list(reversed(list(chat_messages_qs[:200])))
     
     # Mark messages as read
     Message.objects.filter(sender=partner, receiver=request.user, is_read=False).update(is_read=True)
@@ -1657,13 +1717,20 @@ def chat_api_messages(request, partner_id):
         (Q(sender=partner, receiver=request.user, receiver_deleted=False))
     ).exclude(
         Q(text__startswith='__SPIN__:') & Q(timestamp__lt=recent_cutoff)
-    ).select_related('reply_to__sender__profile').order_by('timestamp')
+    ).select_related('reply_to__sender__profile').order_by('id')
+
+    try:
+        after_id = int(request.GET.get('after', 0))
+    except (TypeError, ValueError):
+        after_id = 0
+    if after_id > 0:
+        messages = messages.filter(id__gt=after_id)
     
     # Mark incoming unread messages as read
     Message.objects.filter(sender=partner, receiver=request.user, is_read=False).update(is_read=True)
     
     msg_list = []
-    for msg in messages:
+    for msg in messages[:200]:
         msg_list.append({
             'id': msg.id,
             'text': msg.text,
@@ -1678,7 +1745,15 @@ def chat_api_messages(request, partner_id):
             } if msg.reply_to else None
         })
         
-    return JsonResponse({'messages': msg_list})
+    payload = {'messages': msg_list}
+    if request.GET.get('sync') == '1':
+        payload['all_ids'] = list(Message.objects.filter(
+            (Q(sender=request.user, receiver=partner, sender_deleted=False)) |
+            (Q(sender=partner, receiver=request.user, receiver_deleted=False))
+        ).exclude(
+            Q(text__startswith='__SPIN__:') & Q(timestamp__lt=recent_cutoff)
+        ).order_by('-id').values_list('id', flat=True)[:200])
+    return JsonResponse(payload)
 
 # ---------------- PROFILE MANAGEMENT ----------------
 
@@ -2126,121 +2201,18 @@ def run_migrations(request):
 # ---------------- ANONYMOUS WALL ----------------
 
 def wall_view(request):
-    return render(request, 'wall.html', {
-        'PUSHER_KEY': settings.PUSHER_KEY,
-        'PUSHER_CLUSTER': settings.PUSHER_CLUSTER
-    })
+    response = HttpResponse("The public drawing wall is temporarily disabled.", status=410)
+    response['Cache-Control'] = 'public, max-age=3600'
+    return response
 
 @csrf_exempt
 def wall_api(request):
-    if request.method == 'GET':
-        strokes = list(WallStroke.objects.all().values('id', 'points', 'color', 'brush_size'))
-        images = list(WallImage.objects.all().values('id', 'image_url', 'x', 'y', 'width', 'height'))
-        return JsonResponse({'strokes': strokes, 'images': images})
-
-    elif request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            
-            if 'image_url' in data:
-                # Handle image upload (Admin only check in frontend, but could add here too)
-                if not request.user.is_superuser and request.user.email not in settings.ADMIN_EMAILS:
-                    return JsonResponse({'error': 'Unauthorized'}, status=403)
-                    
-                obj = WallImage.objects.create(
-                    image_url=data['image_url'],
-                    x=data['x'],
-                    y=data['y'],
-                    width=data['width'],
-                    height=data['height']
-                )
-                event_type = 'new_image'
-                payload = {
-                    'id': obj.id,
-                    'image_url': obj.image_url,
-                    'x': obj.x,
-                    'y': obj.y,
-                    'width': obj.width,
-                    'height': obj.height
-                }
-            else:
-                # Handle stroke
-                obj = WallStroke.objects.create(
-                    points=data['points'],
-                    color=data['color'],
-                    brush_size=data['brush_size']
-                )
-                event_type = 'new_stroke'
-                payload = {
-                    'id': obj.id,
-                    'points': obj.points,
-                    'color': obj.color,
-                    'brush_size': obj.brush_size
-                }
-
-            # Broadcast to Pusher
-            broadcast_event('wall', event_type, payload)
-            return JsonResponse({'success': True, 'id': obj.id})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
-
-    elif request.method == 'DELETE':
-        if not request.user.is_superuser and request.user.email not in settings.ADMIN_EMAILS:
-            return JsonResponse({'error': 'Unauthorized'}, status=403)
-        
-        try:
-            data = json.loads(request.body)
-            x = data.get('x')
-            y = data.get('y')
-            size = data.get('size', 1)
-            pixel_size = 10 # Matches PIXEL_SIZE in wall.html
-            
-            # Area to clear
-            clear_rect = size * pixel_size
-            half = clear_rect / 2
-            
-            # Find and delete strokes that have points within the eraser area
-            # We use a slightly broader search for efficiency and then filter if needed
-            # For a pixel wall, most strokes are very short.
-            
-            # Simple approach: delete strokes whose first point is in the area
-            # (In a pixel wall, strokes are often just one or a few pixels)
-            deleted_ids = []
-            
-            # More robust: find any stroke that overlaps the bounding box
-            # This is hard with JSONField directly in SQL without complex queries,
-            # so we'll do a coordinate range check if possible, or just fetch recent ones and filter.
-            
-            # Optimization: only check strokes from the last 24 hours or just all of them if the wall is small
-            all_s = WallStroke.objects.all()
-            for s in all_s:
-                in_range = False
-                for p in s.points:
-                    if (x - half <= p['x'] <= x + half + pixel_size) and (y - half <= p['y'] <= y + half + pixel_size):
-                        in_range = True
-                        break
-                if in_range:
-                    deleted_ids.append(s.id)
-            
-            if deleted_ids:
-                WallStroke.objects.filter(id__in=deleted_ids).delete()
-                broadcast_event('wall', 'delete_strokes', {'ids': deleted_ids})
-                
-            # Also check images
-            deleted_image_ids = []
-            all_i = WallImage.objects.all()
-            for img in all_i:
-                # Check if center point overlaps image rect
-                if (img.x <= x <= img.x + img.width) and (img.y <= y <= img.y + img.height):
-                    deleted_image_ids.append(img.id)
-            
-            if deleted_image_ids:
-                WallImage.objects.filter(id__in=deleted_image_ids).delete()
-                broadcast_event('wall', 'delete_images', {'ids': deleted_image_ids})
-
-            return JsonResponse({'success': True, 'deleted_ids': deleted_ids, 'deleted_image_ids': deleted_image_ids})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
+    response = JsonResponse(
+        {'success': False, 'error': 'The public drawing wall is temporarily disabled.'},
+        status=410,
+    )
+    response['Cache-Control'] = 'public, max-age=3600'
+    return response
 
 
 # ---------------- CONFESSIONS ----------------
@@ -3129,7 +3101,7 @@ def admin_dashboard(request):
     pending_events_count = Event.objects.filter(status='pending').count()
 
     today = timezone.now().date()
-    today_question = DailyQuestion.objects.filter(date=today).first()
+    today_question = DailyQuestion.objects.filter(is_active=True).first()
     pending_suggestions = QuestionSuggestion.objects.filter(status='pending').select_related('suggested_by__profile').order_by('-created_at')
     question_history = DailyQuestion.objects.all().select_related('created_by__profile').order_by('-date')[:20]
 
@@ -3311,12 +3283,7 @@ def admin_action(request):
             UserReport.objects.filter(id=target_id).delete()
 
         elif action == 'clear_wall':
-            wall_images = WallImage.objects.all()
-            for img in wall_images:
-                if img.image:
-                    delete_from_supabase_by_url(img.image, bucket="images")
-            WallStroke.objects.all().delete()
-            WallImage.objects.all().delete()
+            messages.warning(request, "The public drawing wall is disabled; its stored data was left untouched.")
 
         elif action == 'ban_user':
             profile = get_object_or_404(Profile, id=target_id)
@@ -3472,7 +3439,7 @@ def admin_action(request):
                     except ValueError:
                         messages.error(request, "Invalid date format.")
                     else:
-                        DailyQuestion.objects.filter(date=q_date).delete()
+                        DailyQuestion.objects.filter(is_active=True).update(is_active=False)
                         q = DailyQuestion.objects.create(
                             question_text=question_text,
                             date=q_date,
@@ -3490,6 +3457,8 @@ def admin_action(request):
 
         elif action == 'qotd_toggle_active':
             q = get_object_or_404(DailyQuestion, id=target_id)
+            if not q.is_active:
+                DailyQuestion.objects.filter(is_active=True).update(is_active=False)
             q.is_active = not q.is_active
             q.save()
             messages.success(request, f"Question {'activated' if q.is_active else 'deactivated'}.")
@@ -3499,7 +3468,7 @@ def admin_action(request):
             suggestion.status = 'approved'
             suggestion.save()
             today = timezone.now().date()
-            DailyQuestion.objects.filter(date=today).delete()
+            DailyQuestion.objects.filter(is_active=True).update(is_active=False)
             q = DailyQuestion.objects.create(
                 question_text=suggestion.question_text,
                 date=today,
@@ -5544,16 +5513,52 @@ def _seed_communities():
         Community.objects.get_or_create(slug=d['slug'], defaults=d)
 
 
+def _community_system_text(message):
+    if message.kind == CommunityMessage.KIND_MESSAGE:
+        return ''
+    action = 'joined' if message.kind == CommunityMessage.KIND_JOIN else 'left'
+    if message.community.is_anonymous:
+        return f"A member {action} the community"
+    profile = getattr(message.sender, 'profile', None)
+    sender_name = (profile.name if profile else '') or message.sender.username
+    return f"{sender_name} {action} the community"
+
+
+def _serialize_community_message(message):
+    reply_to = message.reply_to
+    return {
+        'id': message.id,
+        'text': message.text,
+        'kind': message.kind,
+        'system_text': _community_system_text(message),
+        'sender_id': message.sender_id,
+        'sender_name': message.sender_name,
+        'sender_avatar': message.sender_avatar,
+        'timestamp': message.timestamp.strftime('%I:%M %p'),
+        'created_at': message.timestamp.isoformat(),
+        'reply_to': {
+            'id': reply_to.id,
+            'text': reply_to.text[:50],
+            'sender_name': reply_to.sender_name,
+        } if reply_to else None,
+    }
+
+
 @login_required
 def community_list(request):
     _seed_communities()
-    communities = Community.objects.all()
+    communities = list(Community.objects.annotate(actual_member_count=Count('memberships')))
     read_statuses = {
         s.community_id: s.last_read_at
         for s in CommunityReadStatus.objects.filter(user=request.user)
     }
+    joined_ids = set(CommunityMember.objects.filter(user=request.user).values_list('community_id', flat=True))
     for c in communities:
-        c.member_count = CommunityMessage.objects.filter(community=c).values('sender').distinct().count()
+        c.member_count = c.actual_member_count
+        c.is_member = c.id in joined_ids
+        c.unread_count = 0
+        if not c.is_member:
+            continue
         qs = CommunityMessage.objects.filter(community=c)
         if c.chat_cleared_at:
             qs = qs.filter(timestamp__gt=c.chat_cleared_at)
@@ -5571,23 +5576,24 @@ def community_list(request):
 @login_required
 def community_list_api(request):
     _seed_communities()
-    communities = Community.objects.all()
+    communities = Community.objects.annotate(actual_member_count=Count('memberships'))
     read_statuses = {
         s.community_id: s.last_read_at
         for s in CommunityReadStatus.objects.filter(user=request.user)
     }
+    joined_ids = set(CommunityMember.objects.filter(user=request.user).values_list('community_id', flat=True))
     data = []
     total_unread = 0
     for c in communities:
-        member_count = CommunityMessage.objects.filter(community=c).values('sender').distinct().count()
-        qs = CommunityMessage.objects.filter(community=c)
-        if c.chat_cleared_at:
-            qs = qs.filter(timestamp__gt=c.chat_cleared_at)
-        last_read = read_statuses.get(c.id)
-        if last_read:
-            unread = qs.filter(timestamp__gt=last_read).count()
-        else:
-            unread = qs.count()
+        member_count = c.actual_member_count
+        is_member = c.id in joined_ids
+        unread = 0
+        if is_member:
+            qs = CommunityMessage.objects.filter(community=c)
+            if c.chat_cleared_at:
+                qs = qs.filter(timestamp__gt=c.chat_cleared_at)
+            last_read = read_statuses.get(c.id)
+            unread = qs.filter(timestamp__gt=last_read).count() if last_read else qs.count()
         total_unread += unread
         data.append({
             'slug': c.slug,
@@ -5597,6 +5603,7 @@ def community_list_api(request):
             'member_count': member_count,
             'is_anonymous': c.is_anonymous,
             'unread_count': unread,
+            'is_member': is_member,
         })
     return JsonResponse({'communities': data, 'total_unread': total_unread})
 
@@ -5608,6 +5615,14 @@ def community_chat(request, slug):
         community = Community.objects.get(slug=slug)
     except Community.DoesNotExist:
         messages.error(request, "Community not found.")
+        return redirect('community_list')
+
+    # This check intentionally happens before every CommunityMessage query.
+    # Non-members never download, count, reply to, or post community messages.
+    if not CommunityMember.objects.filter(user=request.user, community=community).exists():
+        if request.method == 'POST' or request.content_type == 'application/json':
+            return JsonResponse({'success': False, 'error': 'Join this community to access its chat.'}, status=403)
+        messages.info(request, f"Join {community.name} to open its chat.")
         return redirect('community_list')
 
     if request.method == 'POST':
@@ -5649,23 +5664,15 @@ def community_chat(request, slug):
             defaults={'last_read_at': timezone.now()}
         )
 
+        try:
+            send_community_push(community, request.user, text)
+        except Exception as exc:
+            safe_print(f"Community push notification failed: {exc}")
+
         if request.content_type == 'application/json':
             return JsonResponse({
                 'success': True,
-                'message': {
-                    'id': msg.id,
-                    'text': msg.text,
-                    'sender_id': msg.sender.id,
-                    'sender_name': msg.sender_name,
-                    'sender_avatar': msg.sender_avatar,
-                    'timestamp': msg.timestamp.strftime('%I:%M %p'),
-                    'created_at': msg.timestamp.isoformat(),
-                    'reply_to': {
-                        'id': reply_to.id,
-                        'text': reply_to.text[:50] if reply_to else '',
-                        'sender_name': reply_to.sender_name if reply_to else '',
-                    } if reply_to else None,
-                }
+                'message': _serialize_community_message(msg),
             })
         return redirect('community_chat', slug=slug)
 
@@ -5676,10 +5683,14 @@ def community_chat(request, slug):
         defaults={'last_read_at': timezone.now()}
     )
 
-    chat_messages = CommunityMessage.objects.filter(community=community).select_related('sender', 'sender__profile', 'reply_to', 'reply_to__sender', 'reply_to__sender__profile').order_by('timestamp')
+    chat_messages_qs = CommunityMessage.objects.filter(community=community).select_related(
+        'community', 'sender', 'sender__profile', 'reply_to', 'reply_to__community',
+        'reply_to__sender', 'reply_to__sender__profile'
+    ).order_by('-id')
 
     if community.chat_cleared_at:
-        chat_messages = chat_messages.filter(timestamp__gt=community.chat_cleared_at)
+        chat_messages_qs = chat_messages_qs.filter(timestamp__gt=community.chat_cleared_at)
+    chat_messages = list(reversed(list(chat_messages_qs[:200])))
 
     today = timezone.now().date()
     yesterday = today - timedelta(days=1)
@@ -5691,6 +5702,8 @@ def community_chat(request, slug):
         'yesterday': yesterday,
         'is_admin': is_staff_check(request.user),
         'from_source': request.GET.get('from', ''),
+        'is_member': True,
+        'member_count': CommunityMember.objects.filter(community=community).count(),
     })
 
 
@@ -5701,30 +5714,27 @@ def community_messages_api(request, slug):
     except Community.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Not found'}, status=404)
 
-    after_id = request.GET.get('after')
-    qs = CommunityMessage.objects.filter(community=community).select_related('sender', 'sender__profile', 'reply_to', 'reply_to__sender', 'reply_to__sender__profile')
+    if not CommunityMember.objects.filter(user=request.user, community=community).exists():
+        return JsonResponse({'success': False, 'error': 'Join this community to access its messages.'}, status=403)
+
+    try:
+        after_id = int(request.GET.get('after', 0))
+    except (TypeError, ValueError):
+        after_id = 0
+    qs = CommunityMessage.objects.filter(community=community).select_related(
+        'community', 'sender', 'sender__profile', 'reply_to', 'reply_to__community',
+        'reply_to__sender', 'reply_to__sender__profile'
+    )
 
     if community.chat_cleared_at:
         qs = qs.filter(timestamp__gt=community.chat_cleared_at)
 
-    all_ids = list(qs.order_by('id').values_list('id', flat=True))
+    if after_id > 0:
+        qs = qs.filter(id__gt=after_id)
 
     messages_data = []
     for msg in qs.order_by('id')[:200]:
-        messages_data.append({
-            'id': msg.id,
-            'text': msg.text,
-            'sender_id': msg.sender.id,
-            'sender_name': msg.sender_name,
-            'sender_avatar': msg.sender_avatar,
-            'timestamp': msg.timestamp.strftime('%I:%M %p'),
-            'created_at': msg.timestamp.isoformat(),
-            'reply_to': {
-                'id': msg.reply_to.id,
-                'text': msg.reply_to.text[:50] if msg.reply_to else '',
-                'sender_name': msg.reply_to.sender_name if msg.reply_to else '',
-            } if msg.reply_to else None,
-        })
+        messages_data.append(_serialize_community_message(msg))
 
     if messages_data:
         CommunityReadStatus.objects.update_or_create(
@@ -5733,7 +5743,13 @@ def community_messages_api(request, slug):
             defaults={'last_read_at': timezone.now()}
         )
 
-    return JsonResponse({'messages': messages_data, 'all_ids': all_ids})
+    payload = {'messages': messages_data}
+    if request.GET.get('sync') == '1':
+        all_messages = CommunityMessage.objects.filter(community=community)
+        if community.chat_cleared_at:
+            all_messages = all_messages.filter(timestamp__gt=community.chat_cleared_at)
+        payload['all_ids'] = list(all_messages.order_by('-id').values_list('id', flat=True)[:200])
+    return JsonResponse(payload)
 
 
 @login_required
@@ -5750,7 +5766,12 @@ def community_delete_message(request, message_id):
             return JsonResponse({'success': False, 'error': 'Not found'}, status=404)
     else:
         try:
-            msg = CommunityMessage.objects.get(id=message_id, sender=request.user)
+            msg = CommunityMessage.objects.get(
+                id=message_id,
+                sender=request.user,
+                kind=CommunityMessage.KIND_MESSAGE,
+                community__memberships__user=request.user,
+            )
         except CommunityMessage.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Not found'}, status=404)
 
@@ -5818,9 +5839,128 @@ def community_upload_image(request, slug):
 
 
 @login_required
+@require_POST
+def community_join(request, slug):
+    try:
+        community = Community.objects.get(slug=slug)
+    except Community.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Community not found'}, status=404)
+
+    member, created = CommunityMember.objects.get_or_create(user=request.user, community=community)
+    if created:
+        CommunityMessage.objects.create(
+            community=community,
+            sender=request.user,
+            text='joined the community',
+            kind=CommunityMessage.KIND_JOIN,
+        )
+        now = timezone.now()
+        CommunityReadStatus.objects.update_or_create(
+            user=request.user,
+            community=community,
+            defaults={'last_read_at': now},
+        )
+        community.member_count = CommunityMember.objects.filter(community=community).count()
+        community.save(update_fields=['member_count'])
+    return JsonResponse({
+        'success': True,
+        'is_member': True,
+        'created': created,
+        'member_count': community.member_count,
+        'chat_url': f"/community/{community.slug}/?from=communities",
+    })
+
+
+@login_required
+@require_POST
+def community_leave(request, slug):
+    try:
+        community = Community.objects.get(slug=slug)
+    except Community.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Community not found'}, status=404)
+
+    deleted, _ = CommunityMember.objects.filter(user=request.user, community=community).delete()
+    if deleted:
+        CommunityMessage.objects.create(
+            community=community,
+            sender=request.user,
+            text='left the community',
+            kind=CommunityMessage.KIND_LEAVE,
+        )
+        community.member_count = CommunityMember.objects.filter(community=community).count()
+        community.save(update_fields=['member_count'])
+    CommunityMute.objects.filter(user=request.user, community=community).delete()
+    CommunityReadStatus.objects.filter(user=request.user, community=community).delete()
+    return JsonResponse({
+        'success': True,
+        'is_member': False,
+        'member_count': community.member_count,
+    })
+
+
+@login_required
+@require_POST
+def community_toggle_mute(request, slug):
+    try:
+        community = Community.objects.get(slug=slug)
+    except Community.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Community not found'}, status=404)
+
+    if not CommunityMember.objects.filter(user=request.user, community=community).exists():
+        return JsonResponse({'success': False, 'error': 'Join this community first.'}, status=403)
+
+    mute, created = CommunityMute.objects.get_or_create(user=request.user, community=community, defaults={'is_muted': True})
+    if not created:
+        mute.is_muted = not mute.is_muted
+        mute.save(update_fields=['is_muted'])
+    return JsonResponse({'success': True, 'is_muted': mute.is_muted})
+
+
+@login_required
+def community_info(request, slug):
+    try:
+        community = Community.objects.get(slug=slug)
+    except Community.DoesNotExist:
+        messages.error(request, "Community not found.")
+        return redirect('community_list')
+
+    if not CommunityMember.objects.filter(user=request.user, community=community).exists():
+        messages.info(request, f"Join {community.name} to view its group info.")
+        return redirect('community_list')
+
+    mute_obj = CommunityMute.objects.filter(user=request.user, community=community).first()
+    is_muted = mute_obj.is_muted if mute_obj else False
+
+    member_list = []
+    member_count = CommunityMember.objects.filter(community=community).count()
+    if not community.is_anonymous:
+        members = CommunityMember.objects.filter(community=community).select_related('user', 'user__profile').order_by('-joined_at')
+        for m in members:
+            u = m.user
+            p = getattr(u, 'profile', None)
+            member_list.append({
+                'id': u.id,
+                'username': u.username,
+                'name': p.name if p else u.username,
+                'avatar': p.get_profile_pic_url if p and p.profile_pic else f"https://ui-avatars.com/api/?name={u.username}&background=6366f1&color=fff&size=128",
+                'joined_at': m.joined_at,
+                'is_self': u.id == request.user.id,
+            })
+
+    return render(request, 'community_info.html', {
+        'community': community,
+        'is_member': True,
+        'is_muted': is_muted,
+        'members': member_list,
+        'member_count': member_count,
+        'is_admin': is_staff_check(request.user),
+    })
+
+
+@login_required
 def question_of_the_day_api(request):
     today = timezone.now().date()
-    question = DailyQuestion.objects.filter(date=today, is_active=True).first()
+    question = DailyQuestion.objects.filter(is_active=True).first()
     if not question:
         return JsonResponse({'success': False, 'error': 'No question today'})
 
@@ -5873,7 +6013,7 @@ def question_of_the_day_api(request):
 @require_POST
 def question_of_the_day_vote(request):
     today = timezone.now().date()
-    question = DailyQuestion.objects.filter(date=today, is_active=True).first()
+    question = DailyQuestion.objects.filter(is_active=True).first()
     if not question:
         return JsonResponse({'success': False, 'error': 'No question today'}, status=400)
 

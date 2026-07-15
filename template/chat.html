@@ -2176,15 +2176,20 @@ chatForm.addEventListener('submit', async (e) => {
 
 async function fetchNewMessages() {
     try {
-        const response = await fetch(`/api/chat/${partnerId}/`);
+        const numericIds = Array.from(renderedIds).map(Number).filter(Number.isFinite);
+        const afterId = numericIds.length ? Math.max(...numericIds) : 0;
+        const shouldSync = !fetchNewMessages.lastSync || Date.now() - fetchNewMessages.lastSync > 30000;
+        const response = await fetch(`/api/chat/${partnerId}/?after=${afterId}${shouldSync ? '&sync=1' : ''}`);
         if (!response.ok) return;
         const data = await response.json();
+        if (shouldSync) fetchNewMessages.lastSync = Date.now();
         if (data.messages) {
-            const serverIds = new Set();
             data.messages.forEach(msg => {
-                serverIds.add(msg.id);
                 if (!renderedIds.has(msg.id)) appendMessage(msg);
             });
+        }
+        if (data.all_ids) {
+            const serverIds = new Set(data.all_ids.map(Number));
             document.querySelectorAll('.message-row[data-id]').forEach(row => {
                 const rid = row.dataset.id;
                 if (rid && !rid.startsWith('temp-') && !serverIds.has(parseInt(rid)) && !serverIds.has(rid)) {
@@ -2197,7 +2202,9 @@ async function fetchNewMessages() {
         }
     } catch (error) {}
 }
-setInterval(fetchNewMessages, 2000);
+setInterval(() => {
+    if (!document.hidden) fetchNewMessages();
+}, 5000);
 
 async function sendDailySpark(userId) {
     const btn = document.getElementById('chatSparkBtn');

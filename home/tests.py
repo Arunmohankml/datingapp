@@ -7,15 +7,217 @@ from PIL import Image
 from django.db import connection
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
-from .models import Conversation, DailyMatchAction, DailyQuestion, KnotComment, KnotPost, KnotPreference, KnotReport, KnotVote, MatchRequest, Profile, QuestionOption
+from .models import Community, CommunityMember, CommunityMessage, CommunityMute, CommunityReadStatus, Conversation, DailyMatchAction, DailyQuestion, FCMToken, KnotComment, KnotPost, KnotPreference, KnotReport, KnotVote, MatchRequest, Message, Profile, QuestionOption
 
 
 class TestDatabaseSafetyTests(TestCase):
     def test_test_runner_uses_sqlite_not_supabase(self):
         self.assertEqual(connection.vendor, 'sqlite')
+
+
+class EgressRegressionTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('egress-user', password='testpass123')
+        self.partner = User.objects.create_user('egress-partner', password='testpass123')
+        Profile.objects.create(user=self.user, name='Egress User')
+        Profile.objects.create(user=self.partner, name='Egress Partner')
+        self.client.force_login(self.user)
+
+    def test_community_poll_is_incremental_without_per_message_community_queries(self):
+        community = Community.objects.create(name='Egress Test', slug='egress-test')
+        CommunityMember.objects.create(user=self.user, community=community)
+        first = CommunityMessage.objects.create(community=community, sender=self.partner, text='old')
+        latest = CommunityMessage.objects.create(community=community, sender=self.partner, text='new')
+
+        with CaptureQueriesContext(connection) as queries:
+            response = self.client.get(f'/api/community/{community.slug}/messages/?after={first.id}')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([message['id'] for message in response.json()['messages']], [latest.id])
+        repeated_community_fetches = [
+            query['sql'] for query in queries.captured_queries
+            if 'FROM "home_community"' in query['sql'] and '"home_community"."id" =' in query['sql']
+        ]
+        self.assertEqual(repeated_community_fetches, [])
+
+    def test_direct_chat_poll_only_returns_messages_after_cursor(self):
+        MatchRequest.objects.create(sender=self.user, receiver=self.partner, status='accepted')
+        first = Message.objects.create(sender=self.partner, receiver=self.user, text='old')
+        latest = Message.objects.create(sender=self.partner, receiver=self.user, text='new')
+
+        response = self.client.get(f'/api/chat/{self.partner.id}/?after={first.id}')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual([message['id'] for message in response.json()['messages']], [latest.id])
+
+    def test_wall_page_and_api_are_blocked_without_database_queries(self):
+        anonymous_client = Client()
+
+        with self.assertNumQueries(0):
+            page = anonymous_client.get('/wall/')
+            api_get = anonymous_client.get('/api/wall/')
+            api_post = anonymous_client.post('/api/wall/', data='{}', content_type='application/json')
+            api_delete = anonymous_client.delete('/api/wall/', data='{}', content_type='application/json')
+
+        self.assertEqual(page.status_code, 410)
+        self.assertEqual(api_get.status_code, 410)
+        self.assertEqual(api_post.status_code, 410)
+        self.assertEqual(api_delete.status_code, 410)
+
+
+class CommunityMembershipTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('community-user', password='testpass123')
+        self.sender = User.objects.create_user('community-sender', password='testpass123')
+        self.muted = User.objects.create_user('community-muted', password='testpass123')
+        self.outsider = User.objects.create_user('community-outsider', password='testpass123')
+        for user in (self.user, self.sender, self.muted, self.outsider):
+            Profile.objects.create(user=user, name=user.username.replace('-', ' ').title())
+        self.community = Community.objects.create(name='Campus Circle', slug='campus-circle')
+        self.client.force_login(self.user)
+
+    def test_non_member_chat_and_poll_are_blocked_before_message_queries(self):
+        CommunityMessage.objects.create(community=self.community, sender=self.sender, text='private message')
+
+        with CaptureQueriesContext(connection) as page_queries:
+            page = self.client.get(f'/community/{self.community.slug}/')
+        with CaptureQueriesContext(connection) as api_queries:
+            api = self.client.get(f'/api/community/{self.community.slug}/messages/')
+        post = self.client.post(
+            f'/community/{self.community.slug}/',
+            data=json.dumps({'text': 'not allowed'}),
+            content_type='application/json',
+        )
+
+        self.assertEqual(page.status_code, 302)
+        self.assertEqual(api.status_code, 403)
+        self.assertEqual(post.status_code, 403)
+        self.assertFalse(CommunityMessage.objects.filter(sender=self.user).exists())
+        for queries in (page_queries, api_queries):
+            message_queries = [q['sql'] for q in queries.captured_queries if 'home_communitymessage' in q['sql'].lower()]
+            self.assertEqual(message_queries, [])
+
+    def test_join_creates_membership_read_marker_and_system_message(self):
+        response = self.client.post(f'/api/community/{self.community.slug}/join/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['created'])
+        self.assertTrue(CommunityMember.objects.filter(user=self.user, community=self.community).exists())
+        self.assertTrue(CommunityReadStatus.objects.filter(user=self.user, community=self.community).exists())
+        event = CommunityMessage.objects.get(community=self.community, sender=self.user)
+        self.assertEqual(event.kind, CommunityMessage.KIND_JOIN)
+        self.assertEqual(response.json()['member_count'], 1)
+
+        chat = self.client.get(f'/community/{self.community.slug}/')
+        self.assertEqual(chat.status_code, 200)
+        self.assertContains(chat, 'Community User')
+        self.assertContains(chat, 'joined')
+        self.assertContains(chat, '1 member · tap for info')
+
+    def test_chat_list_join_supplies_a_valid_csrf_token(self):
+        browser = Client(enforce_csrf_checks=True)
+        browser.force_login(self.user)
+
+        page = browser.get('/chats/')
+        csrf_cookie = browser.cookies.get('csrftoken')
+        response = browser.post(
+            f'/api/community/{self.community.slug}/join/',
+            HTTP_X_CSRFTOKEN=csrf_cookie.value if csrf_cookie else '',
+        )
+
+        self.assertEqual(page.status_code, 200)
+        self.assertIsNotNone(csrf_cookie)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['success'])
+
+    def test_mute_requires_membership_and_leave_removes_private_state(self):
+        blocked = self.client.post(f'/api/community/{self.community.slug}/toggle-mute/')
+        self.assertEqual(blocked.status_code, 403)
+
+        CommunityMember.objects.create(user=self.user, community=self.community)
+        CommunityReadStatus.objects.create(user=self.user, community=self.community)
+        muted = self.client.post(f'/api/community/{self.community.slug}/toggle-mute/')
+        self.assertEqual(muted.status_code, 200)
+        self.assertTrue(muted.json()['is_muted'])
+
+        left = self.client.post(f'/api/community/{self.community.slug}/leave/')
+        self.assertEqual(left.status_code, 200)
+        self.assertFalse(CommunityMember.objects.filter(user=self.user, community=self.community).exists())
+        self.assertFalse(CommunityMute.objects.filter(user=self.user, community=self.community).exists())
+        self.assertFalse(CommunityReadStatus.objects.filter(user=self.user, community=self.community).exists())
+        self.assertEqual(
+            CommunityMessage.objects.filter(sender=self.user).latest('id').kind,
+            CommunityMessage.KIND_LEAVE,
+        )
+
+    def test_group_info_is_member_only_and_lists_members(self):
+        blocked = self.client.get(f'/community/{self.community.slug}/info/')
+        self.assertEqual(blocked.status_code, 302)
+
+        CommunityMember.objects.create(user=self.user, community=self.community)
+        CommunityMember.objects.create(user=self.sender, community=self.community)
+        allowed = self.client.get(f'/community/{self.community.slug}/info/')
+        self.assertEqual(allowed.status_code, 200)
+        self.assertContains(allowed, 'Community Sender')
+        self.assertContains(allowed, 'Mute notifications')
+
+    def test_anonymous_group_info_hides_member_identities(self):
+        self.community.is_anonymous = True
+        self.community.save(update_fields=['is_anonymous'])
+        CommunityMember.objects.create(user=self.user, community=self.community)
+        CommunityMember.objects.create(user=self.sender, community=self.community)
+
+        response = self.client.get(f'/community/{self.community.slug}/info/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['members'], [])
+        self.assertNotContains(response, 'Community Sender')
+        self.assertNotContains(response, f'/profile/{self.sender.id}/')
+        self.assertNotContains(response, 'Members —')
+
+    @patch('home.views.messaging.send_each_for_multicast')
+    @patch('home.views.get_firebase_app')
+    def test_message_push_only_targets_joined_unmuted_members(self, firebase_app, send_multicast):
+        CommunityMember.objects.bulk_create([
+            CommunityMember(user=self.user, community=self.community),
+            CommunityMember(user=self.sender, community=self.community),
+            CommunityMember(user=self.muted, community=self.community),
+        ])
+        CommunityMute.objects.create(user=self.muted, community=self.community, is_muted=True)
+        FCMToken.objects.create(user=self.user, token='recipient-token')
+        FCMToken.objects.create(user=self.sender, token='sender-token')
+        FCMToken.objects.create(user=self.muted, token='muted-token')
+        FCMToken.objects.create(user=self.outsider, token='outsider-token')
+
+        response = self.client.post(
+            f'/community/{self.community.slug}/',
+            data=json.dumps({'text': 'Hello members'}),
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        firebase_app.assert_called_once()
+        send_multicast.assert_called_once()
+        self.assertEqual(send_multicast.call_args.args[0].tokens, ['sender-token'])
+
+    def test_unjoined_communities_do_not_contribute_unread_queries_or_counts(self):
+        joined = Community.objects.create(name='Joined', slug='joined')
+        CommunityMember.objects.create(user=self.user, community=joined)
+        CommunityMessage.objects.create(community=joined, sender=self.sender, text='visible')
+        CommunityMessage.objects.create(community=self.community, sender=self.sender, text='must not count')
+
+        response = self.client.get('/api/communities/list/')
+        payload = response.json()
+        by_slug = {item['slug']: item for item in payload['communities']}
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(by_slug['joined']['unread_count'], 1)
+        self.assertEqual(by_slug['campus-circle']['unread_count'], 0)
+        self.assertEqual(payload['total_unread'], 1)
 
 
 @override_settings(ADMIN_EMAILS=['admin@knotspot.test'])

@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Profile, Question, Option, UserAnswer, RoomRequest, Conversation, DailyQuestion, QuestionOption, QuestionVote, QuestionSuggestion, KnotPost, KnotComment, KnotReport
+from .models import Profile, Question, Option, UserAnswer, RoomRequest, Conversation, DailyQuestion, QuestionOption, QuestionVote, QuestionSuggestion, KnotPost, KnotComment, KnotReport, CommunityMember, CommunityMute
 
 
 # ✅ Inline options inside Question admin
@@ -147,4 +147,17 @@ class KnotReportAdmin(admin.ModelAdmin):
 class QuestionVoteAdmin(admin.ModelAdmin):
     list_display = ('user', 'option', 'voted_at')
     list_filter = ('option__question', 'voted_at')
+
+
+@admin.register(CommunityMember)
+class CommunityMemberAdmin(admin.ModelAdmin):
+    list_display = ('user', 'community', 'joined_at')
+    list_filter = ('community', 'joined_at')
+    search_fields = ('user__username', 'community__name')
+
+
+@admin.register(CommunityMute)
+class CommunityMuteAdmin(admin.ModelAdmin):
+    list_display = ('user', 'community', 'is_muted')
+    list_filter = ('community', 'is_muted')
 

@@ -1016,9 +1016,19 @@ class Community(models.Model):
 
 
 class CommunityMessage(models.Model):
+    KIND_MESSAGE = 'message'
+    KIND_JOIN = 'join'
+    KIND_LEAVE = 'leave'
+    KIND_CHOICES = (
+        (KIND_MESSAGE, 'Message'),
+        (KIND_JOIN, 'Member joined'),
+        (KIND_LEAVE, 'Member left'),
+    )
+
     community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='messages')
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_messages')
     text = models.TextField(blank=True, default='')
+    kind = models.CharField(max_length=12, choices=KIND_CHOICES, default=KIND_MESSAGE, db_index=True)
     timestamp = models.DateTimeField(auto_now_add=True)
     reply_to = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replies')
     sender_deleted = models.BooleanField(default=False)
@@ -1056,6 +1066,33 @@ class CommunityReadStatus(models.Model):
 
     def __str__(self):
         return f"{self.user.username} read {self.community.name} at {self.last_read_at}"
+
+
+class CommunityMember(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_memberships')
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='memberships')
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'community')
+        ordering = ['-joined_at']
+
+    def __str__(self):
+        return f"{self.user.username} member of {self.community.name}"
+
+
+class CommunityMute(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='community_mutes')
+    community = models.ForeignKey(Community, on_delete=models.CASCADE, related_name='mutes')
+    is_muted = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'community')
+
+    def __str__(self):
+        status = "muted" if self.is_muted else "unmuted"
+        return f"{self.user.username} {status} {self.community.name}"
 
 
 class DailyQuestion(models.Model):

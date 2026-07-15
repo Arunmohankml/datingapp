@@ -1,0 +1,360 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ community.name }} Info | KnotSpot{% endblock %}
+
+{% block head %}
+<style>
+nav { display: none !important; }
+html, body {
+    height: 100dvh; overflow: hidden; position: fixed; width: 100%;
+    background: #f7f9fb; padding: 0 !important; margin: 0 !important;
+}
+.container {
+    max-width: 100% !important; width: 100% !important; padding: 0 !important;
+    margin: 0 !important; height: 100%; box-sizing: border-box;
+    background: transparent !important; border: none !important; box-shadow: none !important;
+}
+.info-shell {
+    display: flex; flex-direction: column; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    width: 100%; max-width: 560px; margin: 0 auto;
+    background: linear-gradient(180deg, #fbfcff 0%, #f7f9fb 58%, #eff4fb 100%); z-index: 10;
+}
+
+/* Header */
+.info-topbar {
+    flex-shrink: 0;
+    padding: calc(6px + env(safe-area-inset-top)) 20px 10px;
+    background: rgba(247,249,251,0.78);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid rgba(0,74,198,0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    z-index: 20;
+}
+.info-topbar-main {
+    display: flex; align-items: center; gap: 12px; min-width: 0;
+}
+.match-back-btn {
+    width: 44px; height: 44px; border-radius: 16px;
+    background: rgba(255,255,255,0.88);
+    display: flex; justify-content: center; align-items: center;
+    text-decoration: none; color: var(--primary, #004ac6);
+    border: 1px solid rgba(0,74,198,0.08);
+    box-shadow: 0 10px 24px rgba(15,23,42,0.06);
+    transition: 0.2s ease; flex-shrink: 0; cursor: pointer;
+}
+.match-back-btn .material-symbols-outlined { font-size: 22px; }
+.match-back-btn:active { transform: scale(0.94); }
+
+.info-topbar h2 {
+    margin: 0; font-size: 20px; font-weight: 800;
+    color: #151b27; letter-spacing: -0.03em;
+}
+
+/* Scrollable body */
+.info-body {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: 0 0 120px; background: transparent;
+    scrollbar-width: none;
+}
+.info-body::-webkit-scrollbar { display: none; }
+
+/* Community header card */
+.info-hero {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 28px 20px 24px; text-align: center;
+}
+.info-avatar {
+    width: 80px; height: 80px; border-radius: 24px;
+    object-fit: cover; box-shadow: 0 12px 28px rgba(15,23,42,0.1);
+    background: #f1f5f9; margin-bottom: 14px;
+}
+.info-avatar.anon {
+    background: linear-gradient(135deg, #64748b, #475569);
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+}
+.info-name {
+    font-size: 22px; font-weight: 800; color: #151b27;
+    margin: 0 0 4px; letter-spacing: -0.03em;
+}
+.info-desc {
+    font-size: 13px; color: #64748b; margin: 0; line-height: 1.5;
+    max-width: 320px;
+}
+.info-meta {
+    display: flex; gap: 20px; margin-top: 14px;
+}
+.info-meta-item {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 700; color: #64748b;
+}
+.info-meta-item .material-symbols-outlined {
+    font-size: 16px; color: var(--primary);
+}
+
+/* Sections */
+.info-section {
+    background: rgba(255,255,255,0.84);
+    border: 1px solid rgba(0,74,198,0.06);
+    border-radius: 20px;
+    margin: 12px 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(15,23,42,0.04);
+}
+.info-section-title {
+    padding: 14px 18px 8px;
+    font-size: 12px; font-weight: 800; color: #64748b;
+    text-transform: uppercase; letter-spacing: 0.08em;
+}
+
+/* Mute toggle */
+.info-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; cursor: pointer;
+    transition: background 0.15s;
+    width: 100%; min-height: 64px; border: 0; background: transparent;
+    color: inherit; text-align: left; font: inherit;
+}
+.info-row:active { background: rgba(0,0,0,0.03); }
+.info-row:focus-visible, .match-back-btn:focus-visible, .member-item:focus-visible {
+    outline: 3px solid rgba(0,74,198,0.22); outline-offset: -3px;
+}
+.info-row-left {
+    display: flex; align-items: center; gap: 12px;
+}
+.info-row-icon {
+    width: 36px; height: 36px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.info-row-icon.mute { background: #fef3c7; color: #d97706; }
+.info-row-icon.leave { background: #fef2f2; color: #ef4444; }
+.info-row-text {
+    font-size: 15px; font-weight: 600; color: #151b27;
+}
+
+/* iOS Toggle */
+.toggle-switch {
+    position: relative; width: 48px; height: 28px; flex-shrink: 0;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+    position: absolute; inset: 0; cursor: pointer;
+    background: #d1d5db; border-radius: 999px;
+    transition: background 0.3s;
+}
+.toggle-slider::before {
+    content: ''; position: absolute;
+    width: 22px; height: 22px; left: 3px; bottom: 3px;
+    background: white; border-radius: 50%;
+    transition: transform 0.3s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+.toggle-switch input:checked + .toggle-slider {
+    background: var(--primary, #004ac6);
+}
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+}
+
+/* Members */
+.member-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 18px;
+    transition: background 0.15s;
+    text-decoration: none; color: inherit; min-height: 64px;
+}
+.member-item:active { background: rgba(0,0,0,0.03); }
+.member-item:not(:last-child) {
+    border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+.member-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    object-fit: cover; flex-shrink: 0; background: #f1f5f9;
+}
+.member-info {
+    flex: 1; min-width: 0;
+}
+.member-name {
+    font-size: 14px; font-weight: 700; color: #151b27;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.member-joined {
+    font-size: 11px; color: #94a3b8;
+}
+.info-row-copy { display: flex; flex-direction: column; gap: 2px; }
+.info-row-help { color: #7b8798; font-size: 12px; line-height: 1.35; }
+.member-self {
+    font-size: 11px; font-weight: 700; color: var(--primary);
+    background: rgba(0,74,198,0.08); padding: 2px 8px;
+    border-radius: 999px; white-space: nowrap;
+}
+
+/* Leave button full */
+.info-leave-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px; border: none; border-radius: 16px;
+    background: #fef2f2; color: #ef4444;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    transition: background 0.2s;
+}
+.info-leave-btn:active { background: #fee2e2; }
+
+/* Join btn if not member */
+.info-join-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px; border: none; border-radius: 16px;
+    background: var(--primary, #004ac6); color: #fff;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 6px 16px rgba(0,74,198,0.2);
+    transition: background 0.2s;
+}
+.info-join-btn:active { background: #003da8; }
+button, a { touch-action: manipulation; }
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<section class="info-shell">
+
+    <div class="info-topbar">
+        <div class="info-topbar-main">
+            <a href="{% url 'community_chat' community.slug %}?from=communities" class="match-back-btn" aria-label="Back to {{ community.name }} chat">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </a>
+            <h2>Group Info</h2>
+        </div>
+    </div>
+
+    <div class="info-body">
+        <!-- Hero -->
+        <div class="info-hero">
+            {% if community.is_anonymous %}
+            <div class="info-avatar anon">
+                <span class="material-symbols-outlined" style="font-size:36px;">visibility_off</span>
+            </div>
+            {% else %}
+            <img src="{{ community.get_image_url }}" alt="{{ community.name }}" class="info-avatar" loading="lazy" decoding="async" width="80" height="80">
+            {% endif %}
+            <h1 class="info-name">{{ community.name }}</h1>
+            <p class="info-desc">{{ community.description }}</p>
+            <div class="info-meta">
+                <div class="info-meta-item">
+                    <span class="material-symbols-outlined">group</span>
+                    {{ member_count }} members
+                </div>
+                {% if community.is_anonymous %}
+                <div class="info-meta-item">
+                    <span class="material-symbols-outlined">visibility_off</span>
+                    Anonymous
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Mute Section -->
+        <div class="info-section">
+            <button type="button" class="info-row" onclick="toggleMute()" id="muteRow" aria-describedby="muteHelp">
+                <div class="info-row-left">
+                    <div class="info-row-icon mute">
+                        <span class="material-symbols-outlined" id="muteIcon">{% if is_muted %}notifications_off{% else %}notifications{% endif %}</span>
+                    </div>
+                    <span class="info-row-copy">
+                        <span class="info-row-text">Mute notifications</span>
+                        <span class="info-row-help" id="muteHelp">{% if is_muted %}New messages will stay silent{% else %}You’ll be notified about new messages{% endif %}</span>
+                    </span>
+                </div>
+                <span class="toggle-switch" aria-hidden="true">
+                    <input type="checkbox" id="muteToggle" tabindex="-1" {% if is_muted %}checked{% endif %}>
+                    <span class="toggle-slider"></span>
+                </span>
+            </button>
+        </div>
+
+        {% if not community.is_anonymous %}
+        <!-- Members Section -->
+        <div class="info-section">
+            <div class="info-section-title">Members — {{ member_count }}</div>
+            {% for member in members %}
+            <a class="member-item" href="{% url 'view_profile' member.id %}" aria-label="View {{ member.name }}'s profile">
+                <img src="{{ member.avatar }}" alt="{{ member.name }}" class="member-avatar" loading="lazy" decoding="async" width="40" height="40">
+                <div class="member-info">
+                    <div class="member-name">{{ member.name }}</div>
+                </div>
+                {% if member.is_self %}
+                <span class="member-self">You</span>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Leave -->
+        <div class="info-section">
+            <button type="button" class="info-row" onclick="leaveCommunity()" id="leaveButton">
+                <div class="info-row-left">
+                    <div class="info-row-icon leave">
+                        <span class="material-symbols-outlined">logout</span>
+                    </div>
+                    <span class="info-row-text" style="color:#ef4444;">Leave Community</span>
+                </div>
+            </button>
+        </div>
+    </div>
+
+</section>
+
+<script>
+const csrfToken = '{{ csrf_token }}';
+const slug = '{{ community.slug }}';
+
+async function toggleMute() {
+    try {
+        const res = await fetch(`/api/community/${slug}/toggle-mute/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const data = await res.json();
+        if (data.success) {
+            const toggle = document.getElementById('muteToggle');
+            if (toggle) toggle.checked = data.is_muted;
+            const icon = document.getElementById('muteIcon');
+            if (icon) icon.textContent = data.is_muted ? 'notifications_off' : 'notifications';
+            const help = document.getElementById('muteHelp');
+            if (help) help.textContent = data.is_muted ? 'New messages will stay silent' : 'You’ll be notified about new messages';
+        }
+    } catch (e) { console.error(e); }
+}
+
+async function leaveCommunity() {
+    const confirmed = await customConfirm(
+        'You will stop receiving messages and notifications from this community.',
+        'Leave community?', 'Leave', 'Cancel'
+    );
+    if (!confirmed) return;
+    const button = document.getElementById('leaveButton');
+    if (button) button.disabled = true;
+    try {
+        const res = await fetch(`/api/community/${slug}/leave/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.location.href = `{% url 'community_list' %}`;
+        }
+    } catch (e) {
+        console.error(e);
+        if (button) button.disabled = false;
+    }
+}
+</script>
+{% endblock %}

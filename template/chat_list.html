@@ -133,6 +133,79 @@
         transform: scale(0.97);
     }
 
+    .comm-join-btn {
+        min-width: 68px;
+        min-height: 40px;
+        padding: 0 18px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--primary, #004ac6);
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(0, 74, 198, 0.22);
+        font-family: inherit;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+    }
+    .comm-join-btn:active {
+        transform: scale(0.96);
+        box-shadow: 0 5px 12px rgba(0, 74, 198, 0.2);
+    }
+    .comm-join-btn:disabled {
+        cursor: wait !important;
+        opacity: 0.88;
+    }
+    .comm-join-spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.42);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: commJoinSpin 0.7s linear infinite;
+    }
+    @keyframes commJoinSpin {
+        to { transform: rotate(360deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        .comm-join-spinner { animation-duration: 1.4s; }
+    }
+
+    .community-card-action {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .community-card-action.is-join {
+        min-width: 72px;
+        flex-direction: column;
+        gap: 5px;
+    }
+    .community-card-action.is-member {
+        gap: 5px;
+    }
+    .community-member-count {
+        color: #7b8798;
+        font-size: 10px;
+        font-weight: 700;
+        line-height: 1.2;
+        white-space: nowrap;
+    }
+    .community-open-indicator {
+        color: #94a3b8;
+        font-size: 21px;
+        transition: transform 0.18s ease, color 0.18s ease;
+    }
+    .chat-card:hover .community-open-indicator {
+        color: var(--primary, #004ac6);
+        transform: translateX(2px);
+    }
+
     .tab-unread-badge {
         background: #ef4444;
         color: white;
@@ -173,14 +246,14 @@
     }
 
     .chat-card {
-        background: rgba(255, 255, 255, 0.84);
-        border: 1px solid rgba(0, 74, 198, 0.08);
-        border-radius: 28px;
-        padding: 18px 20px;
-        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(15, 23, 42, 0.055);
+        border-radius: 22px;
+        padding: 15px 16px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.055);
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: 14px;
         text-decoration: none;
         color: inherit;
         cursor: pointer;
@@ -198,9 +271,9 @@
     }
 
     .chat-avatar {
-        width: 56px;
-        height: 56px;
-        border-radius: 18px;
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
         object-fit: cover;
         flex-shrink: 0;
         box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
@@ -214,15 +287,15 @@
 
     .chat-info-row {
         display: flex;
-        justify-content: space-between;
+        justify-content: flex-start;
         align-items: center;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
         gap: 8px;
     }
 
     .chat-name {
-        font-weight: 700;
-        font-size: 16px;
+        font-weight: 750;
+        font-size: 15px;
         color: #151b27;
         letter-spacing: -0.02em;
         white-space: nowrap;
@@ -517,9 +590,9 @@ async function loadCommunities() {
         container.innerHTML = '';
         if (data.communities && data.communities.length > 0) {
             data.communities.forEach(c => {
-                const card = document.createElement('a');
-                card.href = `/community/${c.slug}/?from=chats`;
+                const card = document.createElement('div');
                 card.className = 'chat-card';
+                card.style.cursor = 'default';
                 let avatarHtml;
                 if (c.is_anonymous) {
                     avatarHtml = `<div class="chat-avatar comm-avatar anon-avatar"><span class="material-symbols-outlined" style="font-size:28px;">visibility_off</span></div>`;
@@ -527,7 +600,16 @@ async function loadCommunities() {
                     avatarHtml = `<img src="${c.image_url}" alt="${c.name}" class="chat-avatar" loading="lazy" decoding="async" width="56" height="56">`;
                 }
                 const unreadBadge = c.unread_count > 0 ? `<div class="unread-badge" style="margin-left:8px;">${c.unread_count > 99 ? '99+' : c.unread_count}</div>` : '';
-                card.innerHTML = `${avatarHtml}<div class="chat-details"><div class="chat-info-row"><div class="chat-name">${c.name}</div><span class="chat-time">${c.member_count} members</span></div><div class="chat-snippet-row"><div class="chat-snippet">${c.description}</div>${unreadBadge}</div></div><span class="material-symbols-outlined" style="font-size:20px; color:#94a3b8;">chevron_right</span>`;
+                const memberLabel = `${c.member_count} ${c.member_count === 1 ? 'member' : 'members'}`;
+                let rightHtml;
+                if (c.is_member) {
+                    rightHtml = `<div class="community-card-action is-member">${unreadBadge}<span class="community-member-count">${memberLabel}</span><span class="community-open-indicator material-symbols-outlined" aria-hidden="true">chevron_right</span></div>`;
+                    card.style.cursor = 'pointer';
+                    card.onclick = function() { window.location.href = `/community/${c.slug}/?from=chats`; };
+                } else {
+                    rightHtml = `<div class="community-card-action is-join"><button class="comm-join-btn" onclick="event.stopPropagation(); joinCommunityFromList('${c.slug}', this)" aria-label="Join ${c.name}">Join</button><span class="community-member-count">${memberLabel}</span></div>`;
+                }
+                card.innerHTML = `${avatarHtml}<div class="chat-details"><div class="chat-info-row"><div class="chat-name">${c.name}</div></div><div class="chat-snippet-row"><div class="chat-snippet">${c.description}</div></div></div>${rightHtml}`;
                 container.appendChild(card);
             });
             if (data.total_unread > 0) {
@@ -541,6 +623,37 @@ async function loadCommunities() {
         }
     } catch (e) {
         container.innerHTML = '<div class="empty-state"><p>Failed to load communities.</p></div>';
+    }
+}
+
+async function joinCommunityFromList(slug, btn) {
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrfToken = csrfInput ? csrfInput.value : '{{ csrf_token }}';
+    const originalLabel = btn.getAttribute('aria-label') || 'Join community';
+    btn.disabled = true;
+    btn.setAttribute('aria-busy', 'true');
+    btn.setAttribute('aria-label', 'Joining community');
+    btn.innerHTML = '<span class="comm-join-spinner" aria-hidden="true"></span>';
+    try {
+        const res = await fetch(`/api/community/${slug}/join/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken }
+        });
+        const data = await res.json();
+        if (data.success) {
+            const chatUrl = (data.chat_url || `/community/${slug}/`).split('?')[0];
+            window.location.assign(`${chatUrl}?from=chats`);
+        } else {
+            btn.textContent = 'Join';
+            btn.disabled = false;
+            btn.removeAttribute('aria-busy');
+            btn.setAttribute('aria-label', originalLabel);
+        }
+    } catch (e) {
+        btn.textContent = 'Join';
+        btn.disabled = false;
+        btn.removeAttribute('aria-busy');
+        btn.setAttribute('aria-label', originalLabel);
     }
 }
 

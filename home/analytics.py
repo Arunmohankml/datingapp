@@ -6,7 +6,7 @@ from .models import (
     ConfessionLike, ConfessionReport, UserReport, Spark, BlockedUser,
     RoomListing, RoomRequest, SavedRoomListing, Conversation, VoiceRoom,
     VoiceParticipant, GiveawayEntry, FCMToken, ProfileImage, Announcement,
-    WallStroke, WallImage, BannedIdentifier,
+    BannedIdentifier,
 )
 from django.contrib.auth.models import User as AuthUser
 

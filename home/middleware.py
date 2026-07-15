@@ -2,7 +2,7 @@ import traceback
 import sys
 import re
 import os
-from django.http import HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.utils.html import format_html
 
 # Paths that are always allowed (login, static assets, admin)
@@ -36,6 +36,31 @@ _BAN_HTML = """
 </body>
 </html>
 """
+
+
+class DisabledFeatureMiddleware:
+    """Block retired high-egress features before any database-backed middleware runs."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        path = request.path.rstrip('/')
+        if path == '/wall':
+            response = HttpResponse(
+                "The public drawing wall is temporarily disabled.",
+                status=410,
+            )
+            response['Cache-Control'] = 'public, max-age=3600'
+            return response
+        if path == '/api/wall':
+            response = JsonResponse(
+                {'success': False, 'error': 'The public drawing wall is temporarily disabled.'},
+                status=410,
+            )
+            response['Cache-Control'] = 'public, max-age=3600'
+            return response
+        return self.get_response(request)
 
 
 class ExceptionLoggingMiddleware:
