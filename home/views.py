@@ -5504,6 +5504,7 @@ def _notify_user(user, message, link=''):
 def _seed_communities():
     """Create default communities if they don't exist."""
     defaults = [
+        {'name': 'KnotSpot', 'slug': 'knotspot', 'description': 'Connect with the wider KnotSpot student community.', 'image': '', 'is_anonymous': False},
         {'name': 'SRM', 'slug': 'srm', 'description': 'Connect with students from SRM University.', 'image': '', 'is_anonymous': False},
         {'name': 'VIT', 'slug': 'vit', 'description': 'Connect with students from VIT University.', 'image': '', 'is_anonymous': False},
         {'name': 'Amrita', 'slug': 'amrita', 'description': 'Connect with students from Amrita University.', 'image': '', 'is_anonymous': False},
@@ -5567,6 +5568,7 @@ def community_list(request):
             c.unread_count = qs.filter(timestamp__gt=last_read).count()
         else:
             c.unread_count = qs.count()
+    communities.sort(key=lambda community: (not community.is_member, community.name.lower()))
     return render(request, 'community_list.html', {
         'communities': communities,
         'is_admin': is_staff_check(request.user),
@@ -5605,6 +5607,7 @@ def community_list_api(request):
             'unread_count': unread,
             'is_member': is_member,
         })
+    data.sort(key=lambda community: (not community['is_member'], community['name'].lower()))
     return JsonResponse({'communities': data, 'total_unread': total_unread})
 
 
@@ -5938,11 +5941,16 @@ def community_info(request, slug):
         for m in members:
             u = m.user
             p = getattr(u, 'profile', None)
+            campus = get_campus_by_alias(p.campus) if p else None
+            organization = campus['org'] if campus else ''
+            course = p.course.strip().replace('.', '') if p and p.course else ''
+            student_details = ' '.join(part for part in (organization, course, 'student') if part)
             member_list.append({
                 'id': u.id,
                 'username': u.username,
                 'name': p.name if p else u.username,
                 'avatar': p.get_profile_pic_url if p and p.profile_pic else f"https://ui-avatars.com/api/?name={u.username}&background=6366f1&color=fff&size=128",
+                'student_details': student_details,
                 'joined_at': m.joined_at,
                 'is_self': u.id == request.user.id,
             })

@@ -107,50 +107,69 @@
     }
 
     .tab-switcher {
+        box-sizing: border-box;
         display: flex;
-        gap: 6px;
-        padding: 12px 16px 8px;
+        width: calc(100% - 48px);
+        max-width: 330px;
+        gap: 3px;
+        margin: 10px auto 6px;
+        padding: 3px;
+        background: #edf2f8;
+        border: 1px solid rgba(15, 23, 42, 0.055);
+        border-radius: 999px;
     }
     .tab-btn {
         flex: 1;
-        padding: 10px 16px;
+        min-height: 36px;
+        padding: 7px 13px;
         border: none;
         border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
         font-family: inherit;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 700;
+        white-space: nowrap;
         cursor: pointer;
-        transition: all 0.22s ease;
+        transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
         background: transparent;
-        color: #6b7a90;
+        color: #617087;
     }
     .tab-btn.active {
-        background: var(--primary);
+        background: var(--primary, #004ac6);
         color: #fff;
-        box-shadow: 0 8px 20px rgba(0, 74, 198, 0.2);
+        box-shadow: 0 5px 14px rgba(0, 74, 198, 0.2);
     }
     .tab-btn:active {
         transform: scale(0.97);
     }
 
     .comm-join-btn {
-        min-width: 68px;
-        min-height: 40px;
-        padding: 0 18px;
+        width: 68px;
+        height: 36px;
+        box-sizing: border-box;
+        padding: 0 13px;
         border: 0;
-        border-radius: 999px;
+        border-radius: 11px;
         background: var(--primary, #004ac6);
         color: #fff;
-        box-shadow: 0 8px 18px rgba(0, 74, 198, 0.22);
+        box-shadow: 0 4px 10px rgba(0, 74, 198, 0.16);
         font-family: inherit;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 800;
         cursor: pointer;
         white-space: nowrap;
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        position: relative;
         transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+    }
+    .comm-join-btn::before {
+        content: '';
+        position: absolute;
+        inset: -4px;
     }
     .comm-join-btn:active {
         transform: scale(0.96);
@@ -161,8 +180,8 @@
         opacity: 0.88;
     }
     .comm-join-spinner {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         border: 2px solid rgba(255, 255, 255, 0.42);
         border-top-color: #fff;
         border-radius: 50%;
@@ -176,59 +195,89 @@
     }
 
     .community-card-action {
-        flex-shrink: 0;
-        display: flex;
+        width: 90px;
+        align-self: stretch;
+        display: grid;
+        grid-template-columns: 68px 18px;
+        grid-template-rows: 36px 14px;
+        column-gap: 4px;
+        row-gap: 2px;
         align-items: center;
-        justify-content: center;
+        justify-content: start;
     }
-    .community-card-action.is-join {
-        min-width: 72px;
-        flex-direction: column;
-        gap: 5px;
-    }
-    .community-card-action.is-member {
-        gap: 5px;
+    .community-action-primary {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        width: 90px;
+        height: 36px;
+        display: grid;
+        grid-template-columns: 68px 18px;
+        align-items: center;
+        gap: 4px;
     }
     .community-member-count {
-        color: #7b8798;
+        grid-column: 1;
+        grid-row: 2;
+        color: #708096;
         font-size: 10px;
         font-weight: 700;
-        line-height: 1.2;
+        line-height: 14px;
+        width: 68px;
+        justify-self: center;
+        white-space: nowrap;
+        text-align: center;
+    }
+    .community-unread-pill,
+    .community-open-label {
+        width: 68px;
+        height: 36px;
+        box-sizing: border-box;
+        padding: 0 8px;
+        border-radius: 11px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #eaf2ff;
+        border: 1px solid rgba(0, 74, 198, 0.12);
+        color: var(--primary, #004ac6);
+        font-size: 10px;
+        font-weight: 800;
         white-space: nowrap;
     }
     .community-open-indicator {
-        color: #94a3b8;
-        font-size: 21px;
+        color: #8090a6;
+        font-size: 18px;
         transition: transform 0.18s ease, color 0.18s ease;
     }
-    .chat-card:hover .community-open-indicator {
+    .community-card:hover .community-open-indicator {
         color: var(--primary, #004ac6);
         transform: translateX(2px);
     }
 
     .tab-unread-badge {
-        background: #ef4444;
-        color: white;
-        min-width: 20px;
-        height: 20px;
-        border-radius: 10px;
+        background: rgba(0, 74, 198, 0.1);
+        color: var(--primary, #004ac6);
+        min-width: 18px;
+        height: 18px;
+        border-radius: 999px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 10px;
+        font-size: 9px;
         font-weight: 800;
-        padding: 0 6px;
-        margin-left: 4px;
+        padding: 0 5px;
+        margin-left: 5px;
         vertical-align: middle;
     }
     .tab-btn.active .tab-unread-badge {
-        background: rgba(255,255,255,0.25);
+        background: rgba(255,255,255,0.2);
+        color: #fff;
     }
 
     .feed-list {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
         padding: 0 16px;
     }
 
@@ -236,7 +285,7 @@
         flex: 1;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        padding: 8px 0 110px;
+        padding: 6px 0 110px;
         background: transparent;
         scrollbar-width: none;
         -ms-overflow-style: none;
@@ -268,6 +317,49 @@
 
     .chat-card:active {
         transform: scale(0.985);
+    }
+
+    .community-card {
+        box-sizing: border-box;
+        display: grid;
+        grid-template-columns: 52px minmax(0, 1fr) 90px;
+        align-items: center;
+        column-gap: 14px;
+        padding: 15px 16px;
+        border-radius: 22px;
+        background: #fff;
+        border-color: rgba(15, 23, 42, 0.06);
+        box-shadow: 0 8px 20px rgba(31, 49, 74, 0.055);
+    }
+    .community-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 26px rgba(31, 49, 74, 0.08);
+    }
+    .community-card:focus-visible {
+        outline: 3px solid rgba(0, 74, 198, 0.2);
+        outline-offset: 2px;
+    }
+    .community-card .chat-details {
+        align-self: center;
+    }
+    .community-card .chat-avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+    }
+    .community-card .chat-snippet {
+        color: #66768b;
+        font-size: 12.5px;
+        font-weight: 500;
+        line-height: 1.35;
+    }
+    .community-card .chat-name {
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    @media (max-width: 390px) {
+        .feed-list { padding-inline: 12px; }
     }
 
     .chat-avatar {
@@ -446,6 +538,8 @@
     .feed-list { padding: 0 10px; gap: 10px; }
     .chat-card { padding: 16px 18px; border-radius: 26px; }
     .chat-avatar { width: 56px; height: 56px; }
+    .community-card { grid-template-columns: 56px minmax(0, 1fr) 90px; }
+    .community-card .chat-avatar { width: 56px; height: 56px; }
     .chat-name { font-size: 16px; }
     .chat-snippet { font-size: 14px; }
     .empty-state { padding: 80px 20px; }
@@ -590,24 +684,27 @@ async function loadCommunities() {
         container.innerHTML = '';
         if (data.communities && data.communities.length > 0) {
             data.communities.forEach(c => {
-                const card = document.createElement('div');
-                card.className = 'chat-card';
-                card.style.cursor = 'default';
+                const card = document.createElement(c.is_member ? 'a' : 'article');
+                card.className = 'chat-card community-card';
+                card.dataset.communitySlug = c.slug;
                 let avatarHtml;
                 if (c.is_anonymous) {
                     avatarHtml = `<div class="chat-avatar comm-avatar anon-avatar"><span class="material-symbols-outlined" style="font-size:28px;">visibility_off</span></div>`;
                 } else {
                     avatarHtml = `<img src="${c.image_url}" alt="${c.name}" class="chat-avatar" loading="lazy" decoding="async" width="56" height="56">`;
                 }
-                const unreadBadge = c.unread_count > 0 ? `<div class="unread-badge" style="margin-left:8px;">${c.unread_count > 99 ? '99+' : c.unread_count}</div>` : '';
                 const memberLabel = `${c.member_count} ${c.member_count === 1 ? 'member' : 'members'}`;
                 let rightHtml;
                 if (c.is_member) {
-                    rightHtml = `<div class="community-card-action is-member">${unreadBadge}<span class="community-member-count">${memberLabel}</span><span class="community-open-indicator material-symbols-outlined" aria-hidden="true">chevron_right</span></div>`;
-                    card.style.cursor = 'pointer';
-                    card.onclick = function() { window.location.href = `/community/${c.slug}/?from=chats`; };
+                    const unreadText = c.unread_count > 99 ? '99+' : `${c.unread_count} new`;
+                    const unreadIndicator = c.unread_count > 0
+                        ? `<span class="community-unread-pill" aria-label="${c.unread_count} unread messages">${unreadText}</span>`
+                        : '<span class="community-open-label">Open</span>';
+                    rightHtml = `<div class="community-card-action is-member"><span class="community-action-primary">${unreadIndicator}<span class="community-open-indicator material-symbols-outlined" aria-hidden="true">chevron_right</span></span><span class="community-member-count">${memberLabel}</span></div>`;
+                    card.href = `/community/${c.slug}/?from=chats`;
+                    card.setAttribute('aria-label', `Open ${c.name} community${c.unread_count > 0 ? `, ${c.unread_count} unread messages` : ''}`);
                 } else {
-                    rightHtml = `<div class="community-card-action is-join"><button class="comm-join-btn" onclick="event.stopPropagation(); joinCommunityFromList('${c.slug}', this)" aria-label="Join ${c.name}">Join</button><span class="community-member-count">${memberLabel}</span></div>`;
+                    rightHtml = `<div class="community-card-action is-join"><span class="community-action-primary"><button type="button" class="comm-join-btn" onclick="event.stopPropagation(); joinCommunityFromList('${c.slug}', this)" aria-label="Join ${c.name}">Join</button></span><span class="community-member-count">${memberLabel}</span></div>`;
                 }
                 card.innerHTML = `${avatarHtml}<div class="chat-details"><div class="chat-info-row"><div class="chat-name">${c.name}</div></div><div class="chat-snippet-row"><div class="chat-snippet">${c.description}</div></div></div>${rightHtml}`;
                 container.appendChild(card);

@@ -188,19 +188,28 @@ html, body {
     .comm-join-spinner { animation-duration: 1.4s; }
 }
 
-/* Unread badge */
+/* Unread badge - same size as join btn */
 .community-unread {
     background: linear-gradient(135deg, #004ac6, #3f7dff);
-    color: white; min-width: 22px; height: 22px;
-    border-radius: 11px; display: inline-flex;
+    color: white;
+    min-width: 52px; height: 38px;
+    border-radius: 999px;
+    display: inline-flex;
     align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 800; padding: 0 8px;
-    box-shadow: 0 6px 14px rgba(0,74,198,0.2);
+    font-size: 13px; font-weight: 800;
+    box-shadow: 0 4px 12px rgba(0,74,198,0.2);
+    flex-shrink: 0;
+    padding: 0 14px;
 }
 
 /* Arrow for joined */
 .comm-arrow {
     flex-shrink: 0; color: #94a3b8; font-size: 20px;
+    margin-left: -4px;
+}
+
+.comm-meta {
+    font-size: 11px; font-weight: 600; color: #94a3b8; margin-top: 2px;
 }
 button, a { touch-action: manipulation; }
 @media (prefers-reduced-motion: reduce) {

@@ -160,9 +160,14 @@ class CommunityMembershipTests(TestCase):
 
         CommunityMember.objects.create(user=self.user, community=self.community)
         CommunityMember.objects.create(user=self.sender, community=self.community)
+        sender_profile = self.sender.profile
+        sender_profile.campus = 'SRM Ramapuram (RMP)'
+        sender_profile.course = 'B.Tech'
+        sender_profile.save(update_fields=['campus', 'course'])
         allowed = self.client.get(f'/community/{self.community.slug}/info/')
         self.assertEqual(allowed.status_code, 200)
         self.assertContains(allowed, 'Community Sender')
+        self.assertContains(allowed, 'SRM BTech student')
         self.assertContains(allowed, 'Mute notifications')
 
     def test_anonymous_group_info_hides_member_identities(self):
@@ -218,6 +223,23 @@ class CommunityMembershipTests(TestCase):
         self.assertEqual(by_slug['joined']['unread_count'], 1)
         self.assertEqual(by_slug['campus-circle']['unread_count'], 0)
         self.assertEqual(payload['total_unread'], 1)
+
+    def test_joined_communities_are_first_and_knotspot_is_seeded(self):
+        joined = Community.objects.create(name='Joined Last Alphabetically', slug='joined-last')
+        CommunityMember.objects.create(user=self.user, community=joined)
+
+        response = self.client.get('/api/communities/list/')
+        communities = response.json()['communities']
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(communities[0]['slug'], joined.slug)
+        self.assertTrue(communities[0]['is_member'])
+        self.assertIn('knotspot', [community['slug'] for community in communities])
+
+        page = self.client.get('/community/')
+        page_communities = page.context['communities']
+        self.assertEqual(page_communities[0].slug, joined.slug)
+        self.assertTrue(page_communities[0].is_member)
 
 
 @override_settings(ADMIN_EMAILS=['admin@knotspot.test'])

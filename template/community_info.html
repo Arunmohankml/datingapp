@@ -165,9 +165,9 @@ html, body {
 /* Members */
 .member-item {
     display: flex; align-items: center; gap: 12px;
-    padding: 12px 18px;
+    box-sizing: border-box; min-height: 60px; padding: 8px 18px;
     transition: background 0.15s;
-    text-decoration: none; color: inherit; min-height: 64px;
+    text-decoration: none; color: inherit;
 }
 .member-item:active { background: rgba(0,0,0,0.03); }
 .member-item:not(:last-child) {
@@ -178,14 +178,15 @@ html, body {
     object-fit: cover; flex-shrink: 0; background: #f1f5f9;
 }
 .member-info {
-    flex: 1; min-width: 0;
+    flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;
 }
 .member-name {
     font-size: 14px; font-weight: 700; color: #151b27;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.member-joined {
-    font-size: 11px; color: #94a3b8;
+.member-student-details {
+    font-size: 11.5px; line-height: 1.25; font-weight: 500; color: #74839a;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .info-row-copy { display: flex; flex-direction: column; gap: 2px; }
 .info-row-help { color: #7b8798; font-size: 12px; line-height: 1.35; }
@@ -288,6 +289,7 @@ button, a { touch-action: manipulation; }
                 <img src="{{ member.avatar }}" alt="{{ member.name }}" class="member-avatar" loading="lazy" decoding="async" width="40" height="40">
                 <div class="member-info">
                     <div class="member-name">{{ member.name }}</div>
+                    <div class="member-student-details">{{ member.student_details }}</div>
                 </div>
                 {% if member.is_self %}
                 <span class="member-self">You</span>
