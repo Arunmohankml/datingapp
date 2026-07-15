@@ -27,6 +27,7 @@ from .models import (
     KnotComment, KnotCommentLike, KnotEngagementNotice, KnotPost, KnotPreference,
     KnotReport, KnotVote, StaffMember,
 )
+from .pusher_utils import broadcast_event
 
 
 SORTS = {'newest', 'hot', 'top', 'oldest'}
@@ -260,8 +261,23 @@ def _safe_push(user, title, body, url):
         print(f'Knots push skipped: {exc}')
 
 
-def _notify_after_commit(user, title, body, url):
-    transaction.on_commit(lambda: _safe_push(user, title, body, url))
+def _safe_in_app_notify(user, title, body, url, payload=None):
+    if not user:
+        return
+    data = {'title': title, 'body': body, 'url': url}
+    if payload:
+        data.update(payload)
+    try:
+        broadcast_event(f'chat_{user.id}', 'knot_activity', data)
+    except Exception as exc:
+        print(f'Knots in-app notification skipped: {exc}')
+
+
+def _notify_after_commit(user, title, body, url, payload=None):
+    transaction.on_commit(lambda: (
+        _safe_push(user, title, body, url),
+        _safe_in_app_notify(user, title, body, url, payload),
+    ))
 
 
 def _annotated_posts(user):
@@ -628,8 +644,15 @@ def knot_comment_create(request, post_id):
     if target.id != request.user.id:
         actor = getattr(request.user, 'profile', None)
         actor_name = actor.display_name if actor else request.user.username
-        title = 'New reply to your comment' if parent else 'New reply to your Knot'
-        _notify_after_commit(target, title, f'{actor_name}: {content[:100]}', f'/knots/{post.id}/{post.slug}/#comment-{comment.id}')
+        title = 'New reply to your comment' if parent else 'New comment on your Knot'
+        kind = 'knot_reply' if parent else 'knot_comment'
+        _notify_after_commit(target, title, f'{actor_name}: {content[:100]}', f'/knots/{post.id}/{post.slug}/#comment-{comment.id}', {
+            'kind': kind,
+            'post_id': post.id,
+            'comment_id': comment.id,
+            'actor_id': request.user.id,
+            'actor_name': actor_name,
+        })
     comment = _annotated_comments(request.user).get(id=comment.id)
     return JsonResponse({'success': True, 'data': _comment_payload(comment, request.user)}, status=201)
 

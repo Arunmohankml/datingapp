@@ -597,6 +597,13 @@
                 }
             });
 
+            userChannel.bind('knot_activity', (data) => {
+                const url = data.url || '/knots/';
+                const title = data.title || 'New Knots activity';
+                const body = data.body ? ` — ${data.body}` : '';
+                showGlobalToast(`${title}${body}`, url);
+            });
+
             userChannel.bind('new_connection', (data) => {
                 const matchBadge = document.getElementById('match-badge');
                 if (matchBadge) matchBadge.style.display = 'block';
@@ -891,7 +898,7 @@
 
             if (Notification.permission === 'denied') {
                 if (isForced) {
-                    customAlert("Notifications are currently blocked. To receive messages and match requests, please enable notifications in your browser's site settings.", "Notifications Blocked");
+                    customAlert("Notifications are currently blocked. To receive chats, match requests, and Knots comments or replies, please enable notifications in your browser's site settings.", "Notifications Blocked");
                 }
                 return;
             }
@@ -910,7 +917,7 @@
                         <i class="fas fa-bell"></i>
                     </div>
                     <h3 style="margin:0 0 12px; font-size:22px; font-weight:800; color:#1e3a8a;">Enable Notifications</h3>
-                    <p style="margin:0 0 24px; color:#64748b; font-size:15px; line-height:1.6;">To receive messages from users and requests, you should enable notification permissions.</p>
+                    <p style="margin:0 0 24px; color:#64748b; font-size:15px; line-height:1.6;">Enable notifications to receive chats, match requests, and Knots comments or replies even when you are outside the browser.</p>
                     <div style="display:flex; flex-direction:column; gap:10px;">
                         <button id="enable-notif-btn" style="width:100%; padding:14px; background:var(--primary); color:white; border:none; border-radius:14px; font-weight:700; cursor:pointer; font-size:15px; transition:0.2s;">Enable Notifications</button>
                         <button id="dismiss-notif-btn" style="width:100%; padding:12px; background:none; color:#64748b; border:none; font-weight:600; cursor:pointer; font-size:14px;">Not Now</button>

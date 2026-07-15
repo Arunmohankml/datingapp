@@ -595,6 +595,71 @@ class KnotsFeatureTests(TestCase):
         self.assertEqual(too_long.status_code, 400)
         self.assertIn('1200 characters', too_long.json()['error'])
 
+    @patch('home.views.send_push_to_user')
+    @patch('home.knot_views.broadcast_event')
+    def test_knot_comment_notifies_post_owner_with_push_and_in_app_toast(self, broadcast, push):
+        self.client.force_login(self.other)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self._post_json(f'/api/knots/{self.post.id}/comments/', {
+                'content': 'Can confirm the library is open.',
+            })
+
+        self.assertEqual(response.status_code, 201)
+        comment = KnotComment.objects.get(content='Can confirm the library is open.')
+        push.assert_called_once()
+        self.assertEqual(push.call_args.args[0], self.owner)
+        self.assertEqual(push.call_args.args[1], 'New comment on your Knot')
+        self.assertEqual(push.call_args.args[3], f'/knots/{self.post.id}/{self.post.slug}/#comment-{comment.id}')
+        broadcast.assert_called_once()
+        self.assertEqual(broadcast.call_args.args[0], f'chat_{self.owner.id}')
+        self.assertEqual(broadcast.call_args.args[1], 'knot_activity')
+        self.assertEqual(broadcast.call_args.args[2]['kind'], 'knot_comment')
+        self.assertEqual(broadcast.call_args.args[2]['comment_id'], comment.id)
+
+    @patch('home.views.send_push_to_user')
+    @patch('home.knot_views.broadcast_event')
+    def test_knot_reply_notifies_parent_comment_owner_even_for_reply_chains(self, broadcast, push):
+        parent = KnotComment.objects.create(post=self.post, user=self.other, content='Parent question')
+        self.client.force_login(self.owner)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self._post_json(f'/api/knots/{self.post.id}/comments/', {
+                'content': 'Replying to parent',
+                'parent_id': parent.id,
+            })
+
+        self.assertEqual(response.status_code, 201)
+        reply = KnotComment.objects.get(content='Replying to parent')
+        push.assert_called_once()
+        self.assertEqual(push.call_args.args[0], self.other)
+        self.assertEqual(push.call_args.args[1], 'New reply to your comment')
+        broadcast.assert_called_once()
+        self.assertEqual(broadcast.call_args.args[0], f'chat_{self.other.id}')
+        self.assertEqual(broadcast.call_args.args[2]['kind'], 'knot_reply')
+        self.assertEqual(broadcast.call_args.args[2]['comment_id'], reply.id)
+
+    @patch('home.views.send_push_to_user')
+    @patch('home.knot_views.broadcast_event')
+    def test_knot_comment_does_not_notify_self(self, broadcast, push):
+        self.client.force_login(self.owner)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self._post_json(f'/api/knots/{self.post.id}/comments/', {
+                'content': 'Commenting on my own Knot',
+            })
+
+        self.assertEqual(response.status_code, 201)
+        push.assert_not_called()
+        broadcast.assert_not_called()
+
+    def test_global_browser_listener_shows_in_app_knot_activity_toast(self):
+        self.client.force_login(self.owner)
+        response = self.client.get('/knots/')
+
+        self.assertContains(response, "userChannel.bind('knot_activity'")
+        self.assertContains(response, "showGlobalToast(`${title}${body}`, url);", html=False)
+
     @patch('home.knot_views.upload_to_cloudinary', return_value='https://res.cloudinary.com/demo/image/upload/knot.webp')
     def test_authenticated_user_can_upload_valid_knot_image(self, upload):
         self.client.force_login(self.owner)
