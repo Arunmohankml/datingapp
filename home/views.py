@@ -2480,6 +2480,32 @@ def confession_story(request, confession_id):
         return HttpResponse("Not authorized", status=403)
     return render(request, 'confession_story.html', {'confession': confession})
 
+
+def _send_confession_reply_notification(owner, comment, actor_name):
+    """Best-effort push and foreground notification for a confession reply."""
+    url = f'/confessions/{comment.confession_id}/#comment-{comment.id}'
+    preview = ' '.join(comment.content.split())[:100]
+    title = 'New reply to your confession'
+    body = f'{actor_name}: {preview}'
+
+    try:
+        send_push_to_user(owner, title, body, url)
+    except Exception as exc:
+        safe_print(f'Confession reply push skipped: {exc}')
+
+    try:
+        broadcast_event(f'chat_{owner.id}', 'confession_activity', {
+            'title': title,
+            'body': body,
+            'url': url,
+            'kind': 'confession_reply',
+            'confession_id': comment.confession_id,
+            'comment_id': comment.id,
+        })
+    except Exception as exc:
+        safe_print(f'Confession in-app notification skipped: {exc}')
+
+
 def add_comment(request, confession_id):
     if request.method == 'POST':
         confession = get_object_or_404(Confession, id=confession_id)
@@ -2500,13 +2526,35 @@ def add_comment(request, confession_id):
             user = request.user
 
         if content:
-            ConfessionComment.objects.create(
+            comment = ConfessionComment.objects.create(
                 confession=confession,
                 user=user,
                 content=content,
                 is_anonymous=is_anonymous,
                 poster_fingerprint=fingerprint
             )
+
+            is_owner_comment = bool(
+                confession.user_id and user and confession.user_id == user.id
+            )
+            is_owner_device = bool(
+                fingerprint and confession.poster_fingerprint == fingerprint
+            )
+            if confession.user_id and not is_owner_comment and not is_owner_device:
+                if is_anonymous:
+                    actor_name = 'Someone anonymously replied'
+                elif user and hasattr(user, 'profile'):
+                    actor_name = user.profile.name
+                elif user:
+                    actor_name = user.username
+                else:
+                    actor_name = 'Someone replied'
+
+                transaction.on_commit(
+                    lambda: _send_confession_reply_notification(
+                        confession.user, comment, actor_name
+                    )
+                )
     return redirect('confession_detail', confession_id=confession_id)
 
 @login_required

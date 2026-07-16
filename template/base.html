@@ -641,6 +641,13 @@
                 showGlobalToast(`${title}${body}`, url);
             });
 
+            userChannel.bind('confession_activity', (data) => {
+                const url = data.url || '/confessions/';
+                const title = data.title || 'New confession activity';
+                const body = data.body ? ` — ${data.body}` : '';
+                showGlobalToast(`${title}${body}`, url);
+            });
+
             userChannel.bind('new_connection', (data) => {
                 const matchBadge = document.getElementById('match-badge');
                 if (matchBadge) matchBadge.style.display = 'block';

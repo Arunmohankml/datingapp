@@ -11,12 +11,80 @@ from django.test import Client, TestCase, override_settings
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
-from .models import Community, CommunityMember, CommunityMessage, CommunityMute, CommunityReadStatus, Conversation, DailyMatchAction, DailyQuestion, FCMToken, KnotComment, KnotPost, KnotPreference, KnotReport, KnotVote, MatchRequest, Message, Profile, QuestionOption
+from .models import Community, CommunityMember, CommunityMessage, CommunityMute, CommunityReadStatus, Confession, ConfessionComment, Conversation, DailyMatchAction, DailyQuestion, FCMToken, KnotComment, KnotPost, KnotPreference, KnotReport, KnotVote, MatchRequest, Message, Profile, QuestionOption
 
 
 class TestDatabaseSafetyTests(TestCase):
     def test_test_runner_uses_sqlite_not_supabase(self):
         self.assertEqual(connection.vendor, 'sqlite')
+
+
+class ConfessionReplyNotificationTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user('confession-owner', password='testpass123')
+        self.commenter = User.objects.create_user('confession-commenter', password='testpass123')
+        Profile.objects.create(user=self.owner, name='Confession Owner')
+        Profile.objects.create(user=self.commenter, name='Helpful Student')
+        self.confession = Confession.objects.create(
+            user=self.owner,
+            content='Is anyone else feeling this way?',
+            poster_fingerprint='owner-device',
+        )
+
+    @patch('home.views.broadcast_event')
+    @patch('home.views.send_push_to_user')
+    def test_reply_notifies_confession_owner_with_push_and_foreground_toast(self, push, broadcast):
+        self.client.force_login(self.commenter)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                f'/confessions/{self.confession.id}/comment/',
+                {
+                    'content': 'You are definitely not alone.',
+                    'is_anonymous': 'true',
+                    'fingerprint': 'commenter-device',
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        comment = ConfessionComment.objects.get(confession=self.confession)
+        expected_url = f'/confessions/{self.confession.id}/#comment-{comment.id}'
+        push.assert_called_once_with(
+            self.owner,
+            'New reply to your confession',
+            'Someone anonymously replied: You are definitely not alone.',
+            expected_url,
+        )
+        broadcast.assert_called_once()
+        self.assertEqual(broadcast.call_args.args[0], f'chat_{self.owner.id}')
+        self.assertEqual(broadcast.call_args.args[1], 'confession_activity')
+        self.assertEqual(broadcast.call_args.args[2]['comment_id'], comment.id)
+
+    @patch('home.views.broadcast_event')
+    @patch('home.views.send_push_to_user')
+    def test_owner_comment_does_not_notify_owner(self, push, broadcast):
+        self.client.force_login(self.owner)
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                f'/confessions/{self.confession.id}/comment/',
+                {
+                    'content': 'Adding some context.',
+                    'is_anonymous': 'true',
+                    'fingerprint': 'owner-device',
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        push.assert_not_called()
+        broadcast.assert_not_called()
+
+    def test_base_page_listens_for_foreground_confession_activity(self):
+        self.client.force_login(self.owner)
+
+        response = self.client.get(f'/confessions/{self.confession.id}/')
+
+        self.assertContains(response, "userChannel.bind('confession_activity'")
 
 
 class EgressRegressionTests(TestCase):

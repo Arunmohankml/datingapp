@@ -677,7 +677,7 @@
         </div>
 
         {% for comment in confession.comments.all %}
-        <div class="comment-item">
+        <div class="comment-item" id="comment-{{ comment.id }}">
             <img src="{{ comment.display_pic }}" alt="Avatar" class="comment-avatar">
             <div class="comment-body">
                 <div class="comment-head">
