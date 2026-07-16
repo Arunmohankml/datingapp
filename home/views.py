@@ -2299,7 +2299,7 @@ def create_confession(request):
     if not is_admin:
         allowed, wait = check_rate_limit(fingerprint, ip)
         if not allowed:
-            mins = max(1, wait // 60)
+            mins = max(1, math.ceil(wait / 60))
             messages.warning(
                 request,
                 f"You\'re posting too fast. Please try again in about {mins} minute(s)."
@@ -5666,6 +5666,46 @@ def _serialize_community_message(message):
     }
 
 
+def _group_community_messages(messages):
+    """Group adjacent chat messages exactly as the live client does."""
+    groups = []
+    last_sender_id = None
+
+    for message in messages:
+        message_date = timezone.localdate(message.timestamp)
+        if message.kind != CommunityMessage.KIND_MESSAGE:
+            groups.append({
+                'is_system': True,
+                'date': message_date,
+                'message': message,
+            })
+            last_sender_id = None
+            continue
+
+        previous_group = groups[-1] if groups else None
+        can_join_previous = (
+            previous_group
+            and not previous_group['is_system']
+            and previous_group['sender_id'] == message.sender_id
+            and previous_group['date'] == message_date
+        )
+        if can_join_previous:
+            previous_group['messages'].append(message)
+            continue
+
+        groups.append({
+            'is_system': False,
+            'date': message_date,
+            'sender': message.sender,
+            'sender_id': message.sender_id,
+            'sender_changed': last_sender_id is not None and last_sender_id != message.sender_id,
+            'messages': [message],
+        })
+        last_sender_id = message.sender_id
+
+    return groups
+
+
 @login_required
 def community_list(request):
     _seed_communities()
@@ -5815,6 +5855,7 @@ def community_chat(request, slug):
     if community.chat_cleared_at:
         chat_messages_qs = chat_messages_qs.filter(timestamp__gt=community.chat_cleared_at)
     chat_messages = list(reversed(list(chat_messages_qs[:200])))
+    chat_message_groups = _group_community_messages(chat_messages)
 
     today = timezone.now().date()
     yesterday = today - timedelta(days=1)
@@ -5822,6 +5863,7 @@ def community_chat(request, slug):
     return render(request, 'community_chat.html', {
         'community': community,
         'chat_messages': chat_messages,
+        'chat_message_groups': chat_message_groups,
         'today': today,
         'yesterday': yesterday,
         'is_admin': is_staff_check(request.user),

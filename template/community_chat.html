@@ -403,34 +403,37 @@
     </div>
 
     <div class="chat-messages" id="chat-box">
-        {% if chat_messages %}
-            {% for msg in chat_messages %}
-                        {% ifchanged msg.timestamp|date:"Y-m-d" %}
-                        <div class="chat-date-divider" data-date="{{ msg.timestamp|date:'Y-m-d' }}">
+        {% if chat_message_groups %}
+            {% for group in chat_message_groups %}
+                        {% ifchanged group.date %}
+                        <div class="chat-date-divider" data-date="{{ group.date|date:'Y-m-d' }}">
                             <div class="chat-date-pill">
-                                {% if msg.timestamp|date:"Y-m-d" == today|date:"Y-m-d" %}Today
-                                {% elif msg.timestamp|date:"Y-m-d" == yesterday|date:"Y-m-d" %}Yesterday
-                                {% else %}{{ msg.timestamp|date:"F j, Y" }}{% endif %}
+                                {% if group.date|date:"Y-m-d" == today|date:"Y-m-d" %}Today
+                                {% elif group.date|date:"Y-m-d" == yesterday|date:"Y-m-d" %}Yesterday
+                                {% else %}{{ group.date|date:"F j, Y" }}{% endif %}
                             </div>
                         </div>
                         {% endifchanged %}
 
-                        {% if msg.kind != 'message' %}
+                        {% if group.is_system %}
+                        {% with msg=group.message %}
                         <div class="system-message" data-id="{{ msg.id }}" data-date="{{ msg.timestamp|date:'Y-m-d' }}">
                             {% if community.is_anonymous %}A member{% else %}{{ msg.sender.profile.name|default:msg.sender.username }}{% endif %}
                             {% if msg.kind == 'join' %}joined{% else %}left{% endif %} the community
                         </div>
+                        {% endwith %}
                         {% else %}
-                        <div class="message-group {% if msg.sender == request.user %}sent{% else %}received{% endif %} sender-changed" data-sender="{{ msg.sender.id }}">
-                            {% if msg.sender != request.user and not community.is_anonymous %}
-                            <a href="{% url 'view_profile' msg.sender.id %}">
-                                <img src="{{ msg.sender.profile.get_profile_pic_thumb_url }}" alt="" class="msg-avatar" loading="lazy" decoding="async" width="28" height="28">
+                        <div class="message-group {% if group.sender == request.user %}sent{% else %}received{% endif %}{% if group.sender_changed %} sender-changed{% endif %}" data-sender="{{ group.sender_id }}">
+                            {% if group.sender != request.user and not community.is_anonymous %}
+                            <a href="{% url 'view_profile' group.sender_id %}">
+                                <img src="{{ group.sender.profile.get_profile_pic_thumb_url }}" alt="" class="msg-avatar" loading="lazy" decoding="async" width="28" height="28">
                             </a>
                             {% endif %}
                             <div class="msg-bubbles">
-                                <div class="message {% if msg.sender == request.user %}sent{% else %}received{% endif %} solo"
+                                {% for msg in group.messages %}
+                                <div class="message {% if group.sender == request.user %}sent{% else %}received{% endif %} {% if group.messages|length == 1 %}solo{% elif forloop.first %}first{% elif forloop.last %}last{% else %}middle{% endif %}"
                                     data-id="{{ msg.id }}" data-date="{{ msg.timestamp|date:'Y-m-d' }}" data-sender="{{ msg.sender.id }}" data-full-date="{{ msg.timestamp|date:'c' }}">
-                                    {% if msg.sender != request.user %}
+                                    {% if forloop.first and group.sender != request.user %}
                                         {% if community.is_anonymous %}
                                         <div class="msg-name-in-bubble" style="color:#64748b;cursor:default;">Anonymous</div>
                                         {% else %}
@@ -450,6 +453,7 @@
                                         <span class="timestamp">{{ msg.timestamp|time:"H:i" }}</span>
                                     </div>
                                 </div>
+                                {% endfor %}
                             </div>
                         </div>
                         {% endif %}
@@ -503,6 +507,7 @@ document.querySelectorAll('.message[data-id], .system-message[data-id]').forEach
     const id = parseInt(el.dataset.id);
     if (id) renderedIds.add(id);
     if (el.classList.contains('message')) lastSenderInChat = el.dataset.sender;
+    else if (el.classList.contains('system-message')) lastSenderInChat = null;
 });
 
 function escapeHtml(value) {
@@ -637,8 +642,11 @@ function appendMessage(msg) {
             const bubbles = lastGroup.querySelector('.msg-bubbles');
             if (bubbles) {
                 const prevBubbles = bubbles.querySelectorAll('.message');
-                prevBubbles.forEach(b => { b.classList.remove('last','solo'); b.classList.add('middle'); });
-                bubbles.insertAdjacentHTML('beforeend', buildMessageHtml(msg, 'middle'));
+                prevBubbles.forEach((bubble, index) => {
+                    bubble.classList.remove('first', 'middle', 'last', 'solo');
+                    bubble.classList.add(index === 0 ? 'first' : 'middle');
+                });
+                bubbles.insertAdjacentHTML('beforeend', buildMessageHtml(msg, 'last'));
                 bindMessageEvents(bubbles.lastElementChild);
             }
         } else {

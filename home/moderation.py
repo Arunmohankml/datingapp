@@ -206,8 +206,8 @@ def check_name_mention(text: str) -> bool:
 # ─────────────────────────────────────────────────────────────────────────────
 # 4. RATE LIMITING
 # ─────────────────────────────────────────────────────────────────────────────
-RATE_LIMIT_COUNT = 3       # max confessions
-RATE_LIMIT_MINUTES = 10    # per N minutes
+RATE_LIMIT_COUNT = 1       # max confessions
+RATE_LIMIT_MINUTES = 5     # per N minutes
 
 
 def check_rate_limit(fingerprint: str, ip: str = "") -> tuple:

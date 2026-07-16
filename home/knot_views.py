@@ -36,7 +36,7 @@ CONTROL_CHARS = re.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]')
 RICH_TEXT_TAGS = {'p', 'div', 'br', 'strong', 'em', 'span', 'ul', 'ol', 'li', 'h2', 'a', 'img'}
 COMMENT_MAX_LENGTH = 1200
 KNOT_MAX_IMAGES = 4
-KNOT_CREATE_COOLDOWN = timedelta(hours=1)
+KNOT_CREATE_COOLDOWN = timedelta(minutes=5)
 KNOT_IMAGE_TARGET_BYTES = 150 * 1024
 KNOT_IMAGE_MAX_DIMENSION = 1280
 
@@ -466,7 +466,7 @@ def knot_form(request, post_id=None):
             campus = campus_record['name']
         if not post:
             if _rate_limited(KnotPost, request.user, timezone.now() - KNOT_CREATE_COOLDOWN, 1):
-                return _error('You can post only one Knot per hour. Try again later.', 429)
+                return _error('You can post only one Knot every 5 minutes. Try again later.', 429)
             if not location_supplied and not college and not campus:
                 profile_college, profile_campus = _profile_snapshot(request.user)
                 college, campus = profile_college, profile_campus

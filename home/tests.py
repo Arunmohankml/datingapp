@@ -6,12 +6,13 @@ from unittest.mock import patch
 from PIL import Image
 from django.db import connection
 from django.contrib.auth.models import User
+from django.contrib.messages import get_messages
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
-from .models import Community, CommunityMember, CommunityMessage, CommunityMute, CommunityReadStatus, Confession, ConfessionComment, Conversation, DailyMatchAction, DailyQuestion, FCMToken, KnotComment, KnotPost, KnotPreference, KnotReport, KnotVote, MatchRequest, Message, Option, Profile, Question, QuestionOption, UserAnswer
+from .models import Community, CommunityMember, CommunityMessage, CommunityMute, CommunityReadStatus, Confession, ConfessionComment, ConfessionRateLimit, Conversation, DailyMatchAction, DailyQuestion, FCMToken, KnotComment, KnotPost, KnotPreference, KnotReport, KnotVote, MatchRequest, Message, Option, Profile, Question, QuestionOption, UserAnswer
 
 
 class QuizQuestionPriorityTests(TestCase):
@@ -156,6 +157,34 @@ class ConfessionReplyNotificationTests(TestCase):
         response = self.client.get(f'/confessions/{self.confession.id}/')
 
         self.assertContains(response, "userChannel.bind('confession_activity'")
+
+
+class ConfessionPostingCooldownTests(TestCase):
+    def test_confession_allows_one_post_every_five_minutes(self):
+        payload = {
+            'content': 'A first unique campus confession',
+            'is_anonymous': 'true',
+            'fingerprint': 'five-minute-device',
+        }
+        first = self.client.post('/confessions/create/', payload)
+
+        payload['content'] = 'A second different campus confession'
+        blocked = self.client.post('/confessions/create/', payload)
+
+        self.assertEqual(first.status_code, 302)
+        self.assertEqual(blocked.status_code, 302)
+        self.assertEqual(Confession.objects.filter(poster_fingerprint='five-minute-device').count(), 1)
+        warning_messages = [str(message) for message in get_messages(blocked.wsgi_request)]
+        self.assertTrue(any('5 minute(s)' in message for message in warning_messages))
+
+        ConfessionRateLimit.objects.filter(identifier='five-minute-device').update(
+            submitted_at=timezone.now() - timedelta(minutes=5, seconds=1)
+        )
+        payload['content'] = 'A third unique confession after cooldown'
+        allowed = self.client.post('/confessions/create/', payload)
+
+        self.assertEqual(allowed.status_code, 302)
+        self.assertEqual(Confession.objects.filter(poster_fingerprint='five-minute-device').count(), 2)
 
 
 class EgressRegressionTests(TestCase):
@@ -347,6 +376,66 @@ class CommunityMembershipTests(TestCase):
         firebase_app.assert_called_once()
         send_multicast.assert_called_once()
         self.assertEqual(send_multicast.call_args.args[0].tokens, ['sender-token'])
+
+    def test_refresh_groups_consecutive_messages_from_same_sender(self):
+        CommunityMember.objects.bulk_create([
+            CommunityMember(user=self.user, community=self.community),
+            CommunityMember(user=self.sender, community=self.community),
+        ])
+        CommunityMessage.objects.create(
+            community=self.community,
+            sender=self.sender,
+            text='First consecutive message',
+        )
+        CommunityMessage.objects.create(
+            community=self.community,
+            sender=self.sender,
+            text='Second consecutive message',
+        )
+
+        response = self.client.get(f'/community/{self.community.slug}/')
+
+        self.assertEqual(response.status_code, 200)
+        html = response.content.decode()
+        rendered_chat = html.split('<div class="chat-messages" id="chat-box">', 1)[1].split(
+            '<div class="chat-input-area">', 1
+        )[0]
+        self.assertEqual(rendered_chat.count('class="message-group received'), 1)
+        self.assertEqual(rendered_chat.count('class="msg-avatar"'), 1)
+        self.assertEqual(rendered_chat.count('class="msg-name-in-bubble"'), 1)
+        self.assertEqual(rendered_chat.count('class="message received first"'), 1)
+        self.assertEqual(rendered_chat.count('class="message received last"'), 1)
+        self.assertNotIn('class="message received solo"', rendered_chat)
+
+    def test_system_event_breaks_consecutive_message_group(self):
+        CommunityMember.objects.bulk_create([
+            CommunityMember(user=self.user, community=self.community),
+            CommunityMember(user=self.sender, community=self.community),
+        ])
+        CommunityMessage.objects.create(
+            community=self.community,
+            sender=self.sender,
+            text='Message before event',
+        )
+        CommunityMessage.objects.create(
+            community=self.community,
+            sender=self.user,
+            kind=CommunityMessage.KIND_JOIN,
+        )
+        CommunityMessage.objects.create(
+            community=self.community,
+            sender=self.sender,
+            text='Message after event',
+        )
+
+        response = self.client.get(f'/community/{self.community.slug}/')
+        html = response.content.decode()
+        rendered_chat = html.split('<div class="chat-messages" id="chat-box">', 1)[1].split(
+            '<div class="chat-input-area">', 1
+        )[0]
+
+        self.assertEqual(rendered_chat.count('class="message-group received'), 2)
+        self.assertEqual(rendered_chat.count('class="system-message"'), 1)
 
     def test_unjoined_communities_do_not_contribute_unread_queries_or_counts(self):
         joined = Community.objects.create(name='Joined', slug='joined')
@@ -896,7 +985,7 @@ class KnotsFeatureTests(TestCase):
         self.assertIn('up to 4 images', response.json()['error'])
         self.assertFalse(KnotPost.objects.filter(title='Too many images').exists())
 
-    def test_create_allows_only_one_knot_per_hour(self):
+    def test_create_allows_one_knot_every_five_minutes(self):
         recent = KnotPost.objects.create(
             user=self.other,
             title='Recent Knot',
@@ -914,10 +1003,12 @@ class KnotsFeatureTests(TestCase):
         })
 
         self.assertEqual(blocked.status_code, 429)
-        self.assertIn('one Knot per hour', blocked.json()['error'])
+        self.assertIn('one Knot every 5 minutes', blocked.json()['error'])
         self.assertFalse(KnotPost.objects.filter(title='Second Knot').exists())
 
-        KnotPost.objects.filter(id=recent.id).update(created_at=timezone.now() - timedelta(hours=1, minutes=1))
+        KnotPost.objects.filter(id=recent.id).update(
+            created_at=timezone.now() - timedelta(minutes=5, seconds=1)
+        )
         allowed = self._post_json('/knots/create/', {
             'title': 'After Cooldown',
             'content': 'This one is allowed now.',
@@ -926,6 +1017,33 @@ class KnotsFeatureTests(TestCase):
         })
 
         self.assertEqual(allowed.status_code, 201)
+
+    def test_feed_paginates_twelve_knots_per_page(self):
+        KnotPost.objects.bulk_create([
+            KnotPost(
+                user=self.owner,
+                title=f'Paginated Knot {index:02d}',
+                content=f'Pagination body {index}',
+                college='SRM',
+                campus='SRM Kattankulathur (KTR)',
+            )
+            for index in range(24)
+        ])
+        self.client.force_login(self.owner)
+
+        first_page = self.client.get('/knots/?page=1&sort=newest&filters=1')
+        second_page = self.client.get('/knots/?page=2&sort=newest&filters=1')
+        third_page = self.client.get('/knots/?page=3&sort=newest&filters=1')
+
+        self.assertEqual(len(first_page.context['posts']), 12)
+        self.assertEqual(len(second_page.context['posts']), 12)
+        self.assertEqual(len(third_page.context['posts']), 1)
+        self.assertTrue(first_page.context['posts'].has_next())
+        self.assertTrue(second_page.context['posts'].has_previous())
+        self.assertContains(first_page, 'Load more')
+        first_ids = {post.id for post in first_page.context['posts']}
+        second_ids = {post.id for post in second_page.context['posts']}
+        self.assertFalse(first_ids & second_ids)
 
     def test_rich_content_caps_blank_lines_and_repeated_spaces(self):
         self.client.force_login(self.owner)
