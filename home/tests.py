@@ -1439,6 +1439,67 @@ class DailyMatchActionLimitTests(TestCase):
         self.assertEqual(DailyMatchAction.objects.filter(user=actor).count(), 13)
 
 
+class ProfilePhotoValidationTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('photo-user', password='testpass123')
+        self.profile = Profile.objects.create(
+            user=self.user,
+            name='Photo User',
+            profile_pic='https://example.com/original.jpg',
+        )
+        self.client.force_login(self.user)
+
+    @staticmethod
+    def _image_upload(filename):
+        image = BytesIO()
+        Image.new('RGB', (20, 20), color=(30, 80, 120)).save(image, format='JPEG')
+        return SimpleUploadedFile(filename, image.getvalue(), content_type='image/jpeg')
+
+    @patch('home.views.upload_to_cloudinary', return_value='https://example.com/should-not-upload.jpg')
+    def test_screenshot_filename_is_rejected_before_cloud_upload(self, upload):
+        for filename in ('Screenshot_2026-07-16.jpg', 'Screenshot(1).jpg', 'meme123.jpg'):
+            with self.subTest(filename=filename):
+                response = self.client.post(
+                    '/profile/edit/',
+                    {
+                        'update_pfp_instant': '1',
+                        'profile_pic_file': self._image_upload(filename),
+                    },
+                )
+                self.assertRedirects(response, '/profile/edit/')
+
+        upload.assert_not_called()
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.profile_pic, 'https://example.com/original.jpg')
+        feedback = ' '.join(str(message) for message in get_messages(response.wsgi_request))
+        self.assertIn("Screenshots and memes aren't allowed", feedback)
+
+    @patch('home.views.upload_to_cloudinary', return_value='https://example.com/new-photo.jpg')
+    def test_regular_photo_filename_is_uploaded(self, upload):
+        response = self.client.post(
+            '/profile/edit/',
+            {
+                'update_pfp_instant': '1',
+                'profile_pic_file': self._image_upload('portrait.jpg'),
+            },
+        )
+
+        self.assertRedirects(response, '/profile/edit/')
+        upload.assert_called_once()
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.profile_pic, 'https://example.com/new-photo.jpg')
+
+    def test_browser_validation_accepts_any_detected_face_body_or_hand(self):
+        response = self.client.get('/profile/edit/')
+        html = response.content.decode()
+
+        self.assertContains(response, 'function isDisallowedProfilePhotoFilename')
+        self.assertContains(response, 'hand: { enabled: true }')
+        self.assertNotIn('aspectRatio > 1.85', html)
+        self.assertNotIn('isFaceLargeEnough', html)
+        self.assertNotIn('isBodyLargeEnough', html)
+
+
 @override_settings(ADMIN_EMAILS=['admin-profile@test.local'])
 class AdminProfileModerationTests(TestCase):
     def setUp(self):

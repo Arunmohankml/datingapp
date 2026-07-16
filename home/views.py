@@ -15,6 +15,7 @@ from django.http import JsonResponse, HttpResponse, Http404
 from django.core.management import call_command
 import json
 import os
+import re
 from urllib.parse import quote
 import requests
 import firebase_admin
@@ -2040,6 +2041,22 @@ def toggle_discoverable(request):
         return redirect(referer)
     return redirect('home')
 
+PROFILE_PHOTO_FILENAME_REJECTION = (
+    "Screenshots and memes aren't allowed. Please use a real photo to keep the community genuine."
+)
+
+
+def _profile_photo_filename_is_disallowed(uploaded_file):
+    """Reject obvious screenshot/meme uploads without judging the image dimensions."""
+    filename = os.path.basename(getattr(uploaded_file, 'name', '') or '').lower()
+    screenshot_pattern = r'screen[\s._-]*(?:shot|capture)(?=$|[^a-z])'
+    screencap_pattern = r'screen[\s._-]*cap(?=$|[^a-z])'
+    meme_pattern = r'(?:^|[^a-z])memes?(?=$|[^a-z])'
+    return bool(re.search(screenshot_pattern, filename)
+                or re.search(screencap_pattern, filename)
+                or re.search(meme_pattern, filename))
+
+
 @login_required
 def edit_profile(request):
     profile = get_object_or_404(Profile, user=request.user)
@@ -2055,6 +2072,9 @@ def edit_profile(request):
                     # Handle Cloudinary Upload
                     if 'profile_pic_file' in request.FILES:
                         submitted_pfp = request.FILES['profile_pic_file']
+                        if _profile_photo_filename_is_disallowed(submitted_pfp):
+                            messages.error(request, PROFILE_PHOTO_FILENAME_REJECTION)
+                            return redirect('edit_profile')
                         img_url = upload_to_cloudinary(submitted_pfp, folder="srm_match/profile_pics")
                         if img_url:
                             updated_profile.profile_pic = img_url
@@ -2087,7 +2107,11 @@ def edit_profile(request):
             # Handle Instant PFP Upload
             elif 'update_pfp_instant' in request.POST:
                 if 'profile_pic_file' in request.FILES:
-                    img_url = upload_to_cloudinary(request.FILES['profile_pic_file'], folder="srm_match/profile_pics")
+                    submitted_pfp = request.FILES['profile_pic_file']
+                    if _profile_photo_filename_is_disallowed(submitted_pfp):
+                        messages.error(request, PROFILE_PHOTO_FILENAME_REJECTION)
+                        return redirect('edit_profile')
+                    img_url = upload_to_cloudinary(submitted_pfp, folder="srm_match/profile_pics")
                     if img_url:
                         profile.profile_pic = img_url
                         profile.save()
@@ -3674,7 +3698,11 @@ def admin_edit_user_profile(request, user_id):
                 
                 # Manual file handling for admin
                 if 'profile_pic_file' in request.FILES:
-                    img_url = upload_to_cloudinary(request.FILES['profile_pic_file'], folder="srm_match/profile_pics")
+                    submitted_pfp = request.FILES['profile_pic_file']
+                    if _profile_photo_filename_is_disallowed(submitted_pfp):
+                        messages.error(request, PROFILE_PHOTO_FILENAME_REJECTION)
+                        return redirect('admin_edit_user_profile', user_id=user_id)
+                    img_url = upload_to_cloudinary(submitted_pfp, folder="srm_match/profile_pics")
                     if img_url: updated_profile.profile_pic = img_url
                 
                 if 'verification_image_file' in request.FILES:
@@ -3709,7 +3737,11 @@ def admin_edit_user_profile(request, user_id):
             
         elif 'update_pfp_instant' in request.POST:
             if 'profile_pic_file' in request.FILES:
-                img_url = upload_to_cloudinary(request.FILES['profile_pic_file'], folder="srm_match/profile_pics")
+                submitted_pfp = request.FILES['profile_pic_file']
+                if _profile_photo_filename_is_disallowed(submitted_pfp):
+                    messages.error(request, PROFILE_PHOTO_FILENAME_REJECTION)
+                    return redirect('admin_edit_user_profile', user_id=user_id)
+                img_url = upload_to_cloudinary(submitted_pfp, folder="srm_match/profile_pics")
                 if img_url:
                     profile.profile_pic = img_url
                     profile.save()

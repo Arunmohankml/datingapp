@@ -1498,7 +1498,7 @@
       gender: { enabled: false }
     },
     body: { enabled: true },
-    hand: { enabled: false },
+    hand: { enabled: true },
     object: { enabled: false },
     gesture: { enabled: false },
     iris: { enabled: false },
@@ -2232,6 +2232,15 @@
   const pfpInput = document.getElementById('id_pfp_instant');
   const pfpForm = document.getElementById('pfp-instant-form');
   const isAdminEdit = {{ is_admin_editing|yesno:"true,false" }};
+  const profilePhotoFilenameRejection = "Screenshots and memes aren't allowed. Please use a real photo to keep the community genuine.";
+
+  function isDisallowedProfilePhotoFilename(filename) {
+    const normalized = (filename || '').toLowerCase();
+    const isScreenshot = /screen[\s._-]*(?:shot|capture)(?=$|[^a-z])/i.test(normalized)
+      || /screen[\s._-]*cap(?=$|[^a-z])/i.test(normalized);
+    const isMeme = /(?:^|[^a-z])memes?(?=$|[^a-z])/i.test(normalized);
+    return isScreenshot || isMeme;
+  }
 
   async function checkHumanPhoto(imageElement) {
     const tempCanvas = document.createElement('canvas');
@@ -2244,65 +2253,25 @@
     const tempCtx = tempCanvas.getContext('2d');
     tempCtx.drawImage(imageElement, 0, 0, width, height);
 
-    // 1. Aspect Ratio check: reject extremely tall or wide images typical of mobile/desktop screenshots
-    const aspectRatio = height / width;
-    if (aspectRatio > 1.85 || aspectRatio < 0.54) {
-        console.log("Rejected due to screenshot-like aspect ratio:", aspectRatio);
-        return false;
-    }
-
     const result = await human.detect(tempCanvas);
 
     const faces = result.face || [];
     const bodies = result.body || [];
+    const hands = result.hand || [];
 
-    const FACE_MIN_SCORE = 0.25;  // face confidence threshold
-    const BODY_MIN_SCORE = 0.30;  // body/pose confidence threshold
-
-    const validFaces = faces.filter(f => (f.score ?? f.faceScore ?? 0) >= FACE_MIN_SCORE);
-    const validBodies = bodies.filter(b => (b.score ?? 0) >= BODY_MIN_SCORE);
-
-    if (validFaces.length === 0 && validBodies.length === 0) {
-        console.log("Rejected: No face or body detected with sufficient confidence.");
-        return false;
-    }
-
-    // 2. Coverage check: In screenshots containing photos, the detected person occupies a tiny fraction of the canvas.
-    // In real photos, the face or body covers a significant portion of the image.
-    const isFaceLargeEnough = validFaces.some(f => {
-        const box = f.box; // [x, y, w, h]
-        const boxW = box[2];
-        const boxH = box[3];
-        const normW = boxW > 1 ? boxW / width : boxW;
-        const normH = boxH > 1 ? boxH / height : boxH;
-        const normArea = normW * normH;
-        // Face must cover at least 12% of the width and 1.5% of the total area
-        return normW >= 0.12 && normArea >= 0.015;
-    });
-
-    const isBodyLargeEnough = validBodies.some(b => {
-        const box = b.box;
-        const boxW = box[2];
-        const boxH = box[3];
-        const normW = boxW > 1 ? boxW / width : boxW;
-        const normH = boxH > 1 ? boxH / height : boxH;
-        const normArea = normW * normH;
-        // Body must cover at least 8% of the total area or at least 22% of the dimensions
-        return normArea >= 0.08 || (normW >= 0.22 && normH >= 0.22);
-    });
-
-    if (!isFaceLargeEnough && !isBodyLargeEnough) {
-        console.log("Rejected: Face/body detected but occupies too little of the canvas (typical of screenshots).");
-        return false;
-    }
-
-    return true;
+    return faces.length > 0 || bodies.length > 0 || hands.length > 0;
   }
 
   if (pfpInput) {
     pfpInput.addEventListener('change', async function() {
       if (!this.files || !this.files[0]) return;
       const file = this.files[0];
+
+      if (isDisallowedProfilePhotoFilename(file.name)) {
+        this.value = '';
+        customAlert(profilePhotoFilenameRejection, 'Invalid Photo');
+        return;
+      }
       showOverlay('Initialising AI model…');
 
       async function submitCompressed() {
@@ -2370,10 +2339,10 @@
         if (!isHuman) {
           hideOverlay();
           if (typeof showGlobalToast === 'function') {
-            showGlobalToast('Screenshot or invalid photo detected', null);
+            showGlobalToast('No person detected in this photo', null);
           }
           this.value = '';
-          customAlert("Screenshots and downloaded images are not allowed. Please upload a real photo where a person (or body part) is clearly visible.", 'Invalid Photo');
+          customAlert("Please upload a photo containing a face, body, or visible body part.", 'No Person Detected');
           return;
         }
 
