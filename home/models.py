@@ -172,6 +172,7 @@ class Profile(models.Model):
 
 class Question(models.Model):
     text = models.CharField(max_length=255)
+    is_priority = models.BooleanField(default=False, db_index=True)
 
     def __str__(self):
         return self.text

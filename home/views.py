@@ -630,7 +630,8 @@ def match_feed(request):
             "has_age_pref": profile.pref_age_min is not None and profile.pref_age_max is not None,
         })
 
-    question = Question.objects.exclude(id__in=answered_ids).first()
+    unanswered_questions = _get_unanswered_quiz_questions(user, 1)
+    question = unanswered_questions[0] if unanswered_questions else None
 
     if not question:
         # DISCOVERY MODE: Fetch and Rank All Potential Matches
@@ -2611,12 +2612,74 @@ def answer_question(request, question_id):
 
 # ---------------- FAST QUIZ API ----------------
 
+NEW_USER_PRIORITY_ANSWER_LIMIT = 50
+PRIORITY_QUESTION_ROLLOUT_AT = timezone.make_aware(datetime(2026, 7, 16))
+
+
+def _get_unanswered_quiz_questions(user, limit, *, prefetch_options=False):
+    """Return a stable mix of imported priority questions and the original bank.
+
+    During a user's first 50 answers, half of each normal quiz batch comes from
+    the newly imported set. The other half remains from the original bank so
+    answer overlap with existing users is preserved for matching. After 50
+    answers, questions follow the existing ID order exactly as before.
+    """
+    if limit <= 0:
+        return []
+
+    answers = UserAnswer.objects.filter(user=user)
+    answered_ids = answers.values_list('question_id', flat=True)
+    unanswered = Question.objects.exclude(id__in=answered_ids)
+    answered_count = answers.count()
+
+    is_new_account = user.date_joined >= PRIORITY_QUESTION_ROLLOUT_AT
+    if not is_new_account or answered_count >= NEW_USER_PRIORITY_ANSWER_LIMIT:
+        questions = unanswered.order_by('id')[:limit]
+        if prefetch_options:
+            questions = questions.prefetch_related('options')
+        return list(questions)
+
+    # For a one-question fallback, alternate priority/original questions.
+    # Regular 6/10-question batches receive an even 50/50 mix.
+    priority_target = limit // 2
+    if limit % 2 and answered_count % 2 == 0:
+        priority_target += 1
+    original_target = limit - priority_target
+
+    priority_ids = list(
+        unanswered.filter(is_priority=True)
+        .order_by('id')
+        .values_list('id', flat=True)[:priority_target]
+    )
+    original_ids = list(
+        unanswered.filter(is_priority=False)
+        .order_by('id')
+        .values_list('id', flat=True)[:original_target]
+    )
+    selected_ids = priority_ids + original_ids
+
+    if len(selected_ids) < limit:
+        selected_ids.extend(
+            unanswered.exclude(id__in=selected_ids)
+            .order_by('id')
+            .values_list('id', flat=True)[:limit - len(selected_ids)]
+        )
+
+    questions = Question.objects.filter(id__in=selected_ids)
+    if prefetch_options:
+        questions = questions.prefetch_related('options')
+    questions_by_id = {question.id: question for question in questions}
+    return [questions_by_id[question_id] for question_id in selected_ids if question_id in questions_by_id]
+
 @login_required
 def get_quiz_batch(request):
     """Returns unanswered questions for the Fast Fire quiz (6 for girls, 10 for guys)."""
-    answered_ids = UserAnswer.objects.filter(user=request.user).values_list('question_id', flat=True)
     limit = quiz_round_size(request.user)
-    questions = Question.objects.prefetch_related('options').exclude(id__in=answered_ids)[:limit]
+    questions = _get_unanswered_quiz_questions(
+        request.user,
+        limit,
+        prefetch_options=True,
+    )
     
     data = []
     for q in questions:
@@ -2643,15 +2706,25 @@ def save_quiz_batch(request):
             questions = {q.id: q for q in Question.objects.filter(id__in=q_ids)}
             options = {o.id: o for o in Option.objects.filter(id__in=o_ids)}
 
+            answers_to_create = []
+            seen_question_ids = set()
             for ans in answers:
                 question_id = ans.get('question_id')
                 option_id = ans.get('option_id')
-                if question_id and option_id and question_id in questions and option_id in options:
-                    UserAnswer.objects.get_or_create(
+                if (
+                    question_id and option_id
+                    and question_id in questions
+                    and option_id in options
+                    and question_id not in seen_question_ids
+                ):
+                    answers_to_create.append(UserAnswer(
                         user=request.user,
                         question=questions[question_id],
-                        defaults={'option': options[option_id]}
-                    )
+                        option=options[option_id],
+                    ))
+                    seen_question_ids.add(question_id)
+            if answers_to_create:
+                UserAnswer.objects.bulk_create(answers_to_create, ignore_conflicts=True)
             
             # Reset rounds_shown to trigger 'check_match' redirect on next home load
             ans_count = UserAnswer.objects.filter(user=request.user).count()

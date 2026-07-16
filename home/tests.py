@@ -1,6 +1,6 @@
 import json
 from io import BytesIO
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from PIL import Image
@@ -11,7 +11,78 @@ from django.test import Client, TestCase, override_settings
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
-from .models import Community, CommunityMember, CommunityMessage, CommunityMute, CommunityReadStatus, Confession, ConfessionComment, Conversation, DailyMatchAction, DailyQuestion, FCMToken, KnotComment, KnotPost, KnotPreference, KnotReport, KnotVote, MatchRequest, Message, Profile, QuestionOption
+from .models import Community, CommunityMember, CommunityMessage, CommunityMute, CommunityReadStatus, Confession, ConfessionComment, Conversation, DailyMatchAction, DailyQuestion, FCMToken, KnotComment, KnotPost, KnotPreference, KnotReport, KnotVote, MatchRequest, Message, Option, Profile, Question, QuestionOption, UserAnswer
+
+
+class QuizQuestionPriorityTests(TestCase):
+    def setUp(self):
+        Question.objects.all().delete()
+        self.user = User.objects.create_user('quiz-priority-user', password='testpass123')
+        Profile.objects.create(user=self.user, name='Quiz User', gender='male')
+        self.client.force_login(self.user)
+
+        self.original_questions = self._questions('Original', 10, is_priority=False)
+        self.priority_questions = self._questions('Imported', 10, is_priority=True)
+
+    @staticmethod
+    def _questions(prefix, count, *, is_priority):
+        questions = []
+        for index in range(count):
+            question = Question.objects.create(
+                text=f'{prefix} question {index}',
+                is_priority=is_priority,
+            )
+            Option.objects.create(question=question, text='First option')
+            Option.objects.create(question=question, text='Second option')
+            questions.append(question)
+        return questions
+
+    def test_new_user_batch_mixes_imported_and_original_questions(self):
+        response = self.client.get('/api/quiz/batch/')
+
+        self.assertEqual(response.status_code, 200)
+        question_ids = [question['id'] for question in response.json()['questions']]
+        self.assertEqual(question_ids[:5], [question.id for question in self.priority_questions[:5]])
+        self.assertEqual(question_ids[5:], [question.id for question in self.original_questions[:5]])
+
+    def test_answered_questions_are_not_returned(self):
+        answered = self.priority_questions[0]
+        UserAnswer.objects.create(
+            user=self.user,
+            question=answered,
+            option=answered.options.first(),
+        )
+
+        response = self.client.get('/api/quiz/batch/')
+        question_ids = [question['id'] for question in response.json()['questions']]
+
+        self.assertNotIn(answered.id, question_ids)
+        self.assertEqual(len(question_ids), 10)
+
+    def test_established_user_keeps_original_question_order(self):
+        answered_history = self._questions('Answered history', 50, is_priority=False)
+        UserAnswer.objects.bulk_create([
+            UserAnswer(
+                user=self.user,
+                question=question,
+                option=question.options.first(),
+            )
+            for question in answered_history
+        ])
+
+        response = self.client.get('/api/quiz/batch/')
+        question_ids = [question['id'] for question in response.json()['questions']]
+
+        self.assertEqual(question_ids, [question.id for question in self.original_questions])
+
+    def test_pre_rollout_user_with_few_answers_keeps_original_order(self):
+        self.user.date_joined = timezone.make_aware(datetime(2026, 7, 15))
+        self.user.save(update_fields=['date_joined'])
+
+        response = self.client.get('/api/quiz/batch/')
+        question_ids = [question['id'] for question in response.json()['questions']]
+
+        self.assertEqual(question_ids, [question.id for question in self.original_questions])
 
 
 class TestDatabaseSafetyTests(TestCase):

@@ -5,7 +5,6 @@
 
 {% block head %}
 <style>
-nav { display: none !important; }
 html, body {
     height: 100dvh; overflow: hidden; position: fixed; width: 100%;
     background: #f7f9fb; padding: 0 !important; margin: 0 !important;
@@ -144,7 +143,7 @@ html, body {
 /* Join Button */
 .comm-join-btn {
     flex-shrink: 0;
-    min-height: 44px; padding: 8px 18px;
+    min-height: 38px; padding: 8px 18px;
     border-radius: 999px;
     border: none;
     font-size: 12px;
@@ -188,18 +187,16 @@ html, body {
     .comm-join-spinner { animation-duration: 1.4s; }
 }
 
-/* Unread badge - same size as join btn */
+/* Unread badge */
 .community-unread {
-    background: linear-gradient(135deg, #004ac6, #3f7dff);
-    color: white;
-    min-width: 52px; height: 38px;
-    border-radius: 999px;
+    background: rgba(0,74,198,0.1);
+    color: var(--primary, #004ac6);
+    width: 22px; height: 22px;
+    border-radius: 50%;
     display: inline-flex;
     align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 800;
-    box-shadow: 0 4px 12px rgba(0,74,198,0.2);
+    font-size: 11px; font-weight: 800;
     flex-shrink: 0;
-    padding: 0 14px;
 }
 
 /* Arrow for joined */
@@ -259,9 +256,9 @@ button, a { touch-action: manipulation; }
                 {% if community.is_member %}<a class="comm-details comm-details-link" href="{% url 'community_chat' community.slug %}?from=communities" aria-label="Open {{ community.name }} chat">{% else %}<div class="comm-details">{% endif %}
                     <div class="comm-info-row">
                         <div class="comm-name">{{ community.name }}</div>
-                        <span class="comm-members">{{ community.member_count }} members</span>
                     </div>
                     <p class="comm-desc">{{ community.description }}</p>
+                    <div class="comm-meta">{{ community.member_count }} members</div>
                 {% if community.is_member %}</a>{% else %}</div>{% endif %}
 
                 {% if community.is_member %}
